@@ -79,6 +79,21 @@ The platform uses Supabase with PostgreSQL. You'll need to:
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Run TypeScript type checking
+- `npm test` - Run unit and integration tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run test:e2e` - Run end-to-end tests
+
+## Testing
+
+The platform includes comprehensive test coverage:
+
+- **104+ unit tests** covering utilities, components, and business logic
+- **Integration tests** for complex workflows
+- **E2E tests** using Playwright for user flows
+- **Test utilities** and mock factories for easy test writing
+
+See [docs/TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 
 ## License
 

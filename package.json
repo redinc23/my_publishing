@@ -9,6 +9,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "db:seed": "tsx scripts/seed-database.ts",
     "db:migrate": "echo 'Run migrations in Supabase SQL Editor'"
