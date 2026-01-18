@@ -144,7 +144,7 @@ This document contains comprehensive user stories for the MANGU Platform - a Net
 - Recommendations factor in ratings given
 - At least 10 recommendations are provided
 - Recommendations can be refreshed
-- Algorithm source is transparent (vector similarity, collaborative filtering, etc.)
+- Algorithm source is transparent (vector similarity, collaborative filtering, or content-based filtering)
 
 #### US-1.3.2: Similar Books
 **As a** user viewing a book  
@@ -1064,7 +1064,7 @@ This document contains comprehensive user stories for the MANGU Platform - a Net
 - HTTPS enforced
 - Session tokens secure
 - Failed login attempts rate limited
-- Two-factor authentication available (future)
+- Account security measures in place
 
 #### US-5.2.2: Secure Payment Processing
 **As a** user making a purchase  
@@ -1118,6 +1118,23 @@ This document contains comprehensive user stories for the MANGU Platform - a Net
 - Audiobook features
 - Advanced marketing tools
 - Detailed partner performance tracking
+
+---
+
+## Future Enhancements
+
+The following features are planned for future releases:
+
+### Security Enhancements
+- **Two-Factor Authentication (2FA)**: Add optional 2FA via SMS or authenticator apps for enhanced account security
+- **Biometric Authentication**: Support fingerprint/face recognition on mobile devices
+
+### Advanced Features
+- **Social Reading**: Reading groups, shared annotations, and social reading experiences
+- **Advanced Analytics**: ML-based predictive analytics for sales forecasting
+- **Multi-language Support**: Internationalization and localization for global markets
+- **Mobile Apps**: Native iOS and Android applications
+- **Live Events**: Virtual author readings and book launch events
 
 ---
 
