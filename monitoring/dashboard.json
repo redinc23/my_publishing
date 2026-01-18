@@ -1,0 +1,27 @@
+{
+  "dashboard": {
+    "title": "AuthorSphere Production",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "targets": [{ "expr": "rate(http_requests_total[5m])" }]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate",
+        "targets": [{ "expr": "rate(http_requests_total{status=~\"5..\"}[5m])" }]
+      },
+      {
+        "id": 3,
+        "title": "Cache Hit Rate",
+        "targets": [{ "expr": "rate(recommendation_cache_hits_total[5m]) / rate(recommendation_requests_total[5m])" }]
+      },
+      {
+        "id": 4,
+        "title": "Database Latency",
+        "targets": [{ "expr": "histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m]))" }]
+      }
+    ]
+  }
+}
