@@ -1,16 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-inter',
-  display: 'swap',
-});
+// Use system font stack as fallback when Google Fonts is unavailable
+const fontClassName = 'font-sans';
 
 export const metadata: Metadata = {
   title: 'MANGU - Digital Publishing Platform',
@@ -24,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={fontClassName} suppressHydrationWarning>
       <body>
         <Providers>
           <div className="min-h-screen flex flex-col">
