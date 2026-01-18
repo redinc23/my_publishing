@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createCheckoutSession } from '@/lib/stripe/server';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limit';
 import type { CheckoutSessionRequest, CheckoutSessionResponse } from '@/types';
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting - stricter for payment endpoints
+  const rateLimitResponse = rateLimitMiddleware(request, 5, 60000);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const body: CheckoutSessionRequest = await request.json();
     const { book_id, user_id } = body;

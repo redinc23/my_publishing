@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimitMiddleware } from '@/lib/middleware/rate-limit';
 import { headers } from 'next/headers';
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResponse = rateLimitMiddleware(request, 100, 60000);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const { events } = await request.json();
 
