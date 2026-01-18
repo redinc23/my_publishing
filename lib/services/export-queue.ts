@@ -268,7 +268,7 @@ export class ExportQueueService {
 
     // Send email notification
     // Implementation depends on your email service
-    console.log(`Export ready for ${user.email}: ${fileUrl}`);
+    console.log(`Export ready for user ${user.id}: ${fileUrl}`);
   }
 
   async cleanupOldExports(): Promise<void> {
