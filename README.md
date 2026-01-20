@@ -161,10 +161,14 @@ docker run -p 3000:3000 mangu-platform
 
 ## Documentation
 
+- **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
+- **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
+- **[AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md)** - 5-minute deployment guide
 - **[AWS Amplify Deployment](./docs/AWS_AMPLIFY_DEPLOYMENT.md)** - Complete AWS Amplify setup guide
 - [Vercel Deployment](./docs/DEPLOYMENT.md) - Vercel deployment guide
 - [API Documentation](./docs/API.md) - API reference
 - [Development Guide](./docs/DEVELOPMENT.md) - Development setup and guidelines
+- [Migrations Guide](./docs/MIGRATIONS.md) - Database migration instructions
 
 ## License
 
