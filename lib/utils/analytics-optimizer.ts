@@ -69,25 +69,24 @@ export class AnalyticsOptimizer {
     };
   }
 
-  static batchRequests<T>(
+  static async batchRequests<T>(
     requests: Array<() => Promise<T>>,
     batchSize: number = 5
   ): Promise<T[]> {
     const results: T[] = [];
 
-    return new Promise(async (resolve) => {
-      for (let i = 0; i < requests.length; i += batchSize) {
-        const batch = requests.slice(i, i + batchSize);
-        const batchResults = await Promise.all(
-          batch.map(fn => fn().catch(error => {
-            console.error('Batch request failed:', error);
-            return null as T;
-          }))
-        );
-        results.push(...batchResults.filter(Boolean));
-      }
-      resolve(results);
-    });
+    for (let i = 0; i < requests.length; i += batchSize) {
+      const batch = requests.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map(fn => fn().catch(error => {
+          console.error('Batch request failed:', error);
+          return null as T;
+        }))
+      );
+      results.push(...batchResults.filter(Boolean));
+    }
+
+    return results;
   }
 
   static preloadCommonData(bookId: string): void {
