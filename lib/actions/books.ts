@@ -540,25 +540,27 @@ export async function incrementViewCount(bookId: string) {
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     if (!lastViewed.data || new Date(lastViewed.data.last_viewed) < twentyFourHoursAgo) {
-      // Increment view count
-      await supabase.rpc('increment_view_count', { book_id: bookId });
+      await Promise.all([
+        // Increment view count
+        supabase.rpc('increment_view_count', { book_id: bookId }),
 
-      // Update cache
-      await supabase
-        .from('book_view_cache')
-        .upsert({
-          cache_key: cacheKey,
-          last_viewed: now.toISOString()
-        }, { onConflict: 'cache_key' });
+        // Update cache
+        supabase
+          .from('book_view_cache')
+          .upsert({
+            cache_key: cacheKey,
+            last_viewed: now.toISOString()
+          }, { onConflict: 'cache_key' }),
 
-      // Log view for analytics
-      await supabase.from('book_views').insert({
-        book_id: bookId,
-        user_id: userId,
-        viewed_at: now.toISOString(),
-        ip_address: null,
-        user_agent: null
-      });
+        // Log view for analytics
+        supabase.from('book_views').insert({
+          book_id: bookId,
+          user_id: userId,
+          viewed_at: now.toISOString(),
+          ip_address: null,
+          user_agent: null
+        })
+      ]);
     }
 
     return { success: true, code: 'VIEW_INCREMENTED' };
