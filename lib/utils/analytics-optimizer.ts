@@ -90,7 +90,7 @@ export class AnalyticsOptimizer {
     });
   }
 
-  static preloadCommonData(bookId: string): void {
+  static async preloadCommonData(bookId: string): Promise<void> {
     // Preload commonly used data
     const commonQueries = [
       { key: `views-${bookId}`, fetchFn: () => this.getCachedViews(bookId) },
@@ -98,9 +98,11 @@ export class AnalyticsOptimizer {
       { key: `revenue-${bookId}`, fetchFn: () => this.getCachedRevenue(bookId) },
     ];
 
-    commonQueries.forEach(({ key, fetchFn }) => {
-      this.withOptimization<any>(key, fetchFn, { cache: true });
-    });
+    await Promise.all(
+      commonQueries.map(({ key, fetchFn }) =>
+        this.withOptimization<any>(key, fetchFn, { cache: true })
+      )
+    );
   }
 
   private static async getCachedViews(bookId: string) {
