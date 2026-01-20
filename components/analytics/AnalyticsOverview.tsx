@@ -6,7 +6,7 @@ import { Calendar, TrendingUp, Users, Download, DollarSign, Globe } from 'lucide
 import { dateRanges, formatDateRange, type DateRange } from '@/lib/utils/date-ranges';
 import { formatLargeNumber } from '@/lib/utils/analytics-helpers';
 import { formatCurrency } from '@/lib/utils/currency';
-import { getBookAnalytics, getLiveReaders } from '@/lib/actions/analytics';
+import { getBookAnalytics, getLiveReaders, getGeographyData } from '@/lib/actions/analytics';
 import { getBookRevenue } from '@/lib/actions/revenue';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,10 +41,11 @@ export function AnalyticsOverview({
   const loadOverview = async () => {
     setLoading(true);
     try {
-      const [analytics, readers, revenue] = await Promise.all([
+      const [analytics, readers, revenue, geography] = await Promise.all([
         getBookAnalytics(bookId, dateRange),
         getLiveReaders(bookId),
         getBookRevenue(bookId, dateRange),
+        getGeographyData(bookId, dateRange),
       ]);
 
       const totalViews = analytics.reduce((sum, day) => sum + day.views, 0);
@@ -64,7 +65,7 @@ export function AnalyticsOverview({
         completionRate: avgCompletionRate,
         avgReadTime,
         revenue: revenue.total * 100, // Convert to cents for formatCurrency
-        countriesReached: 0, // TODO: Calculate from geography data
+        countriesReached: geography.length,
         growthRate: 0, // TODO: Calculate growth rate
       });
     } catch (error) {
