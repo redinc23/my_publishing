@@ -3,7 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, TrendingUp, Users, Download, DollarSign, Globe } from 'lucide-react';
-import { dateRanges, formatDateRange, type DateRange } from '@/lib/utils/date-ranges';
+import {
+  dateRanges,
+  formatDateRange,
+  getPreviousDateRange,
+  type DateRange
+} from '@/lib/utils/date-ranges';
 import { formatLargeNumber } from '@/lib/utils/analytics-helpers';
 import { formatCurrency } from '@/lib/utils/currency';
 import { getBookAnalytics, getLiveReaders } from '@/lib/actions/analytics';
@@ -41,13 +46,24 @@ export function AnalyticsOverview({
   const loadOverview = async () => {
     setLoading(true);
     try {
-      const [analytics, readers, revenue] = await Promise.all([
+      const previousDateRange = getPreviousDateRange(dateRange);
+
+      const [analytics, readers, revenue, previousAnalytics] = await Promise.all([
         getBookAnalytics(bookId, dateRange),
         getLiveReaders(bookId),
         getBookRevenue(bookId, dateRange),
+        getBookAnalytics(bookId, previousDateRange)
       ]);
 
       const totalViews = analytics.reduce((sum, day) => sum + day.views, 0);
+      const previousTotalViews = previousAnalytics.reduce((sum, day) => sum + day.views, 0);
+
+      const growthRate = previousTotalViews > 0
+        ? ((totalViews - previousTotalViews) / previousTotalViews) * 100
+        : totalViews > 0
+          ? 100
+          : 0;
+
       const uniqueReaders = analytics.reduce((sum, day) => sum + day.unique_users, 0);
       const totalDownloads = analytics.reduce((sum, day) => sum + (day.downloads || 0), 0);
       const avgCompletionRate = analytics.length > 0
@@ -65,7 +81,7 @@ export function AnalyticsOverview({
         avgReadTime,
         revenue: revenue.total * 100, // Convert to cents for formatCurrency
         countriesReached: 0, // TODO: Calculate from geography data
-        growthRate: 0, // TODO: Calculate growth rate
+        growthRate,
       });
     } catch (error) {
       console.error('Error loading overview:', error);
@@ -125,7 +141,8 @@ export function AnalyticsOverview({
           <CardContent>
             <div className="text-2xl font-bold">{formatLargeNumber(stats.totalViews)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.growthRate > 0 ? '+' : ''}{stats.growthRate}% from last period
+              {stats.growthRate > 0 ? '+' : ''}
+              {stats.growthRate.toFixed(2)}% from last period
             </p>
           </CardContent>
         </Card>
