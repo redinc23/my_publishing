@@ -11,30 +11,67 @@ import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import Link from 'next/link';
 import type { BookWithAuthor } from '@/types';
+import { shouldUseMocks, getMockFeaturedBooks, getMockTrendingBooks } from '@/lib/utils/mock-data';
 
 async function getFeaturedBooks(): Promise<BookWithAuthor[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*))')
-    .eq('status', 'published')
-    .eq('is_featured', true)
-    .order('published_at', { ascending: false })
-    .limit(6);
+  // Use mock data if in mock mode
+  if (shouldUseMocks()) {
+    return getMockFeaturedBooks();
+  }
 
-  return (data as BookWithAuthor[]) || [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('books')
+      .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+      .eq('status', 'published')
+      .eq('is_featured', true)
+      .order('published_at', { ascending: false })
+      .limit(6);
+
+    // Fallback to mock data if query returns empty or error
+    if (error || !data || data.length === 0) {
+      if (error) {
+        console.warn('Error fetching featured books, using mock data:', error.message);
+      }
+      return getMockFeaturedBooks();
+    }
+
+    return (data as BookWithAuthor[]) || [];
+  } catch (error) {
+    console.warn('Exception fetching featured books, using mock data:', error);
+    return getMockFeaturedBooks();
+  }
 }
 
 async function getTrendingBooks(): Promise<BookWithAuthor[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*))')
-    .eq('status', 'published')
-    .order('total_reads', { ascending: false })
-    .limit(10);
+  // Use mock data if in mock mode
+  if (shouldUseMocks()) {
+    return getMockTrendingBooks();
+  }
 
-  return (data as BookWithAuthor[]) || [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('books')
+      .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+      .eq('status', 'published')
+      .order('total_reads', { ascending: false })
+      .limit(10);
+
+    // Fallback to mock data if query returns empty or error
+    if (error || !data || data.length === 0) {
+      if (error) {
+        console.warn('Error fetching trending books, using mock data:', error.message);
+      }
+      return getMockTrendingBooks();
+    }
+
+    return (data as BookWithAuthor[]) || [];
+  } catch (error) {
+    console.warn('Exception fetching trending books, using mock data:', error);
+    return getMockTrendingBooks();
+  }
 }
 
 function BookGrid({ books }: { books: BookWithAuthor[] }) {
@@ -80,7 +117,7 @@ export default async function HomePage() {
                       {heroBook.title}
                     </h1>
                     <p className="text-xl mb-8 text-secondary drop-shadow">
-                      by {heroBook.author.profile.full_name || heroBook.author.pen_name}
+                      by {heroBook.author.profile?.full_name || heroBook.author.pen_name || heroBook.author.full_name || 'Unknown Author'}
                     </p>
                     <div className="flex gap-4">
                       <Button asChild size="lg">

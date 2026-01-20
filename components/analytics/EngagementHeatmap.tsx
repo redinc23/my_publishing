@@ -11,7 +11,7 @@ interface EngagementHeatmapProps {
 export function EngagementHeatmap({ data }: EngagementHeatmapProps) {
   const chartData = data.map(item => ({
     chapter: `Ch ${item.chapter_number}`,
-    engagement: item.engagement_score,
+    engagement: item.avg_time_spent || 0,
     dropOff: item.drop_off_rate,
     completions: item.completions,
   }));

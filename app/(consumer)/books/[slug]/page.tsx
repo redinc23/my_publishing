@@ -24,15 +24,19 @@ async function getBook(slug: string): Promise<BookFull | null> {
   return data as BookFull | null;
 }
 
-async function getSimilarBooks(genre: string, excludeId: string) {
+async function getSimilarBooks(genre: string | undefined, excludeId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
+  let query = supabase
     .from('books')
     .select('*, author:authors!inner(*, profile:profiles!inner(*))')
     .eq('status', 'published')
-    .eq('genre', genre)
-    .neq('id', excludeId)
-    .limit(6);
+    .neq('id', excludeId);
+  
+  if (genre) {
+    query = query.eq('genre', genre);
+  }
+  
+  const { data } = await query.limit(6);
 
   return data || [];
 }
@@ -48,7 +52,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   return {
     title: `${book.title} - MANGU`,
-    description: book.description || `Read ${book.title} by ${book.author.profile.full_name || book.author.pen_name}`,
+    description: book.description || `Read ${book.title} by ${book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}`,
   };
 }
 
@@ -83,16 +87,20 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               <p className="text-xl text-secondary mb-4">
                 by{' '}
                 <Link href={`/authors/${book.author.id}`} className="hover:text-primary">
-                  {book.author.profile.full_name || book.author.pen_name}
+                  {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
                 </Link>
               </p>
               <div className="flex items-center gap-4 mb-6">
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-400">★</span>
-                  <span>{book.average_rating.toFixed(1)}</span>
-                </div>
-                <span className="text-secondary">•</span>
-                <span className="text-secondary">{book.total_reads} reads</span>
+                {book.average_rating && (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <span className="text-yellow-400">★</span>
+                      <span>{book.average_rating.toFixed(1)}</span>
+                    </div>
+                    <span className="text-secondary">•</span>
+                  </>
+                )}
+                <span className="text-secondary">{book.total_reads || 0} reads</span>
               </div>
               <p className="text-lg mb-6">{book.description}</p>
               <div className="flex gap-4 mb-6">
@@ -128,11 +136,11 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="mt-6">
-              {book.trailer_vimeo_id && (
-                <div className="mb-8">
-                  <VimeoPlayer videoId={book.trailer_vimeo_id} />
-                </div>
-              )}
+                {(book as BookFull).trailer_vimeo_id && (
+                  <div className="mb-8">
+                    <VimeoPlayer videoId={(book as BookFull).trailer_vimeo_id!} />
+                  </div>
+                )}
               <div>
                 <h3 className="text-2xl font-bold mb-4">About this book</h3>
                 <p className="text-lg text-secondary whitespace-pre-line">{book.description}</p>

@@ -10,6 +10,7 @@ const inter = Inter({
   weight: ['400', '700'],
   variable: '--font-inter',
   display: 'swap',
+  fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
 export const metadata: Metadata = {

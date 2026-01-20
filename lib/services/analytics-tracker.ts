@@ -1,10 +1,10 @@
 'use client';
 
-import type { EventType } from '@/types/analytics';
+import type { AnalyticsEventType } from '@/types/analytics';
 
 interface TrackEvent {
   book_id: string;
-  event_type: EventType;
+  event_type: AnalyticsEventType;
   session_id: string;
   event_data?: Record<string, any>;
   chapter_id?: string;

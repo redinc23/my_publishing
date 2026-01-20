@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "validate-env": "tsx scripts/validate-env.ts",
+    "dev": "npm run validate-env && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -11,7 +12,8 @@
     "test": "jest",
     "test:e2e": "playwright test",
     "db:seed": "tsx scripts/seed-database.ts",
-    "db:migrate": "echo 'Run migrations in Supabase SQL Editor'"
+    "db:migrate": "tsx scripts/run-migrations.ts",
+    "verify-rls": "tsx scripts/verify-rls.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -38,6 +40,7 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^10.18.0",
     "lodash": "^4.17.21",
+    "lru-cache": "^11.2.4",
     "lucide-react": "^0.309.0",
     "next": "14.2.3",
     "next-themes": "^0.2.1",
@@ -52,7 +55,7 @@
     "recharts": "^3.6.0",
     "resend": "^3.2.0",
     "sonner": "^2.0.7",
-    "stripe": "^14.10.0",
+    "stripe": "^14.25.0",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.2.0",
     "zod": "^3.25.76"

@@ -30,7 +30,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             {book.title}
           </h3>
           <p className="text-sm text-secondary line-clamp-1">
-            {book.author.profile.full_name || book.author.pen_name}
+            {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
           </p>
         </div>
       </Link>
@@ -59,13 +59,17 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             {book.title}
           </h3>
           <p className="text-sm text-secondary line-clamp-1 mb-2">
-            {book.author.profile.full_name || book.author.pen_name}
+            {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
           </p>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-400">★</span>
-              <span className="text-sm">{book.average_rating.toFixed(1)}</span>
-            </div>
+            {book.average_rating ? (
+              <div className="flex items-center gap-1">
+                <span className="text-yellow-400">★</span>
+                <span className="text-sm">{(book.average_rating || 0).toFixed(1)}</span>
+              </div>
+            ) : (
+              <div></div>
+            )}
             <div className="text-sm font-semibold">
               {book.discount_price ? (
                 <>

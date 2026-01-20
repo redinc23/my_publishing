@@ -26,15 +26,17 @@ export function GeographyMap({ data }: GeographyMapProps) {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{getCountryFlag(item.country_code)}</span>
                   <div>
-                    <div className="font-medium">{item.country_name}</div>
+                    <div className="font-medium">{item.country_name || item.country}</div>
                     <div className="text-sm text-muted-foreground">
-                      {item.readers} readers • {item.sessions} sessions
+                      {item.readers || item.count} readers {item.sessions ? `• ${item.sessions} sessions` : ''}
                     </div>
                   </div>
                 </div>
-                <div className="text-sm font-medium">
-                  {item.avg_engagement.toFixed(0)}% engagement
-                </div>
+                  {item.avg_engagement && (
+                    <div className="text-sm font-medium">
+                      {item.avg_engagement.toFixed(0)}% engagement
+                    </div>
+                  )}
               </div>
             ))}
           </div>

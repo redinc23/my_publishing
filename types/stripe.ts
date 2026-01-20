@@ -12,7 +12,7 @@ export interface CheckoutSessionResponse {
   url: string;
 }
 
-export interface WebhookEvent {
+export interface StripeWebhookEvent {
   type: string;
   data: {
     object: Record<string, unknown>;

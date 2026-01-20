@@ -49,12 +49,12 @@ export function AnalyticsOverview({
 
       const totalViews = analytics.reduce((sum, day) => sum + day.views, 0);
       const uniqueReaders = analytics.reduce((sum, day) => sum + day.unique_users, 0);
-      const totalDownloads = analytics.reduce((sum, day) => sum + day.downloads, 0);
+      const totalDownloads = analytics.reduce((sum, day) => sum + (day.downloads || 0), 0);
       const avgCompletionRate = analytics.length > 0
-        ? analytics.reduce((sum, day) => sum + day.completion_rate, 0) / analytics.length
+        ? analytics.reduce((sum, day) => sum + (day.completion_rate || 0), 0) / analytics.length
         : 0;
       const avgReadTime = analytics.length > 0
-        ? analytics.reduce((sum, day) => sum + day.avg_read_time, 0) / analytics.length
+        ? analytics.reduce((sum, day) => sum + (day.avg_time_spent || 0), 0) / analytics.length
         : 0;
 
       setStats({

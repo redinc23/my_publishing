@@ -202,18 +202,18 @@ export class ExportQueueService {
       throw new Error(result.error || 'Export failed');
     }
 
-    return result.data;
+    return typeof result.data === 'string' ? result.data : String(result.data);
   }
 
   private async exportRevenue(job: ExportJob): Promise<string> {
     const { exportRevenueData } = await import('@/lib/actions/export-data');
-    const result = await exportRevenueData(job.bookId, job.dateRange);
+    const result = await exportRevenueData(job.bookId, job.dateRange, job.format);
 
     if (!result.success || !result.data) {
       throw new Error(result.error || 'Export failed');
     }
 
-    return result.data;
+    return typeof result.data === 'string' ? result.data : String(result.data);
   }
 
   private async exportReaders(job: ExportJob): Promise<string> {
@@ -224,7 +224,7 @@ export class ExportQueueService {
       throw new Error(result.error || 'Export failed');
     }
 
-    return result.data;
+    return typeof result.data === 'string' ? result.data : String(result.data);
   }
 
   private async uploadToStorage(job: ExportJob, data: string): Promise<string> {

@@ -47,7 +47,7 @@ export default async function AudiobookPage({ params }: { params: { id: string }
             <div>
               <h1 className="text-4xl font-bold mb-4">{book.title}</h1>
               <p className="text-xl text-secondary mb-6">
-                by {book.author.profile.full_name || book.author.pen_name}
+                by {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
               </p>
               <p className="text-lg mb-6">{book.description}</p>
             </div>
