@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { computeFileHash } from '@/lib/utils/file-utils';
 import { UPLOAD_CONFIGS, type UploadResult } from '@/types/upload';
 
 export async function uploadFile(
@@ -44,13 +45,15 @@ export async function uploadFile(
       .from(bucket)
       .getPublicUrl(filePath);
 
+    const hash = await computeFileHash(file);
+
     return {
       filePath,
       publicUrl,
       fileName: file.name,
       fileSize: file.size,
       mimeType: file.type,
-      hash: '', // TODO: Generate file hash for deduplication
+      hash,
       metadata: {},
     };
   } catch (error) {
