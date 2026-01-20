@@ -96,25 +96,21 @@ async function createTestProfiles(count: number): Promise<Array<{ id: string; us
       });
 
       if (authError) {
-        // User might already exist, try to fetch it
-        const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
-        if (existingUser?.user) {
-          console.log(`   ✓ User ${i} already exists: ${email}`);
-          // Get or create profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, user_id')
-            .eq('user_id', existingUser.user.id)
-            .single();
+        // User might already exist, try to locate via profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, user_id')
+          .eq('email', email)
+          .single();
 
-          if (profile) {
-            profiles.push({ id: profile.id, user_id: profile.user_id });
-            continue;
-          }
-        } else {
-          console.error(`   ✗ Failed to create user ${i}:`, authError.message);
+        if (profile) {
+          console.log(`   ✓ User ${i} already exists: ${email}`);
+          profiles.push({ id: profile.id, user_id: profile.user_id });
           continue;
         }
+
+        console.error(`   ✗ Failed to create user ${i}:`, authError.message);
+        continue;
       }
 
       if (!authData?.user) {
