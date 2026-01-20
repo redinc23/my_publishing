@@ -1,0 +1,7 @@
+# Format: repo|secret_value|branch_name (secret and branch are optional)
+your-org/app-one|prod-secret-1|main
+your-org/app-two|prod-secret-2|main
+your-org/app-three|prod-secret-3|develop
+your-org/app-four|prod-secret-4|main
+your-org/app-five|prod-secret-5|main
+your-org/app-six|prod-secret-6|main
