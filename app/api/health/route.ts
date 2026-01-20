@@ -71,7 +71,7 @@ function checkEnvironment(): CheckResult {
 async function checkDatabase(supabase: Awaited<ReturnType<typeof createClient>>): Promise<CheckResult> {
   const start = Date.now();
   try {
-    const { error, data } = await supabase.from('profiles').select('id').limit(1);
+    const { error } = await supabase.from('profiles').select('id').limit(1);
     const latency = Date.now() - start;
     
     if (error) {
@@ -223,16 +223,28 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
     const missingOptional: string[] = [];
     
     // Check required tables
-    for (const table of requiredTables) {
-      const { error } = await supabase.from(table).select('id').limit(1);
+    const requiredChecks = await Promise.all(
+      requiredTables.map(async (table) => {
+        const { error } = await supabase.from(table).select('id').limit(1);
+        return { table, error };
+      })
+    );
+
+    for (const { table, error } of requiredChecks) {
       if (error && error.message.includes('does not exist')) {
         missingRequired.push(table);
       }
     }
     
     // Check optional tables
-    for (const table of optionalTables) {
-      const { error } = await supabase.from(table).select('id').limit(1);
+    const optionalChecks = await Promise.all(
+      optionalTables.map(async (table) => {
+        const { error } = await supabase.from(table).select('id').limit(1);
+        return { table, error };
+      })
+    );
+
+    for (const { table, error } of optionalChecks) {
       if (error && error.message.includes('does not exist')) {
         missingOptional.push(table);
       }
