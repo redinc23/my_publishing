@@ -1,4 +1,4 @@
-import { startOfDay, endOfDay, subDays, subWeeks, subMonths, startOfWeek, startOfMonth } from 'date-fns';
+import { startOfDay, endOfDay, subDays, subWeeks, subMonths, startOfWeek, startOfMonth, differenceInDays } from 'date-fns';
 
 export interface DateRange {
   from?: Date;
@@ -70,4 +70,34 @@ export function formatDateRange(range: DateRange): string {
   const toStr = range.to.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   
   return `${fromStr} - ${toStr}`;
+}
+
+export function getPreviousDateRange(range: DateRange): DateRange {
+  if (!range.from || !range.to) {
+    return { from: undefined, to: undefined };
+  }
+
+  const duration = differenceInDays(range.to, range.from);
+  const prevTo = subDays(range.from, 1);
+  const prevFrom = subDays(prevTo, duration);
+
+  return {
+    from: startOfDay(prevFrom),
+    to: endOfDay(prevTo),
+  };
+}
+
+export function getPreviousDateRange(range: DateRange): DateRange {
+  if (!range.from || !range.to) {
+    return { from: undefined, to: undefined };
+  }
+
+  const duration = differenceInDays(range.to, range.from);
+  const prevTo = subDays(range.from, 1);
+  const prevFrom = subDays(prevTo, duration);
+
+  return {
+    from: startOfDay(prevFrom),
+    to: endOfDay(prevTo),
+  };
 }
