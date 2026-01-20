@@ -15,20 +15,24 @@ export async function getBookAnalytics(
 
     if (!user) throw new Error('Not authenticated');
 
-    // Verify book ownership
-    const { data: book } = await supabase
-      .from('books')
-      .select('author_id')
-      .eq('id', bookId)
-      .single();
+    const cacheKey = `analytics:${bookId}:${dateRange.from?.toISOString()}-${dateRange.to?.toISOString()}`;
+
+    // Parallelize ownership check and cache retrieval
+    const [bookResult, cached] = await Promise.all([
+      supabase
+        .from('books')
+        .select('author_id')
+        .eq('id', bookId)
+        .single(),
+      getCache<BookStats[]>(cacheKey)
+    ]);
+
+    const book = bookResult.data;
 
     if (!book || book.author_id !== user.id) {
       throw new Error('Unauthorized');
     }
 
-    // Check cache
-    const cacheKey = `analytics:${bookId}:${dateRange.from?.toISOString()}-${dateRange.to?.toISOString()}`;
-    const cached = await getCache<BookStats[]>(cacheKey);
     if (cached) return cached;
 
     // Fetch from database
