@@ -1,0 +1,63 @@
+# Amplify ignore file
+# Similar to .gitignore, this file specifies patterns to exclude from deployment
+
+# Dependencies
+node_modules/
+
+# Testing
+tests/
+coverage/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+jest.config.js
+jest.setup.js
+playwright.config.ts
+
+# Local env files
+.env*.local
+.env.test
+
+# Build artifacts (will be built by Amplify)
+.next/
+out/
+build/
+dist/
+
+# Documentation (not needed in deployment)
+docs/
+*.md
+!README.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD files
+.github/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Scripts (not needed for deployment)
+scripts/
+
+# Vercel config (not needed for Amplify)
+vercel.json
+
+# Supabase local files (migrations run separately)
+supabase/

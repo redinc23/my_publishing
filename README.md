@@ -2,16 +2,26 @@
 
 A complete, production-ready, Netflix-inspired digital publishing platform built with Next.js 14.
 
-## Features
+## 🚀 Deployment Status: AWS Amplify Ready!
+
+This platform is now configured for immediate deployment to AWS Amplify. See [AWS Amplify Deployment Guide](./docs/AWS_AMPLIFY_DEPLOYMENT.md) for complete instructions.
+
+## Core Features (Phase 1 - Ready for Launch)
 
 - 📚 Book marketplace with browsing and search
-- 🤖 AI-powered recommendations (Resonance Engine)
 - 📖 Reading interface with progress tracking
 - ✍️ Author portal for manuscript submission
-- 🎧 Audiobook support
 - 💳 Stripe payment integration
 - 🔐 Authentication with Supabase
 - 📊 Analytics and engagement tracking
+- 📱 Responsive design and mobile support
+
+## Future Features (Phase 2+)
+
+- 🤖 AI-powered recommendations (Resonance Engine) - *Requires OpenAI API*
+- 🎧 Audiobook support - *Coming soon*
+- 📧 Email notifications - *Requires Resend*
+- ⭐ User reviews and ratings - *Coming soon*
 
 ## Tech Stack
 
@@ -120,6 +130,45 @@ After running migrations, verify the setup by checking:
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Run TypeScript type checking
+
+## Deployment
+
+### AWS Amplify (Recommended) 🚀
+
+The platform is pre-configured for AWS Amplify deployment:
+
+1. **Quick Deploy to Amplify:**
+   - Connect your GitHub repository to AWS Amplify
+   - Amplify will automatically detect the `amplify.yml` configuration
+   - Add environment variables in Amplify Console
+   - Deploy!
+
+2. **Detailed Instructions:**
+   See [AWS Amplify Deployment Guide](./docs/AWS_AMPLIFY_DEPLOYMENT.md) for complete step-by-step instructions.
+
+### Vercel (Alternative)
+
+```bash
+vercel deploy --prod
+```
+
+### Docker
+
+```bash
+docker build -t mangu-platform .
+docker run -p 3000:3000 mangu-platform
+```
+
+## Documentation
+
+- **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
+- **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
+- **[AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md)** - 5-minute deployment guide
+- **[AWS Amplify Deployment](./docs/AWS_AMPLIFY_DEPLOYMENT.md)** - Complete AWS Amplify setup guide
+- [Vercel Deployment](./docs/DEPLOYMENT.md) - Vercel deployment guide
+- [API Documentation](./docs/API.md) - API reference
+- [Development Guide](./docs/DEVELOPMENT.md) - Development setup and guidelines
+- [Migrations Guide](./docs/MIGRATIONS.md) - Database migration instructions
 
 ## License
 
