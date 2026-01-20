@@ -169,6 +169,7 @@ docker run -p 3000:3000 mangu-platform
 - [API Documentation](./docs/API.md) - API reference
 - [Development Guide](./docs/DEVELOPMENT.md) - Development setup and guidelines
 - [Migrations Guide](./docs/MIGRATIONS.md) - Database migration instructions
+- [Admin Setup Guide](./docs/ADMIN_SETUP.md) - Automation scripts documentation
 
 ## License
 
