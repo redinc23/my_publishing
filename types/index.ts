@@ -164,11 +164,14 @@ export interface BookWithAuthor extends Book {
       avatar_url?: string;
     };
   };
+  subgenres?: string[];
   trailer_vimeo_id?: string;
   is_featured?: boolean;
   average_rating?: number;
   price?: number;
   discount_price?: number;
+  total_reads?: number;
+  total_reviews?: number;
 }
 
 export interface BookWithStats extends Book {

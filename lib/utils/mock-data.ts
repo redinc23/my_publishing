@@ -6,6 +6,11 @@
 import { useMocks } from './env-validation';
 import type { BookWithAuthor } from '@/types';
 
+const mockProfile = (full_name: string, avatar_url?: string) => ({
+  full_name,
+  ...(avatar_url ? { avatar_url } : {}),
+});
+
 /**
  * Check if mock mode should be used
  */
@@ -25,10 +30,12 @@ export const mockBooks: BookWithAuthor[] = [
       'A haunting tale of a woman who can steal and preserve memories, exploring themes of identity, loss, and the ethics of remembering.',
     genre: 'literary-fiction',
     subgenres: ['magical-realism', 'contemporary'],
+    author_id: 'mock-author-1',
     cover_url: 'https://picsum.photos/seed/book1/400/600',
     price: 14.99,
     discount_price: 9.99,
     status: 'published',
+    visibility: 'public',
     is_featured: true,
     total_reads: 15234,
     total_reviews: 892,
@@ -41,15 +48,7 @@ export const mockBooks: BookWithAuthor[] = [
     author: {
       id: 'mock-author-1',
       pen_name: 'Elena Rodriguez',
-      bio: 'Pulitzer Prize finalist known for lyrical prose exploring Latin American identity.',
-      is_verified: true,
-      profile: {
-        id: 'mock-profile-1',
-        email: 'elena@example.com',
-        full_name: 'Elena Rodriguez',
-        role: 'author',
-        subscription_tier: 'premium',
-      },
+      profile: mockProfile('Elena Rodriguez'),
     },
   },
   {
@@ -60,9 +59,11 @@ export const mockBooks: BookWithAuthor[] = [
       'In 2157, an AI consciousness awakens in the global neural network, forcing humanity to confront what it means to be alive.',
     genre: 'sci-fi',
     subgenres: ['cyberpunk', 'ai'],
+    author_id: 'mock-author-2',
     cover_url: 'https://picsum.photos/seed/book2/400/600',
     price: 16.99,
     status: 'published',
+    visibility: 'public',
     is_featured: true,
     total_reads: 23451,
     total_reviews: 1203,
@@ -75,15 +76,7 @@ export const mockBooks: BookWithAuthor[] = [
     author: {
       id: 'mock-author-2',
       pen_name: 'Marcus Chen',
-      bio: 'Science fiction author exploring AI ethics and consciousness.',
-      is_verified: true,
-      profile: {
-        id: 'mock-profile-2',
-        email: 'marcus@example.com',
-        full_name: 'Marcus Chen',
-        role: 'author',
-        subscription_tier: 'premium',
-      },
+      profile: mockProfile('Marcus Chen'),
     },
   },
   {
@@ -94,9 +87,11 @@ export const mockBooks: BookWithAuthor[] = [
       'A detective must solve a murder where the only witness is a child who cannot speak.',
     genre: 'mystery',
     subgenres: ['crime', 'thriller'],
+    author_id: 'mock-author-3',
     cover_url: 'https://picsum.photos/seed/book3/400/600',
     price: 12.99,
     status: 'published',
+    visibility: 'public',
     is_featured: true,
     total_reads: 18923,
     total_reviews: 1023,
@@ -109,15 +104,7 @@ export const mockBooks: BookWithAuthor[] = [
     author: {
       id: 'mock-author-3',
       pen_name: 'Sarah Okonkwo',
-      bio: 'Mystery writer crafting intricate psychological thrillers.',
-      is_verified: true,
-      profile: {
-        id: 'mock-profile-3',
-        email: 'sarah@example.com',
-        full_name: 'Sarah Okonkwo',
-        role: 'author',
-        subscription_tier: 'premium',
-      },
+      profile: mockProfile('Sarah Okonkwo'),
     },
   },
   {
@@ -127,10 +114,12 @@ export const mockBooks: BookWithAuthor[] = [
     description:
       'A gripping account of the Normandy landings through the eyes of soldiers on both sides.',
     genre: 'historical-fiction',
+    author_id: 'mock-author-4',
     cover_url: 'https://picsum.photos/seed/book4/400/600',
     price: 15.99,
     discount_price: 11.99,
     status: 'published',
+    visibility: 'public',
     is_featured: false,
     total_reads: 9876,
     total_reviews: 567,
@@ -143,15 +132,7 @@ export const mockBooks: BookWithAuthor[] = [
     author: {
       id: 'mock-author-4',
       pen_name: 'James Morrison',
-      bio: 'Historical fiction novelist specializing in WWII narratives.',
-      is_verified: true,
-      profile: {
-        id: 'mock-profile-4',
-        email: 'james@example.com',
-        full_name: 'James Morrison',
-        role: 'author',
-        subscription_tier: 'premium',
-      },
+      profile: mockProfile('James Morrison'),
     },
   },
   {
@@ -162,9 +143,11 @@ export const mockBooks: BookWithAuthor[] = [
       'Two people from different cultures find love despite family expectations and cultural barriers.',
     genre: 'romance',
     subgenres: ['contemporary', 'multicultural'],
+    author_id: 'mock-author-5',
     cover_url: 'https://picsum.photos/seed/book5/400/600',
     price: 9.99,
     status: 'published',
+    visibility: 'public',
     is_featured: true,
     total_reads: 21345,
     total_reviews: 1234,
@@ -177,15 +160,7 @@ export const mockBooks: BookWithAuthor[] = [
     author: {
       id: 'mock-author-5',
       pen_name: 'Priya Sharma',
-      bio: 'Romance author with a focus on cultural identity and belonging.',
-      is_verified: true,
-      profile: {
-        id: 'mock-profile-5',
-        email: 'priya@example.com',
-        full_name: 'Priya Sharma',
-        role: 'author',
-        subscription_tier: 'premium',
-      },
+      profile: mockProfile('Priya Sharma'),
     },
   },
 ];
@@ -202,7 +177,7 @@ export function getMockFeaturedBooks(): BookWithAuthor[] {
  */
 export function getMockTrendingBooks(): BookWithAuthor[] {
   return [...mockBooks]
-    .sort((a, b) => b.total_reads - a.total_reads)
+    .sort((a, b) => (b.total_reads ?? 0) - (a.total_reads ?? 0))
     .slice(0, 12);
 }
 
@@ -235,7 +210,7 @@ export function searchMockBooks(query: string): BookWithAuthor[] {
   return mockBooks.filter(
     (book) =>
       book.title.toLowerCase().includes(lowerQuery) ||
-      book.description.toLowerCase().includes(lowerQuery) ||
-      book.author.pen_name.toLowerCase().includes(lowerQuery)
+      book.description?.toLowerCase().includes(lowerQuery) ||
+      book.author.pen_name?.toLowerCase().includes(lowerQuery)
   );
 }
