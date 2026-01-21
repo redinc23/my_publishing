@@ -1,6 +1,1043 @@
 #!/usr/bin/env python3
 """
 NEXUS/CENTURIES PROJECT ANALYZER
+Forensic analysis & recovery planning for Cursor AI
+
+Tailored for:
+- Node.js / TypeScript (≈90% of repo)
+- Neon / Postgres (PLpgSQL present)
+- Full-stack app with API + frontend + platform connectors
+
+Target repo: redinc23/my_publishing
+"""
+
+import os
+import json
+import sys
+import subprocess
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, List, Optional, Any
+import argparse
+
+
+class NexusProjectAnalyzer:
+    def __init__(self, project_path: str = "."):
+        self.project_path = Path(project_path).absolute()
+        self.results: Dict[str, Any] = {
+            "metadata": {
+                "timestamp": datetime.now().isoformat(),
+                "project_path": str(self.project_path),
+                "project_name": "NEXUS/Centuries",
+                "analyzer_version": "2.0.0",
+                "target_repo": "redinc23/my_publishing",
+            },
+            "analysis": {},
+            "recommendations": {},
+            "nexus_specific": {},
+        }
+
+    # -----------------------------
+    # Low-level helpers
+    # -----------------------------
+
+    def _log_issue(self, description: str, severity: str = "medium") -> None:
+        """Log potential issues discovered during analysis."""
+        self.results["analysis"].setdefault("issues", [])
+        self.results["analysis"]["issues"].append(
+            {
+                "type": "potential_problem",
+                "description": description,
+                "severity": severity,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+    def _get_git_status(self) -> Dict[str, Any]:
+        """Return lightweight git status for the repo."""
+        try:
+            # Is this a git repo?
+            result = subprocess.run(
+                ["git", "rev-parse", "--git-dir"],
+                cwd=self.project_path,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode != 0:
+                return {"has_git": False}
+
+            # Porcelain status
+            status_result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=self.project_path,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+
+            # Current branch
+            branch_result = subprocess.run(
+                ["git", "branch", "--show-current"],
+                cwd=self.project_path,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+
+            modified_files = [
+                line for line in status_result.stdout.splitlines() if line.strip()
+            ]
+
+            return {
+                "has_git": True,
+                "current_branch": branch_result.stdout.strip(),
+                "modified_files_count": len(modified_files),
+                "uncommitted_changes": len(modified_files) > 0,
+                "status_output": status_result.stdout[:500],
+            }
+        except (subprocess.SubprocessError, FileNotFoundError, subprocess.TimeoutExpired):
+            return {"has_git": False}
+
+    # -----------------------------
+    # Structural analysis
+    # -----------------------------
+
+    def analyze_project_structure(self) -> Dict[str, Any]:
+        """Deep forensic analysis of project structure."""
+        structure: Dict[str, Any] = {
+            "files_by_extension": {},
+            "directories": [],
+            "total_size_mb": 0.0,
+            "file_count": 0,
+            "empty_files": [],
+            "large_files": [],
+            "git_status": self._get_git_status(),
+        }
+
+        total_size = 0
+        skip_dirs = {
+            "__pycache__",
+            ".git",
+            "node_modules",
+            "venv",
+            ".venv",
+            "env",
+            "dist",
+            "build",
+            ".next",
+        }
+
+        for root, dirs, files in os.walk(self.project_path):
+            # prune
+            dirs[:] = [d for d in dirs if d not in skip_dirs]
+            rel_dir = str(Path(root).relative_to(self.project_path))
+            if rel_dir not in structure["directories"]:
+                structure["directories"].append(rel_dir)
+
+            for file in files:
+                filepath = Path(root) / file
+                try:
+                    size = filepath.stat().st_size
+                    total_size += size
+                    ext = filepath.suffix.lower()
+                    structure["files_by_extension"][ext] = (
+                        structure["files_by_extension"].get(ext, 0) + 1
+                    )
+
+                    rel_path = str(filepath.relative_to(self.project_path))
+
+                    # Flag empty files (potential corruption)
+                    if size == 0 and ext not in {".gitkeep", ".keep", ".env"}:
+                        structure["empty_files"].append(rel_path)
+                        self._log_issue(
+                            f"Empty file detected: {rel_path}", severity="high"
+                        )
+
+                    # Flag suspiciously large files
+                    if size > 10 * 1024 * 1024:  # > 10MB
+                        structure["large_files"].append(
+                            {
+                                "path": rel_path,
+                                "size_mb": round(size / (1024 * 1024), 2),
+                            }
+                        )
+
+                except (OSError, PermissionError) as e:
+                    self._log_issue(
+                        f"Cannot access: {filepath} - {str(e)}", severity="medium"
+                    )
+
+        structure["total_size_mb"] = round(total_size / (1024 * 1024), 2)
+        structure["file_count"] = sum(structure["files_by_extension"].values())
+        return structure
+
+    def identify_core_files(self) -> Dict[str, List[str]]:
+        """
+        Identify core vs peripheral files with categorization,
+        tuned for this repo (TypeScript + PLpgSQL).
+        """
+        core_patterns = {
+            "config": [
+                "package.json",
+                "tsconfig.json",
+                ".env",
+                ".env.example",
+                "docker-compose.yml",
+                "Dockerfile",
+            ],
+            "database": [
+                "schema.sql",
+                "migration",
+                "migrations",
+                "prisma",
+                "drizzle",
+                "sql",
+            ],
+            "api": [
+                "server.ts",
+                "app.ts",
+                "main.ts",
+                "src/routes",
+                "routes/",
+                "api/",
+                "controllers/",
+            ],
+            "connectors": [
+                "connector",
+                "BaseConnector",
+                "TwitterConnector",
+                "PlatformManager",
+            ],
+            "frontend": [
+                "app/",
+                "pages/",
+                "components/",
+                "page.tsx",
+                "layout.tsx",
+                "next.config.js",
+                "next.config.ts",
+            ],
+            "docs": [
+                "README.md",
+                "API.md",
+                "ARCHITECTURE.md",
+            ],
+        }
+
+        found_files: Dict[str, List[str]] = {k: [] for k in core_patterns}
+
+        for category, patterns in core_patterns.items():
+            for pattern in patterns:
+                matches = list(self.project_path.rglob(f"*{pattern}*"))
+                for match in matches:
+                    if any(
+                        skip in str(match)
+                        for skip in ("node_modules", "dist", "build", "__pycache__")
+                    ):
+                        continue
+                    rel_path = str(match.relative_to(self.project_path))
+                    if rel_path not in found_files[category]:
+                        found_files[category].append(rel_path)
+
+        return found_files
+
+    # -----------------------------
+    # NEXUS/Centuries-specific checks
+    # -----------------------------
+
+    def _check_prompt_1(self) -> Dict[str, Any]:
+        """Check database schema completion (Prompt 1)."""
+        indicators = [
+            self.project_path / "001_initial_schema.sql",
+            self.project_path / "schema.sql",
+            self.project_path / "migrations",
+        ]
+        exists = any(p.exists() for p in indicators)
+        return {
+            "status": "complete" if exists else "missing",
+            "confidence": "high" if exists else "low",
+            "files_found": [
+                str(p.relative_to(self.project_path)) for p in indicators if p.exists()
+            ],
+        }
+
+    def _check_prompt_2(self) -> Dict[str, Any]:
+        """Check API Gateway completion (Prompt 2) — CRITICAL."""
+        indicators = [
+            "server.ts",
+            "app.ts",
+            "main.ts",
+            "routes/",
+            "api/",
+            "src/routes",
+        ]
+
+        found: List[str] = []
+        for indicator in indicators:
+            matches = list(self.project_path.rglob(f"*{indicator}*"))
+            found.extend(str(m.relative_to(self.project_path)) for m in matches[:3])
+
+        has_api = len(found) > 0
+
+        # auth endpoints
+        has_auth = False
+        for pattern in ("auth.ts", "auth.js", "authentication"):
+            if list(self.project_path.rglob(f"*{pattern}*")):
+                has_auth = True
+                break
+
+        if has_api and has_auth:
+            status = "complete"
+        elif has_api:
+            status = "partial"
+        else:
+            status = "missing"
+
+        return {
+            "status": status,
+            "confidence": (
+                "high" if status == "complete" else "medium" if status == "partial" else "low"
+            ),
+            "files_found": found[:10],
+            "has_auth": has_auth,
+            "critical": True,
+            "blocking": (
+                ["prompt_4_frontend", "prompt_5_deployment"]
+                if status != "complete"
+                else []
+            ),
+        }
+
+    def _check_prompt_3(self) -> Dict[str, Any]:
+        """Check platform connectors (Prompt 3)."""
+        indicators = ["BaseConnector", "TwitterConnector", "connector", "PlatformManager"]
+        found: List[str] = []
+
+        for indicator in indicators:
+            matches = list(self.project_path.rglob(f"*{indicator}*"))
+            found.extend(str(m.relative_to(self.project_path)) for m in matches[:2])
+
+        exists = len(found) > 0
+        return {
+            "status": "complete" if exists else "missing",
+            "confidence": "high" if exists else "low",
+            "files_found": found,
+        }
+
+    def _check_prompt_4(self) -> Dict[str, Any]:
+        """Check frontend completion (Prompt 4, Next.js/React)."""
+        indicators = ["app/", "pages/", "components/", "page.tsx", "layout.tsx"]
+        found: List[str] = []
+
+        for indicator in indicators:
+            matches = list(self.project_path.rglob(f"*{indicator}*"))
+            found.extend(str(m.relative_to(self.project_path)) for m in matches[:3])
+
+        has_next_config = any(
+            (self.project_path / name).exists()
+            for name in ("next.config.js", "next.config.ts")
+        )
+
+        if len(found) > 5 and has_next_config:
+            status = "complete"
+        elif len(found) > 0:
+            status = "partial"
+        else:
+            status = "missing"
+
+        return {
+            "status": status,
+            "confidence": "medium",
+            "files_found": found[:10],
+            "has_next_config": has_next_config,
+        }
+
+    def _check_prompt_5(self) -> Dict[str, Any]:
+        """Check deployment setup (Prompt 5)."""
+        indicators = [
+            self.project_path / "Dockerfile",
+            self.project_path / "docker-compose.yml",
+            self.project_path / ".github/workflows",
+            self.project_path / "amplify.yml",
+        ]
+
+        found = [
+            str(p.relative_to(self.project_path))
+            for p in indicators
+            if p.exists()
+        ]
+        exists = len(found) > 0
+
+        return {
+            "status": "complete" if exists else "missing",
+            "confidence": "high" if exists else "low",
+            "files_found": found,
+        }
+
+    def _identify_blocker(self, nexus_status: Dict[str, Dict[str, Any]]) -> str:
+        """Identify what's blocking progress across prompts."""
+        for prompt_name, details in nexus_status.items():
+            if details.get("critical") and details["status"] != "complete":
+                blocking = details.get("blocking", [])
+                suffix = f" - {', '.join(blocking)}" if blocking else ""
+                return f"{prompt_name.upper()}{suffix}"
+
+        for prompt_name, details in nexus_status.items():
+            if details["status"] != "complete":
+                return prompt_name.upper()
+
+        return "NONE - All prompts complete!"
+
+    def analyze_nexus_completion(self) -> Dict[str, Any]:
+        """Run all NEXUS/Centuries prompt checks."""
+        nexus_status = {
+            "prompt_1_database": self._check_prompt_1(),
+            "prompt_2_api": self._check_prompt_2(),
+            "prompt_3_connectors": self._check_prompt_3(),
+            "prompt_4_frontend": self._check_prompt_4(),
+            "prompt_5_deployment": self._check_prompt_5(),
+        }
+
+        completed = sum(1 for v in nexus_status.values() if v["status"] == "complete")
+        total = len(nexus_status)
+
+        return {
+            "prompts": nexus_status,
+            "completion_rate": f"{completed}/{total}",
+            "completion_percentage": round((completed / total) * 100, 1)
+            if total
+            else 0.0,
+            "next_critical_step": self._identify_blocker(nexus_status),
+        }
+
+    # -----------------------------
+    # Dependency + health analysis
+    # -----------------------------
+
+    def generate_dependency_map(self) -> Dict[str, Any]:
+        """Parse package.json and requirements.txt."""
+        dep_map: Dict[str, Any] = {
+            "nodejs": {
+                "dependencies": [],
+                "devDependencies": [],
+                "has_package_json": False,
+            },
+            "python": {"dependencies": [], "has_requirements": False},
+        }
+
+        # Node.js
+        package_json = self.project_path / "package.json"
+        if package_json.exists():
+            try:
+                with package_json.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                dep_map["nodejs"]["dependencies"] = list(
+                    data.get("dependencies", {}).keys()
+                )
+                dep_map["nodejs"]["devDependencies"] = list(
+                    data.get("devDependencies", {}).keys()
+                )
+                dep_map["nodejs"]["has_package_json"] = True
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                self._log_issue(f"Cannot parse package.json: {str(e)}", "high")
+
+        # Python
+        requirements = self.project_path / "requirements.txt"
+        if requirements.exists():
+            try:
+                with requirements.open("r", encoding="utf-8") as f:
+                    deps = [
+                        line.split("==")[0].split(">=")[0].strip()
+                        for line in f
+                        if line.strip() and not line.startswith("#")
+                    ]
+                dep_map["python"]["dependencies"] = deps
+                dep_map["python"]["has_requirements"] = True
+            except UnicodeDecodeError as e:
+                self._log_issue(f"Cannot parse requirements.txt: {str(e)}", "medium")
+
+        return dep_map
+
+    def assess_health_score(self) -> Dict[str, Any]:
+        """Calculate high‑level health scores."""
+        checks = {
+            "has_git": (self.project_path / ".git").exists(),
+            "has_package_json": (self.project_path / "package.json").exists(),
+            "has_readme": (self.project_path / "README.md").exists(),
+            "has_docker": (self.project_path / "Dockerfile").exists()
+            or (self.project_path / "docker-compose.yml").exists(),
+            "has_env_example": (self.project_path / ".env.example").exists(),
+            "has_tests": bool(
+                list(self.project_path.rglob("*.test.*"))
+                or list(self.project_path.rglob("*.spec.*"))
+            ),
+            "has_typescript": (self.project_path / "tsconfig.json").exists(),
+            "has_ci": (self.project_path / ".github/workflows").exists(),
+        }
+
+        scores = {
+            "infrastructure": 0,
+            "documentation": 0,
+            "quality_assurance": 0,
+            "deployment_readiness": 0,
+            "overall": 0,
+        }
+
+        infra_score = (
+            sum(
+                [
+                    checks["has_git"],
+                    checks["has_package_json"],
+                    checks["has_typescript"],
+                ]
+            )
+            / 3
+            * 100
+        )
+        scores["infrastructure"] = round(infra_score)
+
+        doc_score = (
+            sum([checks["has_readme"], checks["has_env_example"]]) / 2 * 100
+        )
+        scores["documentation"] = round(doc_score)
+
+        qa_score = (
+            sum([checks["has_tests"], checks["has_typescript"]]) / 2 * 100
+        )
+        scores["quality_assurance"] = round(qa_score)
+
+        deploy_score = (
+            sum(
+                [
+                    checks["has_docker"],
+                    checks["has_ci"],
+                    checks["has_env_example"],
+                ]
+            )
+            / 3
+            * 100
+        )
+        scores["deployment_readiness"] = round(deploy_score)
+
+        weights = {
+            "infrastructure": 0.3,
+            "documentation": 0.2,
+            "quality_assurance": 0.25,
+            "deployment_readiness": 0.25,
+        }
+        scores["overall"] = round(sum(scores[k] * weights[k] for k in weights))
+
+        return {"scores": scores, "checks": checks}
+
+    # -----------------------------
+    # Prompt generation for Cursor
+    # -----------------------------
+
+    def create_cursor_prompt(self) -> str:
+        """Generate the battle-ready Cursor prompt from analysis."""
+        nexus = self.results["nexus_specific"]
+        health = self.results["analysis"]["health_score"]["scores"]
+        structure = self.results["analysis"]["structure"]
+
+        prompt_lines: List[str] = []
+
+        prompt_lines.append("# 🎯 NEXUS/CENTURIES PROJECT RECOVERY — CURSOR BATTLE PLAN\n")
+        prompt_lines.append(
+            f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        prompt_lines.append(f"**Project Health:** {health['overall']}/100")
+        prompt_lines.append(
+            f"**Completion:** {nexus['completion_rate']} prompts ({nexus['completion_percentage']}%)"
+        )
+        prompt_lines.append(f"**Critical Blocker:** {nexus['next_critical_step']}\n")
+        prompt_lines.append("---\n")
+
+        prompt_lines.append("## 📊 FORENSIC ANALYSIS COMPLETE\n")
+        prompt_lines.append("### Project Structure")
+        prompt_lines.append(f"- **Total Files:** {structure['file_count']}")
+        prompt_lines.append(f"- **Project Size:** {structure['total_size_mb']} MB")
+        prompt_lines.append(
+            f"- **Empty Files (Potential Corruption):** {len(structure.get('empty_files', []))}"
+        )
+        prompt_lines.append(
+            f"- **Git Repository:** "
+            f"{'✅ Yes' if structure['git_status'].get('has_git') else '❌ No'}"
+        )
+
+        if structure["git_status"].get("has_git"):
+            prompt_lines.append(
+                f"- **Current Branch:** {structure['git_status'].get('current_branch', 'unknown')}"
+            )
+            prompt_lines.append(
+                f"- **Uncommitted Changes:** "
+                f"{'⚠️ Yes' if structure['git_status'].get('uncommitted_changes') else '✅ No'}"
+            )
+
+        prompt_lines.append("\n### NEXUS/Centuries Component Status")
+        p = nexus["prompts"]
+
+        prompt_lines.append(
+            f"**Prompt 1 - Database Schema:** {p['prompt_1_database']['status'].upper()}"
+        )
+        api_status = p["prompt_2_api"]["status"].upper()
+        api_flag = (
+            " ⚠️ CRITICAL BLOCKER"
+            if p["prompt_2_api"]["status"] != "complete"
+            else ""
+        )
+        prompt_lines.append(f"**Prompt 2 - API Gateway:** {api_status}{api_flag}")
+        prompt_lines.append(
+            f"**Prompt 3 - Platform Connectors:** {p['prompt_3_connectors']['status'].upper()}"
+        )
+        prompt_lines.append(
+            f"**Prompt 4 - Frontend:** {p['prompt_4_frontend']['status'].upper()}"
+        )
+        prompt_lines.append(
+            f"**Prompt 5 - Deployment:** {p['prompt_5_deployment']['status'].upper()}\n"
+        )
+
+        prompt_lines.append("### Dependencies")
+        deps = self.results["analysis"]["dependencies"]
+        if deps["nodejs"]["has_package_json"]:
+            prompt_lines.append(
+                f"**Node.js Packages:** {len(deps['nodejs']['dependencies'])} dependencies, "
+                f"{len(deps['nodejs']['devDependencies'])} dev dependencies"
+            )
+        if deps["python"]["has_requirements"]:
+            prompt_lines.append(
+                f"**Python Packages:** {len(deps['python']['dependencies'])} dependencies"
+            )
+
+        issues = self.results["analysis"].get("issues", [])
+        if issues:
+            prompt_lines.append(f"\n### ⚠️ Issues Detected: {len(issues)}")
+            for issue in issues[:5]:
+                prompt_lines.append(
+                    f"- **[{issue['severity'].upper()}]** {issue['description']}"
+                )
+
+        # ---- PHASE 0: SAFETY & BACKUP ----
+        prompt_lines.append("\n---\n")
+        prompt_lines.append("## 🎯 YOUR MISSION (EXECUTE IN ORDER)\n")
+        prompt_lines.append("### PHASE 0: SAFETY & BACKUP")
+        prompt_lines.append("1. **CREATE BACKUP IMMEDIATELY**")
+        prompt_lines.append("```bash")
+        prompt_lines.append("# Create timestamped backup")
+        prompt_lines.append(
+            "tar -czf \"../nexus-backup-$(date +%Y%m%d_%H%M%S).tar.gz\" . \\"
+        )
+        prompt_lines.append("  --exclude='node_modules' \\")
+        prompt_lines.append("  --exclude='.git' \\")
+        prompt_lines.append("  --exclude='dist' \\")
+        prompt_lines.append("  --exclude='build'")
+        prompt_lines.append("```")
+        prompt_lines.append("\n2. **COMMIT CURRENT STATE**")
+        prompt_lines.append("```bash")
+        prompt_lines.append("git add -A")
+        prompt_lines.append("git commit -m \"Pre-recovery snapshot - $(date)\"")
+        prompt_lines.append("git tag \"pre-recovery-$(date +%Y%m%d_%H%M%S)\"")
+        prompt_lines.append("```")
+
+        # ---- PHASE 1: TRIAGE & CLEANUP ----
+        prompt_lines.append("\n### PHASE 1: TRIAGE & CLEANUP")
+
+        if structure.get("empty_files"):
+            prompt_lines.append(
+                f"\n**Action Required:** {len(structure['empty_files'])} empty files detected (potential corruption)"
+            )
+            prompt_lines.append("**Generate cleanup script:**")
+            prompt_lines.append("```bash")
+            prompt_lines.append("#!/bin/bash")
+            prompt_lines.append("# Safe cleanup with dry-run")
+            prompt_lines.append("DRY_RUN=true")
+            prompt_lines.append("")
+            prompt_lines.append("# Empty files to investigate:")
+            for f in structure["empty_files"][:10]:
+                prompt_lines.append(f"# - {f}")
+            prompt_lines.append("")
+            prompt_lines.append(
+                'echo "Run with DRY_RUN=false to actually delete after manual review"'
+            )
+            prompt_lines.append("```")
+
+        prompt_lines.append("\n**Verify dependency integrity:**")
+        prompt_lines.append("```bash")
+        prompt_lines.append("# Node.js")
+        prompt_lines.append("rm -rf node_modules package-lock.json pnpm-lock.yaml yarn.lock")
+        prompt_lines.append("npm install")
+        prompt_lines.append("")
+        prompt_lines.append("# If using TypeScript, verify compilation")
+        prompt_lines.append("npm run build")
+        prompt_lines.append("```")
+
+        # ---- PHASE 2: COMPLETE MISSING COMPONENTS ----
+        prompt_lines.append("\n### PHASE 2: COMPLETE MISSING COMPONENTS")
+        prompt_lines.append(f"**CRITICAL:** {nexus['next_critical_step']}\n")
+
+        prompt_2_status = p["prompt_2_api"]["status"]
+
+        if prompt_2_status != "complete":
+            prompt_lines.append("#### 🚨 BUILD PROMPT 2: API GATEWAY (Node.js/Fastify)\n")
+            prompt_lines.append(
+                "**This is BLOCKING all frontend and deployment work.**\n"
+            )
+            prompt_lines.append("**Requirements (ideal structure):**")
+            prompt_lines.append("```text")
+            prompt_lines.append("src/")
+            prompt_lines.append("├── server.ts              # Main entry point")
+            prompt_lines.append("├── app.ts                 # Fastify app setup")
+            prompt_lines.append("├── routes/")
+            prompt_lines.append("│   ├── auth.ts           # POST /auth/register, /auth/login, /auth/refresh")
+            prompt_lines.append(
+                "│   ├── feed.ts           # GET /feed/unified (with Redis caching)"
+            )
+            prompt_lines.append("│   ├── posts.ts          # CRUD for posts")
+            prompt_lines.append("│   └── platforms.ts      # OAuth flows")
+            prompt_lines.append("├── middleware/")
+            prompt_lines.append("│   ├── auth.ts           # JWT verification")
+            prompt_lines.append("│   ├── rateLimit.ts      # Rate limiting")
+            prompt_lines.append("│   └── validation.ts     # Zod schemas")
+            prompt_lines.append("├── lib/")
+            prompt_lines.append("│   ├── db.ts             # Neon Postgres client")
+            prompt_lines.append("│   └── redis.ts          # Upstash Redis client")
+            prompt_lines.append("└── types/")
+            prompt_lines.append("    └── index.ts          # Shared TypeScript types")
+            prompt_lines.append("```")
+            prompt_lines.append("\n**Integration points:**")
+            prompt_lines.append("- **Database:** Neon / Postgres (Prompt 1 schema)")
+            prompt_lines.append("- **Connectors:** Existing Prompt 3 platform connectors")
+            prompt_lines.append("- **Auth:** JWT + refresh tokens, bcrypt password hashing")
+            prompt_lines.append("- **Caching:** Redis for feeds (≈30s TTL, <50ms target)")
+            prompt_lines.append("- **Validation:** Zod schemas for all inputs")
+            prompt_lines.append("- **Tests:** Jest/Vitest with >80% coverage where practical\n")
+            prompt_lines.append("**Deliverables:**")
+            prompt_lines.append("1. API server that starts cleanly (`npm run dev`)")
+            prompt_lines.append("2. Functional auth endpoints")
+            prompt_lines.append("3. Feed endpoint backed by DB")
+            prompt_lines.append("4. Platform OAuth flows wired to connectors")
+            prompt_lines.append("5. Test suite passing")
+            prompt_lines.append("6. API documentation (OpenAPI/Swagger)\n")
+            prompt_lines.append("**Success criteria:**")
+            prompt_lines.append("- `npm run dev` starts without errors")
+            prompt_lines.append("- Full auth flow works end‑to‑end")
+            prompt_lines.append("- Unified feed endpoint returns data from DB")
+            prompt_lines.append("- Tests & typecheck pass")
+        else:
+            if p["prompt_4_frontend"]["status"] != "complete":
+                prompt_lines.append(
+                    "#### BUILD PROMPT 4: FRONTEND (Next.js + React)\n"
+                )
+                prompt_lines.append(
+                    "Your API is ready. Now build the frontend against it."
+                )
+                prompt_lines.append("\n**Requirements:**")
+                prompt_lines.append("- Next.js 13/14+ App Router")
+                prompt_lines.append("- TypeScript strict")
+                prompt_lines.append("- TailwindCSS")
+                prompt_lines.append("- React Query / TanStack Query")
+                prompt_lines.append("- Zustand or equivalent for state\n")
+                prompt_lines.append("**Key pages:**")
+                prompt_lines.append("- `/` – Landing / auth")
+                prompt_lines.append("- `/dashboard` – Unified feed")
+                prompt_lines.append("- `/compose` – Create post")
+                prompt_lines.append("- `/settings` – Platform connections\n")
+
+        # ---- PHASE 3 & 4 ----
+        prompt_lines.append("### PHASE 3: VALIDATION & TESTING")
+        prompt_lines.append("```bash")
+        prompt_lines.append("# 1. Run tests")
+        prompt_lines.append("npm test")
+        prompt_lines.append("")
+        prompt_lines.append("# 2. TypeScript build")
+        prompt_lines.append("npm run build")
+        prompt_lines.append("")
+        prompt_lines.append("# 3. Lint")
+        prompt_lines.append("npm run lint")
+        prompt_lines.append("")
+        prompt_lines.append("# 4. Local env")
+        prompt_lines.append("docker-compose up")
+        prompt_lines.append("# Then hit http://localhost:3000 and test auth + feed flow")
+        prompt_lines.append("```")
+
+        prompt_lines.append("\n### PHASE 4: DEPLOYMENT PREPARATION")
+        prompt_lines.append("**Set up deployment:**")
+        prompt_lines.append("1. Production Dockerfile (multi-stage)")
+        prompt_lines.append("2. GitHub Actions CI/CD")
+        prompt_lines.append("3. `.env.example` fully documented")
+        prompt_lines.append("4. `/health` and `/ready` endpoints")
+        prompt_lines.append("5. Basic monitoring/logging (at least structured logs)\n")
+
+        # ---- Philosophy ----
+        prompt_lines.append("---\n")
+        prompt_lines.append("## 🎭 WORKING PHILOSOPHY")
+        prompt_lines.append("**Conservative:** Build incrementally, validate each step.")
+        prompt_lines.append("**Transparent:** After EACH phase, report:")
+        prompt_lines.append("- ✅ Completed")
+        prompt_lines.append("- ⚠️ Issues / tradeoffs")
+        prompt_lines.append("- 🎯 Next steps\n")
+        prompt_lines.append("**Agentic:** You may:")
+        prompt_lines.append("- Propose and implement refactors")
+        prompt_lines.append("- Delete clearly corrupted/empty files (after listing)")
+        prompt_lines.append("- Adjust architecture where it improves robustness\n")
+        prompt_lines.append("**No handwaving:**")
+        prompt_lines.append("- Everything must run, compile, and be testable.")
+        prompt_lines.append("- Avoid pseudo‑code; provide real implementations.\n")
+
+        prompt_lines.append("---\n")
+        prompt_lines.append("## 🚀 START NOW")
+        prompt_lines.append("1. Analyze the codebase and summarize the current state.")
+        prompt_lines.append(
+            "2. Propose a cleanup plan (especially for empty or suspect files)."
+        )
+        prompt_lines.append("3. Execute Phase 1 (triage & cleanup).")
+        prompt_lines.append("4. Execute Phase 2 (build / finish missing components).")
+        prompt_lines.append("\nAfter each phase, STOP and report before proceeding.\n")
+        prompt_lines.append("GO. 🔥")
+
+        return "\n".join(prompt_lines)
+
+    # -----------------------------
+    # Writers
+    # -----------------------------
+
+    def _write_summary(self, path: Path) -> None:
+        """Write a concise executive summary."""
+        nexus = self.results["nexus_specific"]
+        health = self.results["analysis"]["health_score"]["scores"]
+        structure = self.results["analysis"]["structure"]
+
+        with path.open("w", encoding="utf-8") as f:
+            f.write("# NEXUS/CENTURIES PROJECT ANALYSIS\n\n")
+            f.write(
+                f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+            )
+
+            f.write("## HEALTH SCORE\n")
+            for key, value in health.items():
+                indicator = "🟢" if value >= 70 else "🟡" if value >= 40 else "🔴"
+                label = key.replace("_", " ").title()
+                f.write(f"- {indicator} **{label}:** {value}/100\n")
+
+            f.write("\n## PROJECT STATUS\n")
+            f.write(
+                f"- **Completion:** {nexus['completion_rate']} prompts "
+                f"({nexus['completion_percentage']}%)\n"
+            )
+            f.write(f"- **Critical Blocker:** {nexus['next_critical_step']}\n")
+            f.write(f"- **Total Files:** {structure['file_count']}\n")
+            f.write(f"- **Project Size:** {structure['total_size_mb']} MB\n")
+
+            if structure.get("empty_files"):
+                f.write("\n## ⚠️ ISSUES\n")
+                f.write(
+                    f"- **Empty files detected:** {len(structure['empty_files'])}\n"
+                )
+
+            f.write("\n## NEXT STEPS\n")
+            f.write("1. Review `CURSOR_PROMPT.md`\n")
+            f.write("2. Paste the entire file into Cursor\n")
+            f.write("3. Execute the phase-by-phase recovery plan\n")
+
+    def _write_cleanup_script(self, path: Path) -> None:
+        """Write a DRY-RUN cleanup script for empty files."""
+        empty_files = self.results["analysis"]["structure"].get("empty_files", [])
+
+        with path.open("w", encoding="utf-8") as f:
+            f.write("#!/bin/bash\n")
+            f.write("# NEXUS/CENTURIES Safe Cleanup Script\n")
+            f.write(f"# Generated: {datetime.now().isoformat()}\n\n")
+            f.write("set -e\n\n")
+            f.write("DRY_RUN=true  # Set to false to actually delete\n\n")
+            f.write("echo '🧹 NEXUS/CENTURIES Cleanup Script'\n")
+            f.write("echo '================================'\n\n")
+
+            if empty_files:
+                f.write(f"echo 'Found {len(empty_files)} empty files'\n\n")
+                f.write("EMPTY_FILES=(\n")
+                for file in empty_files:
+                    f.write(f'  \"{file}\"\n')
+                f.write(")\n\n")
+                f.write("for file in \"${EMPTY_FILES[@]}\"; do\n")
+                f.write("  if [[ \"$DRY_RUN\" == \"true\" ]]; then\n")
+                f.write("    echo \"[DRY-RUN] Would delete: $file\"\n")
+                f.write("  else\n")
+                f.write("    rm -f \"$file\"\n")
+                f.write("    echo \"Deleted: $file\"\n")
+                f.write("  fi\n")
+                f.write("done\n\n")
+
+            f.write("echo ''\n")
+            f.write("echo '✅ Cleanup complete'\n")
+            f.write("echo 'Set DRY_RUN=false to execute deletions'\n")
+
+        path.chmod(0o755)
+
+    # -----------------------------
+    # Orchestration
+    # -----------------------------
+
+    def run_full_analysis(self) -> Dict[str, Any]:
+        """Execute complete analysis pipeline."""
+        print(f"🔍 Analyzing NEXUS/Centuries project at: {self.project_path}")
+        print("=" * 70)
+
+        print("📊 Analyzing structure...")
+        self.results["analysis"]["structure"] = self.analyze_project_structure()
+
+        print("📦 Identifying core files...")
+        self.results["analysis"]["core_files"] = self.identify_core_files()
+
+        print("🔗 Mapping dependencies...")
+        self.results["analysis"]["dependencies"] = self.generate_dependency_map()
+
+        print("❤️  Calculating health score...")
+        self.results["analysis"]["health_score"] = self.assess_health_score()
+
+        print("🎯 Analyzing NEXUS completion status...")
+        self.results["nexus_specific"] = self.analyze_nexus_completion()
+
+        return self.results
+
+    def save_results(self, output_dir: str = "./nexus_analysis") -> None:
+        """Persist analysis artifacts to disk."""
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # JSON report
+        json_path = output_path / "analysis_report.json"
+        with json_path.open("w", encoding="utf-8") as f:
+            json.dump(self.results, f, indent=2, default=str)
+
+        # Cursor prompt
+        prompt_path = output_path / "CURSOR_PROMPT.md"
+        with prompt_path.open("w", encoding="utf-8") as f:
+            f.write(self.create_cursor_prompt())
+
+        # Executive summary
+        summary_path = output_path / "EXECUTIVE_SUMMARY.md"
+        self._write_summary(summary_path)
+
+        # Cleanup script (if needed)
+        if self.results["analysis"]["structure"].get("empty_files"):
+            script_path = output_path / "cleanup.sh"
+            self._write_cleanup_script(script_path)
+        else:
+            script_path = None
+
+        print(f"\n✅ Analysis complete! Results saved to: {output_path}")
+        print(f"   📄 Full report: {json_path.name}")
+        print(f"   🎯 Cursor prompt: {prompt_path.name}")
+        print(f"   📋 Summary: {summary_path.name}")
+        if script_path:
+            print(f"   🧹 Cleanup script: {script_path.name}")
+
+    def print_summary(self) -> None:
+        """Print concise summary to the terminal."""
+        nexus = self.results["nexus_specific"]
+        health = self.results["analysis"]["health_score"]["scores"]
+        structure = self.results["analysis"]["structure"]
+
+        print("\n" + "=" * 70)
+        print("📊 NEXUS/CENTURIES ANALYSIS SUMMARY")
+        print("=" * 70)
+
+        print(
+            f"\n🎯 COMPLETION: {nexus['completion_rate']} "
+            f"({nexus['completion_percentage']}%)"
+        )
+        print(f"❤️  HEALTH SCORE: {health['overall']}/100")
+        if health["overall"] >= 70:
+            print("   Status: 🟢 Good - Continue building")
+        elif health["overall"] >= 40:
+            print("   Status: 🟡 Fair - Cleanup recommended")
+        else:
+            print("   Status: 🔴 Poor - Significant work needed")
+
+        print(
+            f"\n📂 PROJECT SIZE: {structure['total_size_mb']} MB "
+            f"({structure['file_count']} files)"
+        )
+
+        if structure["git_status"].get("has_git"):
+            print(
+                f"🔀 GIT: Branch '{structure['git_status'].get('current_branch', 'unknown')}'"
+            )
+            if structure["git_status"].get("uncommitted_changes"):
+                print("   ⚠️  Uncommitted changes detected")
+
+        print(f"\n🚨 CRITICAL BLOCKER: {nexus['next_critical_step']}")
+
+        issues = self.results["analysis"].get("issues", [])
+        if issues:
+            print(f"\n⚠️  ISSUES FOUND: {len(issues)}")
+            for issue in issues[:3]:
+                desc = issue["description"]
+                print(f"   - [{issue['severity'].upper()}] {desc[:80]}...")
+
+        print("\n" + "=" * 70)
+        print("🎯 NEXT: Open nexus_analysis/CURSOR_PROMPT.md")
+        print("=" * 70)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="NEXUS/Centuries Project Analyzer - Cursor Recovery Tool"
+    )
+    parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Project directory path (default: current directory)",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        default="./nexus_analysis",
+        help="Output directory for reports (default: ./nexus_analysis)",
+    )
+    parser.add_argument(
+        "--skip-save",
+        action="store_true",
+        help="Skip saving files, just print summary",
+    )
+
+    args = parser.parse_args()
+
+    try:
+        analyzer = NexusProjectAnalyzer(args.path)
+        analyzer.run_full_analysis()
+        analyzer.print_summary()
+
+        if not args.skip_save:
+            analyzer.save_results(args.output)
+
+            print("\n🚀 READY FOR CURSOR:")
+            print(f"   1. Open '{args.output}/CURSOR_PROMPT.md'")
+            print("   2. Copy the ENTIRE file")
+            print("   3. Paste into Cursor")
+            print("   4. Let Cursor execute the recovery plan")
+            print("\n💡 The prompt is tailored to your NEXUS/Centuries project")
+            print("   using real forensic data from your codebase.")
+
+        return 0
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Analysis interrupted by user")
+        return 1
+    except Exception as e:
+        print(f"\n\n❌ ERROR: {str(e)}", file=sys.stderr)
+        import traceback
+
+        traceback.print_exc()
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+#!/usr/bin/env python3
+"""
+NEXUS/CENTURIES PROJECT ANALYZER
 Forensic analysis tool for Cursor-assisted recovery
 Tailored for Node.js/TypeScript full-stack projects
 """
