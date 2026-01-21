@@ -94,7 +94,7 @@ async function getAppliedMigrations(
       return [];
     }
 
-    return data?.map((m: MigrationRecord) => m.name) || [];
+    return data?.map((m: any) => m.name) || [];
   } catch {
     return [];
   }

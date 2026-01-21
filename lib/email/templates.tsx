@@ -86,7 +86,7 @@ export function PurchaseConfirmationEmail({
               Order #{orderNumber}
             </Text>
             <Text style={{ fontSize: '16px', lineHeight: '24px', marginBottom: '8px' }}>
-              You've purchased: <strong>{bookTitle}</strong>
+              You&apos;ve purchased: <strong>{bookTitle}</strong>
             </Text>
             <Text style={{ fontSize: '16px', lineHeight: '24px', marginBottom: '20px' }}>
               Amount: ${amount.toFixed(2)}
@@ -275,7 +275,7 @@ export function WeeklyDigestEmail({
               Hi {userName},
             </Text>
             <Text style={{ fontSize: '16px', lineHeight: '24px', marginBottom: '20px' }}>
-              Here's what's new this week on MANGU:
+              Here&apos;s what&apos;s new this week on MANGU:
             </Text>
 
             <Heading style={{ fontSize: '20px', marginTop: '24px', marginBottom: '12px' }}>
@@ -339,7 +339,7 @@ export function PasswordResetEmail({ resetLink }: { resetLink: string }) {
               You requested to reset your password. Click the button below to create a new password.
             </Text>
             <Text style={{ fontSize: '14px', lineHeight: '20px', marginBottom: '20px', color: '#999' }}>
-              This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.
+              This link will expire in 1 hour. If you didn&apos;t request this, you can safely ignore this email.
             </Text>
             <Button
               href={resetLink}

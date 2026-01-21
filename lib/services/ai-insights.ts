@@ -1,3 +1,4 @@
+
 // Note: This service should be called from server actions, not client components
 import type { BookStats, HeatmapData } from '@/types/analytics';
 
@@ -154,12 +155,12 @@ export class AIInsightsService {
     return new Date(worst.date).toLocaleDateString('en-US', { weekday: 'long' });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private identifyEngagementZones(heatmap: HeatmapData[]): any[] {
     const zones = [];
 
     for (let i = 0; i < heatmap.length; i += 3) {
       const chunk = heatmap.slice(i, i + 3);
-      const avgCompletion = chunk.reduce((sum, h) => sum + h.completions, 0) / chunk.length;
       const avgDropOff = chunk.reduce((sum, h) => sum + h.drop_off_rate, 0) / chunk.length;
 
       if (avgDropOff < 20) {

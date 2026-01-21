@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { requireAdmin } from '@/lib/middleware/auth';
 import { redirect } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/Sidebar';

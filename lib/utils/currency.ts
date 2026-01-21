@@ -1,3 +1,4 @@
+
 export type Currency = 'usd' | 'eur' | 'gbp' | 'cad' | 'aud';
 
 const currencySymbols: Record<Currency, string> = {
@@ -36,7 +37,7 @@ export function formatCurrencyCompact(amount: number, currency: Currency = 'usd'
   return formatCurrency(amount, currency);
 }
 
-export function parseCurrency(value: string, currency: Currency = 'usd'): number {
+export function parseCurrency(value: string, _currency: Currency = 'usd'): number {
   // Remove currency symbols and parse
   const cleaned = value.replace(/[^0-9.-]/g, '');
   const dollars = parseFloat(cleaned) || 0;

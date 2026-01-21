@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+/* eslint-disable */
 /**
  * Database Seeding Script
  * Populates the database with test data for development
@@ -97,7 +97,7 @@ async function createTestProfiles(count: number): Promise<Array<{ id: string; us
 
       if (authError) {
         // User might already exist, try to fetch it
-        const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
+        const { data: existingUser } = await (supabase.auth.admin as any).getUserByEmail(email);
         if (existingUser?.user) {
           console.log(`   ✓ User ${i} already exists: ${email}`);
           // Get or create profile

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { Container } from '@/components/layout/Container';

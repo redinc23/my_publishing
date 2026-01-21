@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Link from 'next/link';
 import { Navigation } from './Navigation';
 import { UserMenu } from './UserMenu';

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 

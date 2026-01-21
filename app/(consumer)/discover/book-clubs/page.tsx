@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

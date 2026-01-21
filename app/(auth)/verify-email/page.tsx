@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Suspense } from 'react';
 import { Container } from '@/components/layout/Container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

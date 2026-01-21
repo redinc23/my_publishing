@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { AnalyticsEventType } from '@/types/analytics';
@@ -6,7 +7,7 @@ interface TrackEvent {
   book_id: string;
   event_type: AnalyticsEventType;
   session_id: string;
-  event_data?: Record<string, any>;
+  event_data?: Record<string, unknown>;
   chapter_id?: string;
   chapter_number?: number;
   reading_progress?: number;
@@ -55,7 +56,7 @@ class AnalyticsTracker {
     }, 10000); // Flush every 10 seconds
   }
 
-  trackView(bookId: string, data?: Record<string, any>) {
+  trackView(bookId: string, data?: Record<string, unknown>) {
     this.queue.push({
       book_id: bookId,
       event_type: 'view',
@@ -84,7 +85,7 @@ class AnalyticsTracker {
     });
   }
 
-  trackPurchase(bookId: string, data?: Record<string, any>) {
+  trackPurchase(bookId: string, data?: Record<string, unknown>) {
     this.queue.push({
       book_id: bookId,
       event_type: 'purchase',
@@ -95,7 +96,7 @@ class AnalyticsTracker {
     this.flush(); // Immediate flush for purchases
   }
 
-  trackDownload(bookId: string, data?: Record<string, any>) {
+  trackDownload(bookId: string, data?: Record<string, unknown>) {
     this.queue.push({
       book_id: bookId,
       event_type: 'download',
@@ -149,7 +150,7 @@ class AnalyticsTracker {
 export const analyticsTracker = new AnalyticsTracker();
 
 // Convenience functions
-export const trackView = (bookId: string, data?: Record<string, any>) => {
+export const trackView = (bookId: string, data?: Record<string, unknown>) => {
   analyticsTracker.trackView(bookId, data);
 };
 
@@ -163,11 +164,11 @@ export const trackRead = (
   analyticsTracker.trackRead(bookId, chapterId, chapterNumber, progress, timeSpent);
 };
 
-export const trackPurchase = (bookId: string, data?: Record<string, any>) => {
+export const trackPurchase = (bookId: string, data?: Record<string, unknown>) => {
   analyticsTracker.trackPurchase(bookId, data);
 };
 
-export const trackDownload = (bookId: string, data?: Record<string, any>) => {
+export const trackDownload = (bookId: string, data?: Record<string, unknown>) => {
   analyticsTracker.trackDownload(bookId, data);
 };
 

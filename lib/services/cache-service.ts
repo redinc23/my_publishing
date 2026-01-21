@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -22,6 +23,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function setCache(key: string, value: any, ttl?: number): Promise<void> {
   const expires = new Date(Date.now() + (ttl || DEFAULT_TTL));
 
