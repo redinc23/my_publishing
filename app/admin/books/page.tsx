@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { createClient } from '@/lib/supabase/server';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';

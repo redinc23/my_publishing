@@ -1,3 +1,4 @@
+
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { LoginForm } from './LoginForm';
@@ -26,7 +27,7 @@ export default function LoginPage() {
           </Link>
         </div>
         <div className="mt-4 text-center text-sm text-secondary">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="text-primary hover:underline">
             Sign up
           </Link>

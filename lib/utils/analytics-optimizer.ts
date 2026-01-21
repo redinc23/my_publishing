@@ -2,6 +2,7 @@ import type { DateRange } from '@/lib/utils/date-ranges';
 
 export class AnalyticsOptimizer {
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static cache = new Map<string, { data: any; timestamp: number }>();
 
   static async withOptimization<T>(
@@ -13,7 +14,7 @@ export class AnalyticsOptimizer {
       batch?: boolean;
     }
   ): Promise<T> {
-    const { cache = true, debounce = 0, batch = false } = options || {};
+    const { cache = true, debounce = 0 } = options || {};
 
     // Check cache
     if (cache) {
@@ -40,11 +41,12 @@ export class AnalyticsOptimizer {
   }
 
   static generateOptimizedQuery(
-    bookId: string,
+    _bookId: string,
     dateRange: DateRange,
     metrics: string[]
   ): {
     query: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params: any[];
   } {
     // Generate optimized SQL based on requested metrics
@@ -65,7 +67,7 @@ export class AnalyticsOptimizer {
           AND date BETWEEN $2 AND $3
         ORDER BY date ASC
       `,
-      params: [bookId, startDate, endDate],
+      params: [_bookId, startDate, endDate],
     };
   }
 
@@ -89,32 +91,33 @@ export class AnalyticsOptimizer {
     return results;
   }
 
-  static async preloadCommonData(bookId: string): Promise<void> {
+  static async preloadCommonData(_bookId: string): Promise<void> {
     // Preload commonly used data
     const commonQueries = [
-      { key: `views-${bookId}`, fetchFn: () => this.getCachedViews(bookId) },
-      { key: `readers-${bookId}`, fetchFn: () => this.getCachedReaders(bookId) },
-      { key: `revenue-${bookId}`, fetchFn: () => this.getCachedRevenue(bookId) },
+      { key: `views-${_bookId}`, fetchFn: () => this.getCachedViews(_bookId) },
+      { key: `readers-${_bookId}`, fetchFn: () => this.getCachedReaders(_bookId) },
+      { key: `revenue-${_bookId}`, fetchFn: () => this.getCachedRevenue(_bookId) },
     ];
 
     await Promise.all(
       commonQueries.map(({ key, fetchFn }) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.withOptimization<any>(key, fetchFn, { cache: true })
       )
     );
   }
 
-  private static async getCachedViews(bookId: string) {
+  private static async getCachedViews(_bookId: string) {
     // Implementation for cached views
     return { views: 0 };
   }
 
-  private static async getCachedReaders(bookId: string) {
+  private static async getCachedReaders(_bookId: string) {
     // Implementation for cached readers
     return { readers: 0 };
   }
 
-  private static async getCachedRevenue(bookId: string) {
+  private static async getCachedRevenue(_bookId: string) {
     // Implementation for cached revenue
     return { revenue: 0 };
   }

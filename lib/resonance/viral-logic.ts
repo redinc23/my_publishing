@@ -1,5 +1,3 @@
-import type { ViralCoefficient } from '@/types';
-
 /**
  * Calculate viral coefficient for a book
  */

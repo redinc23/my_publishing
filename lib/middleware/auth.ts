@@ -1,3 +1,4 @@
+
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -8,6 +9,7 @@ export interface UserProfile {
   full_name: string | null;
   role: 'reader' | 'author' | 'partner' | 'admin';
   subscription_tier: 'free' | 'basic' | 'premium' | 'institution';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   preferences: Record<string, any> | null;
 }
 

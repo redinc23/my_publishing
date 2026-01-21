@@ -10,7 +10,7 @@ export async function getRecommendations(
 ): Promise<ResonanceRecommendation[]> {
   const supabase = await createClient();
 
-  let query = supabase
+  const query = supabase
     .from('books')
     .select('*')
     .eq('status', 'published')

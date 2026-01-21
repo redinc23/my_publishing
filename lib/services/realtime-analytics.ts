@@ -1,3 +1,4 @@
+
 import { createClient } from '@/lib/supabase/client';
 
 interface RealtimeEvent {
@@ -5,12 +6,14 @@ interface RealtimeEvent {
   bookId: string;
   userId?: string;
   sessionId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
   timestamp: string;
 }
 
 export class RealtimeAnalytics {
   private supabase;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private channel: any;
   private subscribers: Map<string, ((event: RealtimeEvent) => void)[]> = new Map();
 

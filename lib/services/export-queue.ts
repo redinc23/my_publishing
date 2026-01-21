@@ -1,9 +1,11 @@
+
 import { createClient } from '@/lib/supabase/server';
 
 interface ExportJob {
   id: string;
   type: 'analytics' | 'revenue' | 'readers';
   bookId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dateRange: any;
   format: 'csv' | 'json' | 'excel';
   status: 'pending' | 'processing' | 'completed' | 'failed';
@@ -33,6 +35,7 @@ export class ExportQueueService {
   async createJob(
     type: ExportJob['type'],
     bookId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dateRange: any,
     format: ExportJob['format'],
     userId: string
@@ -133,6 +136,7 @@ export class ExportQueueService {
         .eq('id', job.id);
 
       // Generate export based on type
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let result: any;
 
       switch (job.type) {
@@ -231,7 +235,7 @@ export class ExportQueueService {
     const fileName = `${job.type}-${job.bookId}-${Date.now()}.${job.format}`;
     const filePath = `exports/${job.userId}/${fileName}`;
 
-    const { data: uploadData, error } = await this.supabase.storage
+    const { error } = await this.supabase.storage
       .from('exports')
       .upload(filePath, new Blob([data]), {
         contentType: this.getContentType(job.format),

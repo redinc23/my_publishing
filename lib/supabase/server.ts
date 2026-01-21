@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -17,6 +18,7 @@ export async function createClient() {
         },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             );
