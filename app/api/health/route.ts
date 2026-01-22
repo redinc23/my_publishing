@@ -8,17 +8,19 @@
  * - Supabase auth service availability
  * 
  * Migration Order (apply in this sequence):
- * 1. 20260116000000_initial_schema.sql - Creates profiles table and core schema
- * 2. 20260116000000_create_books_table.sql - Books and content tables
- * 3. 20260117000000_analytics_events.sql - Analytics tracking
- * 4. 20260117000000_storage_policies.sql - Storage bucket policies
- * 5. 20260117000001_analytics_sessions.sql - Session tracking
- * 6. 20260117000002_book_stats_materialized.sql - Materialized views
- * 7. 20260117000003_revenue_tracking.sql - Revenue tables
- * 8. 20260117000004_author_payouts.sql - Payout system
- * 9. 20260117000005_book_pricing.sql - Pricing logic
- * 10. 20260118000000_critical_fixes.sql - Bug fixes
- * 11. 20260120000006_performance_optimizations.sql - Performance indexes
+ * 1. 20260116000000_initial_schema.sql - Core schema (profiles, authors, books)
+ * 2. 20260117000000_analytics_events.sql - Analytics tracking
+ * 3. 20260117000000_storage_policies.sql - Storage bucket policies
+ * 4. 20260117000001_analytics_sessions.sql - Session tracking
+ * 5. 20260117000002_book_stats_materialized.sql - Materialized views
+ * 6. 20260117000003_revenue_tracking.sql - Revenue tables
+ * 7. 20260117000004_author_payouts.sql - Payout system
+ * 8. 20260117000005_book_pricing.sql - Pricing logic
+ * 9. 20260118000000_critical_fixes.sql - Bug fixes
+ * 10. 20260120000006_performance_optimizations.sql - Performance indexes
+ * 11. 20260121000000_profile_trigger.sql - Profile trigger
+ * 12. 20260122000000_social_features.sql - Reviews and social tables
+ * 13. 20260123000000_author_policy_fixes.sql - Author RLS fixes
  */
 
 import { NextResponse } from 'next/server';
