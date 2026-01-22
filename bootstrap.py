@@ -461,15 +461,9 @@ def format_requirement_with_new_version(req: Requirement, new_version: str) -> s
     if req.extras:
         base += "[" + ",".join(sorted(req.extras)) + "]"
 
-    op = None
-    for spec in req.specifier:
-        if spec.operator in ("==", "~=", ">=", ">", "<=", "<"):
-            op = spec.operator
-            break
-    if op is None:
-        op = "=="
-
-    out = f"{base}{op}{new_version}"
+    # Use == to pin exact version, avoiding issues with compound specifiers
+    # (e.g., >=2.0,<3.0 would lose the upper bound if we only preserved the first operator)
+    out = f"{base}=={new_version}"
     if req.marker:
         out += f"; {req.marker}"
     return out
@@ -564,10 +558,31 @@ def _replace_pep621_array(text: str, key: str, new_list: list[str]) -> str:
 def _replace_optional_dep_group(text: str, group: str, new_list: list[str]) -> str:
     # Replace within [project.optional-dependencies] table:
     # group = ["x", "y"]  or group = [ ... ]
-    pattern = re.compile(rf"(?ms)^\\s*{re.escape(group)}\\s*=\\s*\\[(.*?)\\]\\s*$")
+    # Match from [project.optional-dependencies] section up to the target group, ensuring we're within that section
+    section_pattern = r"\[project\.optional-dependencies\]"
+    group_pattern = rf"^\\s*{re.escape(group)}\\s*=\\s*\\[(.*?)\\]\\s*$"
+    
+    # Find the section start
+    section_match = re.search(section_pattern, text)
+    if not section_match:
+        return text  # Section doesn't exist, nothing to replace
+    
+    # Find the next section or end of file
+    section_start = section_match.end()
+    next_section_match = re.search(r"^\\[", text[section_start:], re.MULTILINE)
+    section_end = section_start + next_section_match.start() if next_section_match else len(text)
+    
+    # Extract the section content
+    section_content = text[section_start:section_end]
+    
+    # Replace the group within this section only
+    pattern = re.compile(group_pattern, re.MULTILINE | re.DOTALL)
     repl_items = ",\\n".join([f'  "{s}"' for s in new_list])
     repl = f"{group} = [\\n{repl_items}\\n]"
-    return pattern.sub(repl, text, count=1)
+    new_section_content = pattern.sub(repl, section_content, count=1)
+    
+    # Reconstruct the file
+    return text[:section_start] + new_section_content + text[section_end:]
 
 
 def update_dependency_in_pyproject(
@@ -825,7 +840,10 @@ def _select_latest_compatible(
     same_major = [
         v for v in stable if v > cur and v.release and v.release[0] == cur_major
     ]
-    return str(same_major[0] if same_major else stable[0])
+    if same_major:
+        return str(same_major[0])
+    # No same-major upgrade available; return current version to respect policy
+    return ctx.current_version
 
 
 def plan(
@@ -984,15 +1002,14 @@ def run(repo_root: str, package_name: str, requested_version: str | None) -> dic
     start_ts = _now()
 
     db = RunDB(ctx.runs_db)
-    db.create_run(
-        run_id=run_id,
-        ctx=ctx,
-        policy={"allow_major_bump": cfg.allow_major_bump, "allowed_licenses": cfg.allowed_licenses},
-        ci_profile={"commands": cfg.ci_commands},
-        start_ts=start_ts,
-    )
-
     try:
+        db.create_run(
+            run_id=run_id,
+            ctx=ctx,
+            policy={"allow_major_bump": cfg.allow_major_bump, "allowed_licenses": cfg.allowed_licenses},
+            ci_profile={"commands": cfg.ci_commands},
+            start_ts=start_ts,
+        )
         scan(ctx)
         plan_obj = plan(ctx, cfg, db, run_id, trace)
         apply(ctx, db, run_id, trace)
