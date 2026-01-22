@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 interface AnalyticsPageProps {
   params: {
@@ -16,6 +17,9 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
     redirect('/login');
   }
 
+  const { authorId, role } = await getAuthorContext(supabase, user.id);
+  const isAdmin = role === 'admin';
+
   // Verify book ownership
   const { data: book } = await supabase
     .from('books')
@@ -23,7 +27,7 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
     .eq('id', params.id)
     .single();
 
-  if (!book || book.author_id !== user.id) {
+  if (!book || (!isAdmin && book.author_id !== authorId)) {
     redirect('/dashboard');
   }
 

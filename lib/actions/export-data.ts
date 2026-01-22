@@ -15,6 +15,7 @@ import {
   getFirstError 
 } from '@/lib/validations/schemas';
 import type { ExportResult, ExportDateRange } from '@/types/export';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 /**
  * Export analytics data for a book
@@ -32,6 +33,9 @@ export async function exportAnalyticsData(
     if (authError || !user) {
       return { success: false, error: 'Unauthorized - please sign in' };
     }
+
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
 
     // Validate book ID
     const bookIdResult = validateSafe(BookIdSchema, bookId);
@@ -62,17 +66,8 @@ export async function exportAnalyticsData(
       return { success: false, error: 'Book not found' };
     }
 
-    if (book.author_id !== user.id) {
-      // Check if admin
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profile?.role !== 'admin') {
-        return { success: false, error: 'Unauthorized - you do not own this book' };
-      }
+    if (!isAdmin && book.author_id !== authorId) {
+      return { success: false, error: 'Unauthorized - you do not own this book' };
     }
 
     // Build query
@@ -151,6 +146,11 @@ export async function exportRevenueData(
       return { success: false, error: 'Unauthorized' };
     }
 
+    const { authorId } = await getAuthorContext(supabase, user.id);
+    if (!authorId) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     // Validate inputs
     const dateRangeResult = validateSafe(DateRangeSchema, dateRange || {});
     if (!dateRangeResult.success) {
@@ -174,7 +174,7 @@ export async function exportRevenueData(
         created_at,
         books!inner(title, author_id)
       `)
-      .eq('books.author_id', user.id)
+      .eq('books.author_id', authorId)
       .eq('status', 'completed')
       .order('created_at', { ascending: false });
 
@@ -251,6 +251,11 @@ export async function exportReaderData(
       return { success: false, error: 'Unauthorized' };
     }
 
+    const { authorId } = await getAuthorContext(supabase, user.id);
+    if (!authorId) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     // Validate inputs
     const dateRangeResult = validateSafe(DateRangeSchema, dateRange || {});
     if (!dateRangeResult.success) {
@@ -261,7 +266,7 @@ export async function exportReaderData(
     let query = supabase
       .from('analytics_events')
       .select('user_id, book_id, created_at, books!inner(author_id)')
-      .eq('books.author_id', user.id)
+      .eq('books.author_id', authorId)
       .not('user_id', 'is', null);
 
     if (bookId) {

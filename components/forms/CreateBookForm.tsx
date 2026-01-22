@@ -27,6 +27,7 @@ export function CreateBookForm({ onSuccess, onCancel }: CreateBookFormProps) {
     resolver: zodResolver(CreateBookSchema),
     defaultValues: {
       language: 'en',
+        genre: '',
     },
   });
 
@@ -59,6 +60,19 @@ export function CreateBookForm({ onSuccess, onCancel }: CreateBookFormProps) {
           />
           {errors.title && (
             <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="genre">Genre *</Label>
+          <Input
+            id="genre"
+            {...register('genre')}
+            placeholder="Enter genre"
+            className="mt-1"
+          />
+          {errors.genre && (
+            <p className="mt-1 text-sm text-red-500">{errors.genre.message}</p>
           )}
         </div>
 

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Book, Manuscript } from '@/types';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 async function getAuthorData() {
   const supabase = await createClient();
@@ -17,20 +18,20 @@ async function getAuthorData() {
     redirect('/login');
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('user_id', user.id)
-    .single();
+  const { role, authorId } = await getAuthorContext(supabase, user.id);
 
-  if (profile?.role !== 'author' && profile?.role !== 'admin') {
+  if (!role || (role !== 'author' && role !== 'admin')) {
     redirect('/');
+  }
+
+  if (!authorId) {
+    return { author: null, books: [], manuscripts: [], earnings: 0 };
   }
 
   const { data: author } = await supabase
     .from('authors')
     .select('*')
-    .eq('profile_id', user.id)
+    .eq('id', authorId)
     .single();
 
   if (!author) {

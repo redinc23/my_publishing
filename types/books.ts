@@ -61,6 +61,7 @@ export interface CreateBookInput {
   title: string;
   subtitle?: string;
   description?: string;
+  genre: string;
   language?: string;
   isbn?: string;
   categories?: string[];
@@ -111,6 +112,7 @@ export const CreateBookSchema = z.object({
   title: z.string().min(1).max(200),
   subtitle: z.string().max(200).optional(),
   description: z.string().max(5000).optional(),
+  genre: z.string().min(1).max(100),
   language: LanguageSchema.default('en'),
   isbn: ISBNSchema.optional(),
   categories: z.array(z.string()).max(10).optional(),
