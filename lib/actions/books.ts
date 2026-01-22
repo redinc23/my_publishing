@@ -90,6 +90,15 @@ export async function createBook(input: CreateBookInput) {
       return { success: false, error: 'Author profile not found', code: 'AUTHOR_NOT_FOUND' };
     }
 
+    // Get author name for denormalized storage
+    const { data: author } = await supabase
+      .from('authors')
+      .select('pen_name')
+      .eq('id', authorId)
+      .single();
+    
+    const authorName = author?.pen_name || user.user_metadata?.full_name || user.email || 'Anonymous';
+
     // Generate slug from title
     const slug = validated.title
       .toLowerCase()
@@ -117,12 +126,15 @@ export async function createBook(input: CreateBookInput) {
       .from('books')
       .insert({
         title: validated.title,
+        subtitle: validated.subtitle,
         description: validated.description,
         isbn: validated.isbn,
         genre: validated.genre,
+        language: validated.language,
         cover_url: validated.cover_url,
         slug,
         author_id: authorId,
+        author_name: authorName,
       })
       .select()
       .single();
@@ -130,11 +142,12 @@ export async function createBook(input: CreateBookInput) {
     if (error) throw error;
 
     if (validated.epub_url || validated.manuscript_url) {
-      await supabase.from('book_content').insert({
+      const { error: contentError } = await supabase.from('book_content').insert({
         book_id: data.id,
         epub_url: validated.epub_url || null,
         pdf_url: validated.manuscript_url || null,
       });
+      if (contentError) throw contentError;
     }
 
     // Log audit
@@ -224,14 +237,18 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
     };
 
     if (typeof validated.title !== 'undefined') updatePayload.title = validated.title;
+    if (typeof validated.subtitle !== 'undefined') updatePayload.subtitle = validated.subtitle;
     if (typeof validated.description !== 'undefined') updatePayload.description = validated.description;
     if (typeof validated.isbn !== 'undefined') updatePayload.isbn = validated.isbn;
     if (typeof validated.genre !== 'undefined') updatePayload.genre = validated.genre;
+    if (typeof validated.language !== 'undefined') updatePayload.language = validated.language;
     if (typeof validated.cover_url !== 'undefined') updatePayload.cover_url = validated.cover_url;
     if (typeof validated.status !== 'undefined') updatePayload.status = validated.status;
     if (typeof validated.page_count !== 'undefined') updatePayload.page_count = validated.page_count;
     if (typeof validated.word_count !== 'undefined') updatePayload.word_count = validated.word_count;
     if (typeof validated.slug !== 'undefined') updatePayload.slug = validated.slug;
+    if (typeof validated.seo_title !== 'undefined') updatePayload.seo_title = validated.seo_title;
+    if (typeof validated.seo_description !== 'undefined') updatePayload.seo_description = validated.seo_description;
 
     const { data, error } = await supabase
       .from('books')
@@ -258,15 +275,17 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
         .single();
 
       if (existingContent?.id) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('book_content')
           .update(contentUpdates)
           .eq('id', existingContent.id);
+        if (updateError) throw updateError;
       } else {
-        await supabase.from('book_content').insert({
+        const { error: insertError } = await supabase.from('book_content').insert({
           book_id: bookId,
           ...contentUpdates,
         });
+        if (insertError) throw insertError;
       }
     }
 
@@ -325,7 +344,7 @@ export async function deleteBook(bookId: string, hardDelete: boolean = false) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 
-    if (hardDelete && user.user_metadata?.role !== 'admin') {
+    if (hardDelete && !isAdmin) {
       return { success: false, error: 'Admin required for hard delete', code: 'ADMIN_REQUIRED' };
     }
 
