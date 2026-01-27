@@ -59,7 +59,13 @@ jobs:
             echo "sha=${{ github.event.inputs.target_commit }}" >> $GITHUB_OUTPUT
           else
             # Get previous deployment from Vercel
-            PREVIOUS_SHA=$(git log --skip=1 -1 --format=%H)
+            DEPLOYMENTS=$(curl -s -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              "https://api.vercel.com/v6/deployments?projectId=${{ secrets.VERCEL_PROJECT_ID }}&limit=2")
+            PREVIOUS_SHA=$(echo "$DEPLOYMENTS" | jq -r '.deployments[1].meta.githubCommitSha // empty')
+            if [ -z "$PREVIOUS_SHA" ]; then
+              echo "Error: Could not retrieve previous deployment from Vercel"
+              exit 1
+            fi
             echo "sha=${PREVIOUS_SHA}" >> $GITHUB_OUTPUT
           fi
 
@@ -138,10 +144,12 @@ jobs:
           if [ "${{ github.event.inputs.environment }}" == "production" ]; then
             vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} \
               --scope=${{ secrets.VERCEL_ORG_ID }} \
+              --project=${{ secrets.VERCEL_PROJECT_ID }} \
               --yes
           else
             vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
               --scope=${{ secrets.VERCEL_ORG_ID }} \
+              --project=${{ secrets.VERCEL_PROJECT_ID }} \
               --yes
           fi
 
