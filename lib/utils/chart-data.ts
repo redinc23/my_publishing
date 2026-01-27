@@ -37,7 +37,8 @@ export function aggregateByPeriod(
       weekStart.setDate(date.getDate() - date.getDay());
       key = weekStart.toISOString().split('T')[0];
     } else if (period === 'month') {
-      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      // Use first day of month for consistent date formatting
+      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
     } else {
       key = point.date;
     }

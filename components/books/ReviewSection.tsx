@@ -38,24 +38,14 @@ export function ReviewSection({
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'highest' | 'lowest'>('helpful');
   const [filterSpoilers, setFilterSpoilers] = useState(true);
-  const [loading, setLoading] = useState(false);
   
   const hasUserReviewed = !!userReview;
 
-  const handleReviewSubmit = async () => {
+  const handleReviewSubmit = () => {
     setShowReviewForm(false);
-    // Optimistically refresh reviews without full page reload
-    try {
-      // Trigger a re-fetch of reviews - this would ideally be handled by the parent component
-      // or use SWR/React Query for automatic revalidation
-      setLoading(true);
-      // In a real implementation, you'd fetch fresh review data here
-      // For now, we'll just close the form - parent component should handle refetch
-    } catch (error) {
-      console.error('Error refreshing reviews:', error);
-    } finally {
-      setLoading(false);
-    }
+    // Note: Ideally, the parent component should handle review refetching
+    // using SWR/React Query or by passing a refresh callback prop.
+    // For now, we avoid the expensive full page reload.
   };
 
   const renderEmptyState = () => (

@@ -93,16 +93,14 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
     }
   };
 
-  // Memoize the filtered active readers to avoid recalculation on every render
-  const activeReaders = useMemo(() => {
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-    return readers.filter(r => new Date(r.last_activity_at) > fifteenMinutesAgo);
-  }, [readers]);
-
   // Memoize the display readers (first 5) to avoid slicing on every render
   const displayReaders = useMemo(() => {
-    return activeReaders.slice(0, 5);
-  }, [activeReaders]);
+    // Filter for active readers (last 15 minutes) and take first 5
+    const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000;
+    return readers
+      .filter(r => new Date(r.last_activity_at).getTime() > fifteenMinutesAgo)
+      .slice(0, 5);
+  }, [readers]);
 
   if (loading) {
     return (
@@ -145,7 +143,7 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {activeReaders.length > 0 ? (
+        {displayReaders.length > 0 ? (
           <div className="space-y-3">
             {displayReaders.map((reader) => (
               <div key={reader.session_id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
@@ -180,9 +178,9 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
               </div>
             ))}
 
-            {activeReaders.length > 5 && (
+            {displayReaders.length > 5 && (
               <p className="text-xs text-muted-foreground text-center pt-2">
-                And {activeReaders.length - 5} more readers...
+                And {displayReaders.length - 5} more readers...
               </p>
             )}
           </div>
