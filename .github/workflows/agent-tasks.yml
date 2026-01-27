@@ -1,5 +1,7 @@
 name: Agent Tasks (evidence)
 
+# This workflow runs on all PRs to demonstrate agent task functionality
+# and validate that the task runner infrastructure is working correctly.
 on:
   pull_request:
   workflow_dispatch:

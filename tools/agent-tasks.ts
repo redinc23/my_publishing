@@ -10,6 +10,15 @@
  * - Runs predefined tasks (commands + acceptance checklist).
  * - Blocks high-risk tasks unless explicitly allowed.
  * - Prints PR checklist + evidence hints every run.
+ * 
+ * Execution behavior:
+ * - Commands within a task run sequentially (one at a time).
+ * - Post-commands run after all task commands complete.
+ * - Commands are executed via shell (bash/sh).
+ * 
+ * Security:
+ * - Commands are read from agent-tasks.json configuration.
+ * - Ensure agent-tasks.json is protected and reviewed before modifications.
  */
 
 import { spawn } from "node:child_process";
@@ -45,10 +54,16 @@ function die(msg: string): never {
 
 function loadCatalog(): Catalog {
   if (!existsSync(CATALOG_PATH)) {
-    die(`Missing ${CATALOG_PATH}. Create it (see example in this response).`);
+    die(`Missing ${CATALOG_PATH}. See AGENT_TASKS.md for documentation or create agent-tasks.json with version, defaults.postCommands, and tasks array.`);
   }
   const raw = readFileSync(CATALOG_PATH, "utf8");
-  const json = JSON.parse(raw) as Catalog;
+  let json: Catalog;
+  
+  try {
+    json = JSON.parse(raw) as Catalog;
+  } catch (e) {
+    die(`Invalid JSON syntax in ${CATALOG_PATH}: ${e instanceof Error ? e.message : String(e)}`);
+  }
 
   if (!json.version || !json.defaults?.postCommands || !Array.isArray(json.tasks)) {
     die(`Invalid catalog schema in agent-tasks.json`);
@@ -57,6 +72,9 @@ function loadCatalog(): Catalog {
   for (const t of json.tasks) {
     if (!t.id || !t.title || !t.risk || !Array.isArray(t.commands) || !Array.isArray(t.acceptance)) {
       die(`Invalid task entry in agent-tasks.json: ${JSON.stringify(t)}`);
+    }
+    if (!["low", "medium", "high"].includes(t.risk)) {
+      die(`Invalid risk level "${t.risk}" for task ${t.id}. Must be: low, medium, or high`);
     }
   }
 
@@ -76,6 +94,10 @@ function runCmd(cmd: string, opts: { dryRun: boolean }): Promise<void> {
       shell: true,
       cwd: ROOT,
       env: process.env,
+    });
+
+    child.on("error", (error) => {
+      reject(new Error(`Failed to execute command: ${error.message}`));
     });
 
     child.on("exit", (code) => {

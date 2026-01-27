@@ -184,17 +184,17 @@
     },
     {
       "id": "deps:update",
-      "title": "Update dependencies (controlled)",
+      "title": "Check dependencies for updates",
       "risk": "high",
-      "description": "Dependency updates can break builds. Requires explicit approval.",
+      "description": "Lists outdated dependencies. Actual updates require manual review and execution. High-risk because dependency updates can break builds.",
       "commands": [
         "npm outdated || true"
       ],
       "acceptance": [
-        "Only intended packages updated",
-        "Release notes checked for breaking changes",
-        "All tests pass",
-        "Type checking passes"
+        "Outdated packages identified",
+        "Release notes reviewed for breaking changes",
+        "Updates applied manually after review",
+        "All tests pass after updates"
       ]
     },
     {
