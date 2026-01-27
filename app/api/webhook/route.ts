@@ -122,60 +122,94 @@ async function handleCheckoutCompleted(
     .eq('stripe_session_id', session.id)
     .single();
 
+  let orderId: string;
+  let orderData: OrderFromWebhook;
+
   if (existingOrder) {
-    console.log('[Webhook] Order already exists for session:', session.id);
-    return {
-      success: true,
-      event_id: session.id,
-      event_type: 'checkout.session.completed',
-      action_taken: 'Order already exists, skipped creation',
+    // Verify order has associated order items to prevent incomplete orders
+    const { data: existingOrderItems } = await supabaseAdmin
+      .from('order_items')
+      .select('id')
+      .eq('order_id', existingOrder.id)
+      .limit(1);
+
+    if (existingOrderItems && existingOrderItems.length > 0) {
+      console.log('[Webhook] Order already exists for session:', session.id);
+      return {
+        success: true,
+        event_id: session.id,
+        event_type: 'checkout.session.completed',
+        action_taken: 'Order already exists, skipped creation',
+      };
+    }
+    // Order exists but has no items - use existing order ID and create order items
+    console.log('[Webhook] Order exists but missing items, creating order items:', session.id);
+    orderId = existingOrder.id;
+    // Fetch order data for order items creation
+    const { data: orderDetails } = await supabaseAdmin
+      .from('orders')
+      .select('total_amount, currency')
+      .eq('id', existingOrder.id)
+      .single();
+    orderData = {
+      user_id: metadata.user_id,
+      book_id: metadata.book_id,
+      amount: orderDetails?.total_amount || (session.amount_total ? session.amount_total / 100 : 0),
+      currency: orderDetails?.currency || session.currency?.toUpperCase() || 'USD',
+      stripe_session_id: session.id,
+      stripe_payment_intent_id: session.payment_intent as string,
+      stripe_customer_id: session.customer as string | undefined,
+      status: 'completed',
+      metadata: metadata as unknown as Record<string, unknown>,
     };
-  }
-
-  // Create the order
-  const orderData: OrderFromWebhook = {
-    user_id: metadata.user_id,
-    book_id: metadata.book_id,
-    amount: session.amount_total ? session.amount_total / 100 : 0,
-    currency: session.currency?.toUpperCase() || 'USD',
-    stripe_session_id: session.id,
-    stripe_payment_intent_id: session.payment_intent as string,
-    stripe_customer_id: session.customer as string | undefined,
-    status: 'completed',
-    metadata: metadata as unknown as Record<string, unknown>,
-  };
-
-  const orderNumber = `ORD-${session.id}`;
-  const { data: order, error: orderError } = await supabaseAdmin
-    .from('orders')
-    .insert({
-      order_number: orderNumber,
-      user_id: orderData.user_id,
-      total_amount: orderData.amount,
-      status: orderData.status,
-      stripe_session_id: orderData.stripe_session_id,
-      stripe_payment_intent_id: orderData.stripe_payment_intent_id,
-      stripe_customer_id: orderData.stripe_customer_id,
-      currency: orderData.currency,
-      metadata: orderData.metadata || null,
-    })
-    .select('id')
-    .single();
-
-  if (orderError || !order) {
-    console.error('[Webhook] Failed to create order:', orderError);
-    return {
-      success: false,
-      error: `Failed to create order: ${orderError.message}`,
-      event_id: session.id,
-      event_type: 'checkout.session.completed',
-      should_retry: true,
+  } else {
+    // Create the order
+    orderData = {
+      user_id: metadata.user_id,
+      book_id: metadata.book_id,
+      amount: session.amount_total ? session.amount_total / 100 : 0,
+      currency: session.currency?.toUpperCase() || 'USD',
+      stripe_session_id: session.id,
+      stripe_payment_intent_id: session.payment_intent as string,
+      stripe_customer_id: session.customer as string | undefined,
+      status: 'completed',
+      metadata: metadata as unknown as Record<string, unknown>,
     };
+
+    const orderNumber = `ORD-${session.id}`;
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from('orders')
+      .insert({
+        order_number: orderNumber,
+        user_id: orderData.user_id,
+        total_amount: orderData.amount,
+        status: orderData.status,
+        stripe_session_id: orderData.stripe_session_id,
+        stripe_payment_intent_id: orderData.stripe_payment_intent_id,
+        stripe_customer_id: orderData.stripe_customer_id,
+        currency: orderData.currency,
+        metadata: orderData.metadata || null,
+      })
+      .select('id')
+      .single();
+
+    if (orderError || !order) {
+      console.error('[Webhook] Failed to create order:', orderError);
+      return {
+        success: false,
+        error: `Failed to create order: ${orderError?.message || 'Unknown error'}`,
+        event_id: session.id,
+        event_type: 'checkout.session.completed',
+        should_retry: true,
+      };
+    }
+
+    orderId = order.id;
   }
 
   const licenseKey = `LIC-${Date.now()}-${metadata.book_id}`;
   const { error: orderItemError } = await supabaseAdmin.from('order_items').insert({
-    order_id: order.id,
+    order_id: orderId,
     book_id: metadata.book_id,
     unit_price: orderData.amount,
     license_key: licenseKey,
