@@ -131,6 +131,19 @@ After running migrations, verify the setup by checking:
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Run TypeScript type checking
 
+## Local E2E Checks
+
+Use the local Supabase stack and Playwright to run end-to-end tests.
+
+```bash
+./scripts/e2e-local.sh
+```
+
+Notes:
+- Ensure the Supabase CLI and pnpm are installed.
+- The script reads `.env.test` if present; otherwise it uses mock values for Supabase and database settings.
+- `supabase stop` runs automatically via a trap, even if tests fail.
+
 ## Deployment
 
 ### AWS Amplify (Recommended) 🚀
