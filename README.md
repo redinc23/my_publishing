@@ -159,8 +159,41 @@ docker build -t mangu-platform .
 docker run -p 3000:3000 mangu-platform
 ```
 
+## 🤖 GitHub AI Agent Tasks
+
+This repository includes a safe-by-default task runner for GitHub AI agents. See [AGENT_TASKS.md](./AGENT_TASKS.md) for the complete task catalog.
+
+**Quick Start:**
+
+```bash
+# List all available tasks
+npx tsx tools/agent-tasks.ts list
+
+# Show details for a specific task
+npx tsx tools/agent-tasks.ts show quickstart:format
+
+# Run a task (dry-run mode)
+npx tsx tools/agent-tasks.ts run quality:type-check --dry-run
+
+# Run the full CI validation
+npx tsx tools/agent-tasks.ts run ci:lint-test
+```
+
+**Common Tasks:**
+
+- `quickstart:format` - Format code with Prettier and ESLint
+- `quality:type-check` - Run TypeScript type checking
+- `quality:lint` - Run ESLint and auto-fix issues
+- `test:unit` - Run Jest unit tests
+- `test:e2e` - Run Playwright E2E tests
+- `ci:lint-test` - Run full CI validation (type-check + lint + test)
+- `build:production` - Build production bundle
+
+High-risk tasks (like `deps:update`, `db:migrate`) require the `--allow-risky` flag.
+
 ## Documentation
 
+- **[Agent Tasks](./AGENT_TASKS.md)** - Complete task catalog for AI agents
 - **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
 - **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
 - **[AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md)** - 5-minute deployment guide
