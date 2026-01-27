@@ -27,6 +27,7 @@ async function getAuthorBooks(profileId: string): Promise<BookWithAuthor[]> {
     .from('books')
     .select('*, author:authors!inner(*, profile:profiles!inner(*))')
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .eq('author.profile_id', profileId)
     .order('published_at', { ascending: false });
 
