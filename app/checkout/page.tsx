@@ -5,6 +5,7 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/server';
+import { createCheckoutSession } from '@/lib/stripe/server';
 
 interface CheckoutSearchParams {
   book_id?: string;
@@ -62,26 +63,36 @@ async function startCheckout(formData: FormData) {
     redirect('/login');
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/checkout`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      book_id: bookId || undefined,
-      book_slug: bookSlug || undefined,
-      user_id: user.id,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Unable to start checkout.');
+  if (!bookId && !bookSlug) {
+    throw new Error('book_id or book_slug is required');
   }
 
-  const payload = (await response.json()) as { url?: string };
-  if (payload.url) {
-    redirect(payload.url);
+  // Get book details
+  let bookQuery = supabase.from('books').select('*');
+
+  if (bookId) {
+    bookQuery = bookQuery.eq('id', bookId);
+  } else if (bookSlug) {
+    bookQuery = bookQuery.eq('slug', bookSlug);
+  }
+
+  const { data: book, error: bookError } = await bookQuery.single();
+
+  if (bookError || !book) {
+    throw new Error('Book not found');
+  }
+
+  // Create Stripe checkout session directly
+  const session = await createCheckoutSession({
+    bookId: book.id,
+    bookSlug: book.slug,
+    userId: user.id,
+    bookTitle: book.title,
+    price: book.discount_price ?? book.price,
+  });
+
+  if (session.url) {
+    redirect(session.url);
   }
 
   throw new Error('Checkout session missing redirect URL.');
@@ -124,7 +135,7 @@ export default async function CheckoutPage({
                 <h2 className="text-2xl font-semibold">{book.title}</h2>
                 <p className="mt-1 text-secondary">by {authorName}</p>
                 <div className="mt-4 text-xl font-semibold">
-                  {book.discount_price ? (
+                  {book.discount_price != null ? (
                     <>
                       <span className="text-secondary line-through mr-2">${book.price}</span>
                       <span className="text-primary">${book.discount_price}</span>
