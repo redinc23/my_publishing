@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "defaults": {
+    "postCommands": [
+      "git status --porcelain",
+      "git diff --stat"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "quickstart:docs-typos",
+      "title": "Fix obvious typos in docs/comments",
+      "risk": "low",
+      "description": "Spelling/grammar fixes only. No behavioral code changes.",
+      "commands": [
+        "node -v",
+        "npm -v"
+      ],
+      "acceptance": [
+        "Only docs/comments changed",
+        "No public API behavior change",
+        "CI passes (if available)"
+      ]
+    },
+    {
+      "id": "quickstart:readme-badges",
+      "title": "Update README badges and metadata",
+      "risk": "low",
+      "description": "Refresh badges/metadata without changing build logic.",
+      "commands": [
+        "node -v",
+        "npm -v"
+      ],
+      "acceptance": [
+        "README badges reflect actual CI/test status",
+        "No config or runtime changes",
+        "Links are valid"
+      ]
+    },
+    {
+      "id": "quickstart:format",
+      "title": "Normalize formatting (Prettier/ESLint)",
+      "risk": "low",
+      "description": "Run formatters and safe auto-fixes.",
+      "commands": [
+        "npx prettier --write .",
+        "npm run lint -- --fix || true"
+      ],
+      "acceptance": [
+        "No functional changes intended",
+        "Formatter/linter output included in PR",
+        "CI passes (if available)"
+      ]
+    },
+    {
+      "id": "quality:lint",
+      "title": "Run ESLint and auto-fix issues",
+      "risk": "low",
+      "description": "Fix linting issues automatically where possible.",
+      "commands": [
+        "npm run lint -- --fix"
+      ],
+      "acceptance": [
+        "Linting passes",
+        "No runtime behavior changes",
+        "CI passes"
+      ]
+    },
+    {
+      "id": "quality:type-check",
+      "title": "Run TypeScript type checking",
+      "risk": "low",
+      "description": "Verify TypeScript types compile without errors.",
+      "commands": [
+        "npm run type-check"
+      ],
+      "acceptance": [
+        "Type checking passes",
+        "No type errors reported",
+        "CI passes"
+      ]
+    },
+    {
+      "id": "quality:unused",
+      "title": "Remove unused imports/variables",
+      "risk": "medium",
+      "description": "Remove unused symbols and keep behavior unchanged.",
+      "commands": [
+        "npm run lint -- --fix || true",
+        "npm test || true"
+      ],
+      "acceptance": [
+        "Build compiles",
+        "No runtime behavior change expected",
+        "CI passes (if available)"
+      ]
+    },
+    {
+      "id": "test:unit",
+      "title": "Run unit tests",
+      "risk": "low",
+      "description": "Execute Jest unit tests.",
+      "commands": [
+        "npm test"
+      ],
+      "acceptance": [
+        "All tests pass",
+        "No test failures",
+        "Coverage maintained or improved"
+      ]
+    },
+    {
+      "id": "test:e2e",
+      "title": "Run end-to-end tests",
+      "risk": "medium",
+      "description": "Execute Playwright E2E tests.",
+      "commands": [
+        "npm run test:e2e"
+      ],
+      "acceptance": [
+        "All E2E tests pass",
+        "No browser test failures",
+        "CI passes"
+      ]
+    },
+    {
+      "id": "ci:lint-test",
+      "title": "Run full CI validation",
+      "risk": "medium",
+      "description": "Run the complete CI pipeline locally (type-check, lint, test).",
+      "commands": [
+        "npm run type-check",
+        "npm run lint",
+        "npm test"
+      ],
+      "acceptance": [
+        "Type checking passes",
+        "Linting passes",
+        "All tests pass",
+        "CI passes on PR branch"
+      ]
+    },
+    {
+      "id": "build:production",
+      "title": "Build production bundle",
+      "risk": "medium",
+      "description": "Create optimized production build.",
+      "commands": [
+        "npm run build"
+      ],
+      "acceptance": [
+        "Build completes successfully",
+        "No build errors",
+        "Bundle size within acceptable limits"
+      ]
+    },
+    {
+      "id": "deps:outdated",
+      "title": "Check for outdated dependencies",
+      "risk": "low",
+      "description": "List outdated packages without making changes.",
+      "commands": [
+        "npm outdated || true"
+      ],
+      "acceptance": [
+        "Outdated packages identified",
+        "No changes made",
+        "Report included in PR description"
+      ]
+    },
+    {
+      "id": "deps:audit",
+      "title": "Security audit dependencies",
+      "risk": "low",
+      "description": "Check for known security vulnerabilities.",
+      "commands": [
+        "npm audit"
+      ],
+      "acceptance": [
+        "Security vulnerabilities identified (if any)",
+        "No changes made",
+        "Vulnerabilities documented"
+      ]
+    },
+    {
+      "id": "deps:update",
+      "title": "Update dependencies (controlled)",
+      "risk": "high",
+      "description": "Dependency updates can break builds. Requires explicit approval.",
+      "commands": [
+        "npm outdated || true"
+      ],
+      "acceptance": [
+        "Only intended packages updated",
+        "Release notes checked for breaking changes",
+        "All tests pass",
+        "Type checking passes"
+      ]
+    },
+    {
+      "id": "db:migrate",
+      "title": "Run database migrations",
+      "risk": "high",
+      "description": "Execute database migrations. Requires explicit approval.",
+      "commands": [
+        "npm run db:migrate"
+      ],
+      "acceptance": [
+        "Migrations execute successfully",
+        "Database schema updated correctly",
+        "Rollback plan documented",
+        "Tests pass with new schema"
+      ]
+    },
+    {
+      "id": "db:seed",
+      "title": "Seed database with test data",
+      "risk": "medium",
+      "description": "Populate database with seed data for development.",
+      "commands": [
+        "npm run db:seed"
+      ],
+      "acceptance": [
+        "Seed data inserted successfully",
+        "Database in expected state",
+        "No production data affected"
+      ]
+    },
+    {
+      "id": "security:verify-rls",
+      "title": "Verify Row Level Security policies",
+      "risk": "medium",
+      "description": "Check that RLS policies are correctly configured.",
+      "commands": [
+        "npm run verify-rls"
+      ],
+      "acceptance": [
+        "RLS policies verified",
+        "No security issues found",
+        "All checks pass"
+      ]
+    }
+  ]
+}
