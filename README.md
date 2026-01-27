@@ -654,6 +654,87 @@ Check workflow status:
 - In GitHub: **Actions** tab
 - Badge in README (add badge if desired)
 
+## CI/CD
+
+### GitHub Actions
+
+The repository includes automated CI/CD workflows in `.github/workflows/`:
+
+#### Continuous Integration (`ci.yml`)
+
+**Triggers**: Every push and pull request to `main` and `develop` branches
+
+**Jobs**:
+1. **Test Job** - Runs on every push/PR
+   - Install dependencies with npm ci
+   - Run TypeScript type checking (`npm run type-check`)
+   - Run ESLint linting (`npm run lint`)
+   - Run unit tests (`npm test`)
+
+2. **Deploy Job** - Runs only on pushes to `main` branch
+   - Deploys to Vercel production environment
+   - Requires Vercel secrets configured
+
+**Status**: View in GitHub Actions tab
+
+**Configuration**: See [.github/workflows/ci.yml](./.github/workflows/ci.yml)
+
+#### Admin Setup (`admin-setup.yml`)
+
+**Trigger**: Manual workflow dispatch
+
+**Purpose**: Manage environment variables across multiple repositories
+
+**Inputs**:
+- `dry_run` - Run in validation mode without making changes
+- `skip_validation` - Skip repository validation step
+
+**Configuration**: See [.github/workflows/admin-setup.yml](./.github/workflows/admin-setup.yml)
+
+### Required Secrets
+
+For CI/CD to work, configure these secrets in GitHub Settings → Secrets:
+
+#### For Vercel Deployment
+```
+VERCEL_TOKEN          # Vercel API token
+VERCEL_ORG_ID        # Organization ID
+VERCEL_PROJECT_ID    # Project ID
+```
+
+#### For Admin Setup Workflow
+```
+GH_PAT               # GitHub Personal Access Token
+```
+
+### Local CI Simulation
+
+Run the same checks locally before pushing:
+
+```bash
+# Run all CI checks
+npm ci                    # Clean install
+npm run type-check       # TypeScript
+npm run lint             # ESLint
+npm test                 # Unit tests
+
+# Or run all at once
+npm run type-check && npm run lint && npm test
+```
+
+### Pre-commit Hook (Optional)
+
+Add to `.git/hooks/pre-commit`:
+```bash
+#!/bin/sh
+npm run type-check && npm run lint
+```
+
+Make executable:
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
 ## Troubleshooting
 
 ### Common Issues
@@ -718,11 +799,13 @@ PORT=3001 npm run dev
 
 ## Documentation
 
-### Core Documentation
+### Essential Documentation
 
-- **[README.md](./README.md)** - This file - Setup and getting started
+- **[QUICKREF.md](./QUICKREF.md)** - 🚀 Quick reference for developers (start here!)
+- **[README.md](./README.md)** - This file - Complete setup guide
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture and technical details
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Development workflow and contribution guidelines
+- **[DEPENDENCIES.md](./DEPENDENCIES.md)** - Dependency management and known issues
 - **[QUICK_START.md](./QUICK_START.md)** - Quick start guide
 
 ### Deployment Guides
