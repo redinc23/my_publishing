@@ -34,6 +34,7 @@ async function getLibraryItems() {
       'id, order_number, created_at, items:order_items(id, unit_price, book:books(*, author:authors!inner(*, profile:profiles!inner(*))))'
     )
     .eq('user_id', user.id)
+    .eq('status', 'completed')
     .order('created_at', { ascending: false });
 
   return (data as OrderWithItems[]) || [];
