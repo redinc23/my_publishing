@@ -528,6 +528,7 @@ export async function incrementViewCount(bookId: string) {
 
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id || 'anonymous';
+    const viewUserId = user?.id ?? null;
 
     // Check if user has viewed this book recently (within 24 hours)
     const cacheKey = `view:${bookId}:${userId}`;
@@ -556,7 +557,7 @@ export async function incrementViewCount(bookId: string) {
         // Log view for analytics
         supabase.from('book_views').insert({
           book_id: bookId,
-          user_id: userId,
+          user_id: viewUserId,
           viewed_at: now.toISOString(),
           ip_address: null,
           user_agent: null
