@@ -26,16 +26,18 @@ AS $$
     b.id,
     b.title,
     NULL::TEXT AS subtitle,
-    a.pen_name AS author_name,
+    COALESCE(a.pen_name, 'Unknown Author') AS author_name,
     b.cover_url,
     b.average_rating,
     ts_rank(b.search_vector, websearch_to_tsquery('english', search_query)) AS relevance,
     ts_headline('english', b.description, websearch_to_tsquery('english', search_query)) AS match_snippet
   FROM books b
-  JOIN authors a ON b.author_id = a.id
+  LEFT JOIN authors a ON b.author_id = a.id
   WHERE b.search_vector @@ websearch_to_tsquery('english', search_query)
     AND b.status = 'published'
     AND b.visibility = 'public'
+    AND b.deleted_at IS NULL
+    AND (language IS NULL OR b.language = language)
     AND ("minRating" IS NULL OR b.average_rating >= "minRating")
     AND (category IS NULL OR b.genre = category OR category = ANY(b.subgenres))
     AND (tag IS NULL OR tag = ANY(b.subgenres))
