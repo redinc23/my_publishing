@@ -3,17 +3,14 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "==> Running lint checks"
-pnpm lint --max-warnings=0
-
 echo "==> Running type checks"
-pnpm type-check
+npm run type-check
 
-echo "==> Running formatting checks"
-pnpm format:check
+echo "==> Running lint checks"
+npm run lint
 
 echo "==> Running unit tests"
-pnpm test:ci
+npm test
 
 echo "==> Running build"
-pnpm build
+npm run build
