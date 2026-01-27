@@ -1,0 +1,57 @@
+version: 2
+updates:
+  # NPM dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+      development-dependencies:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+    reviewers:
+      - "redinc23"
+    assignees:
+      - "redinc23"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    open-pull-requests-limit: 10
+    versioning-strategy: "increase-if-necessary"
+    rebase-strategy: "auto"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+
+  # Security updates (critical)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-type: "direct"
+    severity: "critical"
+    labels:
+      - "security"
+    pull-request-branch-name:
+      separator: "-"

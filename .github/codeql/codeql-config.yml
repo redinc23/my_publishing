@@ -1,0 +1,27 @@
+name: "MANGU CodeQL Config"
+
+paths:
+  - "app/**"
+  - "components/**"
+  - "lib/**"
+  - "pages/**"
+  - "api/**"
+  - "utils/**"
+
+paths-ignore:
+  - "**/node_modules"
+  - "**/.next"
+  - "**/coverage"
+  - "**/playwright-report"
+  - "**/test-results"
+  - "**/*.test.*"
+  - "**/*.spec.*"
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+  # Removed custom queries reference as file does not exist yet
+
+query-filters:
+  - exclude:
+      id: "js/missing-rate-limiting"

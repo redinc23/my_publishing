@@ -1,0 +1,52 @@
+name: Dependabot Auto-Review
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  dependabot-review:
+    if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve patch and minor updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: |
+          gh pr review ${{ github.event.pull_request.html_url }} --approve -b "✅ Auto-approved: ${{ steps.metadata.outputs.update-type }} update"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+
+      - name: Label patch updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: |
+          gh pr edit ${{ github.event.pull_request.html_url }} --add-label "dependencies,automerge"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on major updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh pr comment ${{ github.event.pull_request.html_url }} --body "⚠️ **Major Update Detected**\n\nThis is a major version update. Please review breaking changes before merging.\n\n*Package*: ${{ steps.metadata.outputs.dependency-name }}\n*From*: ${{ steps.metadata.outputs.previous-version }}\n*To*: ${{ steps.metadata.outputs.new-version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for safe updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' &&
+          steps.metadata.outputs.dependency-type == 'direct:production'
+        run: |
+          gh pr merge ${{ github.event.pull_request.html_url }} --auto --squash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
