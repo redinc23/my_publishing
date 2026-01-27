@@ -18,6 +18,7 @@ export function getStripe(): Stripe {
 
 interface CreateCheckoutSessionParams {
   bookId: string;
+  bookSlug?: string;
   userId: string;
   bookTitle: string;
   price: number;
@@ -25,12 +26,14 @@ interface CreateCheckoutSessionParams {
 
 export async function createCheckoutSession({
   bookId,
+  bookSlug,
   userId,
   bookTitle,
   price,
 }: CreateCheckoutSessionParams) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const stripe = getStripe();
+  const bookPath = bookSlug || bookId;
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
@@ -47,10 +50,11 @@ export async function createCheckoutSession({
         quantity: 1,
       },
     ],
-    success_url: `${baseUrl}/books/${bookId}?success=true`,
-    cancel_url: `${baseUrl}/books/${bookId}?canceled=true`,
+    success_url: `${baseUrl}/books/${bookPath}?success=true`,
+    cancel_url: `${baseUrl}/books/${bookPath}?canceled=true`,
     metadata: {
       book_id: bookId,
+      book_slug: bookSlug || '',
       user_id: userId,
     },
   });

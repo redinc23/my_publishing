@@ -3,7 +3,8 @@
  */
 
 export interface CheckoutSessionRequest {
-  book_id: string;
+  book_id?: string;
+  book_slug?: string;
   user_id: string;
 }
 
