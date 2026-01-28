@@ -121,6 +121,7 @@ NODE_ENV=production
 1. **📋 LAUNCH_CHECKLIST.md** - Complete deployment checklist
 2. **⚡ AWS_AMPLIFY_QUICK_START.md** - 5-minute quick start
 3. **📖 AWS_AMPLIFY_DEPLOYMENT.md** - Full deployment guide
+4. **🌐 DEV_ENVIRONMENT_AND_ROUTE53_GUIDE.md** - Dev environments & custom domains
 
 ### Additional Resources:
 - **FEATURE_PHASES.md** - What's ready now vs future
