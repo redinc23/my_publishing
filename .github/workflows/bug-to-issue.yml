@@ -1,0 +1,61 @@
+name: Bug to Issue (continuous failures)
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"] # matches the name of the main CI workflow
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+
+concurrency:
+  group: bug-to-issue-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  create_or_update_issue:
+    if: ${{ github.event.workflow_run.conclusion != 'skipped' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm i @actions/core @actions/github
+
+      - name: Run bug-to-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_HTML_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_NAME: ${{ github.event.workflow_run.name }}
+          RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          THRESHOLD_FAILS: "3"           # create issue after 3 consecutive fails
+          CLOSE_AFTER_SUCCESSES: "2"     # auto-close after 2 consecutive successes
+        run: node .github/scripts/bug-to-issue.js
+
+      - name: Commit state if changed
+        run: |
+          if git status --porcelain | grep -q ".github/bug-to-issue-state.json"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .github/bug-to-issue-state.json
+            git commit -m "chore: update bug-to-issue state"
+            git push
+          else
+            echo "No state changes."
+          fi
