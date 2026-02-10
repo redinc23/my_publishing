@@ -105,6 +105,10 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${YELLOW}Linking to remote project... (Enter Reference ID)${NC}"
     read -p "Enter Supabase Project Ref (e.g. abcdefghijklm): " SUPA_REF
     supabase link --project-ref "$SUPA_REF"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Failed to link to Supabase project. Aborting database sync.${NC}"
+        exit 1
+    fi
 
     echo -e "${YELLOW}Pushing schema...${NC}"
     supabase db push
@@ -132,6 +136,10 @@ ENV_STRING=${ENV_STRING%,}
 # Build
 echo -e "Building Container Image..."
 gcloud builds submit --tag "$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$APP_NAME:latest" . --project=$PROJECT_ID
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Build failed. Aborting deployment.${NC}"
+    exit 1
+fi
 
 # Deploy
 echo -e "Deploying to Cloud Run..."
