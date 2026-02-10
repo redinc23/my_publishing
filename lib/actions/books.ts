@@ -2,7 +2,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { 
   CreateBookSchema, 
@@ -121,6 +121,7 @@ export async function createBook(input: CreateBookInput) {
 
     revalidatePath('/admin/books');
     revalidatePath('/books');
+    revalidateTag('featured-books');
 
     return { success: true, data, code: 'BOOK_CREATED' };
   } catch (error) {
@@ -213,6 +214,7 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
     revalidatePath('/admin/books');
     revalidatePath(`/books/${bookId}`);
     revalidatePath(`/books/${data.slug}`);
+    revalidateTag('featured-books');
 
     return { success: true, data, code: 'BOOK_UPDATED' };
   } catch (error) {
@@ -283,6 +285,7 @@ export async function deleteBook(bookId: string, hardDelete: boolean = false) {
 
     revalidatePath('/admin/books');
     revalidatePath('/books');
+    revalidateTag('featured-books');
 
     return { success: true, code: hardDelete ? 'BOOK_HARD_DELETED' : 'BOOK_SOFT_DELETED' };
   } catch (error) {
@@ -333,6 +336,7 @@ export async function restoreBook(bookId: string) {
 
     revalidatePath('/admin/books');
     revalidatePath('/books');
+    revalidateTag('featured-books');
 
     return { success: true, code: 'BOOK_RESTORED' };
   } catch (error) {

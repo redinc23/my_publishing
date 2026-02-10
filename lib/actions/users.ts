@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export async function updateProfile(updates: {
   full_name?: string;
@@ -31,5 +31,6 @@ export async function updateProfile(updates: {
   }
 
   revalidatePath('/dashboard');
+  revalidateTag('featured-books');
   return { data: profile };
 }
