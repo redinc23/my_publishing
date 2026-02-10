@@ -2,6 +2,12 @@
 
 Complete guide for deploying the MANGU platform to production.
 
+## Deployment Options
+
+- **GCP Cloud Run:** See [MANGU Production Deployment](./MANGU_PRODUCTION_DEPLOYMENT.md) for the full flight manual and `deploy_master.sh` script.
+- **Vercel:** Follow the steps below.
+- **AWS Amplify:** See [AWS Amplify Deployment](./AWS_AMPLIFY_DEPLOYMENT.md).
+
 ## Prerequisites
 
 - Node.js 18+ installed
