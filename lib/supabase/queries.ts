@@ -84,7 +84,7 @@ export async function getBookById(id: string) {
 export async function getFeaturedBooks(limit = 6) {
   try {
     const data = await unstable_cache(
-      async () => {
+      async (limit) => {
         // Use admin client to bypass RLS and avoid cookie dependency for static cache
         const supabase = createAdminClient();
         const { data, error } = await supabase
@@ -99,9 +99,9 @@ export async function getFeaturedBooks(limit = 6) {
         if (error) throw error;
         return data;
       },
-      ['featured-books', limit.toString()],
+      ['featured-books'],
       { tags: ['featured-books'], revalidate: 3600 }
-    )();
+    )(limit);
 
     return { data, error: null };
   } catch (error) {
