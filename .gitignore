@@ -44,4 +44,7 @@ test-results/
 logs/
 
 # OS files
-Thumbs.db
+Thumbs.dbnexus_analysis/
+nexus_analysis_rollout/
+nexus_rollout_results/
+nexus_analysis_reports/
