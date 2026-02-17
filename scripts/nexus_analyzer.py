@@ -259,9 +259,16 @@ class NexusProjectAnalyzer:
         else:
             status = "missing"
 
+        if status == "complete":
+            confidence = "high"
+        elif status == "partial":
+            confidence = "medium"
+        else:
+            confidence = "low"
+
         return {
             "status": status,
-            "confidence": "high" if status == "complete" else "medium",
+            "confidence": confidence,
             "files_found": found[:10],
             "has_auth": has_auth,
             "critical": True,
@@ -334,7 +341,7 @@ class NexusProjectAnalyzer:
         status = "complete" if found else "missing"
         return {
             "status": status,
-            "confidence": "high",
+            "confidence": "high" if found else "low",
             "files_found": found,
         }
 
@@ -449,21 +456,18 @@ class NexusProjectAnalyzer:
         out_path = Path(output_dir)
         out_path.mkdir(parents=True, exist_ok=True)
 
-        report_name = f"analysis_report_{self.project_path.name}.json"
-        with (out_path / report_name).open("w", encoding="utf-8") as f:
+        repo_name = self.project_path.name
+        with (out_path / f"analysis_report_{repo_name}.json").open("w", encoding="utf-8") as f:
             json.dump(self.results, f, indent=2)
 
-        with (out_path / "analysis_report.json").open("w", encoding="utf-8") as f:
-            json.dump(self.results, f, indent=2)
-
-        with (out_path / "EXECUTIVE_SUMMARY.md").open("w", encoding="utf-8") as f:
+        with (out_path / f"EXECUTIVE_SUMMARY_{repo_name}.md").open("w", encoding="utf-8") as f:
             h = self.results['analysis']['health_score']['scores']['overall']
             f.write(f"# EXECUTIVE SUMMARY - {self.project_path.name}\n\n")
             f.write(f"**Health Score:** {h}/100\n")
             f.write(f"**Completion Status:** {self.results['nexus_specific']['completion_rate']} prompts complete.\n")
             f.write(f"**Next Blocker:** {self.results['nexus_specific']['next_critical_step']}\n")
 
-        with (out_path / "CURSOR_PROMPT.md").open("w", encoding="utf-8") as f:
+        with (out_path / f"CURSOR_PROMPT_{repo_name}.md").open("w", encoding="utf-8") as f:
             f.write(self.create_cursor_prompt())
 
 def analyze_multiple_repos(repos_file: str, output_dir: str):
@@ -487,12 +491,22 @@ def analyze_multiple_repos(repos_file: str, output_dir: str):
         repo_name = repo_path_str.split('/')[-1]
 
         if os.path.exists(repo_name):
-            print(f"🔍 Analyzing local repo: {repo_name}...")
-            analyzer = NexusProjectAnalyzer(repo_name)
-            analyzer.run_full_analysis()
-            analyzer.save_results(output_dir)
-            h = analyzer.results['analysis']['health_score']['scores']['overall']
-            summary.append(f"- ✅ **{repo_name}**: Health {h}/100, Status {analyzer.results['nexus_specific']['completion_rate']}")
+            # Check if analysis artifacts already exist
+            existing_report = out_path / f"analysis_report_{repo_name}.json"
+            if existing_report.exists():
+                print(f"📊 Reading existing analysis for: {repo_name}...")
+                try:
+                    with existing_report.open("r", encoding="utf-8") as f:
+                        results = json.load(f)
+                    h = results['analysis']['health_score']['scores']['overall']
+                    completion_rate = results['nexus_specific']['completion_rate']
+                    summary.append(f"- ✅ **{repo_name}**: Health {h}/100, Status {completion_rate}")
+                except (json.JSONDecodeError, KeyError) as e:
+                    print(f"⚠️  Error reading existing report for {repo_name}: {e}")
+                    summary.append(f"- ⚠️ **{repo_name}**: Error reading existing analysis")
+            else:
+                print(f"⏳ **{repo_name}**: No existing analysis found (run analysis first)")
+                summary.append(f"- ⏳ **{repo_name}**: Pending Analysis (No existing artifacts)")
         else:
             summary.append(f"- ⏳ **{repo_name}**: Pending Analysis (Directory not found locally)")
 
