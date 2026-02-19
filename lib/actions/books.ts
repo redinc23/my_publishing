@@ -2,6 +2,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { 
@@ -11,6 +12,7 @@ import {
   type CreateBookInput, 
   type UpdateBookInput 
 } from '@/types/books';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 // Rate limiting
 const RATE_LIMIT = new Map<string, { count: number; timestamp: number }>();
@@ -48,16 +50,25 @@ const logAudit = async (
   details: Record<string, any>
 ) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
-  await supabase.from('audit_logs').insert({
-    user_id: user?.id,
-    action,
-    resource_id: resourceId,
-    resource_type: resourceType,
-    details,
-    ip_address: null, // Would be set by a middleware in production
-    user_agent: null
-  });
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return;
+  }
+
+  try {
+    const adminClient = createAdminClient();
+    await adminClient.from('audit_logs').insert({
+      user_id: user?.id,
+      action,
+      table_name: resourceType,
+      record_id: resourceId,
+      new_data: details,
+      ip_address: null, // Would be set by a middleware in production
+      user_agent: null,
+    });
+  } catch (error) {
+    console.warn('Audit log failed:', error);
+  }
 };
 
 export async function createBook(input: CreateBookInput) {
@@ -74,6 +85,11 @@ export async function createBook(input: CreateBookInput) {
     // Validate input
     const validated = CreateBookSchema.parse(input);
 
+    const { authorId } = await getAuthorContext(supabase, user.id);
+    if (!authorId) {
+      return { success: false, error: 'Author profile not found', code: 'AUTHOR_NOT_FOUND' };
+    }
+
     // Generate slug from title
     const slug = validated.title
       .toLowerCase()
@@ -85,7 +101,7 @@ export async function createBook(input: CreateBookInput) {
       .from('books')
       .select('id')
       .eq('slug', slug)
-      .eq('author_id', user.id)
+      .eq('author_id', authorId)
       .is('deleted_at', null)
       .single();
 
@@ -100,18 +116,26 @@ export async function createBook(input: CreateBookInput) {
     const { data, error } = await supabase
       .from('books')
       .insert({
-        ...validated,
+        title: validated.title,
+        description: validated.description,
+        isbn: validated.isbn,
+        genre: validated.genre,
+        cover_url: validated.cover_url,
         slug,
-        author_id: user.id,
-        author_name: user.user_metadata?.full_name || user.email || 'Anonymous',
-        metadata: validated.metadata || {},
-        tags: validated.tags || [],
-        categories: validated.categories || [],
+        author_id: authorId,
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    if (validated.epub_url || validated.manuscript_url) {
+      await supabase.from('book_content').insert({
+        book_id: data.id,
+        epub_url: validated.epub_url || null,
+        pdf_url: validated.manuscript_url || null,
+      });
+    }
 
     // Log audit
     await logAudit(supabase, 'CREATE', data.id, 'book', {
@@ -157,6 +181,9 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
     // Validate input
     const validated = UpdateBookSchema.parse(input);
 
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
+
     // Check ownership and if book exists
     const { data: book } = await supabase
       .from('books')
@@ -164,7 +191,7 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
       .eq('id', bookId)
       .single();
 
-    if (!book || book.author_id !== user.id) {
+    if (!book || (!isAdmin && book.author_id !== authorId)) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 
@@ -179,7 +206,7 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
         .select('id')
         .eq('slug', validated.slug)
         .neq('id', bookId)
-        .eq('author_id', user.id)
+        .eq('author_id', book.author_id)
         .is('deleted_at', null)
         .single();
 
@@ -192,17 +219,56 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
       }
     }
 
+    const updatePayload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (typeof validated.title !== 'undefined') updatePayload.title = validated.title;
+    if (typeof validated.description !== 'undefined') updatePayload.description = validated.description;
+    if (typeof validated.isbn !== 'undefined') updatePayload.isbn = validated.isbn;
+    if (typeof validated.genre !== 'undefined') updatePayload.genre = validated.genre;
+    if (typeof validated.cover_url !== 'undefined') updatePayload.cover_url = validated.cover_url;
+    if (typeof validated.status !== 'undefined') updatePayload.status = validated.status;
+    if (typeof validated.page_count !== 'undefined') updatePayload.page_count = validated.page_count;
+    if (typeof validated.word_count !== 'undefined') updatePayload.word_count = validated.word_count;
+    if (typeof validated.slug !== 'undefined') updatePayload.slug = validated.slug;
+
     const { data, error } = await supabase
       .from('books')
-      .update({
-        ...validated,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', bookId)
       .select()
       .single();
 
     if (error) throw error;
+
+    if (typeof validated.epub_url !== 'undefined' || typeof validated.manuscript_url !== 'undefined') {
+      const contentUpdates: Record<string, string | null> = {};
+      if (typeof validated.epub_url !== 'undefined') {
+        contentUpdates.epub_url = validated.epub_url || null;
+      }
+      if (typeof validated.manuscript_url !== 'undefined') {
+        contentUpdates.pdf_url = validated.manuscript_url || null;
+      }
+
+      const { data: existingContent } = await supabase
+        .from('book_content')
+        .select('id')
+        .eq('book_id', bookId)
+        .single();
+
+      if (existingContent?.id) {
+        await supabase
+          .from('book_content')
+          .update(contentUpdates)
+          .eq('id', existingContent.id);
+      } else {
+        await supabase.from('book_content').insert({
+          book_id: bookId,
+          ...contentUpdates,
+        });
+      }
+    }
 
     // Log audit
     await logAudit(supabase, 'UPDATE', bookId, 'book', {
@@ -246,13 +312,16 @@ export async function deleteBook(bookId: string, hardDelete: boolean = false) {
 
     checkRateLimit(user.id, 'delete_book');
 
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
+
     const { data: book } = await supabase
       .from('books')
       .select('author_id, deleted_at')
       .eq('id', bookId)
       .single();
 
-    if (!book || book.author_id !== user.id) {
+    if (!book || (!isAdmin && book.author_id !== authorId)) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 
@@ -304,13 +373,16 @@ export async function restoreBook(bookId: string) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
+
     const { data: book } = await supabase
       .from('books')
       .select('author_id, deleted_at')
       .eq('id', bookId)
       .single();
 
-    if (!book || book.author_id !== user.id) {
+    if (!book || (!isAdmin && book.author_id !== authorId)) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 
@@ -357,10 +429,15 @@ export async function getMyBooks(options?: {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
 
+    const { authorId } = await getAuthorContext(supabase, user.id);
+    if (!authorId) {
+      return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+    }
+
     let query = supabase
       .from('books')
       .select('*', { count: 'exact' })
-      .eq('author_id', user.id)
+      .eq('author_id', authorId)
       .order('created_at', { ascending: false });
 
     if (options?.status) {
@@ -479,13 +556,16 @@ export async function getBookStats(bookId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
 
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
+
     const { data: book } = await supabase
       .from('books')
       .select('author_id')
       .eq('id', bookId)
       .single();
 
-    if (!book || book.author_id !== user.id) {
+    if (!book || (!isAdmin && book.author_id !== authorId)) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 

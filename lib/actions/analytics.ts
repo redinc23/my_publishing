@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { DateRange } from '@/types/analytics';
 import type { BookStats, HeatmapData, GeographyData, LiveReader } from '@/types/analytics';
 import { getCache, setCache } from '@/lib/services/cache-service';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 export async function getBookAnalytics(
   bookId: string,
@@ -15,6 +16,9 @@ export async function getBookAnalytics(
 
     if (!user) throw new Error('Not authenticated');
 
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
+
     // Verify book ownership
     const { data: book } = await supabase
       .from('books')
@@ -22,7 +26,7 @@ export async function getBookAnalytics(
       .eq('id', bookId)
       .single();
 
-    if (!book || book.author_id !== user.id) {
+    if (!book || (!isAdmin && book.author_id !== authorId)) {
       throw new Error('Unauthorized');
     }
 

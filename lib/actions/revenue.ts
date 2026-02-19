@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { DateRange } from '@/types/analytics';
 import type { BookSale, BookPricing } from '@/types/revenue';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 export async function getBookRevenue(
   bookId: string,
@@ -14,6 +15,9 @@ export async function getBookRevenue(
 
     if (!user) throw new Error('Not authenticated');
 
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
+
     // Verify book ownership
     const { data: book } = await supabase
       .from('books')
@@ -21,7 +25,7 @@ export async function getBookRevenue(
       .eq('id', bookId)
       .single();
 
-    if (!book || book.author_id !== user.id) {
+    if (!book || (!isAdmin && book.author_id !== authorId)) {
       throw new Error('Unauthorized');
     }
 
@@ -86,6 +90,9 @@ export async function updateBookPricing(
 
     if (!user) throw new Error('Not authenticated');
 
+    const { authorId, role } = await getAuthorContext(supabase, user.id);
+    const isAdmin = role === 'admin';
+
     // Verify book ownership
     const { data: book } = await supabase
       .from('books')
@@ -93,7 +100,7 @@ export async function updateBookPricing(
       .eq('id', bookId)
       .single();
 
-    if (!book || book.author_id !== user.id) {
+    if (!book || (!isAdmin && book.author_id !== authorId)) {
       throw new Error('Unauthorized');
     }
 

@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 export async function submitManuscript(formData: FormData) {
   const supabase = await createClient();
@@ -13,13 +14,9 @@ export async function submitManuscript(formData: FormData) {
     redirect('/login');
   }
 
-  const { data: author } = await supabase
-    .from('authors')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
+  const { authorId } = await getAuthorContext(supabase, user.id);
 
-  if (!author) {
+  if (!authorId) {
     return { error: 'Author profile not found' };
   }
 
@@ -37,7 +34,7 @@ export async function submitManuscript(formData: FormData) {
   }
 
   const { error } = await supabase.from('manuscripts').insert({
-    author_id: author.id,
+    author_id: authorId,
     title,
     working_title: workingTitle,
     genre,

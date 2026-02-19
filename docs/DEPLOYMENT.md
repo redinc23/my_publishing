@@ -51,7 +51,7 @@ NODE_ENV=production
 
 1. Connect to your Supabase project
 2. Navigate to SQL Editor
-3. Run the migration file: `supabase/migrations/20260116000000_initial_schema.sql`
+3. Run migrations **in order** (see `docs/MIGRATIONS.md`)
 4. Verify all tables, indexes, and RLS policies are created
 
 ### Verify RLS Policies

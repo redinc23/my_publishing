@@ -4,6 +4,7 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ManuscriptCard } from '@/components/cards/ManuscriptCard';
 import type { Manuscript } from '@/types';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 async function getManuscripts() {
   const supabase = await createClient();
@@ -15,20 +16,16 @@ async function getManuscripts() {
     redirect('/login');
   }
 
-  const { data: author } = await supabase
-    .from('authors')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
+  const { authorId } = await getAuthorContext(supabase, user.id);
 
-  if (!author) {
+  if (!authorId) {
     return [];
   }
 
   const { data } = await supabase
     .from('manuscripts')
     .select('*')
-    .eq('author_id', author.id)
+    .eq('author_id', authorId)
     .order('created_at', { ascending: false });
 
   return (data as Manuscript[]) || [];

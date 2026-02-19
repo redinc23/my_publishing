@@ -74,16 +74,18 @@ The platform uses Supabase with PostgreSQL. You'll need to:
 Migrations are located in `supabase/migrations/` and **must be applied in this exact order**:
 
 1. `20260116000000_initial_schema.sql` - Creates `profiles` table and core schema (required for health check)
-2. `20260116000000_create_books_table.sql` - Books and content tables
-3. `20260117000000_analytics_events.sql` - Analytics event tracking
-4. `20260117000000_storage_policies.sql` - Storage bucket policies
-5. `20260117000001_analytics_sessions.sql` - Session tracking
-6. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
-7. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
-8. `20260117000004_author_payouts.sql` - Author payout system
-9. `20260117000005_book_pricing.sql` - Pricing logic and discounts
-10. `20260118000000_critical_fixes.sql` - Bug fixes and corrections
-11. `20260120000006_performance_optimizations.sql` - Performance indexes
+2. `20260117000000_analytics_events.sql` - Analytics event tracking
+3. `20260117000000_storage_policies.sql` - Storage bucket policies
+4. `20260117000001_analytics_sessions.sql` - Session tracking
+5. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
+6. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
+7. `20260117000004_author_payouts.sql` - Author payout system
+8. `20260117000005_book_pricing.sql` - Pricing logic and discounts
+9. `20260118000000_critical_fixes.sql` - Bug fixes and corrections
+10. `20260120000006_performance_optimizations.sql` - Performance indexes
+11. `20260121000000_profile_trigger.sql` - Profile auto-creation trigger
+12. `20260122000000_social_features.sql` - Reviews, comments, follows, reading lists
+13. `20260123000000_author_policy_fixes.sql` - Author RLS fixes + soft delete
 
 **To apply migrations:**
 

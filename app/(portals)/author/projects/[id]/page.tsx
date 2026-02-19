@@ -5,6 +5,7 @@ import { Section } from '@/components/layout/Section';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Manuscript } from '@/types';
+import { getAuthorContext } from '@/lib/utils/author-context';
 
 async function getManuscript(id: string) {
   const supabase = await createClient();
@@ -16,13 +17,9 @@ async function getManuscript(id: string) {
     redirect('/login');
   }
 
-  const { data: author } = await supabase
-    .from('authors')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
+  const { authorId } = await getAuthorContext(supabase, user.id);
 
-  if (!author) {
+  if (!authorId) {
     return null;
   }
 
@@ -30,7 +27,7 @@ async function getManuscript(id: string) {
     .from('manuscripts')
     .select('*')
     .eq('id', id)
-    .eq('author_id', author.id)
+    .eq('author_id', authorId)
     .single();
 
   return data as Manuscript | null;

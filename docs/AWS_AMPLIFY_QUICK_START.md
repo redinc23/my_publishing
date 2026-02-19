@@ -14,10 +14,8 @@ This guide gets you up and running on AWS Amplify in under 10 minutes.
 ### Step 1: Supabase Setup (2 minutes)
 
 1. Create a Supabase project at https://supabase.com
-2. Go to **SQL Editor** → Run this migration:
-   ```sql
-   -- Copy and paste from: supabase/migrations/20260116000000_initial_schema.sql
-   ```
+2. Go to **SQL Editor** → Run migrations **in order**:
+   - Follow `docs/MIGRATIONS.md` and apply each file in sequence
 3. Get your keys from **Settings** → **API**:
    - Project URL
    - Anon key

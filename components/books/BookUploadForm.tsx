@@ -29,6 +29,9 @@ export function BookUploadForm({ onSuccess, onCancel }: BookUploadFormProps) {
     formState: { errors },
   } = useForm<CreateBookInput>({
     resolver: zodResolver(CreateBookSchema),
+    defaultValues: {
+      genre: '',
+    },
   });
 
   const handleCoverUpload = async (file: File) => {
@@ -77,6 +80,19 @@ export function BookUploadForm({ onSuccess, onCancel }: BookUploadFormProps) {
           />
           {errors.title && (
             <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="genre">Genre *</Label>
+          <Input
+            id="genre"
+            {...register('genre')}
+            placeholder="Enter genre"
+            className="mt-1"
+          />
+          {errors.genre && (
+            <p className="mt-1 text-sm text-red-500">{errors.genre.message}</p>
           )}
         </div>
 
