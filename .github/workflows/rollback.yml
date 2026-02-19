@@ -1,0 +1,221 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment for rollback'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+      rollback_type:
+        description: 'Type of rollback'
+        required: true
+        type: choice
+        options:
+          - previous_deployment
+          - specific_commit
+      target_commit:
+        description: 'Target commit SHA (only for specific_commit rollback)'
+        required: false
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+concurrency:
+  group: rollback-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  validate-rollback:
+    name: Validate Rollback Request
+    runs-on: ubuntu-latest
+    outputs:
+      target_sha: ${{ steps.resolve.outputs.sha }}
+      deployment_url: ${{ steps.resolve.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit exists
+        if: ${{ github.event.inputs.rollback_type == 'specific_commit' }}
+        run: |
+          if ! git cat-file -e ${{ github.event.inputs.target_commit }}^{commit} 2>/dev/null; then
+            echo "Error: Commit ${{ github.event.inputs.target_commit }} not found"
+            exit 1
+          fi
+
+      - name: Resolve target deployment
+        id: resolve
+        run: |
+          if [ "${{ github.event.inputs.rollback_type }}" == "specific_commit" ]; then
+            echo "sha=${{ github.event.inputs.target_commit }}" >> $GITHUB_OUTPUT
+          else
+            # Get previous deployment from Vercel
+            PREVIOUS_SHA=$(git log --skip=1 -1 --format=%H)
+            echo "sha=${PREVIOUS_SHA}" >> $GITHUB_OUTPUT
+          fi
+
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            echo "url=https://mangu-platform.vercel.app" >> $GITHUB_OUTPUT
+          else
+            echo "url=https://staging.mangu-platform.vercel.app" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Log rollback details
+        run: |
+          echo "## Rollback Details" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ github.event.inputs.environment }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rollback Type | ${{ github.event.inputs.rollback_type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Target SHA | ${{ steps.resolve.outputs.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Reason | ${{ github.event.inputs.reason }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Initiated by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+
+  rollback-vercel:
+    name: Rollback Vercel Deployment
+    runs-on: ubuntu-latest
+    needs: validate-rollback
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      url: ${{ needs.validate-rollback.outputs.deployment_url }}
+
+    steps:
+      - name: Checkout target commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-rollback.outputs.target_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Create rollback environment file
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            cat > .env.local << EOF
+          NODE_ENV=production
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_PROD_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_PROD_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_PROD_SERVICE_KEY }}
+          STRIPE_SECRET_KEY=${{ secrets.STRIPE_LIVE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_LIVE_WEBHOOK_SECRET }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_LIVE_PUBLISHABLE_KEY }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+          EOF
+          else
+            cat > .env.local << EOF
+          NODE_ENV=staging
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_STAGING_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_STAGING_SERVICE_KEY }}
+          STRIPE_SECRET_KEY=${{ secrets.STRIPE_TEST_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_TEST_WEBHOOK_SECRET }}
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_TEST_PUBLISHABLE_KEY }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+          EOF
+          fi
+
+      - name: Deploy rollback to Vercel
+        id: deploy
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} \
+              --scope=${{ secrets.VERCEL_ORG_ID }} \
+              --yes
+          else
+            vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
+              --scope=${{ secrets.VERCEL_ORG_ID }} \
+              --yes
+          fi
+
+      - name: Create rollback record
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: '${{ needs.validate-rollback.outputs.target_sha }}',
+              environment: '${{ github.event.inputs.environment }}',
+              description: 'Rollback: ${{ github.event.inputs.reason }}',
+              auto_merge: false,
+              required_contexts: []
+            });
+
+  notify-rollback:
+    name: Notify Rollback Complete
+    runs-on: ubuntu-latest
+    needs: [validate-rollback, rollback-vercel]
+    if: always()
+
+    steps:
+      - name: Send Slack notification
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ needs.rollback-vercel.result }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job
+          text: |
+            Rollback ${{ needs.rollback-vercel.result }}
+            Environment: ${{ github.event.inputs.environment }}
+            Reason: ${{ github.event.inputs.reason }}
+            Target: ${{ needs.validate-rollback.outputs.target_sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub Issue for rollback tracking
+        if: ${{ needs.rollback-vercel.result == 'success' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `Rollback: ${process.env.ENVIRONMENT} - ${new Date().toISOString().split('T')[0]}`;
+            const body = `## Rollback Summary
+
+            | Field | Value |
+            |-------|-------|
+            | Environment | ${process.env.ENVIRONMENT} |
+            | Target SHA | ${process.env.TARGET_SHA} |
+            | Reason | ${process.env.REASON} |
+            | Initiated by | @${context.actor} |
+            | Timestamp | ${new Date().toISOString()} |
+
+            ### Action Items
+            - [ ] Investigate root cause
+            - [ ] Create post-mortem (if applicable)
+            - [ ] Plan forward fix
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['rollback', 'incident', process.env.ENVIRONMENT]
+            });
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+          TARGET_SHA: ${{ needs.validate-rollback.outputs.target_sha }}
+          REASON: ${{ github.event.inputs.reason }}
+
+      - name: Summary
+        run: |
+          echo "## Rollback Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Successfully rolled back **${{ github.event.inputs.environment }}** to commit \`${{ needs.validate-rollback.outputs.target_sha }}\`" >> $GITHUB_STEP_SUMMARY
