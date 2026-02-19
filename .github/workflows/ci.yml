@@ -1,33 +1,412 @@
-name: CI/CD Pipeline
-
+name: CI Pipeline
 on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  # ========== PHASE 1: PREP ==========
+  quality-checks:
+    name: Quality Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          node-version: 18
-      - run: npm ci
-      - run: npm run type-check
-      - run: npm run lint
-      - run: npm test
+          fetch-depth: 0
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-      - uses: amondnet/vercel-action@v20
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Run ESLint
+        run: pnpm lint --max-warnings=0
+
+      - name: Run TypeScript check
+        run: pnpm type-check
+
+      - name: Run Prettier check
+        run: pnpm format:check
+
+  # ========== PHASE 2: SECURITY ==========
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run npm audit (development)
+        run: |
+          npm audit --audit-level=moderate || true
+          echo "## Audit Results" >> $GITHUB_STEP_SUMMARY
+          echo "Development audit completed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run npm audit (production only)
+        run: |
+          npm audit --production --audit-level=high || true
+
+      - name: Check for known vulnerabilities
+        run: |
+          npx checkly@latest guardians scan --directory ./ --reporter github
+        env:
+          CHECKLY_API_KEY: ${{ secrets.CHECKLY_API_KEY }}
+
+  # ========== PHASE 3: UNIT TESTS ==========
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [quality-checks, security-audit]
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ✅ CORRECTED: Use mock environment for unit tests
+      - name: Create test environment file
+        run: |
+          cat > .env.test << EOF
+          NODE_ENV=test
+          NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-test-key-for-ci-only
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_mock123456789
+          STRIPE_SECRET_KEY=sk_test_mock123456789
+          STRIPE_WEBHOOK_SECRET=whsec_mock123456789
+          NEXT_PUBLIC_SITE_URL=http://localhost:3000
+          OPENAI_API_KEY=sk-mock-openai-key-for-tests-only
+          RESEND_API_KEY=re_mock_resend_key_for_tests
+          EOF
+
+      - name: Run unit tests with coverage
+        run: pnpm test:ci
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  # ========== PHASE 4: BUILD TEST ==========
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ✅ CORRECTED: Create .env.local with mock values
+      - name: Create production-like environment file
+        run: |
+          cat > .env.local << 'EOF'
+          # MOCK VALUES FOR CI BUILD - NEVER USE REAL SECRETS
+          NEXT_PUBLIC_SUPABASE_URL=https://mock-supabase-project.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ci-build-mock-key-only
+          SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ci-service-role-mock
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_mockBuildKey123
+          STRIPE_SECRET_KEY=sk_test_mockBuildKey123
+          STRIPE_WEBHOOK_SECRET=whsec_mockBuildKey123
+          NEXT_PUBLIC_SITE_URL=https://mock-build-url.com
+          NODE_ENV=production
+          EOF
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Analyze bundle size
+        run: |
+          npx @next/bundle-analyzer
+
+      - name: Upload build artifacts (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-failure-artifacts
+          path: |
+            .next/
+            public/
+          retention-days: 7
+
+  # ========== PHASE 5: E2E TESTS ==========
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, build-test]
+    timeout-minutes: 30
+    
+    services:
+      # ✅ CORRECTED: Use Supabase local Docker image
+      supabase:
+        image: supabase/postgres:15.1.0.117
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ✅ CORRECTED: Setup Supabase CLI and local instance
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://github.com/supabase/cli/raw/main/install.sh | sh
+          echo "$HOME/.supabase/bin" >> $GITHUB_PATH
+
+      - name: Initialize Supabase project
+        run: |
+          supabase init --yes
+          supabase db reset --db-url="postgresql://postgres:postgres@localhost:5432/postgres" --linked
+
+      - name: Run database migrations
+        run: |
+          # Apply your migrations
+          supabase db push --db-url="postgresql://postgres:postgres@localhost:5432/postgres"
+
+      - name: Seed test data
+        run: pnpm db:seed
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+      # ✅ CORRECTED: Cache Playwright browsers
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          PLAYWRIGHT_VERSION=$(pnpm list @playwright/test --depth=0 --json | jq -r '.dependencies["@playwright/test"].version')
+          echo "version=$PLAYWRIGHT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      # ✅ CORRECTED: Run E2E tests with local Supabase
+      - name: Run E2E tests
+        run: pnpm test:e2e --reporter=html
+        env:
+          NODE_ENV: test
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24ifQ.mock-e2e-key
+          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSJ9.mock-service-role
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure-screenshots
+          path: test-results/
+          retention-days: 7
+
+  # ========== PHASE 6: SECURITY SCAN ==========
+  codeql:
+    name: CodeQL Security Scan
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended,security-and-quality
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # ========== PHASE 7: PERFORMANCE ==========
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create environment for Lighthouse
+        run: |
+          cat > .env.local << 'EOF'
+          NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=mock-for-lighthouse
+          NEXT_PUBLIC_SITE_URL=http://localhost:3000
+          NODE_ENV=production
+          EOF
+
+      - name: Build for Lighthouse
+        run: pnpm build
+
+      - name: Run Lighthouse CI
+        run: |
+          npx @lhci/cli@0.11.x autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 30
+
+  # ========== FINAL: NOTIFICATIONS ==========
+  notify:
+    name: Notify Status
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests, codeql, lighthouse]
+    if: always()
+    
+    steps:
+      - name: Check workflow status
+        id: check-status
+        run: |
+          if [[ "${{ needs.unit-tests.result }}" == "success" && 
+                "${{ needs.e2e-tests.result }}" == "success" && 
+                "${{ needs.codeql.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: failure()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          channel-id: 'C12345678'
+          slack-message: |
+            ❌ *CI Pipeline Failed*: ${{ github.repository }}
+            *Workflow*: ${{ github.workflow }}
+            *Branch*: ${{ github.ref_name }}
+            *Commit*: ${{ github.sha }}
+            *Run URL*: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

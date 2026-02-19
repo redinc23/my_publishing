@@ -1,0 +1,56 @@
+name: Emergency Rollback
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'Commit SHA to rollback to'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+        default: 'staging'
+
+jobs:
+  rollback:
+    name: Rollback ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout specified commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha }}
+
+      - name: Validate commit exists
+        run: |
+          git log --oneline -1
+          echo "Rolling back to: ${{ inputs.commit_sha }}"
+
+      - name: Deploy rollback
+        run: |
+          echo "🚨 EMERGENCY ROLLBACK INITIATED"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Commit: ${{ inputs.commit_sha }}"
+          echo "Timestamp: $(date)"
+          
+          # Add your rollback commands here
+          # Example: Deploy to Vercel
+          # npx vercel --prod --token=$VERCEL_TOKEN --yes
+
+      - name: Create rollback issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Rollback to ${context.inputs.commit_sha.substring(0, 7)} on ${context.inputs.environment}`,
+              body: `## Emergency Rollback\n\n**Environment**: ${context.inputs.environment}\n**Target Commit**: ${context.inputs.commit_sha}\n**Initiated By**: @${context.actor}\n**Timestamp**: ${new Date().toISOString()}\n\n### Root Cause Investigation Required\n- [ ] Identify why rollback was needed\n- [ ] Document the incident\n- [ ] Create preventive measures\n\n**⚠️ This issue must be addressed before next deployment.**`,
+              labels: ['incident', 'rollback', 'high-priority']
+            });

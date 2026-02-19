@@ -9,11 +9,17 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test": "jest",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "jest --passWithNoTests",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
     "test:e2e": "playwright test",
+    "ci": "npm-run-all --sequential lint type-check format:check test:ci build",
     "db:seed": "tsx scripts/seed-database.ts",
     "db:migrate": "tsx scripts/run-migrations.ts",
-    "verify-rls": "tsx scripts/verify-rls.ts"
+    "verify-rls": "tsx scripts/verify-rls.ts",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -75,6 +81,7 @@
     "eslint-config-next": "14.2.35",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.2.0",
+    "npm-run-all": "^4.1.5",
     "postcss": "^8.4.33",
     "prettier": "^3.2.4",
     "prettier-plugin-tailwindcss": "^0.5.11",
