@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { unstable_cache } from 'next/cache';
 import type { Database } from '@/types/database';
 
 type Tables = Database['public']['Tables'];
@@ -80,16 +82,37 @@ export async function getBookById(id: string) {
 }
 
 export async function getFeaturedBooks(limit = 6) {
-  const supabase = await createClient();
+  try {
+    const data = await unstable_cache(
+      async (limit) => {
+        // Use admin client to bypass RLS and avoid cookie dependency for static cache
+        const supabase = createAdminClient();
+        const { data, error } = await supabase
+          .from('books')
+          .select('*, author:authors(*, profile:profiles(*))')
+          .eq('is_featured', true)
+          .eq('status', 'published')
+          .eq('visibility', 'public')
+          .order('featured_at', { ascending: false })
+          .limit(limit);
 
-  return supabase
-    .from('books')
-    .select('*, author:authors(*, profile:profiles(*))')
-    .eq('is_featured', true)
-    .eq('status', 'published')
-    .eq('visibility', 'public')
-    .order('featured_at', { ascending: false })
-    .limit(limit);
+        if (error) throw error;
+        return data;
+      },
+      ['featured-books'],
+      { tags: ['featured-books'], revalidate: 3600 }
+    )(limit);
+
+    return { data, error: null };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching featured books:', error);
+    // Return error in a format compatible with Supabase response
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    };
+  }
 }
 
 export async function getTrendingBooks(limit = 12) {
