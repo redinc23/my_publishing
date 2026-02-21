@@ -6,10 +6,13 @@ import type { CheckoutSessionRequest, CheckoutSessionResponse } from '@/types';
 export async function POST(request: NextRequest) {
   try {
     const body: CheckoutSessionRequest = await request.json();
-    const { book_id, user_id } = body;
+    const { book_id, book_slug, user_id } = body;
 
-    if (!book_id || !user_id) {
-      return NextResponse.json({ error: 'book_id and user_id are required' }, { status: 400 });
+    if ((!book_id && !book_slug) || !user_id) {
+      return NextResponse.json(
+        { error: 'book_id (or book_slug) and user_id are required' },
+        { status: 400 }
+      );
     }
 
     const supabase = await createClient();
@@ -23,11 +26,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get book details
-    const { data: book, error: bookError } = await supabase
-      .from('books')
-      .select('*')
-      .eq('id', book_id)
-      .single();
+    let bookQuery = supabase.from('books').select('*');
+
+    if (book_id) {
+      bookQuery = bookQuery.eq('id', book_id);
+    } else if (book_slug) {
+      bookQuery = bookQuery.eq('slug', book_slug);
+    }
+
+    const { data: book, error: bookError } = await bookQuery.single();
 
     if (bookError || !book) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
@@ -35,7 +42,8 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe checkout session
     const session = await createCheckoutSession({
-      bookId: book_id,
+      bookId: book.id,
+      bookSlug: book.slug,
       userId: user_id,
       bookTitle: book.title,
       price: book.discount_price || book.price,
