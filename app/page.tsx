@@ -91,8 +91,10 @@ function BookGrid({ books }: { books: BookWithAuthor[] }) {
 }
 
 export default async function HomePage() {
-  const featuredBooks = await getFeaturedBooks();
-  const trendingBooks = await getTrendingBooks();
+  const [featuredBooks, trendingBooks] = await Promise.all([
+    getFeaturedBooks(),
+    getTrendingBooks(),
+  ]);
   const heroBook = featuredBooks[0] || trendingBooks[0];
 
   return (
