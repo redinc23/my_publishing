@@ -45,3 +45,7 @@ logs/
 
 # OS files
 Thumbs.db
+nexus_analysis/
+nexus_analysis_rollout/
+nexus_rollout_results/
+nexus_analysis_reports/
