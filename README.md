@@ -131,6 +131,14 @@ After running migrations, verify the setup by checking:
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Run TypeScript type checking
 
+## Local CI Checks
+
+Run the same quality checks as CI (quality-checks + unit-tests + build-test):
+
+```bash
+./scripts/ci-local.sh
+```
+
 ## Deployment
 
 ### AWS Amplify (Recommended) 🚀
