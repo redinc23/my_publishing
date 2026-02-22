@@ -493,20 +493,23 @@ export async function getBookStats(bookId: string) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 
-    // Get monthly stats
-    const { data: monthlyStats } = await supabase
-      .from('book_stats')
-      .select('*')
-      .eq('book_id', bookId)
-      .order('month', { ascending: false })
-      .limit(12);
-
-    // Get total stats
-    const { data: totalStats } = await supabase
-      .from('books')
-      .select('view_count, download_count, average_rating, review_count')
-      .eq('id', bookId)
-      .single();
+    // Get monthly and total stats in parallel
+    const [
+      { data: monthlyStats },
+      { data: totalStats },
+    ] = await Promise.all([
+      supabase
+        .from('book_stats')
+        .select('*')
+        .eq('book_id', bookId)
+        .order('month', { ascending: false })
+        .limit(12),
+      supabase
+        .from('books')
+        .select('view_count, download_count, average_rating, review_count')
+        .eq('id', bookId)
+        .single(),
+    ]);
 
     return { 
       success: true, 
