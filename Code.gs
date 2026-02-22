@@ -45,6 +45,8 @@ function parseGREEntries(text) {
   for (var i = 0; i < blocks.length; i++) {
     var block = blocks[i].trim();
     if (!block) continue;
+    // Skip preamble text before first Word heading
+    if (!/^###\s+Word\s+\d+/i.test(block)) continue;
     var word = extractField(block, 'Word');
     if (!word && /^###\s+Word\s+\d+:/i.test(block)) {
       var wordLine = block.split('\n')[0];
@@ -117,15 +119,13 @@ function convertGREToAvery5164() {
   var doc = DocumentApp.getActiveDocument();
   var body = doc.getBody();
 
-  // Avery 5164: 3 columns x 6 rows per sheet, 288pt usable height per sheet
-  var COLS = 3;
-  var ROWS = 6;
+  // Avery 5164: 2 columns x 3 rows per sheet
+  var COLS = 2;
+  var ROWS = 3;
   var LABELS_PER_SHEET = COLS * ROWS;
-  var MARGIN = 36;
-  var SHEET_HEIGHT = 612;
-  var USABLE_HEIGHT = SHEET_HEIGHT - 2 * MARGIN;
 
   var sourceText = body.getText();
+  body.clear();
   var entries = parseGREEntries(sourceText);
 
   if (entries.length === 0) {
@@ -144,6 +144,8 @@ function convertGREToAvery5164() {
 
     var table = body.appendTable();
     table.setBorderWidth(0);
+    // Remove the initial row created by appendTable()
+    table.getRow(0).removeFromParent();
 
     for (var r = 0; r < ROWS; r++) {
       var row = table.appendTableRow();
