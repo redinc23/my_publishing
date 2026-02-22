@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { webhookRateLimit, getClientIdentifier } from '@/lib/utils/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
 import type { 
@@ -13,6 +14,8 @@ import type {
   CheckoutMetadata, 
   OrderFromWebhook 
 } from '@/types/webhook';
+
+type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
 
 // Webhook secret for signature verification
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -39,7 +42,7 @@ function verifySignature(
  * Check if event was already processed (idempotency)
  */
 async function checkIdempotency(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   eventId: string
 ): Promise<{ processed: boolean; recordId?: string }> {
   const { data: existing } = await supabase
@@ -59,7 +62,7 @@ async function checkIdempotency(
  * Record webhook event for idempotency tracking
  */
 async function recordWebhookEvent(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   event: Stripe.Event
 ): Promise<void> {
   await supabase.from('webhook_events').upsert(
@@ -77,7 +80,7 @@ async function recordWebhookEvent(
  * Mark webhook event as processed
  */
 async function markEventProcessed(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   eventId: string,
   error?: string
 ): Promise<void> {
@@ -95,7 +98,8 @@ async function markEventProcessed(
  * Handle checkout.session.completed event
  */
 async function handleCheckoutCompleted(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
+  supabaseAdmin: SupabaseClient,
   session: Stripe.Checkout.Session
 ): Promise<WebhookProcessingResult> {
   const metadata = session.metadata as CheckoutMetadata | null;
@@ -112,7 +116,7 @@ async function handleCheckoutCompleted(
   }
 
   // Check for duplicate order (additional idempotency check)
-  const { data: existingOrder } = await supabase
+  const { data: existingOrder } = await supabaseAdmin
     .from('orders')
     .select('id')
     .eq('stripe_session_id', session.id)
@@ -141,13 +145,47 @@ async function handleCheckoutCompleted(
     metadata: metadata as unknown as Record<string, unknown>,
   };
 
-  const { error: orderError } = await supabase.from('orders').insert(orderData);
+  const orderNumber = `ORD-${session.id}`;
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from('orders')
+    .insert({
+      order_number: orderNumber,
+      user_id: orderData.user_id,
+      total_amount: orderData.amount,
+      status: orderData.status,
+      stripe_session_id: orderData.stripe_session_id,
+      stripe_payment_intent_id: orderData.stripe_payment_intent_id,
+      stripe_customer_id: orderData.stripe_customer_id,
+      currency: orderData.currency,
+      metadata: orderData.metadata || null,
+    })
+    .select('id')
+    .single();
 
-  if (orderError) {
+  if (orderError || !order) {
     console.error('[Webhook] Failed to create order:', orderError);
     return {
       success: false,
       error: `Failed to create order: ${orderError.message}`,
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+      should_retry: true,
+    };
+  }
+
+  const licenseKey = `LIC-${Date.now()}-${metadata.book_id}`;
+  const { error: orderItemError } = await supabaseAdmin.from('order_items').insert({
+    order_id: order.id,
+    book_id: metadata.book_id,
+    unit_price: orderData.amount,
+    license_key: licenseKey,
+  });
+
+  if (orderItemError) {
+    console.error('[Webhook] Failed to create order item:', orderItemError);
+    return {
+      success: false,
+      error: `Failed to create order item: ${orderItemError.message}`,
       event_id: session.id,
       event_type: 'checkout.session.completed',
       should_retry: true,
@@ -197,7 +235,7 @@ async function handleCheckoutExpired(
  * Handle charge.refunded event
  */
 async function handleChargeRefunded(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   charge: Stripe.Charge
 ): Promise<WebhookProcessingResult> {
   const paymentIntentId = charge.payment_intent as string;
@@ -313,10 +351,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
 
   // Initialize Supabase client
-  const supabase = await createClient();
+  const supabase = await createServerClient();
+  const supabaseAdmin = createAdminClient();
 
   // Check idempotency
-  const idempotencyCheck = await checkIdempotency(supabase, event.id);
+  const idempotencyCheck = await checkIdempotency(supabaseAdmin, event.id);
   if (idempotencyCheck.processed) {
     console.log(`[Webhook] Event already processed: ${event.id}`);
     return NextResponse.json({
@@ -326,7 +365,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Record the event
-  await recordWebhookEvent(supabase, event);
+  await recordWebhookEvent(supabaseAdmin, event);
 
   // Process the event
   let result: WebhookProcessingResult;
@@ -335,7 +374,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        result = await handleCheckoutCompleted(supabase, session);
+        result = await handleCheckoutCompleted(supabase, supabaseAdmin, session);
         break;
       }
 
@@ -347,7 +386,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
-        result = await handleChargeRefunded(supabase, charge);
+        result = await handleChargeRefunded(supabaseAdmin, charge);
         break;
       }
 
@@ -369,7 +408,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Mark as processed
-    await markEventProcessed(supabase, event.id, result.success ? undefined : result.error);
+    await markEventProcessed(supabaseAdmin, event.id, result.success ? undefined : result.error);
 
     const duration = Date.now() - startTime;
     console.log(`[Webhook] Processed ${event.type} in ${duration}ms:`, result);
@@ -391,7 +430,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.error(`[Webhook] Error processing ${event.type}:`, error);
 
     // Mark as failed
-    await markEventProcessed(supabase, event.id, errorMessage);
+    await markEventProcessed(supabaseAdmin, event.id, errorMessage);
 
     // Return 500 to trigger retry for unexpected errors
     return NextResponse.json(
