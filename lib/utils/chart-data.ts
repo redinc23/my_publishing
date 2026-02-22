@@ -10,10 +10,13 @@ export function formatChartData(
   stats: BookStats[],
   metric: keyof BookStats
 ): ChartDataPoint[] {
+  // Cache date locale formatter to avoid recreating on each iteration
+  const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+  
   return stats.map(stat => ({
     date: stat.date,
     value: stat[metric] as number,
-    label: new Date(stat.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    label: dateFormatter.format(new Date(stat.date)),
   }));
 }
 
@@ -22,6 +25,8 @@ export function aggregateByPeriod(
   period: 'day' | 'week' | 'month'
 ): ChartDataPoint[] {
   const grouped = new Map<string, number[]>();
+  // Cache date formatter to avoid recreating on each iteration
+  const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
   
   data.forEach(point => {
     const date = new Date(point.date);
@@ -32,7 +37,8 @@ export function aggregateByPeriod(
       weekStart.setDate(date.getDate() - date.getDay());
       key = weekStart.toISOString().split('T')[0];
     } else if (period === 'month') {
-      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      // Use first day of month for consistent date formatting
+      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
     } else {
       key = point.date;
     }
@@ -46,7 +52,7 @@ export function aggregateByPeriod(
   return Array.from(grouped.entries()).map(([date, values]) => ({
     date,
     value: values.reduce((sum, val) => sum + val, 0) / values.length,
-    label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    label: dateFormatter.format(new Date(date)),
   }));
 }
 
