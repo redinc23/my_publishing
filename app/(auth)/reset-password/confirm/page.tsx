@@ -26,7 +26,7 @@ export default function ResetPasswordConfirmPage() {
       setStatus('loading');
       setError(null);
 
-      const code = searchParams.get('code');
+      const code = searchParams?.get('code');
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
       const accessToken = hashParams.get('access_token');
       const refreshToken = hashParams.get('refresh_token');

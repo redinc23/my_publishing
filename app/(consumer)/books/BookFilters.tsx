@@ -34,7 +34,7 @@ export function BookFilters() {
   const searchParams = useSearchParams();
 
   const updateSearchParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
     if (value) {
       params.set(key, value);
     } else {
@@ -48,10 +48,10 @@ export function BookFilters() {
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <Input
         placeholder="Search books..."
-        defaultValue={searchParams.get('q') || ''}
+        defaultValue={searchParams?.get('q') || ''}
         onChange={(e) => {
           const value = e.target.value;
-          const params = new URLSearchParams(searchParams.toString());
+          const params = new URLSearchParams(searchParams?.toString() ?? '');
           if (value) {
             params.set('q', value);
           } else {
@@ -63,7 +63,7 @@ export function BookFilters() {
         className="flex-1"
       />
       <Select
-        value={searchParams.get('genre') || ''}
+        value={searchParams?.get('genre') || ''}
         onValueChange={(value) => updateSearchParam('genre', value)}
       >
         <SelectTrigger className="w-full sm:w-[180px]">
@@ -79,7 +79,7 @@ export function BookFilters() {
         </SelectContent>
       </Select>
       <Select
-        value={searchParams.get('sort') || 'published_at'}
+        value={searchParams?.get('sort') || 'published_at'}
         onValueChange={(value) => updateSearchParam('sort', value)}
       >
         <SelectTrigger className="w-full sm:w-[180px]">

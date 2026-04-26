@@ -11,7 +11,7 @@ export default function ContactPage() {
           <a className="text-primary hover:underline" href="mailto:support@mangu.com">
             support@mangu.com
           </a>
-          . We'll get back to you within two business days.
+          . We&apos;ll get back to you within two business days.
         </p>
       </Container>
     </Section>

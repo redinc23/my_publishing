@@ -8,7 +8,7 @@ import type { BookWithAuthor } from '@/types';
 interface OrderItem {
   id: string;
   unit_price: number;
-  book: BookWithAuthor | null;
+  book: BookWithAuthor | BookWithAuthor[] | null;
 }
 
 interface OrderWithItems {
@@ -16,6 +16,11 @@ interface OrderWithItems {
   order_number: string;
   created_at: string;
   items: OrderItem[];
+}
+
+function normalizeBook(book: OrderItem['book']): BookWithAuthor | null {
+  if (!book) return null;
+  return Array.isArray(book) ? (book[0] ?? null) : book;
 }
 
 async function getLibraryItems() {
@@ -42,12 +47,15 @@ async function getLibraryItems() {
 export default async function LibraryPage() {
   const orders = await getLibraryItems();
   const purchasedItems = orders.flatMap((order) =>
-    (order.items || [])
-      .filter((item) => item.book)
-      .map((item) => ({
-        ...item,
-        order,
-      }))
+    (order.items || []).reduce<Array<OrderItem & { book: BookWithAuthor; order: OrderWithItems }>>(
+      (acc, item) => {
+        const book = normalizeBook(item.book);
+        if (!book) return acc;
+        acc.push({ ...item, book, order });
+        return acc;
+      },
+      []
+    )
   );
 
   return (
@@ -56,7 +64,7 @@ export default async function LibraryPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold">Your Library</h1>
-            <p className="text-secondary mt-2">Access every book you've purchased.</p>
+            <p className="text-secondary mt-2">Access every book you&apos;ve purchased.</p>
           </div>
         </div>
 
@@ -68,7 +76,7 @@ export default async function LibraryPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {purchasedItems.map((item) => (
               <div key={item.id} className="space-y-3">
-                <BookCard book={item.book!} />
+                <BookCard book={item.book} />
                 <div className="text-sm text-secondary">
                   Order {item.order.order_number} •{' '}
                   {new Date(item.order.created_at).toLocaleDateString()}

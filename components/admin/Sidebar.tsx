@@ -24,7 +24,7 @@ export function AdminSidebar() {
       </div>
       <nav className="space-y-2">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = pathname?.startsWith(item.href) ?? false;
           return (
             <Link
               key={item.href}
