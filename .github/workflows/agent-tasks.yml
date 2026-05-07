@@ -1,0 +1,36 @@
+name: Agent Tasks (evidence)
+
+# This workflow runs on all PRs to demonstrate agent task functionality
+# and validate that the task runner infrastructure is working correctly.
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: List agent tasks
+        run: npx tsx tools/agent-tasks.ts list
+
+      # Example: run format task in dry-run mode for evidence.
+      # Switch to non-dry-run if you want CI to enforce formatting.
+      - name: Dry-run format task
+        run: npx tsx tools/agent-tasks.ts run quickstart:format --dry-run
+
+      # Example: show a specific task
+      - name: Show CI validation task
+        run: npx tsx tools/agent-tasks.ts show ci:lint-test
