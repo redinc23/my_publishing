@@ -110,16 +110,17 @@ Before deploying to AWS Amplify, ensure you have:
    Apply migrations in the Supabase SQL Editor in this order:
    
    1. `supabase/migrations/20260116000000_initial_schema.sql`
-   2. `supabase/migrations/20260116000000_create_books_table.sql`
-   3. `supabase/migrations/20260117000000_analytics_events.sql`
-   4. `supabase/migrations/20260117000000_storage_policies.sql`
-   5. `supabase/migrations/20260117000001_analytics_sessions.sql`
-   6. `supabase/migrations/20260117000002_book_stats_materialized.sql`
-   7. `supabase/migrations/20260117000003_revenue_tracking.sql`
-   8. `supabase/migrations/20260117000004_author_payouts.sql`
-   9. `supabase/migrations/20260117000005_book_pricing.sql`
-   10. `supabase/migrations/20260118000000_critical_fixes.sql`
-   11. `supabase/migrations/20260120000006_performance_optimizations.sql`
+   2. `supabase/migrations/20260117000000_analytics_events.sql`
+   3. `supabase/migrations/20260117000000_storage_policies.sql`
+   4. `supabase/migrations/20260117000001_analytics_sessions.sql`
+   5. `supabase/migrations/20260117000002_book_stats_materialized.sql`
+   6. `supabase/migrations/20260117000003_revenue_tracking.sql`
+   7. `supabase/migrations/20260117000004_author_payouts.sql`
+   8. `supabase/migrations/20260117000005_book_pricing.sql`
+   9. `supabase/migrations/20260118000000_critical_fixes.sql`
+   10. `supabase/migrations/20260120000006_performance_optimizations.sql`
+   11. `supabase/migrations/20260121000000_profile_trigger.sql`
+   12. `supabase/migrations/20260122000000_social_features.sql`
 
    **Note:** See `docs/MIGRATIONS.md` for detailed migration instructions.
 
