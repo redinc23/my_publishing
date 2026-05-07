@@ -1,7 +1,7 @@
 /* eslint-disable */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -93,6 +93,15 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
     }
   };
 
+  // Memoize the display readers (first 5) to avoid slicing on every render
+  const displayReaders = useMemo(() => {
+    // Filter for active readers (last 15 minutes) and take first 5
+    const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000;
+    return readers
+      .filter(r => new Date(r.last_activity_at).getTime() > fifteenMinutesAgo)
+      .slice(0, 5);
+  }, [readers]);
+
   if (loading) {
     return (
       <Card>
@@ -134,9 +143,9 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {readers.length > 0 ? (
+        {displayReaders.length > 0 ? (
           <div className="space-y-3">
-            {readers.slice(0, 5).map((reader) => (
+            {displayReaders.map((reader) => (
               <div key={reader.session_id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={reader.user?.avatar_url} />
@@ -169,9 +178,9 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
               </div>
             ))}
 
-            {readers.length > 5 && (
+            {displayReaders.length > 5 && (
               <p className="text-xs text-muted-foreground text-center pt-2">
-                And {readers.length - 5} more readers...
+                And {displayReaders.length - 5} more readers...
               </p>
             )}
           </div>

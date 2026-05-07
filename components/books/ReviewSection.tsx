@@ -43,8 +43,9 @@ export function ReviewSection({
 
   const handleReviewSubmit = () => {
     setShowReviewForm(false);
-    // Refresh reviews
-    window.location.reload();
+    // Note: Ideally, the parent component should handle review refetching
+    // using SWR/React Query or by passing a refresh callback prop.
+    // For now, we avoid the expensive full page reload.
   };
 
   const renderEmptyState = () => (

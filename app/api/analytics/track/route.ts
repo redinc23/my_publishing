@@ -113,10 +113,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const deviceType = getDeviceType(userAgent);
     const referrerDomain = getReferrerDomain(referrer || request.headers.get('referer'));
 
-    // Verify book exists and is accessible
+    // Verify book exists and is accessible (single query with author_id)
     const { data: book, error: bookError } = await supabase
       .from('books')
-      .select('id, visibility, status')
+      .select('id, visibility, status, author_id')
       .eq('id', book_id)
       .single();
 
@@ -132,12 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Don't track events for private/draft books unless user is the author
     if (book.visibility === 'private' || book.status !== 'published') {
-      const { data: isAuthor } = await supabase
-        .from('books')
-        .select('id')
-        .eq('id', book_id)
-        .eq('author_id', userId || '')
-        .single();
+      const isAuthor = book.author_id === userId;
 
       if (!isAuthor) {
         return NextResponse.json(
