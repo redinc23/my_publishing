@@ -1,10 +1,11 @@
-# MANGU Platform
+# MANGU Publishers
 
 A complete, production-ready, Netflix-inspired digital publishing platform built with Next.js 14.
 
-## 🚀 Deployment Status: AWS Amplify Ready!
+## Deployment Status
 
-This platform is now configured for immediate deployment to AWS Amplify. See [AWS Amplify Deployment Guide](./docs/AWS_AMPLIFY_DEPLOYMENT.md) for complete instructions.
+Cloud Run via `cloudbuild.yaml` is the canonical production path.
+Vercel and AWS Amplify configs are retained for compatibility and testing, but production release coordination should follow Cloud Build + Cloud Run.
 
 ## Core Features (Phase 1 - Ready for Launch)
 
@@ -74,16 +75,17 @@ The platform uses Supabase with PostgreSQL. You'll need to:
 Migrations are located in `supabase/migrations/` and **must be applied in this exact order**:
 
 1. `20260116000000_initial_schema.sql` - Creates `profiles` table and core schema (required for health check)
-2. `20260116000000_create_books_table.sql` - Books and content tables
-3. `20260117000000_analytics_events.sql` - Analytics event tracking
-4. `20260117000000_storage_policies.sql` - Storage bucket policies
-5. `20260117000001_analytics_sessions.sql` - Session tracking
-6. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
-7. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
-8. `20260117000004_author_payouts.sql` - Author payout system
-9. `20260117000005_book_pricing.sql` - Pricing logic and discounts
-10. `20260118000000_critical_fixes.sql` - Bug fixes and corrections
-11. `20260120000006_performance_optimizations.sql` - Performance indexes
+2. `20260117000000_analytics_events.sql` - Analytics event tracking
+3. `20260117000000_storage_policies.sql` - Storage bucket policies
+4. `20260117000001_analytics_sessions.sql` - Session tracking
+5. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
+6. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
+7. `20260117000004_author_payouts.sql` - Author payout system
+8. `20260117000005_book_pricing.sql` - Pricing logic and discounts
+9. `20260118000000_critical_fixes.sql` - Bug fixes and corrections
+10. `20260120000006_performance_optimizations.sql` - Performance indexes
+11. `20260121000000_profile_trigger.sql` - Profile trigger consistency fixes
+12. `20260122000000_social_features.sql` - Social features schema
 
 **To apply migrations:**
 
@@ -141,20 +143,15 @@ Run the same quality checks as CI (quality-checks + unit-tests + build-test):
 
 ## Deployment
 
-### AWS Amplify (Recommended) 🚀
+### Cloud Run (Canonical Production Path)
 
-The platform is pre-configured for AWS Amplify deployment:
+Production deploys should use Google Cloud Build and Cloud Run:
 
-1. **Quick Deploy to Amplify:**
-   - Connect your GitHub repository to AWS Amplify
-   - Amplify will automatically detect the `amplify.yml` configuration
-   - Add environment variables in Amplify Console
-   - Deploy!
+1. Trigger `cloudbuild.yaml` from `main`
+2. Verify build + deploy steps complete successfully
+3. Validate `/api/health` and critical smoke routes on the custom domain
 
-2. **Detailed Instructions:**
-   See [AWS Amplify Deployment Guide](./docs/AWS_AMPLIFY_DEPLOYMENT.md) for complete step-by-step instructions.
-
-### Vercel (Alternative)
+### Vercel (Secondary / compatibility)
 
 ```bash
 vercel deploy --prod
@@ -163,16 +160,17 @@ vercel deploy --prod
 ### Docker
 
 ```bash
-docker build -t mangu-platform .
-docker run -p 3000:3000 mangu-platform
+docker build -t mangu-publishers .
+docker run -p 3000:3000 mangu-publishers
 ```
 
 ## Documentation
 
 - **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
 - **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
-- **[AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md)** - 5-minute deployment guide
-- **[AWS Amplify Deployment](./docs/AWS_AMPLIFY_DEPLOYMENT.md)** - Complete AWS Amplify setup guide
+- [Cloud Build + Cloud Run Config](./cloudbuild.yaml) - Canonical production deployment pipeline
+- [AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md) - Legacy/secondary deployment path
+- [AWS Amplify Deployment](./docs/AWS_AMPLIFY_DEPLOYMENT.md) - Legacy/secondary deployment path
 - [Vercel Deployment](./docs/DEPLOYMENT.md) - Vercel deployment guide
 - [API Documentation](./docs/API.md) - API reference
 - [Development Guide](./docs/DEVELOPMENT.md) - Development setup and guidelines

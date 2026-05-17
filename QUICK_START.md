@@ -1,4 +1,4 @@
-# 🚀 MANGU Platform - Quick Start Guide
+# MANGU Publishers - Quick Start Guide
 
 ## ✅ Platform Status: PRODUCTION READY
 
@@ -6,7 +6,7 @@ All 150+ files have been created and the platform is complete!
 
 ## 📋 Prerequisites
 
-- Node.js 18+
+- Node.js 20.x
 - npm or yarn
 - Supabase account
 - Stripe account (for payments)
@@ -69,7 +69,7 @@ Visit http://localhost:3000
 ## 📁 Project Structure
 
 ```
-mangs/
+my_publishing/
 ├── app/                    # Next.js app directory
 │   ├── (auth)/            # Authentication pages
 │   ├── (consumer)/        # Public pages
@@ -128,7 +128,11 @@ npm run db:seed      # Seed database
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
+### Cloud Run (Canonical Production)
+
+Use Cloud Build with `cloudbuild.yaml` from `main`.
+
+### Vercel (Secondary)
 
 ```bash
 vercel deploy --prod
@@ -137,8 +141,8 @@ vercel deploy --prod
 ### Docker
 
 ```bash
-docker build -t mangu-platform .
-docker run -p 3000:3000 mangu-platform
+docker build -t mangu-publishers .
+docker run -p 3000:3000 mangu-publishers
 ```
 
 ## 🎉 You're Ready!
