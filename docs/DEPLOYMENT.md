@@ -2,11 +2,13 @@
 
 Complete guide for deploying the MANGU platform to production.
 
+> **Canonical production:** [Cloud Run via Cloud Build](./CANONICAL_PRODUCTION.md). Vercel and Amplify are optional/legacy paths.
+
 ## Deployment Options
 
-- **GCP Cloud Run:** See [MANGU Production Deployment](./MANGU_PRODUCTION_DEPLOYMENT.md) for the full flight manual and `deploy_master.sh` script.
-- **Vercel:** Follow the steps below.
-- **AWS Amplify:** See [AWS Amplify Deployment](./AWS_AMPLIFY_DEPLOYMENT.md).
+- **GCP Cloud Run (canonical):** See [MANGU Production Deployment](./MANGU_PRODUCTION_DEPLOYMENT.md) and [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md). Verify with `./scripts/verify-gcp-production.sh`.
+- **Vercel (optional):** GitHub Actions deploy job runs only when `VERCEL_TOKEN` is set. Steps below.
+- **AWS Amplify (legacy):** See [AWS Amplify Deployment](./AWS_AMPLIFY_DEPLOYMENT.md)—not recommended for new releases.
 
 ## Prerequisites
 

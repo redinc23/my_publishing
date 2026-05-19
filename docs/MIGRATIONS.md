@@ -9,61 +9,72 @@ Migrations **must be applied in this exact order** due to dependencies between t
 1. **20260116000000_initial_schema.sql**
    - Creates `profiles` table (required for health check)
    - Creates `authors` table
+   - Creates `books`, `book_content`, `genres`, and related core tables
    - Sets up core schema and indexes
    - **Dependencies**: None (foundation)
 
-2. **20260116000000_create_books_table.sql**
-   - Creates `books` table
-   - Creates `book_content` table
-   - Creates `genres` table
-   - **Dependencies**: `profiles`, `authors`
-
-3. **20260117000000_analytics_events.sql**
+2. **20260117000000_analytics_events.sql**
    - Creates `analytics_events` table
    - Creates `engagement_events` table
    - Sets up analytics tracking
    - **Dependencies**: `books`, `profiles`
 
-4. **20260117000000_storage_policies.sql**
+3. **20260117000000_storage_policies.sql**
    - Creates storage buckets
    - Sets up Row Level Security (RLS) policies for storage
    - **Dependencies**: `profiles`, `books`
 
-5. **20260117000001_analytics_sessions.sql**
+4. **20260117000001_analytics_sessions.sql**
    - Creates `analytics_sessions` table
    - Creates session tracking functionality
    - **Dependencies**: `analytics_events`
 
-6. **20260117000002_book_stats_materialized.sql**
+5. **20260117000002_book_stats_materialized.sql**
    - Creates materialized views for book statistics
    - Creates refresh functions
    - **Dependencies**: `books`, `analytics_events`
 
-7. **20260117000003_revenue_tracking.sql**
+6. **20260117000003_revenue_tracking.sql**
    - Creates `orders` table
    - Creates `revenue_events` table
    - Sets up payment tracking
    - **Dependencies**: `books`, `profiles`
 
-8. **20260117000004_author_payouts.sql**
+7. **20260117000004_author_payouts.sql**
    - Creates `payouts` table
    - Creates payout calculation functions
    - **Dependencies**: `orders`, `authors`, `books`
 
-9. **20260117000005_book_pricing.sql**
+8. **20260117000005_book_pricing.sql**
    - Creates pricing tables and logic
    - Sets up discount system
    - **Dependencies**: `books`
 
-10. **20260118000000_critical_fixes.sql**
+9. **20260118000000_critical_fixes.sql**
     - Applies bug fixes
     - Updates constraints and indexes
     - **Dependencies**: All previous migrations
 
-11. **20260120000006_performance_optimizations.sql**
+10. **20260120000006_performance_optimizations.sql**
     - Adds performance indexes
     - Optimizes queries
     - **Dependencies**: All previous migrations
+
+11. **20260121000000_profile_trigger.sql**
+    - Auto-creates profile on user signup
+    - **Dependencies**: `profiles`
+
+12. **20260122000000_social_features.sql**
+    - Social tables (reviews, follows, etc.)
+    - **Dependencies**: `profiles`, `books`
+
+### Bundle for SQL Editor
+
+```bash
+./scripts/bundle-migrations.sh > /tmp/mangu-all-migrations.sql
+```
+
+Paste into Supabase SQL Editor in one session, or run file-by-file in order.
 
 ## Applying Migrations
 
@@ -88,7 +99,7 @@ npm run db:migrate -- --dry-run
 npm run db:migrate -- --migration=20260116000000_initial_schema.sql
 ```
 
-**Note**: The migration runner script requires direct database access. If you're using Supabase hosted service, you may need to use the Supabase CLI or SQL Editor instead.
+**Note**: `npm run db:migrate` requires a Supabase `exec_sql` RPC (not enabled on most hosted projects). Use **Option 1** (SQL Editor) or `./scripts/bundle-migrations.sh` instead.
 
 ### Option 3: Using Supabase CLI
 

@@ -1,5 +1,7 @@
 # Phase 2 — fields to gather
 
+> **Intake shell file:** `environment.local.sh` (gitignored) is seeded with `PROJECT_ID=delta-wonder-488420-i3` and `SERVICE_NAME=mangu-publishers`. Fill remaining `REPLACE_ME_*` values below and in that file.
+
 Copy this file, fill it in, then either:
 
 - Save as **`worksheet-export.md`** in this folder (you can gitignore it via `.gitignore` if it contains names/contacts your policy treats as sensitive), **or**

@@ -31,7 +31,8 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # Optional secondary host — canonical production is Cloud Run (see docs/CANONICAL_PRODUCTION.md)
+    if: github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != ''
     steps:
       - uses: actions/checkout@v4
       - uses: amondnet/vercel-action@v20
