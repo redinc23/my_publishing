@@ -4,6 +4,8 @@ A complete, production-ready, Netflix-inspired digital publishing platform built
 
 ## Deployment Status
 
+**Full project documentation:** [docs/MANGU_PUBLISHERS_END_TO_END.md](docs/MANGU_PUBLISHERS_END_TO_END.md) — business, architecture, env, deploy, migrations, Phase 2, and operator roadmap in one place.
+
 Cloud Run via `cloudbuild.yaml` is the canonical production path.
 Vercel and AWS Amplify configs are retained for compatibility and testing, but production release coordination should follow Cloud Build + Cloud Run.
 
