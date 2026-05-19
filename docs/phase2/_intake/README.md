@@ -2,7 +2,13 @@
 
 Use this folder to capture **non-secret** identifiers from your Drive worksheet or ops spreadsheet so command blocks in [`05-milestone-implementation-plan.md`](../05-milestone-implementation-plan.md) stay consistent.
 
-**Start here:** **[`FIELDS_TO_GATHER.md`](FIELDS_TO_GATHER.md)** — full checklist of what to collect and where it goes.
+> Warning: files in this directory may contain real infrastructure identifiers.
+> Never commit `environment.local.sh` or editor recovery files like `*.save`.
+> `.gitignore` rules enforce this safety and should not be changed without review.
+
+**Start here:** **[`ENV_SETUP_WALKTHROUGH.md`](ENV_SETUP_WALKTHROUGH.md)** — step-by-step instructions for copying, filling, validating, and safely handling local environment values.
+
+Then use **[`FIELDS_TO_GATHER.md`](FIELDS_TO_GATHER.md)** as the field checklist for where each value comes from.
 
 ## Steps
 

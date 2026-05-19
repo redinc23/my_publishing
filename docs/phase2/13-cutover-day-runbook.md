@@ -11,6 +11,16 @@ Use canonical variables from `05-milestone-implementation-plan.md`.
 - GO/NO-GO participants are available on launch window.
 - Rollback prerecord fields from `07-operational-runbook.md` are complete.
 
+### Migration Gate (Required Before Cutover)
+
+Database migrations are currently managed as an explicit operational step (not auto-run in CI/CD).
+
+1. Confirm latest migration in `supabase/migrations/` is applied in production.
+2. Record operator, timestamp, and migration evidence link in `14-evidence-and-signoff-log.md`.
+3. Re-check `/api/health` immediately after migration application.
+
+No GO/NO-GO approval should proceed while migration status is unknown.
+
 ## T-24 Hours
 
 ### Actions

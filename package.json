@@ -1,6 +1,9 @@
 {
-  "name": "mangu-platform",
+  "name": "mangu-publishers",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20.0.0 <21.0.0"
+  },
   "private": true,
   "scripts": {
     "validate-env": "tsx scripts/validate-env.ts",
