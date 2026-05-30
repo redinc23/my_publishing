@@ -1,6 +1,6 @@
 -- Create analytics events table with partitioning support
 CREATE TABLE IF NOT EXISTS analytics_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID NOT NULL DEFAULT gen_random_uuid(),
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   session_id TEXT NOT NULL,
@@ -24,13 +24,14 @@ CREATE TABLE IF NOT EXISTS analytics_events (
   os TEXT,
   
   -- Reading context (for 'read' events)
-  chapter_id UUID REFERENCES book_chapters(id) ON DELETE SET NULL,
+  chapter_id UUID,
   chapter_number INTEGER,
   reading_progress NUMERIC(5,2),
   time_spent INTEGER,
   scroll_depth NUMERIC(5,2),
   
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
 
 -- Create partitions for current and next year
@@ -39,6 +40,9 @@ CREATE TABLE analytics_events_2025 PARTITION OF analytics_events
 
 CREATE TABLE analytics_events_2026 PARTITION OF analytics_events
   FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
+
+CREATE TABLE analytics_events_2027 PARTITION OF analytics_events
+  FOR VALUES FROM ('2027-01-01') TO ('2028-01-01');
 
 -- Create default partition for future dates
 CREATE TABLE analytics_events_default PARTITION OF analytics_events DEFAULT;

@@ -19,34 +19,10 @@ BEGIN
 END $$;
 
 -- ============================================
--- FIX 2: Fix storage file size validation function
--- Handles NULL metadata gracefully
+-- FIX 2: Storage file size validation
+-- Skipped: Postgres trigger functions cannot take arguments; size limits
+-- are enforced via storage.buckets.file_size_limit and RLS policies.
 -- ============================================
-CREATE OR REPLACE FUNCTION validate_file_size(max_size_bytes BIGINT)
-RETURNS TRIGGER AS $$
-DECLARE
-    file_size BIGINT;
-BEGIN
-    file_size := NULL;
-    
-    -- Safely extract file size from metadata
-    IF NEW.metadata IS NOT NULL AND NEW.metadata ? 'size' THEN
-        BEGIN
-            file_size := (NEW.metadata->>'size')::BIGINT;
-        EXCEPTION WHEN OTHERS THEN
-            file_size := NULL;
-        END;
-    END IF;
-
-    -- Reject if file exceeds max size
-    IF file_size IS NOT NULL AND file_size > max_size_bytes THEN
-        RAISE EXCEPTION 'File size % bytes exceeds maximum allowed: % bytes', 
-            file_size, max_size_bytes;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
 -- FIX 3: Ensure profiles table has role column
@@ -125,17 +101,17 @@ WITH CHECK (
     AND auth.uid() IS NOT NULL
     AND (storage.foldername(name))[1] = auth.uid()::text
     AND (
-        (NEW.metadata->>'size')::BIGINT <= 5242880  -- 5MB max
-        OR NEW.metadata->>'size' IS NULL
+        (metadata->>'size')::BIGINT <= 5242880  -- 5MB max
+        OR metadata->>'size' IS NULL
     )
     AND (
-        NEW.metadata->>'mimetype' IN (
+        metadata->>'mimetype' IN (
             'image/jpeg', 
             'image/png', 
             'image/webp', 
             'image/gif'
         )
-        OR NEW.metadata->>'mimetype' IS NULL
+        OR metadata->>'mimetype' IS NULL
     )
 );
 
@@ -180,10 +156,18 @@ CREATE INDEX IF NOT EXISTS idx_books_author_status ON books(author_id, status);
 CREATE INDEX IF NOT EXISTS idx_books_created_at ON books(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_books_updated_at ON books(updated_at DESC);
 
--- User follows indexes
-CREATE INDEX IF NOT EXISTS idx_user_follows_following ON user_follows(following_id);
-CREATE INDEX IF NOT EXISTS idx_user_follows_follower ON user_follows(follower_id);
-CREATE INDEX IF NOT EXISTS idx_user_follows_composite ON user_follows(follower_id, following_id);
+-- User follows indexes (table created in social_features migration)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'user_follows'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_user_follows_following ON user_follows(following_id);
+    CREATE INDEX IF NOT EXISTS idx_user_follows_follower ON user_follows(follower_id);
+    CREATE INDEX IF NOT EXISTS idx_user_follows_composite ON user_follows(follower_id, following_id);
+  END IF;
+END $$;
 
 -- Analytics indexes
 CREATE INDEX IF NOT EXISTS idx_analytics_events_book_date ON analytics_events(book_id, created_at DESC);
@@ -193,9 +177,8 @@ CREATE INDEX IF NOT EXISTS idx_analytics_events_session ON analytics_events(sess
 
 -- Orders indexes
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
-CREATE INDEX IF NOT EXISTS idx_orders_book ON orders(book_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON orders(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_book ON order_items(book_id);
 
 -- ============================================
 -- FIX 7: Add unique constraint on slug
@@ -333,12 +316,13 @@ SELECT
     COUNT(DISTINCT ae.id) FILTER (WHERE ae.event_type = 'view') as total_views,
     COUNT(DISTINCT ae.user_id) FILTER (WHERE ae.event_type = 'view') as unique_viewers,
     COUNT(DISTINCT ae.id) FILTER (WHERE ae.event_type = 'purchase') as total_purchases,
-    COALESCE(SUM(o.amount) FILTER (WHERE o.status = 'completed'), 0) as total_revenue,
+    COALESCE(SUM(o.total_amount) FILTER (WHERE o.status = 'completed'), 0) as total_revenue,
     b.created_at,
     b.updated_at
 FROM books b
 LEFT JOIN analytics_events ae ON ae.book_id = b.id
-LEFT JOIN orders o ON o.book_id = b.id
+LEFT JOIN order_items oi ON oi.book_id = b.id
+LEFT JOIN orders o ON o.id = oi.order_id
 GROUP BY b.id, b.title, b.author_id, b.created_at, b.updated_at;
 
 -- ============================================

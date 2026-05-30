@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { webhookRateLimit, getClientIdentifier } from '@/lib/utils/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
 import type { 
@@ -39,7 +39,7 @@ function verifySignature(
  * Check if event was already processed (idempotency)
  */
 async function checkIdempotency(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   eventId: string
 ): Promise<{ processed: boolean; recordId?: string }> {
   const { data: existing } = await supabase
@@ -59,7 +59,7 @@ async function checkIdempotency(
  * Record webhook event for idempotency tracking
  */
 async function recordWebhookEvent(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   event: Stripe.Event
 ): Promise<void> {
   await supabase.from('webhook_events').upsert(
@@ -77,7 +77,7 @@ async function recordWebhookEvent(
  * Mark webhook event as processed
  */
 async function markEventProcessed(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   eventId: string,
   error?: string
 ): Promise<void> {
@@ -95,7 +95,7 @@ async function markEventProcessed(
  * Handle checkout.session.completed event
  */
 async function handleCheckoutCompleted(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   session: Stripe.Checkout.Session
 ): Promise<WebhookProcessingResult> {
   const metadata = session.metadata as CheckoutMetadata | null;
@@ -197,7 +197,7 @@ async function handleCheckoutExpired(
  * Handle charge.refunded event
  */
 async function handleChargeRefunded(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   charge: Stripe.Charge
 ): Promise<WebhookProcessingResult> {
   const paymentIntentId = charge.payment_intent as string;
@@ -313,7 +313,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
 
   // Initialize Supabase client
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Check idempotency
   const idempotencyCheck = await checkIdempotency(supabase, event.id);

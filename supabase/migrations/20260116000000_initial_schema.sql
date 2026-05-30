@@ -1,5 +1,4 @@
--- Enable Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable Extensions (Supabase provides gen_random_uuid() via pgcrypto)
 CREATE EXTENSION IF NOT EXISTS "vector";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
@@ -8,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "unaccent";
 -- PROFILES TABLE
 -- ============================================================================
 CREATE TABLE profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   full_name TEXT,
@@ -23,7 +22,7 @@ CREATE TABLE profiles (
 -- AUTHORS TABLE
 -- ============================================================================
 CREATE TABLE authors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   pen_name TEXT NOT NULL,
   bio TEXT,
@@ -39,7 +38,7 @@ CREATE TABLE authors (
 -- BOOKS TABLE
 -- ============================================================================
 CREATE TABLE books (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   isbn TEXT UNIQUE,
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
@@ -74,7 +73,7 @@ CREATE TABLE books (
 -- BOOK_CONTENT TABLE
 -- ============================================================================
 CREATE TABLE book_content (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   epub_url TEXT,
   pdf_url TEXT,
@@ -88,7 +87,7 @@ CREATE TABLE book_content (
 -- READING_SESSIONS TABLE
 -- ============================================================================
 CREATE TABLE reading_sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   duration INTEGER DEFAULT 0,
@@ -101,7 +100,7 @@ CREATE TABLE reading_sessions (
 -- READING_PROGRESS TABLE
 -- ============================================================================
 CREATE TABLE reading_progress (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   current_position DECIMAL(5,2) DEFAULT 0 CHECK (current_position >= 0 AND current_position <= 100),
@@ -118,7 +117,7 @@ CREATE TABLE reading_progress (
 -- RESONANCE_VECTORS TABLE
 -- ============================================================================
 CREATE TABLE resonance_vectors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   embedding vector(384),
   metadata JSONB DEFAULT '{}'::jsonb,
@@ -130,7 +129,7 @@ CREATE TABLE resonance_vectors (
 -- ENGAGEMENT_EVENTS TABLE
 -- ============================================================================
 CREATE TABLE engagement_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   event_type TEXT NOT NULL CHECK (event_type IN ('view', 'purchase', 'read', 'rating', 'share', 'wishlist')),
@@ -142,7 +141,7 @@ CREATE TABLE engagement_events (
 -- MANUSCRIPTS TABLE
 -- ============================================================================
 CREATE TABLE manuscripts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_id UUID NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   working_title TEXT,
@@ -165,7 +164,7 @@ CREATE TABLE manuscripts (
 -- PARTNERS TABLE
 -- ============================================================================
 CREATE TABLE partners (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   institution_name TEXT NOT NULL,
   subscription_plan TEXT NOT NULL,
@@ -177,7 +176,7 @@ CREATE TABLE partners (
 -- ARC_REQUESTS TABLE
 -- ============================================================================
 CREATE TABLE arc_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   partner_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL DEFAULT 1,
@@ -192,7 +191,7 @@ CREATE TABLE arc_requests (
 -- ORDERS TABLE
 -- ============================================================================
 CREATE TABLE orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number TEXT UNIQUE NOT NULL,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   total_amount DECIMAL(10,2) NOT NULL,
@@ -206,7 +205,7 @@ CREATE TABLE orders (
 -- ORDER_ITEMS TABLE
 -- ============================================================================
 CREATE TABLE order_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   unit_price DECIMAL(10,2) NOT NULL,
@@ -218,7 +217,7 @@ CREATE TABLE order_items (
 -- SUBSCRIPTIONS TABLE
 -- ============================================================================
 CREATE TABLE subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   stripe_subscription_id TEXT UNIQUE NOT NULL,
   status TEXT NOT NULL,
@@ -231,7 +230,7 @@ CREATE TABLE subscriptions (
 -- NOTIFICATIONS TABLE
 -- ============================================================================
 CREATE TABLE notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
   title TEXT NOT NULL,

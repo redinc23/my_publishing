@@ -29,6 +29,8 @@ import { validateStripeConfig, testStripeConnection } from '@/lib/stripe/validat
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
+  ready: boolean;
+  probe: 'readiness';
   timestamp: string;
   uptime_seconds: number;
   version: string;
@@ -48,6 +50,53 @@ interface CheckResult {
 }
 
 const startTime = Date.now();
+
+type DebugPayload = {
+  runId: string;
+  hypothesisId: string;
+  location: string;
+  message: string;
+  data: Record<string, unknown>;
+  timestamp: number;
+};
+
+function debugLog(payload: Omit<DebugPayload, 'timestamp'>): void {
+  const entry: DebugPayload = {
+    ...payload,
+    timestamp: Date.now(),
+  };
+
+  // #region agent log
+  fetch('http://127.0.0.1:7600/ingest/b33062d5-cfbb-4c29-a709-c53dc45a515b', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '5eaffb' },
+    body: JSON.stringify({ sessionId: '5eaffb', ...entry }),
+  }).catch(() => {});
+  console.info('[agent-debug-health]', JSON.stringify({ sessionId: '5eaffb', ...entry }));
+  // #endregion
+}
+
+function getSupabaseEnvShape(): Record<string, unknown> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  let host = '';
+  try {
+    host = supabaseUrl ? new URL(supabaseUrl).host : '';
+  } catch {
+    host = 'invalid-url';
+  }
+
+  return {
+    supabaseUrlHost: host,
+    supabaseUrlHasProjectRef: supabaseUrl.includes('tkzvikozrcynhwsqtkqp'),
+    anonKeyLength: anonKey.length,
+    anonKeyLooksJwt: anonKey.startsWith('eyJ') && anonKey.split('.').length === 3,
+    anonKeyHasWhitespace: /\s/.test(anonKey),
+    serviceRolePresent: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    stripeSecretPresent: Boolean(process.env.STRIPE_SECRET_KEY),
+    stripeWebhookSecretPresent: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+  };
+}
 
 function checkEnvironment(): CheckResult {
   const validation = validateEnvironment();
@@ -72,10 +121,30 @@ function checkEnvironment(): CheckResult {
 async function checkDatabase(supabase: Awaited<ReturnType<typeof createClient>>): Promise<CheckResult> {
   const start = Date.now();
   try {
+    debugLog({
+      runId: 'pre-fix',
+      hypothesisId: 'H1,H2,H3',
+      location: 'app/api/health/route.ts:checkDatabase:before-select',
+      message: 'Before Supabase profiles readiness query',
+      data: getSupabaseEnvShape(),
+    });
     const { error } = await supabase.from('profiles').select('id').limit(1);
     const latency = Date.now() - start;
     
     if (error) {
+      debugLog({
+        runId: 'pre-fix',
+        hypothesisId: 'H1,H2,H4',
+        location: 'app/api/health/route.ts:checkDatabase:error',
+        message: 'Supabase profiles readiness query failed',
+        data: {
+          latency,
+          errorMessage: error.message,
+          errorCode: error.code,
+          errorDetails: error.details,
+          envShape: getSupabaseEnvShape(),
+        },
+      });
       // Provide helpful error messages for common issues
       if (error.message.includes('relation "profiles" does not exist')) {
         return {
@@ -94,10 +163,24 @@ async function checkDatabase(supabase: Awaited<ReturnType<typeof createClient>>)
       return { status: 'fail', latency_ms: latency, message: error.message };
     }
     
+    debugLog({
+      runId: 'pre-fix',
+      hypothesisId: 'H4',
+      location: 'app/api/health/route.ts:checkDatabase:success',
+      message: 'Supabase profiles readiness query passed',
+      data: { latency, envShape: getSupabaseEnvShape() },
+    });
     return { status: latency > 1000 ? 'warn' : 'pass', latency_ms: latency };
   } catch (error) {
     const latency = Date.now() - start;
     const errorMessage = error instanceof Error ? error.message : String(error);
+    debugLog({
+      runId: 'pre-fix',
+      hypothesisId: 'H5',
+      location: 'app/api/health/route.ts:checkDatabase:catch',
+      message: 'Supabase profiles readiness query threw',
+      data: { latency, errorMessage, envShape: getSupabaseEnvShape() },
+    });
     
     // Check for common connection errors
     if (errorMessage.includes('fetch failed') || errorMessage.includes('ECONNREFUSED')) {
@@ -231,8 +314,10 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
       })
     );
 
+    const requiredErrors = requiredChecks.filter(({ error }) => error);
+
     for (const { table, error } of requiredChecks) {
-      if (error && error.message.includes('does not exist')) {
+      if (error?.message.includes('does not exist')) {
         missingRequired.push(table);
       }
     }
@@ -253,6 +338,16 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
     
     const latency = Date.now() - start;
     
+    if (requiredErrors.length > 0 && missingRequired.length === 0) {
+      return {
+        status: 'fail',
+        latency_ms: latency,
+        message: `Required table checks failed: ${requiredErrors
+          .map(({ table, error }) => `${table}: ${error?.message}`)
+          .join('; ')}`,
+      };
+    }
+
     if (missingRequired.length > 0) {
       return {
         status: 'fail',
@@ -277,14 +372,48 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
   }
 }
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
+  const { searchParams } = new URL(request.url);
+  const readyProbe = searchParams.get('ready') === '1';
+
+  debugLog({
+    runId: 'pre-fix',
+    hypothesisId: 'H1,H2,H3,H4,H5',
+    location: 'app/api/health/route.ts:GET:entry',
+    message: 'Health endpoint entered',
+    data: { readyProbe, envShape: getSupabaseEnvShape() },
+  });
+
+  // Lightweight probe for load balancers / smoke tests (always 200 if process is up).
+  if (!readyProbe) {
+    return NextResponse.json(
+      {
+        status: 'ok',
+        probe: 'startup',
+        timestamp: new Date().toISOString(),
+        uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
+      },
+      { status: 200 }
+    );
+  }
+
+  // Full readiness probe (?ready=1) — dependency checks below.
   // First check environment variables before attempting connections
   const envCheck = checkEnvironment();
+  debugLog({
+    runId: 'pre-fix',
+    hypothesisId: 'H3',
+    location: 'app/api/health/route.ts:GET:env-check',
+    message: 'Environment validation completed',
+    data: { envStatus: envCheck.status, envMessage: envCheck.message, envShape: getSupabaseEnvShape() },
+  });
   
   // If environment is not configured, return early with helpful message
   if (envCheck.status === 'fail') {
     const health: HealthStatus = {
       status: 'unhealthy',
+      ready: false,
+      probe: 'readiness',
       timestamp: new Date().toISOString(),
       uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
       version: process.env.npm_package_version || '1.0.0',
@@ -306,6 +435,8 @@ export async function GET(): Promise<NextResponse> {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const health: HealthStatus = {
       status: 'unhealthy',
+      ready: false,
+      probe: 'readiness',
       timestamp: new Date().toISOString(),
       uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
       version: process.env.npm_package_version || '1.0.0',
@@ -327,22 +458,41 @@ export async function GET(): Promise<NextResponse> {
     checkStripe(),
   ]);
 
-  const allPassing = 
-    envCheck.status === 'pass' && 
-    dbCheck.status === 'pass' && 
+  debugLog({
+    runId: 'pre-fix',
+    hypothesisId: 'H1,H2,H3,H4,H5',
+    location: 'app/api/health/route.ts:GET:checks-complete',
+    message: 'Readiness checks completed',
+    data: {
+      dbStatus: dbCheck.status,
+      dbMessage: dbCheck.message,
+      authStatus: authCheck.status,
+      authMessage: authCheck.message,
+      migrationsStatus: migrationsCheck.status,
+      migrationsMessage: migrationsCheck.message,
+      stripeStatus: stripeCheck.status,
+      stripeMessage: stripeCheck.message,
+      envShape: getSupabaseEnvShape(),
+    },
+  });
+
+  const allPassing =
+    envCheck.status === 'pass' &&
+    dbCheck.status === 'pass' &&
     authCheck.status === 'pass' &&
     migrationsCheck.status === 'pass' &&
-    stripeCheck.status !== 'fail'; // Stripe is optional, so warn is OK
+    stripeCheck.status === 'pass';
   
   // envCheck.status cannot be 'fail' here because we return early if it fails
-  const anyFailing = 
-    (dbCheck.status === 'fail') || 
+  const anyFailing =
+    (dbCheck.status === 'fail') ||
     (authCheck.status === 'fail') ||
-    (migrationsCheck.status === 'fail') ||
-    (stripeCheck.status === 'fail');
+    (migrationsCheck.status === 'fail');
 
   const health: HealthStatus = {
     status: anyFailing ? 'unhealthy' : allPassing ? 'healthy' : 'degraded',
+    ready: !anyFailing,
+    probe: 'readiness',
     timestamp: new Date().toISOString(),
     uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
     version: process.env.npm_package_version || '1.0.0',

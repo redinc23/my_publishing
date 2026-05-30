@@ -6,9 +6,7 @@ CREATE INDEX IF NOT EXISTS idx_analytics_events_book_date ON analytics_events(bo
 CREATE INDEX IF NOT EXISTS idx_analytics_events_type_date ON analytics_events(event_type, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_analytics_events_user_book ON analytics_events(user_id, book_id, created_at DESC);
 
--- Create partial indexes for active data
-CREATE INDEX IF NOT EXISTS idx_analytics_events_recent ON analytics_events(created_at DESC)
-WHERE created_at > NOW() - INTERVAL '30 days';
+-- Partial index on recent rows skipped: NOW() is not immutable in index predicates.
 
 -- Optimize book_stats_daily with better aggregation
 CREATE OR REPLACE FUNCTION update_book_stats_daily()

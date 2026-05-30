@@ -56,8 +56,8 @@ steps:
         # Scan both browser and server bundles plus public assets.
         PATTERN="sk_test_|sk_live_|whsec_|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|re_[A-Za-z0-9_]+"
         for target in .next/static .next/server public; do
-          if [ -d "$target" ]; then
-            ! grep -R -nE "$PATTERN" "$target"
+          if [ -d "$$target" ]; then
+            ! grep -R -nE "$$PATTERN" "$$target"
           fi
         done
 
@@ -98,6 +98,17 @@ steps:
       - -c
       - |
         set -euo pipefail
+        REQUIRED_SECRETS="SUPABASE_SERVICE_ROLE_KEY=supabase-service-role-key:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest"
+        OPTIONAL_SECRETS=""
+
+        if gcloud secrets describe resend-api-key --project="$PROJECT_ID" >/dev/null 2>&1; then
+          OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},RESEND_API_KEY=resend-api-key:latest"
+        fi
+
+        if gcloud secrets describe openai-api-key --project="$PROJECT_ID" >/dev/null 2>&1; then
+          OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},OPENAI_API_KEY=openai-api-key:latest"
+        fi
+
         gcloud run deploy "${_SERVICE_NAME}" \
           --image="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA" \
           --platform="${_PLATFORM}" \
@@ -106,10 +117,10 @@ steps:
           --memory="${_MEMORY}" \
           --allow-unauthenticated \
           --no-default-url \
-          --startup-probe=httpGet.path=/api/health,httpGet.port=3000,initialDelaySeconds=10,timeoutSeconds=5,periodSeconds=10,failureThreshold=12 \
-          --liveness-probe=httpGet.path=/api/health,httpGet.port=3000,initialDelaySeconds=30,timeoutSeconds=5,periodSeconds=20,failureThreshold=3 \
+          --startup-probe=httpGet.path=/api/live,httpGet.port=3000,initialDelaySeconds=10,timeoutSeconds=5,periodSeconds=10,failureThreshold=12 \
+          --liveness-probe=httpGet.path=/api/live,httpGet.port=3000,initialDelaySeconds=30,timeoutSeconds=5,periodSeconds=20,failureThreshold=3 \
           --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL},NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY},NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY},NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL}" \
-          --set-secrets="SUPABASE_SERVICE_ROLE_KEY=supabase-service-role-key:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest,RESEND_API_KEY=resend-api-key:latest,OPENAI_API_KEY=openai-api-key:latest"
+          --set-secrets="$${REQUIRED_SECRETS}$${OPTIONAL_SECRETS}"
 
   - id: verify-deploy
     name: gcr.io/google.com/cloudsdktool/cloud-sdk

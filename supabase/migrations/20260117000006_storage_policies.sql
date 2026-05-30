@@ -1,14 +1,4 @@
 -- Enhanced storage policies with size limits and virus scanning placeholder
-CREATE OR REPLACE FUNCTION validate_file_size(max_size_bytes BIGINT)
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.metadata->>'size'::BIGINT > max_size_bytes THEN
-    RAISE EXCEPTION 'File size exceeds maximum allowed size';
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 -- Enhanced bucket configurations
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES
   ('book-covers', 'book-covers', true, 5242880, 
