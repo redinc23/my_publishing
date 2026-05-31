@@ -11,15 +11,29 @@
 
 import { validateEnvironment, printValidationResults } from '../lib/utils/env-validation';
 
+function loadEnvironmentFiles() {
+  // Prefer Next's env loader so validation matches `next dev` behavior.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { loadEnvConfig } = require('@next/env');
+    loadEnvConfig(process.cwd());
+    return;
+  } catch {
+    // Fall through to dotenv as a best-effort fallback.
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('dotenv').config({ path: '.env.local' });
+  } catch {
+    // No supported env loader available; continue with existing process env.
+  }
+}
+
 function main() {
   console.log('🔍 Validating environment variables...\n');
 
-  // Load .env.local if it exists
-  try {
-    require('dotenv').config({ path: '.env.local' });
-  } catch {
-    // dotenv not available or .env.local doesn't exist - that's okay
-  }
+  loadEnvironmentFiles();
 
   const result = validateEnvironment();
   printValidationResults(result);
