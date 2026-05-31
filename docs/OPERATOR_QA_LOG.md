@@ -1,18 +1,24 @@
 # Operator QA Log
 
-Automated checks from plan execution (2026-05-19). Manual browser steps still required for auth/checkout.
+Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
 ## Automated (agent-run)
 
 | Check | Command / URL | Result |
 |-------|---------------|--------|
-| Type-check | `npm run type-check` | PASS (main, 2026-05-19) |
-| Lint | `npm run lint` | PASS |
-| Unit tests | `npm test` | PASS 12/12 |
-| Production build | `USE_MOCKS=true npm run build` | PASS |
-| Local health | `curl localhost:3000/api/health` | PASS (mock mode) |
+| Type-check | `npm run type-check` | PASS (2026-05-31) |
+| Lint | `npm run lint` | PASS (2026-05-31) |
+| Unit tests | `npm test` | PASS 12/12 (2026-05-31) |
+| Env validation | `npm run validate-env` | PASS (2026-05-31) |
+| Production build | `USE_MOCKS=true npm run build` | PASS (2026-05-19) |
+| Local health | `curl localhost:3000/api/health` | PASS (mock mode, 2026-05-19) |
 | GitHub Actions secrets | `gh secret list` | 5 secrets configured |
 | PR #73 merge | `gh pr merge 73` | Merged to `main` |
+| Homepage assets push | commit `ff23d55` | Pushed to `origin/main` (2026-05-31) |
+| Prod smoke `/` | `curl https://mangu-publishers.com/` | HTTP 200 (old deploy still live, 2026-05-31) |
+| Prod smoke `/api/health` | `curl https://mangu-publishers.com/api/health` | HTTP 200 `{"status":"ok",...}` (2026-05-31) |
+| Prod smoke static homepage | `curl https://mangu-publishers.com/homepage/v_a_1.html` | HTTP 404 until Cloud Run redeploy (2026-05-31) |
+| Cloud Build deploy | `./scripts/gcloud-build-submit.sh` | **BLOCKED:** `gcloud auth login` required (token refresh failed) |
 
 ## Manual (operator — browser)
 
@@ -27,16 +33,18 @@ Automated checks from plan execution (2026-05-19). Manual browser steps still re
 | 7 | Browse `/books` | ☐ | | Requires migrations + seed |
 | 8 | Stripe test checkout `4242…` | ☐ | | [WEBHOOK_TESTING.md](./WEBHOOK_TESTING.md) |
 | 9 | Stripe webhook event received | ☐ | | Dashboard → Webhooks |
+| 10 | New static homepage loads at `/` | ☐ | | After Cloud Run redeploy with `ff23d55` |
 
 ## Infrastructure (operator — cloud)
 
 | Item | Script / action | Status |
 |------|-----------------|--------|
 | GCP secrets | `./scripts/sync-gcp-secrets-from-env.sh` | **Blocked:** run `gcloud auth login` locally, then re-run |
-| GCP smoke | `./scripts/verify-gcp-production.sh` | Ran 2026-05-19: 5 secrets MISSING; Cloud Run service not deployed yet |
-| Supabase migrations | `./scripts/bundle-migrations.sh` → SQL Editor | **Blocked:** `.env.local` still has placeholder Supabase URL |
+| GCP deploy | `./scripts/gcloud-build-submit.sh` | **Blocked:** same — auth token refresh failed 2026-05-31 |
+| GCP smoke | `./scripts/verify-gcp-production.sh` | Partial: domain live; redeploy needed for new homepage |
+| Supabase migrations | `./scripts/bundle-migrations.sh` → SQL Editor | Operator-dependent |
 | Canonical prod | `docs/CANONICAL_PRODUCTION.md` | **Done** — Cloud Run; issue #70 closed |
-| Stripe prod webhook | `https://YOUR_DOMAIN/api/webhook` → Secret Manager | See [WEBHOOK_TESTING.md](./WEBHOOK_TESTING.md) |
+| Stripe prod webhook | `https://mangu-publishers.com/api/webhook` → Secret Manager | See [WEBHOOK_TESTING.md](./WEBHOOK_TESTING.md) |
 
 ## Phase 2 intake
 
@@ -45,3 +53,17 @@ Automated checks from plan execution (2026-05-19). Manual browser steps still re
 | `environment.local.sh` | Created with `PROJECT_ID`; fill domain/slugs/RACI |
 | `FIELDS_TO_GATHER.md` | Template — operator to complete |
 | `12-ownership-raci.md` | Worksheet placeholders remain until names provided |
+
+## Redeploy checklist (operator — run after `gcloud auth login`)
+
+```bash
+gcloud auth login
+gcloud config set project delta-wonder-488420-i3
+./scripts/gcloud-build-submit.sh
+./scripts/verify-gcp-production.sh
+curl -I https://mangu-publishers.com/
+curl -I https://mangu-publishers.com/homepage/v_a_1.html
+curl -sS https://mangu-publishers.com/api/health | head -c 500
+```
+
+Expected after redeploy: `/` redirects or serves new homepage; `/homepage/v_a_1.html` returns HTTP 200.
