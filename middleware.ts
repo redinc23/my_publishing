@@ -1,7 +1,46 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { checkRateLimit, authLimiter, uploadLimiter } from '@/lib/rate-limit';
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Apply rate limiting to auth endpoints
+  if (pathname.startsWith('/api/auth/')) {
+    try {
+      const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+      const result = await checkRateLimit(ip, authLimiter);
+
+      if (!result.success) {
+        return new NextResponse('Too Many Requests', {
+          status: 429,
+          headers: result.headers,
+        });
+      }
+    } catch (error) {
+      console.error('Rate limit check failed for auth endpoint:', error);
+      // Allow request to proceed if rate limiting fails (fail-open)
+    }
+  }
+
+  // Apply rate limiting to upload endpoints
+  if (pathname.startsWith('/api/upload') || pathname.includes('/upload')) {
+    try {
+      const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+      const result = await checkRateLimit(ip, uploadLimiter);
+
+      if (!result.success) {
+        return new NextResponse('Too Many Requests', {
+          status: 429,
+          headers: result.headers,
+        });
+      }
+    } catch (error) {
+      console.error('Rate limit check failed for upload endpoint:', error);
+      // Allow request to proceed if rate limiting fails (fail-open)
+    }
+  }
+
   // Check for required environment variables
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.error('Missing Supabase environment variables. Check .env.local.example for setup instructions.');
@@ -47,8 +86,6 @@ export async function middleware(request: NextRequest) {
     if (userError && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
       return response;
     }
-
-    const { pathname } = request.nextUrl;
 
     // Public routes
     const publicRoutes = ['/', '/books', '/genres', '/login', '/register', '/reset-password', '/api'];
@@ -152,7 +189,6 @@ export async function middleware(request: NextRequest) {
     return response;
   } catch (error) {
     // If middleware fails completely, allow public routes to proceed
-    const { pathname } = request.nextUrl;
     const publicRoutes = ['/', '/books', '/genres', '/login', '/register', '/reset-password', '/api'];
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
