@@ -1,10 +1,10 @@
 {
   "name": "mangu-publishers",
   "version": "1.0.0",
+  "private": true,
   "engines": {
     "node": ">=20.0.0 <21.0.0"
   },
-  "private": true,
   "scripts": {
     "validate-env": "tsx scripts/validate-env.ts",
     "dev": "npm run validate-env && next dev",
