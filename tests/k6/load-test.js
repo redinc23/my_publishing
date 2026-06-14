@@ -340,8 +340,6 @@ function recordUnexpectedStatus(response, acceptableStatuses, isCritical = false
 
 // "strict"  → we only accept 200; any deviation is a real problem.
 // "tolerant"→ we deliberately allow degraded/non-200 statuses (e.g. 503/401).
-// This carries real signal (which endpoints we're lenient on) instead of a
-// constant placeholder tag, and stays cheap (one of two values).
 function deriveExpectation(acceptableStatuses) {
   return acceptableStatuses.length === 1 && acceptableStatuses[0] === 200 ? 'strict' : 'tolerant';
 }
@@ -362,7 +360,7 @@ function sendRequest({
 }) {
   const tags = {
     name,
-    type, // already exactly 'page' | 'api' — no redundant 'surface' tag
+    type,
     auth: auth ? 'true' : 'false',
     expected: expected || deriveExpectation(acceptableStatuses),
   };
@@ -560,12 +558,11 @@ export const options = {
 
   thresholds: {
     // Transport failures (DNS/TCP/TLS/5xx). 2% tolerance is the single source
-    // of truth for "how much failure is acceptable" — see the 5xx note below.
+    // of truth for "how much failure is acceptable".
     http_req_failed: ['rate<0.02'],
     business_errors: ['rate<0.02'],
 
-    // 5xx-specific gate, expressed as a RATE so it scales with traffic instead
-    // of failing the whole spike test on one transient error at peak.
+    // 5xx-specific gate, expressed as a RATE so it scales with traffic.
     unexpected_5xx_rate: ['rate<0.01'],
 
     // Blended latency (all surfaces)
@@ -575,10 +572,7 @@ export const options = {
     page_latency: ['p(95)<2500', 'p(99)<4500'],
     api_latency: ['p(95)<1000', 'p(99)<2000'],
 
-    // Per-endpoint guardrails. NOTE: these are scoped to a single route, so a
-    // looser number here than the page_latency aggregate (2500) is intentional
-    // — e.g. the homepage is the heaviest SSR page and gets its own 3000ms
-    // budget without dragging the aggregate up. Not a typo.
+    // Per-endpoint guardrails.
     'http_req_duration{name:api_live}': ['p(95)<300'],
     'http_req_duration{name:api_health}': ['p(95)<800'],
     'http_req_duration{name:page_home}': ['p(95)<3000'],
