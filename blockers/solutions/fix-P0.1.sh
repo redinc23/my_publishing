@@ -9,5 +9,4 @@ cd "$(dirname "$0")/../.."
 echo '20' > .nvmrc
 rm -f package-lock.json
 npm install
-npm ci
  echo '✅ P0.1 Done'
