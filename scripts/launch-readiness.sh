@@ -21,6 +21,7 @@ npm ci
 npm run type-check
 npm run lint
 npm test
+./scripts/verify-migrations.sh
 npm run build
 
 node -e "

@@ -54,7 +54,7 @@ steps:
         set -euo pipefail
         # Runtime-only secrets must never be embedded in artifacts.
         # Scan both browser and server bundles plus public assets.
-        PATTERN="sk_test_|sk_live_|whsec_|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|re_[A-Za-z0-9_]+"
+        PATTERN="sk_test_|sk_live_|whsec_|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|re_[A-Za-z0-9_]+|SUPABASE_SERVICE_ROLE_KEY|STRIPE_SECRET_KEY|RESEND_API_KEY|UPSTASH_REDIS_REST_TOKEN"
         for target in .next/static .next/server public; do
           if [ -d "$$target" ]; then
             ! grep -R -nE "$$PATTERN" "$$target"
