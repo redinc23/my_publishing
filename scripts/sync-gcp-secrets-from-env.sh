@@ -51,5 +51,11 @@ fi
 if [[ -n "${OPENAI_API_KEY:-}" ]]; then
   upsert_secret openai-api-key "${OPENAI_API_KEY}"
 fi
+if [[ -n "${UPSTASH_REDIS_REST_URL:-}" ]]; then
+  upsert_secret upstash-redis-rest-url "${UPSTASH_REDIS_REST_URL}"
+fi
+if [[ -n "${UPSTASH_REDIS_REST_TOKEN:-}" ]]; then
+  upsert_secret upstash-redis-rest-token "${UPSTASH_REDIS_REST_TOKEN}"
+fi
 
 echo "Done. Run ./scripts/verify-gcp-production.sh to confirm."
