@@ -186,7 +186,11 @@ export function validateEnvironment(): EnvValidationResult {
     warnings.push(
       'Upstash rate limiting requires both UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN'
     );
-  } else if (!hasUpstashUrl && process.env.NODE_ENV === 'production' && !useMocks()) {
+  } else if (
+    !hasUpstashUrl &&
+    process.env.NODE_ENV === 'production' &&
+    process.env.USE_MOCKS !== 'true'
+  ) {
     warnings.push(
       'Upstash Redis not configured — distributed rate limiting disabled in production'
     );
