@@ -8,11 +8,17 @@ import {
   PasswordResetEmail,
 } from './templates';
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error('RESEND_API_KEY is not set');
-}
+let resend: Resend | null = null;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not set');
+    }
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export async function sendEmail(
   to: string,
@@ -20,7 +26,8 @@ export async function sendEmail(
   react: React.ReactElement
 ) {
   try {
-    const { data, error } = await resend.emails.send({
+    const client = getResend();
+    const { data, error } = await client.emails.send({
       from: 'MANGU <noreply@mangu.app>',
       to,
       subject,

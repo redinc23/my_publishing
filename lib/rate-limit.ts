@@ -1,31 +1,63 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+let authLimiter: Ratelimit | null = null;
+let uploadLimiter: Ratelimit | null = null;
+let generalLimiter: Ratelimit | null = null;
 
-export const authLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "1 m"),
-  analytics: true,
-  prefix: "ratelimit:auth",
-});
+function getRedis(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    console.warn('[rate-limit] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not set; skipping Redis rate limiter');
+    return null;
+  }
+  return new Redis({ url, token });
+}
 
-export const uploadLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(30, "1 m"),
-  analytics: true,
-  prefix: "ratelimit:upload",
-});
+function getAuthLimiter(): Ratelimit | null {
+  if (!authLimiter) {
+    const redis = getRedis();
+    if (!redis) return null;
+    authLimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(5, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:auth",
+    });
+  }
+  return authLimiter;
+}
 
-export const generalLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(100, "1 m"),
-  analytics: true,
-  prefix: "ratelimit:general",
-});
+function getUploadLimiter(): Ratelimit | null {
+  if (!uploadLimiter) {
+    const redis = getRedis();
+    if (!redis) return null;
+    uploadLimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(30, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:upload",
+    });
+  }
+  return uploadLimiter;
+}
+
+function getGeneralLimiter(): Ratelimit | null {
+  if (!generalLimiter) {
+    const redis = getRedis();
+    if (!redis) return null;
+    generalLimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(100, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:general",
+    });
+  }
+  return generalLimiter;
+}
+
+export { getAuthLimiter, getUploadLimiter, getGeneralLimiter };
 
 export type RateLimitResult = {
   success: boolean;
@@ -37,8 +69,18 @@ export type RateLimitResult = {
 
 export async function checkRateLimit(
   identifier: string,
-  limiter: Ratelimit
+  limiter: Ratelimit | null
 ): Promise<RateLimitResult> {
+  if (!limiter) {
+    // Graceful degradation: pass through when no limiter available
+    return {
+      success: true,
+      limit: 0,
+      remaining: 0,
+      reset: 0,
+      headers: {},
+    };
+  }
   const { success, limit, remaining, reset } = await limiter.limit(identifier);
 
   return {
