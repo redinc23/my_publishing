@@ -17,6 +17,8 @@ REQUIRED_SECRETS=(
 OPTIONAL_SECRETS=(
   resend-api-key
   openai-api-key
+  upstash-redis-rest-url
+  upstash-redis-rest-token
 )
 
 echo "=== GCP production verification ==="

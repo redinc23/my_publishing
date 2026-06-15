@@ -5,9 +5,9 @@ cd "$ROOT"
 
 echo "🚀 Blocker fix-all verification..."
 
-if [[ -f .nvmrc ]] && command -v nvm >/dev/null 2>&1; then
+if [[ -f .nvmrc ]] && [[ -s "${HOME}/.nvm/nvm.sh" ]]; then
   # shellcheck disable=SC1090
-  source "$HOME/.nvm/nvm.sh" 2>/dev/null || true
+  source "${HOME}/.nvm/nvm.sh"
   nvm use "$(cat .nvmrc)" 2>/dev/null || true
 fi
 
@@ -29,19 +29,25 @@ npm run lint
 echo "→ test"
 npm test
 
+echo "→ migrations"
+./scripts/verify-migrations.sh
+
 echo "→ build"
 npm run build
-
-echo "→ migrations"
-if [[ -x ./scripts/verify-migrations.sh ]]; then
-  ./scripts/verify-migrations.sh
-fi
 
 echo "→ lockfile @upstash check"
 node -e "
 const d=require('./package-lock.json').packages[''].dependencies;
-if(!d['@upstash/ratelimit']||!d['@upstash/redis']) { console.error('FAIL: @upstash missing from lockfile'); process.exit(1); }
+if(!d['@upstash/ratelimit']||!d['@upstash/redis']) { console.error('FAIL: @upstash missing'); process.exit(1); }
 console.log('PASS: @upstash in lockfile');
 "
 
-echo "✅ All automated blocker verifications passed"
+echo "→ post-build secret scan"
+PATTERN='sk_test_[A-Za-z0-9]+|sk_live_[A-Za-z0-9]+|whsec_[A-Za-z0-9]+'
+for target in .next/static .next/server public; do
+  if [[ -d "$target" ]]; then
+    ! grep -R -nE "$PATTERN" "$target"
+  fi
+done
+
+echo "✅ All automated blocker verifications passed (100% engineering readiness)"

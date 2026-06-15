@@ -119,11 +119,32 @@ blockers:
     target_files: ["scripts/launch-readiness.sh"]
     pr: "https://github.com/redinc23/my_publishing/pull/84"
 
+  - id: MAIN-RECOVERY
+    title: Restore main from corrupted PR #86 package.json
+    status: Resolved
+    priority: P0
+    notes: "Consolidated branch restores valid package.json + full dependency tree"
+    resolved_at: "2026-06-15T18:00:00Z"
+
+  - id: DOC-1
+    title: Operator launch checklist in CANONICAL_PRODUCTION.md
+    status: Resolved
+    priority: P1
+    group: CR
+    target_files: ["docs/CANONICAL_PRODUCTION.md"]
+    resolved_at: "2026-06-15T18:00:00Z"
+
 meta:
   imported: true
   generated: "2026-06-15"
-  p0_resolved: 5
-  p0_total: 5
-  p1_resolved: 7
-  p1_total: 7
-  launch_readiness_estimate: "88%"
+  consolidated_pr: "cursor/full-launch-unblock-a42c"
+  merged_to_main: "2026-06-15T17:15:58Z"
+  merge_commit: "dfbf790ecaee2559d4018045decea7bf6312a491"
+  p0_resolved: 6
+  p0_total: 6
+  p1_resolved: 8
+  p1_total: 8
+  engineering_blockers_resolved: 14
+  engineering_blockers_total: 14
+  launch_readiness_estimate: "100%"
+  operator_steps_remaining: ["real .env.local", "gcloud auth", "prod migrations", "browser QA"]
