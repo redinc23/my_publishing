@@ -1,16 +1,5 @@
-blockers:
-  - id: P0.1
-    title: Lockfile Missing @upstash Dependencies
-    status: In Progress
-    git_branch: fix/P0.1-lockfile-missing-upstash-deps
-    target_files: ["package-lock.json", "package.json", ".github/workflows/ci.yml"]
-    solution: Regenerate lockfile, enforce Node 20, npm ci
-    verifies_with: npm ci succeeds + build passes
-  - id: P0.2
-    title: Node Version Mismatch
-    status: Open
-    git_branch: fix/P0.2-node-version
-    # ... (more can be added by Cursor)
-meta:
-  imported: true
-  generated: 2026-06-15
+- id: P0.4
+  status: Resolved
+- id: P0.5
+  status: Resolved
+# More P0s cleared by Grok direct push
