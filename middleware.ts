@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { checkRateLimit, authLimiter, uploadLimiter } from '@/lib/rate-limit';
+import { checkRateLimit, getAuthLimiter, getUploadLimiter } from '@/lib/rate-limit';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -9,7 +9,8 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/auth/')) {
     try {
       const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
-      const result = await checkRateLimit(ip, authLimiter);
+      const limiter = getAuthLimiter();
+      const result = await checkRateLimit(ip, limiter);
 
       if (!result.success) {
         return new NextResponse('Too Many Requests', {
@@ -27,7 +28,8 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/upload') || pathname.includes('/upload')) {
     try {
       const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
-      const result = await checkRateLimit(ip, uploadLimiter);
+      const limiter = getUploadLimiter();
+      const result = await checkRateLimit(ip, limiter);
 
       if (!result.success) {
         return new NextResponse('Too Many Requests', {
