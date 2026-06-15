@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": ">=20.0.0 <21.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "validate-env": "tsx scripts/validate-env.ts",
     "dev": "npm run validate-env && next dev",
-    "build": "NODE_ENV=production next build",
+    "build": "next build",
     "start": "NODE_ENV=production next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
