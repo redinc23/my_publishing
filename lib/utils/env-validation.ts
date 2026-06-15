@@ -106,6 +106,28 @@ const envConfigs: EnvConfig[] = [
     },
   },
   {
+    name: 'UPSTASH_REDIS_REST_URL',
+    required: false,
+    description: 'Upstash Redis REST URL (required for distributed rate limiting)',
+    validate: (value) => {
+      if (value && !value.startsWith('https://')) {
+        return 'Upstash REST URL must start with https://';
+      }
+      return true;
+    },
+  },
+  {
+    name: 'UPSTASH_REDIS_REST_TOKEN',
+    required: false,
+    description: 'Upstash Redis REST token (required for distributed rate limiting)',
+    validate: (value) => {
+      if (value && value.length < 10) {
+        return 'Upstash REST token appears invalid';
+      }
+      return true;
+    },
+  },
+  {
     name: 'NEXT_PUBLIC_SITE_URL',
     required: false,
     description: 'Base URL of the application',
@@ -156,6 +178,18 @@ export function validateEnvironment(): EnvValidationResult {
     if (!hasStripeWebhook) {
       warnings.push('Stripe webhook secret missing (required for webhook verification)');
     }
+  }
+
+  const hasUpstashUrl = !!process.env.UPSTASH_REDIS_REST_URL;
+  const hasUpstashToken = !!process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (hasUpstashUrl !== hasUpstashToken) {
+    warnings.push(
+      'Upstash rate limiting requires both UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN'
+    );
+  } else if (!hasUpstashUrl && process.env.NODE_ENV === 'production' && !useMocks()) {
+    warnings.push(
+      'Upstash Redis not configured — distributed rate limiting disabled in production'
+    );
   }
 
   return {

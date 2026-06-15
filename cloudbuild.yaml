@@ -109,6 +109,14 @@ steps:
           OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},OPENAI_API_KEY=openai-api-key:latest"
         fi
 
+        if gcloud secrets describe upstash-redis-rest-url --project="$PROJECT_ID" >/dev/null 2>&1; then
+          OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},UPSTASH_REDIS_REST_URL=upstash-redis-rest-url:latest"
+        fi
+
+        if gcloud secrets describe upstash-redis-rest-token --project="$PROJECT_ID" >/dev/null 2>&1; then
+          OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},UPSTASH_REDIS_REST_TOKEN=upstash-redis-rest-token:latest"
+        fi
+
         gcloud run deploy "${_SERVICE_NAME}" \
           --image="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA" \
           --platform="${_PLATFORM}" \
