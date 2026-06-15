@@ -1,1 +1,49 @@
-{"blockers": [{"id": "P0.1", "title": "Lockfile Missing @upstash Dependencies", "status": "In Progress", "target_files": ["package.json", "package-lock.json"], "git_branch": "fix/P0.1-lockfile-missing-upstash-deps"}]}
+{
+  "meta": {
+    "generated": "2026-06-15",
+    "p0_resolved": 5,
+    "p0_total": 5,
+    "launch_readiness_estimate": "72%"
+  },
+  "blockers": [
+    {
+      "id": "P0.1",
+      "title": "Lockfile Missing @upstash Dependencies",
+      "status": "Resolved",
+      "priority": "P0",
+      "git_branch": "fix/P0.1-lockfile-missing-upstash-deps",
+      "pr": "https://github.com/redinc23/my_publishing/pull/79"
+    },
+    {
+      "id": "P0.2",
+      "title": "Node Version Mismatch",
+      "status": "Resolved",
+      "priority": "P0",
+      "git_branch": "fix/P0.2-node-version",
+      "pr": "https://github.com/redinc23/my_publishing/pull/80"
+    },
+    {
+      "id": "P0.3",
+      "title": "UPSTASH Environment Wiring",
+      "status": "Resolved",
+      "priority": "P0",
+      "git_branch": "fix/P0.3-upstash-env",
+      "pr": "https://github.com/redinc23/my_publishing/pull/82"
+    },
+    {
+      "id": "P0.4",
+      "title": "Rate-limit Unit Test Stubs",
+      "status": "Resolved",
+      "priority": "P0",
+      "git_branch": "fix/P0.4-rate-limit-tests",
+      "pr": "https://github.com/redinc23/my_publishing/pull/83"
+    },
+    {
+      "id": "P0.5",
+      "title": "Middleware Rate-limit Graceful Degradation",
+      "status": "Resolved",
+      "priority": "P0",
+      "git_branch": "fix/P0.3-upstash-env"
+    }
+  ]
+}

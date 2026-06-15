@@ -1,5 +1,66 @@
-- id: P0.4
-  status: Resolved
-- id: P0.5
-  status: Resolved
-# More P0s cleared by Grok direct push
+blockers:
+  - id: P0.1
+    title: Lockfile Missing @upstash Dependencies
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.1-lockfile-missing-upstash-deps
+    target_files: ["package-lock.json", ".nvmrc"]
+    solution: Regenerate lockfile on Node 20; add root .nvmrc
+    verifies_with: npm ci && npm run build
+    pr: "https://github.com/redinc23/my_publishing/pull/79"
+    resolved_at: "2026-06-15T16:30:00Z"
+    notes: "@upstash/ratelimit and @upstash/redis added to package-lock.json"
+
+  - id: P0.2
+    title: Node Version Mismatch
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.2-node-version
+    target_files: [".nvmrc", ".npmrc", ".github/workflows/ci.yml"]
+    solution: engine-strict via .npmrc; CI uses node-version-file
+    verifies_with: npm ci on Node 20
+    pr: "https://github.com/redinc23/my_publishing/pull/80"
+    resolved_at: "2026-06-15T16:31:00Z"
+    notes: "Aligns local, CI, Cloud Build, and Dockerfile on Node 20"
+
+  - id: P0.3
+    title: UPSTASH Environment Wiring
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.3-upstash-env
+    target_files: [".env.local.example", ".env.production.example", "lib/utils/env-validation.ts", "cloudbuild.yaml", "lib/rate-limit.ts"]
+    solution: Document UPSTASH vars; optional GCP secrets; graceful rate-limit init
+    verifies_with: npm run build && npm test
+    pr: "https://github.com/redinc23/my_publishing/pull/82"
+    resolved_at: "2026-06-15T16:32:00Z"
+    notes: "No secrets committed; Cloud Run injection opt-in via Secret Manager"
+
+  - id: P0.4
+    title: Rate-limit Unit Test Stubs
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.4-rate-limit-tests
+    target_files: ["tests/unit/auth-rate-limit.test.ts", "tests/unit/book-action-rate-limit.test.ts"]
+    solution: Replace invalid placeholders with real Jest suites
+    verifies_with: npm test
+    pr: "https://github.com/redinc23/my_publishing/pull/83"
+    resolved_at: "2026-06-15T16:33:00Z"
+    notes: "19 tests passing across 5 suites"
+
+  - id: P0.5
+    title: Middleware Rate-limit Graceful Degradation
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.3-upstash-env
+    target_files: ["lib/rate-limit.ts", "middleware.ts"]
+    solution: Null limiters pass-through; middleware fail-open on errors
+    verifies_with: npm test && npm run build
+    resolved_at: "2026-06-15T16:32:00Z"
+    notes: "Resolved with P0.3 lazy Upstash init"
+
+meta:
+  imported: true
+  generated: "2026-06-15"
+  p0_resolved: 5
+  p0_total: 5
+  launch_readiness_estimate: "72%"
