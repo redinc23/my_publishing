@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -e
+
+# Navigate to the repository root relative to the script location
+cd "$(dirname "$0")/../.."
+
  echo '🔧 P0.1 Fixing lockfile...'
  node --version
 echo '20' > .nvmrc
