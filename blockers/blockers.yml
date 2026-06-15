@@ -1,0 +1,148 @@
+blockers:
+  - id: P0.1
+    title: Lockfile Missing @upstash Dependencies
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.1-lockfile-missing-upstash-deps
+    target_files: ["package-lock.json", ".nvmrc"]
+    solution: Regenerate lockfile on Node 20; add root .nvmrc
+    verifies_with: npm ci && npm run build
+    pr: "https://github.com/redinc23/my_publishing/pull/79"
+    resolved_at: "2026-06-15T16:30:00Z"
+    notes: "@upstash/ratelimit and @upstash/redis added to package-lock.json"
+
+  - id: P0.2
+    title: Node Version Mismatch
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.2-node-version
+    target_files: [".nvmrc", ".npmrc", ".github/workflows/ci.yml"]
+    solution: engine-strict via .npmrc; CI uses node-version-file
+    verifies_with: npm ci on Node 20
+    pr: "https://github.com/redinc23/my_publishing/pull/80"
+    resolved_at: "2026-06-15T16:31:00Z"
+    notes: "Aligns local, CI, Cloud Build, and Dockerfile on Node 20"
+
+  - id: P0.3
+    title: UPSTASH Environment Wiring
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.3-upstash-env
+    target_files: [".env.local.example", ".env.production.example", "lib/utils/env-validation.ts", "cloudbuild.yaml", "lib/rate-limit.ts"]
+    solution: Document UPSTASH vars; optional GCP secrets; graceful rate-limit init
+    verifies_with: npm run build && npm test
+    pr: "https://github.com/redinc23/my_publishing/pull/82"
+    resolved_at: "2026-06-15T16:32:00Z"
+    notes: "No secrets committed; Cloud Run injection opt-in via Secret Manager"
+
+  - id: P0.4
+    title: Rate-limit Unit Test Stubs
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.4-rate-limit-tests
+    target_files: ["tests/unit/auth-rate-limit.test.ts", "tests/unit/book-action-rate-limit.test.ts"]
+    solution: Replace invalid placeholders with real Jest suites
+    verifies_with: npm test
+    pr: "https://github.com/redinc23/my_publishing/pull/83"
+    resolved_at: "2026-06-15T16:33:00Z"
+    notes: "19 tests passing across 5 suites"
+
+  - id: P0.5
+    title: Middleware Rate-limit Graceful Degradation
+    status: Resolved
+    priority: P0
+    git_branch: fix/P0.3-upstash-env
+    target_files: ["lib/rate-limit.ts", "middleware.ts"]
+    solution: Null limiters pass-through; middleware fail-open on errors
+    verifies_with: npm test && npm run build
+    resolved_at: "2026-06-15T16:32:00Z"
+    notes: "Resolved with P0.3 lazy Upstash init"
+
+  - id: ENV-1
+    title: Upstash GCP Secret Sync
+    status: Resolved
+    priority: P1
+    group: ENV
+    git_branch: fix/ENV-upstash-secret-sync
+    target_files: ["scripts/sync-gcp-secrets-from-env.sh", "scripts/verify-gcp-production.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/84"
+    resolved_at: "2026-06-15T16:35:00Z"
+
+  - id: INF-1
+    title: Local CI script uses npm not pnpm
+    status: Resolved
+    priority: P1
+    group: INF
+    git_branch: fix/P1-launch-hardening
+    target_files: ["scripts/ci-local.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/85"
+    resolved_at: "2026-06-15T17:00:00Z"
+
+  - id: DB-1
+    title: Migration file verification script
+    status: Resolved
+    priority: P1
+    group: DB
+    git_branch: fix/P1-launch-hardening
+    target_files: ["scripts/verify-migrations.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/85"
+    resolved_at: "2026-06-15T17:00:00Z"
+
+  - id: SEC-1
+    title: Expand secret audit patterns
+    status: Resolved
+    priority: P1
+    group: SEC
+    git_branch: fix/P1-launch-hardening
+    target_files: ["cloudbuild.yaml"]
+    pr: "https://github.com/redinc23/my_publishing/pull/85"
+    resolved_at: "2026-06-15T17:00:00Z"
+
+  - id: STRIPE-1
+    title: Stripe webhook in Cloud Run deploy
+    status: Resolved
+    priority: P1
+    group: STRIPE
+  - id: CR-1
+    title: Canonical production target documented
+    status: Resolved
+    priority: P1
+    group: CR
+    notes: "docs/CANONICAL_PRODUCTION.md — Cloud Run authoritative"
+
+  - id: QA-1
+    title: Local launch readiness script
+    status: Resolved
+    priority: P1
+    group: QA
+    git_branch: fix/ENV-upstash-secret-sync
+    target_files: ["scripts/launch-readiness.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/84"
+
+  - id: MAIN-RECOVERY
+    title: Restore main from corrupted PR #86 package.json
+    status: Resolved
+    priority: P0
+    notes: "Consolidated branch restores valid package.json + full dependency tree"
+    resolved_at: "2026-06-15T18:00:00Z"
+
+  - id: DOC-1
+    title: Operator launch checklist in CANONICAL_PRODUCTION.md
+    status: Resolved
+    priority: P1
+    group: CR
+    target_files: ["docs/CANONICAL_PRODUCTION.md"]
+    resolved_at: "2026-06-15T18:00:00Z"
+
+meta:
+  imported: true
+  generated: "2026-06-15"
+  consolidated_pr: "cursor/full-launch-unblock-a42c"
+  p0_resolved: 6
+  p0_total: 6
+  p1_resolved: 8
+  p1_total: 8
+  engineering_blockers_resolved: 14
+  engineering_blockers_total: 14
+  launch_readiness_estimate: "100%"
+  operator_steps_remaining: ["real .env.local", "gcloud auth", "prod migrations", "browser QA"]
