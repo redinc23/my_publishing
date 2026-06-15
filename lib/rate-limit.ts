@@ -67,6 +67,14 @@ export type RateLimitResult = {
   headers: Record<string, string>;
 };
 
+const PASS_THROUGH: RateLimitResult = {
+  success: true,
+  limit: 0,
+  remaining: 0,
+  reset: Date.now(),
+  headers: {},
+};
+
 export async function checkRateLimit(
   identifier: string,
   limiter: Ratelimit | null
@@ -89,10 +97,10 @@ export async function checkRateLimit(
     remaining,
     reset,
     headers: {
-      "X-RateLimit-Limit": limit.toString(),
-      "X-RateLimit-Remaining": remaining.toString(),
-      "X-RateLimit-Reset": reset.toString(),
-      "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+      'X-RateLimit-Limit': limit.toString(),
+      'X-RateLimit-Remaining': remaining.toString(),
+      'X-RateLimit-Reset': reset.toString(),
+      'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
     },
   };
 }
