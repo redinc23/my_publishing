@@ -5,6 +5,7 @@
 | P0 Resolved | **6 / 6** |
 | P1 Resolved | **8 / 8** |
 | Engineering readiness | **100%** |
+| Merged to main | **2026-06-15** (PR #87, commit `dfbf790`) |
 | Operator steps | 4 manual (secrets, GCP, DB, QA) |
 
 ## Consolidated fix (replaces stacked PRs #79–#85)

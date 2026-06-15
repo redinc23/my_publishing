@@ -1,6 +1,8 @@
 {
   "meta": {
     "generated": "2026-06-15",
+    "merged_to_main": "2026-06-15T17:15:58Z",
+    "merge_commit": "dfbf790ecaee2559d4018045decea7bf6312a491",
     "p0_resolved": 6,
     "p0_total": 6,
     "p1_resolved": 8,
