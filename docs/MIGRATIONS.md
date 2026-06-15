@@ -19,7 +19,7 @@ Migrations **must be applied in this exact order** due to dependencies between t
    - Sets up analytics tracking
    - **Dependencies**: `books`, `profiles`
 
-3. **20260117000000_storage_policies.sql**
+3. **20260117000006_storage_policies.sql**
    - Creates storage buckets
    - Sets up Row Level Security (RLS) policies for storage
    - **Dependencies**: `profiles`, `books`
@@ -118,7 +118,7 @@ supabase db push
 
 After applying migrations, verify:
 
-1. **Health Check**: Visit `/api/health` - should return "healthy" status
+1. **Health Check**: Visit `/api/health?ready=1` - should return `"ready": true` and a healthy or acceptable degraded status
 2. **Tables Exist**: Check that all expected tables exist in Supabase dashboard
 3. **RLS Policies**: Verify Row Level Security policies are active
 4. **Functions**: Check that database functions were created successfully

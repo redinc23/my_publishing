@@ -7,12 +7,12 @@ Complete guide for deploying the MANGU platform to production.
 ## Deployment Options
 
 - **GCP Cloud Run (canonical):** See [MANGU Production Deployment](./MANGU_PRODUCTION_DEPLOYMENT.md) and [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md). Verify with `./scripts/verify-gcp-production.sh`.
-- **Vercel (optional):** GitHub Actions deploy job runs only when `VERCEL_TOKEN` is set. Steps below.
+- **Vercel (optional):** Legacy manual workflow only. Steps below are for intentional preview/staging checks, not production.
 - **AWS Amplify (legacy):** See [AWS Amplify Deployment](./AWS_AMPLIFY_DEPLOYMENT.md)—not recommended for new releases.
 
 ## Prerequisites
 
-- Node.js 18+ installed
+- Node.js 20 installed (`package.json` requires `>=20.0.0 <21.0.0`)
 - Supabase account and project
 - Vercel account (or alternative hosting)
 - Stripe account

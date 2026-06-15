@@ -61,19 +61,16 @@ type DebugPayload = {
 };
 
 function debugLog(payload: Omit<DebugPayload, 'timestamp'>): void {
+  if (process.env.NODE_ENV !== 'development') {
+    return;
+  }
+
   const entry: DebugPayload = {
     ...payload,
     timestamp: Date.now(),
   };
 
-  // #region agent log
-  fetch('http://127.0.0.1:7600/ingest/b33062d5-cfbb-4c29-a709-c53dc45a515b', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '5eaffb' },
-    body: JSON.stringify({ sessionId: '5eaffb', ...entry }),
-  }).catch(() => {});
-  console.info('[agent-debug-health]', JSON.stringify({ sessionId: '5eaffb', ...entry }));
-  // #endregion
+  console.info('[health-debug]', JSON.stringify(entry));
 }
 
 function getSupabaseEnvShape(): Record<string, unknown> {

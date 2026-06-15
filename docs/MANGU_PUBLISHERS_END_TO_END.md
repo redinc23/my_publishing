@@ -90,7 +90,7 @@ Modernize reading and democratize publishing by connecting readers, indie author
 ### 2.4 Success metrics (launch-grade)
 
 - Custom domain loads over HTTPS; deep links work.
-- `GET /api/health` returns HTTP 200 with DB/auth checks passing.
+- `GET /api/health?ready=1` returns HTTP 200 with DB/auth checks passing.
 - No server secrets in client bundle or public logs.
 - Stripe checkout and webhooks process test/live payments correctly.
 - RBAC blocks unauthorized `/admin`, `/author`, `/partner` access.
@@ -171,7 +171,8 @@ flowchart TB
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /api/health` | Env, DB, auth, Stripe, migration checks |
+| `GET /api/health?ready=1` | Env, DB, auth, Stripe, migration checks |
+| `GET /api/live` | Lightweight Cloud Run liveness probe |
 | `POST /api/checkout` | Stripe Checkout session |
 | `POST /api/webhook` | Stripe events (requires webhook secret) |
 | `POST /api/upload` | File upload |
@@ -287,7 +288,7 @@ File: `docs/phase2/_intake/environment.local.sh` (gitignored). Template: `enviro
 3. `npm run build`  
 4. secret-audit (static bundle scan)  
 5. Docker build + push (`:SHORT_SHA`, `:main`)  
-6. `gcloud run deploy` with startup/liveness probes on `/api/health`  
+6. `gcloud run deploy` with startup/liveness probes on `/api/live`  
 7. verify-deploy  
 
 **Runtime secrets (Secret Manager names):**
@@ -306,12 +307,13 @@ gcloud auth login
 ./scripts/verify-gcp-production.sh       # secrets + health
 ```
 
-### 7.2 Secondary: GitHub Actions → Vercel
+### 7.2 Secondary: GitHub Actions and legacy Vercel
 
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml):
 
-- **On PR / push to `main`:** type-check, lint, test, build (needs Supabase secrets for build).
-- **Deploy job:** Only if `VERCEL_TOKEN` is set; treats Vercel as optional/staging.
+- **On PR / push to `main`:** type-check, lint, test, build.
+- **No production deploy:** production releases are Cloud Build + Cloud Run only.
+- **Legacy Vercel workflow:** manual-only via `.github/workflows/vercel-deploy.yml`.
 
 ### 7.3 Legacy: AWS Amplify
 
@@ -322,7 +324,7 @@ gcloud auth login
 | Path | Node | Tests in pipeline | Production? |
 |------|------|-------------------|-------------|
 | Cloud Build | 20 | lint, type-check, build | **Yes (canonical)** |
-| GitHub Actions | 20 | lint, type-check, test, build | Vercel optional |
+| GitHub Actions | 20 | lint, type-check, test, build | CI only |
 | Amplify | unpinned | build only | Legacy |
 
 ---
@@ -333,7 +335,7 @@ gcloud auth login
 
 1. `20260116000000_initial_schema.sql` — profiles, authors, books, genres, core schema  
 2. `20260117000000_analytics_events.sql`  
-3. `20260117000000_storage_policies.sql`  
+3. `20260117000006_storage_policies.sql`  
 4. `20260117000001_analytics_sessions.sql`  
 5. `20260117000002_book_stats_materialized.sql`  
 6. `20260117000003_revenue_tracking.sql`  
@@ -531,7 +533,7 @@ Secret leakage, build-before-docker, deep links, security headers, health checks
 | Deliverable | Evidence |
 |-------------|----------|
 | Healthy CI | Green GitHub Actions on `main` |
-| Health API | `/api/health` JSON on prod |
+| Health API | `/api/health?ready=1` JSON on prod |
 | Migration state | Supabase tables + `schema_migrations` if used |
 | Phase 2 signoff | [14-evidence-and-signoff-log.md](./phase2/14-evidence-and-signoff-log.md) |
 | Manual QA | [OPERATOR_QA_LOG.md](./OPERATOR_QA_LOG.md) |

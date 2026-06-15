@@ -16,7 +16,7 @@ Automated checks from plan execution. Manual browser steps still required for au
 | PR #73 merge | `gh pr merge 73` | Merged to `main` |
 | Homepage assets push | commit `ff23d55` | Pushed to `origin/main` (2026-05-31) |
 | Prod smoke `/` | `curl https://mangu-publishers.com/` | HTTP 200 (old deploy still live, 2026-05-31) |
-| Prod smoke `/api/health` | `curl https://mangu-publishers.com/api/health` | HTTP 200 `{"status":"ok",...}` (2026-05-31) |
+| Prod smoke readiness | `curl 'https://mangu-publishers.com/api/health?ready=1'` | Pending after Cloud Run redeploy |
 | Prod smoke static homepage | `curl https://mangu-publishers.com/homepage/v_a_1.html` | HTTP 404 until Cloud Run redeploy (2026-05-31) |
 | Cloud Build deploy | `./scripts/gcloud-build-submit.sh` | **BLOCKED:** `gcloud auth login` required (token refresh failed) |
 
@@ -63,7 +63,7 @@ gcloud config set project delta-wonder-488420-i3
 ./scripts/verify-gcp-production.sh
 curl -I https://mangu-publishers.com/
 curl -I https://mangu-publishers.com/homepage/v_a_1.html
-curl -sS https://mangu-publishers.com/api/health | head -c 500
+curl -sS 'https://mangu-publishers.com/api/health?ready=1' | head -c 500
 ```
 
 Expected after redeploy: `/` redirects or serves new homepage; `/homepage/v_a_1.html` returns HTTP 200.

@@ -29,4 +29,4 @@ Trigger Cloud Build so the new secret version is mounted on the Cloud Run servic
 ## 4. Verify
 
 - Stripe Dashboard → Webhook → **Send test webhook**
-- App logs / `/api/health` should show Stripe configured
+- App logs / `/api/health?ready=1` should show Stripe configured

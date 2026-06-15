@@ -18,7 +18,7 @@ interface HealthCheck {
 
 async function getHealthStatus(): Promise<HealthCheck> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/health`, {
+  const response = await fetch(`${baseUrl}/api/health?ready=1`, {
     cache: 'no-store',
   });
 

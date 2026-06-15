@@ -17,6 +17,8 @@ REQUIRED_SECRETS=(
 OPTIONAL_SECRETS=(
   resend-api-key
   openai-api-key
+  upstash-redis-rest-url
+  upstash-redis-rest-token
 )
 
 echo "=== GCP production verification ==="
@@ -93,13 +95,13 @@ if gcloud run services describe "${SERVICE_NAME}" \
   fi
 
   echo
-  echo "--- Readiness check GET ${url}/api/health ---"
-  if curl -sfS "${url}/api/health" | head -c 500; then
+  echo "--- Readiness check GET ${url}/api/health?ready=1 ---"
+  if curl -sfS "${url}/api/health?ready=1" | head -c 500; then
     echo
     echo
     echo "Readiness endpoint responded."
   else
-    echo "WARNING: /api/health failed or returned non-2xx"
+    echo "WARNING: /api/health?ready=1 failed or returned non-2xx"
     exit 1
   fi
 else

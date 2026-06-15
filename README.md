@@ -9,6 +9,8 @@ A complete, production-ready, Netflix-inspired digital publishing platform built
 Cloud Run via `cloudbuild.yaml` is the canonical production path.
 Vercel and AWS Amplify configs are retained for compatibility and testing, but production release coordination should follow Cloud Build + Cloud Run.
 
+**Production launch home base:** [docs/launch/](docs/launch/) — one build runbook plus an account-links workbook for Supabase, Stripe, GCP, DNS, and related dashboards.
+
 ## Core Features (Phase 1 - Ready for Launch)
 
 - 📚 Book marketplace with browsing and search
@@ -78,7 +80,7 @@ Migrations are located in `supabase/migrations/` and **must be applied in this e
 
 1. `20260116000000_initial_schema.sql` - Creates `profiles` table and core schema (required for health check)
 2. `20260117000000_analytics_events.sql` - Analytics event tracking
-3. `20260117000000_storage_policies.sql` - Storage bucket policies
+3. `20260117000006_storage_policies.sql` - Storage bucket policies
 4. `20260117000001_analytics_sessions.sql` - Session tracking
 5. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
 6. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
@@ -111,7 +113,7 @@ supabase db push
 
 **Verification:**
 After running migrations, verify the setup by checking:
-- `/api/health` endpoint should return `"status": "healthy"` with database check passing
+- `/api/health?ready=1` endpoint should return `"ready": true` with database check passing
 - The `profiles` table should exist (required for authentication)
 
 ## Project Structure
@@ -149,9 +151,10 @@ Run the same quality checks as CI (quality-checks + unit-tests + build-test):
 
 Production deploys should use Google Cloud Build and Cloud Run:
 
-1. Trigger `cloudbuild.yaml` from `main`
+1. Fill [docs/launch/PRODUCTION_ACCOUNT_LINKS.md](./docs/launch/PRODUCTION_ACCOUNT_LINKS.md) with dashboard links and launch evidence
+2. Trigger `cloudbuild.yaml` from `main`
 2. Verify build + deploy steps complete successfully
-3. Validate `/api/health` and critical smoke routes on the custom domain
+3. Validate `/api/live`, `/api/health?ready=1`, and critical smoke routes on the custom domain
 
 ### Vercel (Secondary / compatibility)
 
@@ -168,7 +171,8 @@ docker run -p 3000:3000 mangu-publishers
 
 ## Documentation
 
-- **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
+- **[Launch Folder](./docs/launch/README.md)** - Single production build runbook and account-links workbook
+- **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete Cloud Run pre-launch verification checklist
 - **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
 - [Cloud Build + Cloud Run Config](./cloudbuild.yaml) - Canonical production deployment pipeline
 - [AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md) - Legacy/secondary deployment path

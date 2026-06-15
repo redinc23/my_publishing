@@ -30,6 +30,7 @@ steps:
         set -euo pipefail
         npm run lint
         npm run type-check
+        npm test
 
   - id: next-build
     name: node:20
@@ -107,6 +108,14 @@ steps:
 
         if gcloud secrets describe openai-api-key --project="$PROJECT_ID" >/dev/null 2>&1; then
           OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},OPENAI_API_KEY=openai-api-key:latest"
+        fi
+
+        if gcloud secrets describe upstash-redis-rest-url --project="$PROJECT_ID" >/dev/null 2>&1; then
+          OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},UPSTASH_REDIS_REST_URL=upstash-redis-rest-url:latest"
+        fi
+
+        if gcloud secrets describe upstash-redis-rest-token --project="$PROJECT_ID" >/dev/null 2>&1; then
+          OPTIONAL_SECRETS="$${OPTIONAL_SECRETS},UPSTASH_REDIS_REST_TOKEN=upstash-redis-rest-token:latest"
         fi
 
         gcloud run deploy "${_SERVICE_NAME}" \

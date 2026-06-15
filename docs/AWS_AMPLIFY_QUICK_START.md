@@ -1,5 +1,7 @@
 # 🚀 AWS Amplify - Quick Start
 
+> Legacy reference only. MANGU production launches use [Cloud Build + Cloud Run](./launch/ONE_PRODUCTION_BUILD.md). Do not use AWS Amplify for production unless a new architecture decision replaces [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md).
+
 This guide gets you up and running on AWS Amplify in under 10 minutes.
 
 ## What You Need

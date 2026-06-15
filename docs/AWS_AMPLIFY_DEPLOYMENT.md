@@ -1,5 +1,7 @@
 # AWS Amplify Deployment Guide
 
+> Legacy reference only. MANGU production launches use [Cloud Build + Cloud Run](./launch/ONE_PRODUCTION_BUILD.md). Do not use AWS Amplify for production unless a new architecture decision replaces [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md).
+
 Complete guide for deploying the MANGU platform to AWS Amplify.
 
 ## 🚀 Quick Start
