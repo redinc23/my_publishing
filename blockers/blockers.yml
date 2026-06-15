@@ -58,9 +58,66 @@ blockers:
     resolved_at: "2026-06-15T16:32:00Z"
     notes: "Resolved with P0.3 lazy Upstash init"
 
+  - id: ENV-1
+    title: Upstash GCP Secret Sync
+    status: Resolved
+    priority: P1
+    group: ENV
+    git_branch: fix/ENV-upstash-secret-sync
+    target_files: ["scripts/sync-gcp-secrets-from-env.sh", "scripts/verify-gcp-production.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/84"
+    resolved_at: "2026-06-15T16:35:00Z"
+
+  - id: INF-1
+    title: Local CI script uses npm not pnpm
+    status: In Progress
+    priority: P1
+    group: INF
+    git_branch: fix/P1-inf-ci-local
+    target_files: ["scripts/ci-local.sh"]
+
+  - id: DB-1
+    title: Migration file verification script
+    status: In Progress
+    priority: P1
+    group: DB
+    git_branch: fix/P1-db-verify-migrations
+    target_files: ["scripts/verify-migrations.sh"]
+
+  - id: SEC-1
+    title: Expand secret audit patterns
+    status: In Progress
+    priority: P1
+    group: SEC
+    git_branch: fix/P1-sec-audit-expand
+    target_files: ["cloudbuild.yaml", "scripts/launch-readiness.sh"]
+
+  - id: STRIPE-1
+    title: Stripe webhook in Cloud Run deploy
+    status: Resolved
+    priority: P1
+    group: STRIPE
+  - id: CR-1
+    title: Canonical production target documented
+    status: Resolved
+    priority: P1
+    group: CR
+    notes: "docs/CANONICAL_PRODUCTION.md — Cloud Run authoritative"
+
+  - id: QA-1
+    title: Local launch readiness script
+    status: Resolved
+    priority: P1
+    group: QA
+    git_branch: fix/ENV-upstash-secret-sync
+    target_files: ["scripts/launch-readiness.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/84"
+
 meta:
   imported: true
   generated: "2026-06-15"
   p0_resolved: 5
   p0_total: 5
-  launch_readiness_estimate: "72%"
+  p1_resolved: 4
+  p1_total: 7
+  launch_readiness_estimate: "82%"
