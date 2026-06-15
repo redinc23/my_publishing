@@ -16,6 +16,8 @@ interface HealthCheck {
   };
 }
 
+type CheckStatus = 'pass' | 'fail' | 'warn' | undefined;
+
 async function getHealthStatus(): Promise<HealthCheck> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const response = await fetch(`${baseUrl}/api/health?ready=1`, {
@@ -33,7 +35,17 @@ async function getHealthStatus(): Promise<HealthCheck> {
   return response.json();
 }
 
-function StatusIcon({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }) {
+function getOverallCheckStatus(status: HealthCheck['status']): CheckStatus {
+  if (status === 'healthy') {
+    return 'pass';
+  }
+  if (status === 'degraded') {
+    return 'warn';
+  }
+  return 'fail';
+}
+
+function StatusIcon({ status }: { status: CheckStatus }) {
   if (status === 'pass') {
     return <CheckCircle2 className="h-5 w-5 text-green-500" />;
   }
@@ -46,7 +58,7 @@ function StatusIcon({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }
   return <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />;
 }
 
-function StatusBadge({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }) {
+function StatusBadge({ status }: { status: CheckStatus }) {
   if (status === 'pass') {
     return <Badge className="bg-green-500">Pass</Badge>;
   }
@@ -62,6 +74,7 @@ function StatusBadge({ status }: { status: 'pass' | 'fail' | 'warn' | undefined 
 export default async function HealthDashboardPage() {
   await requireAdmin();
   const health = await getHealthStatus();
+  const overallStatus = getOverallCheckStatus(health.status);
 
   return (
     <Container className="py-8">
@@ -80,28 +93,12 @@ export default async function HealthDashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Overall Status</span>
-            <StatusBadge
-              status={
-                health.status === 'healthy'
-                  ? 'pass'
-                  : health.status === 'degraded'
-                    ? 'warn'
-                    : 'fail'
-              }
-            />
+            <StatusBadge status={overallStatus} />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <StatusIcon
-              status={
-                health.status === 'healthy'
-                  ? 'pass'
-                  : health.status === 'degraded'
-                    ? 'warn'
-                    : 'fail'
-              }
-            />
+            <StatusIcon status={overallStatus} />
             <span className="text-lg font-semibold capitalize">{health.status}</span>
           </div>
         </CardContent>

@@ -117,6 +117,8 @@ Expected GCP Secret Manager entries:
 - `stripe-webhook-secret`
 - `openai-api-key` optional
 - `resend-api-key` optional
+- `upstash-redis-rest-url` optional
+- `upstash-redis-rest-token` optional
 
 ### 5. Launch one production build
 

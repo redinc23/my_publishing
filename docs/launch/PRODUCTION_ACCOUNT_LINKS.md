@@ -58,8 +58,8 @@ Track secret presence and owner only. Never store values here.
 | `NEXT_PUBLIC_SITE_URL` | `.env.local`, Cloud Build substitution | Yes |  | Not checked |
 | `OPENAI_API_KEY` | GCP Secret Manager: `openai-api-key` | Optional |  | Not checked |
 | `RESEND_API_KEY` | GCP Secret Manager: `resend-api-key` | Optional |  | Not checked |
-| `UPSTASH_REDIS_REST_URL` | TBD | Optional unless fail-closed rate limiting is required |  | Not checked |
-| `UPSTASH_REDIS_REST_TOKEN` | TBD | Optional unless fail-closed rate limiting is required |  | Not checked |
+| `UPSTASH_REDIS_REST_URL` | GCP Secret Manager: `upstash-redis-rest-url` | Optional unless fail-closed rate limiting is required |  | Not checked |
+| `UPSTASH_REDIS_REST_TOKEN` | GCP Secret Manager: `upstash-redis-rest-token` | Optional unless fail-closed rate limiting is required |  | Not checked |
 
 ## Launch evidence
 
