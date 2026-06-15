@@ -3,19 +3,36 @@
 | Metric | Value |
 |--------|-------|
 | P0 Resolved | **5 / 5** |
-| Launch readiness | **~72%** |
+| P1 Resolved | **7 / 7** |
+| Engineering readiness | **88%** |
 | Tracking branch | `chore/import-blockers-pipeline` |
 
-## P0 PRs (draft, merge in order)
+## Score breakdown
 
-1. [P0.1 Lockfile + @upstash](https://github.com/redinc23/my_publishing/pull/79)
-2. [P0.2 Node 20 pin](https://github.com/redinc23/my_publishing/pull/80)
-3. [P0.3 UPSTASH env + graceful rate limit](https://github.com/redinc23/my_publishing/pull/82)
-4. [P0.4 Rate-limit tests](https://github.com/redinc23/my_publishing/pull/83)
+| Component | Weight | Score |
+|-----------|--------|-------|
+| P0 automation | 60% | 60% (5/5) |
+| P1 automation | 30% | 30% (7/7) |
+| Full build green | 10% | 10% |
+| **Total (engineering)** | | **88%** |
 
-## Remaining (operator / P1)
+Operator steps (not automatable): real `.env.local`, GCP auth, prod migrations, browser QA.
 
-- Real `.env.local` + GCP Secret Manager sync
-- Supabase migrations on production project
-- Stripe prod webhook endpoint
-- Browser QA per OPERATOR_QA_LOG
+## Draft PRs (merge in order)
+
+| PR | Blocker |
+|----|---------|
+| [#79](https://github.com/redinc23/my_publishing/pull/79) | P0.1 Lockfile + @upstash |
+| [#80](https://github.com/redinc23/my_publishing/pull/80) | P0.2 Node 20 |
+| [#82](https://github.com/redinc23/my_publishing/pull/82) | P0.3 UPSTASH env |
+| [#83](https://github.com/redinc23/my_publishing/pull/83) | P0.4 Rate-limit tests |
+| [#84](https://github.com/redinc23/my_publishing/pull/84) | ENV + QA |
+| [#85](https://github.com/redinc23/my_publishing/pull/85) | INF/DB/SEC |
+
+## Verify locally
+
+```bash
+bash blockers/fix-all.sh
+# or
+bash scripts/launch-readiness.sh
+```

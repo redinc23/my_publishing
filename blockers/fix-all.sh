@@ -32,6 +32,11 @@ npm test
 echo "→ build"
 npm run build
 
+echo "→ migrations"
+if [[ -x ./scripts/verify-migrations.sh ]]; then
+  ./scripts/verify-migrations.sh
+fi
+
 echo "→ lockfile @upstash check"
 node -e "
 const d=require('./package-lock.json').packages[''].dependencies;

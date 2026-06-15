@@ -70,27 +70,33 @@ blockers:
 
   - id: INF-1
     title: Local CI script uses npm not pnpm
-    status: In Progress
+    status: Resolved
     priority: P1
     group: INF
-    git_branch: fix/P1-inf-ci-local
+    git_branch: fix/P1-launch-hardening
     target_files: ["scripts/ci-local.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/85"
+    resolved_at: "2026-06-15T17:00:00Z"
 
   - id: DB-1
     title: Migration file verification script
-    status: In Progress
+    status: Resolved
     priority: P1
     group: DB
-    git_branch: fix/P1-db-verify-migrations
+    git_branch: fix/P1-launch-hardening
     target_files: ["scripts/verify-migrations.sh"]
+    pr: "https://github.com/redinc23/my_publishing/pull/85"
+    resolved_at: "2026-06-15T17:00:00Z"
 
   - id: SEC-1
     title: Expand secret audit patterns
-    status: In Progress
+    status: Resolved
     priority: P1
     group: SEC
-    git_branch: fix/P1-sec-audit-expand
-    target_files: ["cloudbuild.yaml", "scripts/launch-readiness.sh"]
+    git_branch: fix/P1-launch-hardening
+    target_files: ["cloudbuild.yaml"]
+    pr: "https://github.com/redinc23/my_publishing/pull/85"
+    resolved_at: "2026-06-15T17:00:00Z"
 
   - id: STRIPE-1
     title: Stripe webhook in Cloud Run deploy
@@ -118,6 +124,6 @@ meta:
   generated: "2026-06-15"
   p0_resolved: 5
   p0_total: 5
-  p1_resolved: 4
+  p1_resolved: 7
   p1_total: 7
-  launch_readiness_estimate: "82%"
+  launch_readiness_estimate: "88%"

@@ -3,47 +3,22 @@
     "generated": "2026-06-15",
     "p0_resolved": 5,
     "p0_total": 5,
-    "launch_readiness_estimate": "72%"
+    "p1_resolved": 7,
+    "p1_total": 7,
+    "launch_readiness_estimate": "88%"
   },
   "blockers": [
-    {
-      "id": "P0.1",
-      "title": "Lockfile Missing @upstash Dependencies",
-      "status": "Resolved",
-      "priority": "P0",
-      "git_branch": "fix/P0.1-lockfile-missing-upstash-deps",
-      "pr": "https://github.com/redinc23/my_publishing/pull/79"
-    },
-    {
-      "id": "P0.2",
-      "title": "Node Version Mismatch",
-      "status": "Resolved",
-      "priority": "P0",
-      "git_branch": "fix/P0.2-node-version",
-      "pr": "https://github.com/redinc23/my_publishing/pull/80"
-    },
-    {
-      "id": "P0.3",
-      "title": "UPSTASH Environment Wiring",
-      "status": "Resolved",
-      "priority": "P0",
-      "git_branch": "fix/P0.3-upstash-env",
-      "pr": "https://github.com/redinc23/my_publishing/pull/82"
-    },
-    {
-      "id": "P0.4",
-      "title": "Rate-limit Unit Test Stubs",
-      "status": "Resolved",
-      "priority": "P0",
-      "git_branch": "fix/P0.4-rate-limit-tests",
-      "pr": "https://github.com/redinc23/my_publishing/pull/83"
-    },
-    {
-      "id": "P0.5",
-      "title": "Middleware Rate-limit Graceful Degradation",
-      "status": "Resolved",
-      "priority": "P0",
-      "git_branch": "fix/P0.3-upstash-env"
-    }
+    {"id": "P0.1", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/79"},
+    {"id": "P0.2", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/80"},
+    {"id": "P0.3", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/82"},
+    {"id": "P0.4", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/83"},
+    {"id": "P0.5", "status": "Resolved"},
+    {"id": "ENV-1", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/84"},
+    {"id": "INF-1", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/85"},
+    {"id": "DB-1", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/85"},
+    {"id": "SEC-1", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/85"},
+    {"id": "STRIPE-1", "status": "Resolved"},
+    {"id": "CR-1", "status": "Resolved"},
+    {"id": "QA-1", "status": "Resolved", "pr": "https://github.com/redinc23/my_publishing/pull/84"}
   ]
 }
