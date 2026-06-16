@@ -9,6 +9,7 @@
     "validate-env": "tsx scripts/validate-env.ts",
     "dev": "npm run validate-env && next dev",
     "build": "next build",
+    
     "start": "NODE_ENV=production next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -36,7 +37,7 @@
     "@stripe/stripe-js": "^2.4.0",
     "@supabase/ssr": "^0.1.0",
     "@supabase/supabase-js": "^2.39.0",
-    "@upstash/ratelimit": "^1.1.3",
+    "@upstash/ratelimit": "1.1.3",
     "@upstash/redis": "^1.32.0",
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.0",
