@@ -57,7 +57,7 @@ const PASS_THROUGH: RateLimitResult = {
   success: true,
   limit: 0,
   remaining: 0,
-  reset: Date.now(),
+  reset: 0,
   headers: {},
 };
 
