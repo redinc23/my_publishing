@@ -1,10 +1,39 @@
-import { checkRateLimit, getUploadLimiter } from '@/lib/rate-limit';
+/**
+ * @jest-environment node
+ */
 
-describe('Book Action Rate Limiting', () => {
+import { checkRateLimit, uploadLimiter, getUploadLimiter } from '@/lib/rate-limit';
+
+describe('book action rate limiting', () => {
+  const originalEnv = process.env;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetModules();
+    process.env = { ...originalEnv };
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
   });
 
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  // Remote tests for direct limiter exports
+  it('passes through when Upstash is not configured', async () => {
+    const { checkRateLimit: crl, authLimiter } = await import('../../lib/rate-limit');
+    const result = await crl('test-user', authLimiter);
+    expect(result.success).toBe(true);
+    expect(result.headers).toEqual({});
+  });
+
+  it('exports null limiters when Upstash env is missing', async () => {
+    const { authLimiter, uploadLimiter: ul, generalLimiter } = await import('../../lib/rate-limit');
+    expect(authLimiter).toBeNull();
+    expect(ul).toBeNull();
+    expect(generalLimiter).toBeNull();
+  });
+
+  // Edge case tests for getUploadLimiter and checkRateLimit
   describe('checkRateLimit for upload actions', () => {
     it('should gracefully degrade when limiter is null', async () => {
       const result = await checkRateLimit('user-123', null);

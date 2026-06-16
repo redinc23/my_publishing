@@ -1,11 +1,54 @@
+import {
+  authRateLimit,
+  emailVerificationRateLimit,
+  getAuthIdentifier,
+  passwordResetRateLimit,
+} from '../../lib/utils/auth-rate-limit';
 import { checkRateLimit, getAuthLimiter } from '@/lib/rate-limit';
 
-describe('Auth Rate Limiting', () => {
+describe('auth-rate-limit', () => {
   beforeEach(() => {
-    // Reset limiters between tests if needed
     jest.clearAllMocks();
   });
 
+  // Tests for lib/utils/auth-rate-limit (LRU cache based)
+  it('allows requests under the auth limit', () => {
+    const id = `user-${Date.now()}-auth`;
+    expect(authRateLimit(id)).toBe(true);
+    expect(authRateLimit(id)).toBe(true);
+  });
+
+  it('blocks after exceeding auth attempts', () => {
+    const id = `user-${Date.now()}-block`;
+    for (let i = 0; i < 5; i++) {
+      expect(authRateLimit(id)).toBe(true);
+    }
+    expect(authRateLimit(id)).toBe(false);
+  });
+
+  it('limits password reset requests per email', () => {
+    const email = `reset-${Date.now()}@example.com`;
+    expect(passwordResetRateLimit(email)).toBe(true);
+    expect(passwordResetRateLimit(email)).toBe(true);
+    expect(passwordResetRateLimit(email)).toBe(true);
+    expect(passwordResetRateLimit(email)).toBe(false);
+  });
+
+  it('limits email verification resend requests', () => {
+    const email = `verify-${Date.now()}@example.com`;
+    expect(emailVerificationRateLimit(email)).toBe(true);
+    expect(emailVerificationRateLimit(email)).toBe(true);
+    expect(emailVerificationRateLimit(email)).toBe(true);
+    expect(emailVerificationRateLimit(email)).toBe(false);
+  });
+
+  it('prefers email over IP for auth identifier', () => {
+    expect(getAuthIdentifier('1.2.3.4', 'User@Example.com')).toBe('user@example.com');
+    expect(getAuthIdentifier('1.2.3.4')).toBe('1.2.3.4');
+    expect(getAuthIdentifier(null)).toBe('unknown');
+  });
+
+  // Tests for lib/rate-limit (Upstash Redis based, graceful degradation)
   describe('checkRateLimit', () => {
     it('should return success=true when limiter is null (graceful degradation)', async () => {
       const result = await checkRateLimit('127.0.0.1', null);
@@ -62,7 +105,6 @@ describe('Auth Rate Limiting', () => {
 
   describe('Middleware behavior', () => {
     it('should fail-open when rate limit check throws', () => {
-      // This is covered by the middleware catch block; ensure no uncaught exceptions
       expect(true).toBe(true);
     });
   });
