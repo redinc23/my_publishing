@@ -116,15 +116,35 @@ export async function getFeaturedBooks(limit = 6) {
 }
 
 export async function getTrendingBooks(limit = 12) {
-  const supabase = await createClient();
+  try {
+    const data = await unstable_cache(
+      async (limit) => {
+        // Use admin client to bypass RLS and avoid cookie dependency for static cache
+        const supabase = createAdminClient();
+        const { data, error } = await supabase
+          .from('books')
+          .select('*, author:authors(*, profile:profiles(*))')
+          .eq('status', 'published')
+          .eq('visibility', 'public')
+          .order('total_reads', { ascending: false })
+          .limit(limit);
 
-  return supabase
-    .from('books')
-    .select('*, author:authors(*, profile:profiles(*))')
-    .eq('status', 'published')
-    .eq('visibility', 'public')
-    .order('total_reads', { ascending: false })
-    .limit(limit);
+        if (error) throw error;
+        return data;
+      },
+      ['trending-books'],
+      { tags: ['trending-books'], revalidate: 3600 }
+    )(limit);
+
+    return { data, error: null };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching trending books:', error);
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    };
+  }
 }
 
 export async function searchBooks(query: string, limit = 20) {
@@ -161,21 +181,13 @@ export async function getBooksByGenre(genre: string, limit = 20) {
 export async function getAuthorById(id: string) {
   const supabase = await createClient();
 
-  return supabase
-    .from('authors')
-    .select('*, profile:profiles(*)')
-    .eq('id', id)
-    .single();
+  return supabase.from('authors').select('*, profile:profiles(*)').eq('id', id).single();
 }
 
 export async function getAuthorBySlug(slug: string) {
   const supabase = await createClient();
 
-  return supabase
-    .from('authors')
-    .select('*, profile:profiles(*)')
-    .eq('pen_name', slug)
-    .single();
+  return supabase.from('authors').select('*, profile:profiles(*)').eq('pen_name', slug).single();
 }
 
 export async function getAuthorBooks(authorId: string) {
@@ -215,11 +227,7 @@ export async function getReadingProgress(userId: string, bookId: string) {
     .single();
 }
 
-export async function updateReadingProgress(
-  userId: string,
-  bookId: string,
-  position: number
-) {
+export async function updateReadingProgress(userId: string, bookId: string, position: number) {
   const supabase = await createClient();
 
   return supabase.rpc('update_reading_progress', {
@@ -232,26 +240,21 @@ export async function updateReadingProgress(
 export async function markBookAsFinished(userId: string, bookId: string, rating?: number) {
   const supabase = await createClient();
 
-  return supabase
-    .from('reading_progress')
-    .upsert({
-      user_id: userId,
-      book_id: bookId,
-      current_position: 100,
-      is_finished: true,
-      finished_at: new Date().toISOString(),
-      rating: rating || null,
-    });
+  return supabase.from('reading_progress').upsert({
+    user_id: userId,
+    book_id: bookId,
+    current_position: 100,
+    is_finished: true,
+    finished_at: new Date().toISOString(),
+    rating: rating || null,
+  });
 }
 
 // ============================================================================
 // RECOMMENDATIONS QUERIES
 // ============================================================================
 
-export async function getPersonalizedRecommendations(
-  userId: string,
-  limit = 12
-) {
+export async function getPersonalizedRecommendations(userId: string, limit = 12) {
   const supabase = await createClient();
 
   return supabase.rpc('get_recommendations', {
@@ -314,11 +317,7 @@ export async function submitManuscript(data: {
     .single();
 }
 
-export async function updateManuscriptStatus(
-  id: string,
-  status: string,
-  editorial_notes?: string
-) {
+export async function updateManuscriptStatus(id: string, status: string, editorial_notes?: string) {
   const supabase = await createClient();
 
   return supabase
@@ -392,9 +391,7 @@ export async function createOrder(data: {
     license_key: `LIC-${Date.now()}-${item.book_id}`,
   }));
 
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems);
+  const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
 
   if (itemsError) {
     return { error: itemsError };
@@ -430,11 +427,7 @@ export async function trackEngagement(data: {
 export async function getProfile(userId: string) {
   const supabase = await createClient();
 
-  return supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
+  return supabase.from('profiles').select('*').eq('user_id', userId).single();
 }
 
 export async function updateProfile(
@@ -443,10 +436,5 @@ export async function updateProfile(
 ) {
   const supabase = await createClient();
 
-  return supabase
-    .from('profiles')
-    .update(updates)
-    .eq('user_id', userId)
-    .select()
-    .single();
+  return supabase.from('profiles').update(updates).eq('user_id', userId).select().single();
 }
