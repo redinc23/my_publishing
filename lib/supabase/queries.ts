@@ -142,7 +142,7 @@ export async function getTrendingBooksCached(limit = 8) {
         if (error) throw error;
         return data;
       },
-      ['trending-books'],
+      ['trending-books', String(limit)],
       { tags: ['trending-books'], revalidate: 1800 }
     )(limit);
     return { data, error: null };
@@ -170,7 +170,7 @@ export async function getFeaturedAuthors(limit = 4) {
         if (error) throw error;
         return data;
       },
-      ['featured-authors'],
+      ['featured-authors', String(limit)],
       { tags: ['featured-authors'], revalidate: 3600 }
     )(limit);
     return { data, error: null };

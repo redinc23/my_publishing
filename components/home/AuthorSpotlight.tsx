@@ -24,7 +24,7 @@ export async function AuthorSpotlight() {
             <h2 className="text-3xl font-bold">Author Spotlight</h2>
           </div>
           <Button asChild variant="ghost" size="sm" className="hidden sm:flex gap-1">
-            <Link href="/books">
+            <Link href="/discover">
               Discover more <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -38,7 +38,7 @@ export async function AuthorSpotlight() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {spotlightAuthors.map((author) => {
               const displayName =
-                author.profile?.full_name || author.pen_name;
+                (author.profile?.full_name || author.pen_name || '').trim() || '?';
               const initial = displayName[0].toUpperCase();
 
               return (
