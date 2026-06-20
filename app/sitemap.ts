@@ -1,9 +1,9 @@
 import { MetadataRoute } from 'next';
-import { createClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://manguprojectz.vercel.app';
-  const supabase = createClient();
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const supabase = await createClient();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
