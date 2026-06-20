@@ -4,9 +4,19 @@ import { checkRateLimit, getAuthLimiter, getUploadLimiter } from '@/lib/rate-lim
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const method = request.method;
 
-  // Apply rate limiting to auth endpoints
-  if (pathname.startsWith('/api/auth/')) {
+  // ── Rate limiting ──────────────────────────────────────────────────────────
+  // Apply to /api/auth/* endpoints AND to server-action POSTs on auth pages.
+  // Next.js server actions POST to the page URL itself (with next-action header).
+  const isAuthApiPath = pathname.startsWith('/api/auth/');
+  const isAuthPageAction =
+    method === 'POST' &&
+    (pathname.startsWith('/login') ||
+      pathname.startsWith('/register') ||
+      pathname.startsWith('/reset-password'));
+
+  if (isAuthApiPath || isAuthPageAction) {
     try {
       const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
       const limiter = getAuthLimiter();
@@ -20,7 +30,7 @@ export async function middleware(request: NextRequest) {
       }
     } catch (error) {
       console.error('Rate limit check failed for auth endpoint:', error);
-      // Allow request to proceed if rate limiting fails (fail-open)
+      // Fail-open: allow the request if the rate-limiter is unavailable.
     }
   }
 
@@ -39,14 +49,12 @@ export async function middleware(request: NextRequest) {
       }
     } catch (error) {
       console.error('Rate limit check failed for upload endpoint:', error);
-      // Allow request to proceed if rate limiting fails (fail-open)
     }
   }
 
   // Check for required environment variables
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.error('Missing Supabase environment variables. Check .env.local.example for setup instructions.');
-    // Allow request to proceed but log error - health check endpoint will catch this
   }
 
   let response = NextResponse.next({
@@ -112,75 +120,39 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Check role-based access
-    if (user) {
-      // Admin route protection
-      if (isAdminRoute) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
+    // ── Role-based access control ────────────────────────────────────────────
+    // Fetch the user profile exactly once, shared across all role-gated checks.
+    if (user && (isAdminRoute || isAuthorRoute || isPartnerRoute)) {
+      let role: string | undefined;
 
-          if (profileError) {
-            console.error('Error fetching profile for admin check:', profileError.message);
-            return NextResponse.redirect(new URL('/', request.url));
-          }
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
 
-          if (profile?.role !== 'admin') {
-            return NextResponse.redirect(new URL('/', request.url));
-          }
-        } catch (error) {
-          console.error('Error in admin route protection:', error);
+        if (profileError) {
+          console.error('Error fetching profile for role check:', profileError.message);
           return NextResponse.redirect(new URL('/', request.url));
         }
+
+        role = profile?.role;
+      } catch (error) {
+        console.error('Error in role-based route protection:', error);
+        return NextResponse.redirect(new URL('/', request.url));
       }
 
-      // Author route protection
-      if (isAuthorRoute) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
-
-          if (profileError) {
-            console.error('Error fetching profile for author check:', profileError.message);
-            return NextResponse.redirect(new URL('/', request.url));
-          }
-
-          if (profile?.role !== 'author' && profile?.role !== 'admin') {
-            return NextResponse.redirect(new URL('/', request.url));
-          }
-        } catch (error) {
-          console.error('Error in author route protection:', error);
-          return NextResponse.redirect(new URL('/', request.url));
-        }
+      if (isAdminRoute && role !== 'admin') {
+        return NextResponse.redirect(new URL('/', request.url));
       }
 
-      // Partner route protection
-      if (isPartnerRoute) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
+      if (isAuthorRoute && role !== 'author' && role !== 'admin') {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
 
-          if (profileError) {
-            console.error('Error fetching profile for partner check:', profileError.message);
-            return NextResponse.redirect(new URL('/', request.url));
-          }
-
-          if (profile?.role !== 'partner' && profile?.role !== 'admin') {
-            return NextResponse.redirect(new URL('/', request.url));
-          }
-        } catch (error) {
-          console.error('Error in partner route protection:', error);
-          return NextResponse.redirect(new URL('/', request.url));
-        }
+      if (isPartnerRoute && role !== 'partner' && role !== 'admin') {
+        return NextResponse.redirect(new URL('/', request.url));
       }
     }
 
