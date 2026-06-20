@@ -167,7 +167,7 @@ test.describe('Reset password page', () => {
       'Supabase not configured'
     );
 
-    await page.getByLabel(/email/i).fill('noexistent@example.com');
+    await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
 
     // Supabase always returns success (doesn't reveal whether email exists).
