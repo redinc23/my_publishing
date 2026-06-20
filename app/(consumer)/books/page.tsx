@@ -23,7 +23,8 @@ async function getBooks(searchParams: BooksPageProps['searchParams']) {
   let query = supabase
     .from('books')
     .select('*, author:authors!inner(*, profile:profiles!inner(*))')
-    .eq('status', 'published');
+    .eq('status', 'published')
+    .eq('content_type', 'book');
 
   // Search
   if (searchParams.q) {
