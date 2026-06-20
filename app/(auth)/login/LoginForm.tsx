@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useId, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,8 +19,18 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const errorId = useId();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Surface errors forwarded via URL (e.g. from OAuth callback failures).
+  useEffect(() => {
+    const urlError = searchParams?.get('error');
+    if (urlError) {
+      setError(decodeURIComponent(urlError));
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -47,7 +57,7 @@ export function LoginForm() {
         router.push('/');
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -55,12 +65,24 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {error && (
-        <div className="rounded-md bg-red-500/10 border border-red-500 p-3 text-sm text-red-500">
-          {error}
-        </div>
-      )}
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4"
+      aria-label="Sign in form"
+      noValidate
+    >
+      {/* Live region announces errors to screen readers without focus change */}
+      <div aria-live="polite" aria-atomic="true">
+        {error && (
+          <div
+            id={errorId}
+            role="alert"
+            className="rounded-md bg-red-500/10 border border-red-500 p-3 text-sm text-red-500"
+          >
+            {error}
+          </div>
+        )}
+      </div>
       <div>
         <label htmlFor="email" className="block text-sm font-medium mb-2">
           Email
@@ -68,12 +90,17 @@ export function LoginForm() {
         <Input
           id="email"
           type="email"
+          autoComplete="email"
           placeholder="you@example.com"
+          aria-describedby={errors.email ? 'email-error' : undefined}
+          aria-invalid={!!errors.email}
           {...register('email')}
           disabled={isLoading}
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+          <p id="email-error" role="alert" className="mt-1 text-sm text-red-500">
+            {errors.email.message}
+          </p>
         )}
       </div>
       <div>
@@ -83,17 +110,28 @@ export function LoginForm() {
         <Input
           id="password"
           type="password"
+          autoComplete="current-password"
           placeholder="••••••••"
+          aria-describedby={errors.password ? 'password-error' : undefined}
+          aria-invalid={!!errors.password}
           {...register('password')}
           disabled={isLoading}
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
+          <p id="password-error" role="alert" className="mt-1 text-sm text-red-500">
+            {errors.password.message}
+          </p>
         )}
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isLoading}
+        aria-busy={isLoading}
+      >
         {isLoading ? <LoadingSpinner size="sm" /> : 'Sign in'}
       </Button>
     </form>
   );
 }
+

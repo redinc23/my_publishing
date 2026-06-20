@@ -91,6 +91,20 @@ steps:
       - push
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:main
 
+  # Scan the pushed image for OS-level and language CVEs using Trivy.
+  # The build fails on any CRITICAL severity vulnerabilities, blocking
+  # insecure images from reaching Cloud Run (supply-chain security gate P0-1).
+  - id: vuln-scan
+    name: aquasec/trivy:latest
+    entrypoint: trivy
+    args:
+      - image
+      - --exit-code=1
+      - --severity=CRITICAL
+      - --no-progress
+      - --ignore-unfixed
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA
+
   - id: deploy-cloud-run
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: bash

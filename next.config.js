@@ -1,4 +1,35 @@
 /** @type {import('next').NextConfig} */
+
+// Build a Content-Security-Policy that covers all required third-party origins.
+// 'unsafe-inline' / 'unsafe-eval' are required by Next.js 14 until nonce-based
+// CSP is fully wired in; tighten further by replacing them with nonces once the
+// application supports it.
+const ContentSecurityPolicy = [
+  "default-src 'self'",
+  // Next.js inline scripts and client-side hydration require 'unsafe-inline'.
+  // Stripe JS also needs to load from js.stripe.com.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com",
+  // Tailwind/CSS-in-JS produces inline styles at runtime.
+  "style-src 'self' 'unsafe-inline'",
+  // Images come from self, Supabase Storage, Stripe, and placeholder services.
+  "img-src 'self' data: blob: https://*.supabase.co https://picsum.photos https://images.unsplash.com https://q.stripe.com",
+  // API calls go to Supabase (REST + Realtime WS) and Stripe.
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://q.stripe.com",
+  // Stripe embeds iframes for secure card input.
+  "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
+  "font-src 'self'",
+  // Disallow plugins and object embeds entirely.
+  "object-src 'none'",
+  // Restrict <base> tag hijacking.
+  "base-uri 'self'",
+  // Only allow forms to POST to the same origin.
+  "form-action 'self'",
+  // Prevent this page from being embedded in a foreign frame (replaces X-Frame-Options).
+  "frame-ancestors 'none'",
+  // Block mixed content.
+  "upgrade-insecure-requests",
+].join('; ');
+
 const nextConfig = {
   output: 'standalone',
   async headers() {
@@ -11,14 +42,22 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          // CSP supersedes X-Frame-Options; keep both for legacy browser coverage.
+          { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
+          // X-XSS-Protection is deprecated in modern browsers but harmless for older ones.
           { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value:
+              'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
+          // Prevent popups from retaining opener access (protects OAuth flows).
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+          // Restrict how this page's resources can be embedded by cross-origin pages.
+          { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
+          { key: 'Content-Security-Policy', value: ContentSecurityPolicy },
         ],
       },
     ];
