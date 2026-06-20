@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { updateBookAdmin } from '@/lib/actions/books';
 
 interface BookEditFormProps {
@@ -21,6 +22,7 @@ interface BookEditFormProps {
     page_count?: number | null;
     word_count?: number | null;
     status: string;
+    content_type?: 'book' | 'comic' | 'paper' | null;
     amazon_url?: string | null;
     kindle_url?: string | null;
     apple_books_url?: string | null;
@@ -44,6 +46,7 @@ export function BookEditForm({ book }: BookEditFormProps) {
     page_count: book.page_count ?? '',
     word_count: book.word_count ?? '',
     status: book.status || 'draft',
+    content_type: book.content_type || 'book',
     amazon_url: book.amazon_url || '',
     kindle_url: book.kindle_url || '',
     apple_books_url: book.apple_books_url || '',
@@ -74,6 +77,7 @@ export function BookEditForm({ book }: BookEditFormProps) {
         page_count: formData.page_count !== '' ? Number(formData.page_count) : undefined,
         word_count: formData.word_count !== '' ? Number(formData.word_count) : undefined,
         status: formData.status as 'draft' | 'published' | 'archived',
+        content_type: formData.content_type as 'book' | 'comic' | 'paper',
         amazon_url: formData.amazon_url || null,
         kindle_url: formData.kindle_url || null,
         apple_books_url: formData.apple_books_url || null,
@@ -116,6 +120,27 @@ export function BookEditForm({ book }: BookEditFormProps) {
             <option value="published">Published</option>
             <option value="archived">Archived</option>
           </select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="content_type">Content Type</Label>
+          <Select
+            value={formData.content_type}
+            onValueChange={(value) =>
+              setFormData({
+                ...formData,
+                content_type: value as 'book' | 'comic' | 'paper',
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select content type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="book">Book</SelectItem>
+              <SelectItem value="comic">Comic Book</SelectItem>
+              <SelectItem value="paper">Paper / Article</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="pt-6 border-t border-border">
           <h3 className="text-lg font-semibold mb-2">External Retailer URLs</h3>
