@@ -22,4 +22,13 @@ const customJestConfig = {
   testPathIgnorePatterns: ['<rootDir>/tests/e2e/'],
 };
 
-module.exports = createJestConfig(customJestConfig);
+// Use async form so we can override transformIgnorePatterns AFTER nextJest sets them.
+// This is needed because @upstash/redis pulls in `uncrypto` which ships only ESM
+// (.mjs with `export` syntax) — Jest can't process it without transformation.
+module.exports = async () => {
+  const config = await createJestConfig(customJestConfig)();
+  config.transformIgnorePatterns = [
+    '/node_modules/(?!(uncrypto|@upstash/redis|@upstash/ratelimit)/)',
+  ];
+  return config;
+};
