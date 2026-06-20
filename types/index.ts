@@ -155,6 +155,7 @@ export interface Book {
   word_count?: number;
   page_count?: number;
   isbn?: string;
+  content_type?: 'book' | 'comic' | 'paper';
   published_at?: string;
   created_at: string;
   updated_at: string;

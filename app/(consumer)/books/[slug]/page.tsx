@@ -19,6 +19,7 @@ async function getBook(slug: string): Promise<BookFull | null> {
     .select('*, author:authors!inner(*, profile:profiles!inner(*)), content:book_content(*)')
     .eq('slug', slug)
     .eq('status', 'published')
+    .eq('content_type', 'book')
     .single();
 
   return data as BookFull | null;
@@ -30,6 +31,7 @@ async function getSimilarBooks(genre: string | undefined, excludeId: string) {
     .from('books')
     .select('*, author:authors!inner(*, profile:profiles!inner(*))')
     .eq('status', 'published')
+    .eq('content_type', 'book')
     .neq('id', excludeId);
   
   if (genre) {

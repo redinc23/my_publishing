@@ -1,49 +1,35 @@
-/* eslint-disable */
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
-import { BookFilters } from './BookFilters';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { BookFilters } from '../books/BookFilters';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { BookWithAuthor } from '@/types';
 
-interface BooksPageProps {
-  searchParams: {
-    q?: string;
-    genre?: string;
-    sort?: string;
-    page?: string;
-  };
+interface PapersPageProps {
+  searchParams: { q?: string; genre?: string; sort?: string; page?: string };
 }
 
-async function getBooks(searchParams: BooksPageProps['searchParams']) {
+async function getPapers(searchParams: PapersPageProps['searchParams']) {
   const supabase = await createClient();
   let query = supabase
     .from('books')
     .select('*, author:authors!inner(*, profile:profiles!inner(*))')
     .eq('status', 'published')
-    .eq('content_type', 'book');
+    .eq('content_type', 'paper');
 
-  // Search
   if (searchParams.q) {
-    query = query.textSearch('title', searchParams.q, {
-      type: 'websearch',
-    });
+    query = query.textSearch('title', searchParams.q, { type: 'websearch' });
   }
-
-  // Genre filter
   if (searchParams.genre) {
     query = query.eq('genre', searchParams.genre);
   }
 
-  // Sort
   const sort = searchParams.sort || 'published_at';
   const ascending = sort === 'price' || sort === 'title';
   query = query.order(sort, { ascending });
 
-  // Pagination
   const page = parseInt(searchParams.page || '0');
   const pageSize = 20;
   query = query.range(page * pageSize, (page + 1) * pageSize - 1);
@@ -52,7 +38,7 @@ async function getBooks(searchParams: BooksPageProps['searchParams']) {
   return (data as BookWithAuthor[]) || [];
 }
 
-function BookGridSkeleton() {
+function PaperGridSkeleton() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
       {Array.from({ length: 12 }).map((_, i) => (
@@ -66,24 +52,21 @@ function BookGridSkeleton() {
   );
 }
 
-export default async function BooksPage({ searchParams }: BooksPageProps) {
-  const books = await getBooks(searchParams);
-
+export default async function PapersPage({ searchParams }: PapersPageProps) {
+  const papers = await getPapers(searchParams);
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Browse Books</h1>
+        <h1 className="text-4xl font-bold mb-8">Browse Papers</h1>
         <BookFilters />
-        <Suspense fallback={<BookGridSkeleton />}>
-          {books.length === 0 ? (
+        <Suspense fallback={<PaperGridSkeleton />}>
+          {papers.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-secondary">No books found. Try adjusting your filters.</p>
+              <p className="text-muted-foreground">No papers found. Try adjusting your filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 mt-8">
-              {books.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
+              {papers.map((paper) => (<BookCard key={paper.id} book={paper} />))}
             </div>
           )}
         </Suspense>
