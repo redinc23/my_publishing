@@ -1,13 +1,63 @@
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { unstable_cache } from 'next/cache';
+import type { BookWithAuthor } from '@/types';
 import type { Database } from '@/types/database';
 
 type Tables = Database['public']['Tables'];
+type HomeBooksResult = { data: BookWithAuthor[] | null; error: Error | null };
+type HomeBooksOrderColumn = 'featured_at' | 'total_reads';
+
+interface CachedHomeBooksOptions {
+  cacheKey: string;
+  orderBy: HomeBooksOrderColumn;
+  ascending: boolean;
+  errorMessage: string;
+  featuredOnly?: boolean;
+}
 
 // ============================================================================
 // BOOKS QUERIES
 // ============================================================================
+
+async function getCachedHomeBooks(
+  limit: number,
+  options: CachedHomeBooksOptions
+): Promise<HomeBooksResult> {
+  try {
+    const data = await unstable_cache(
+      async (bookLimit: number) => {
+        const supabase = createAdminClient();
+        let query = supabase
+          .from('books')
+          .select('*, author:authors(*, profile:profiles(*))')
+          .eq('status', 'published')
+          .eq('visibility', 'public');
+
+        if (options.featuredOnly) {
+          query = query.eq('is_featured', true);
+        }
+
+        const { data, error } = await query
+          .order(options.orderBy, { ascending: options.ascending })
+          .limit(bookLimit);
+
+        if (error) throw error;
+        return (data as unknown as BookWithAuthor[]) || [];
+      },
+      [options.cacheKey],
+      { tags: [options.cacheKey], revalidate: 3600 }
+    )(limit);
+
+    return { data, error: null };
+  } catch (error) {
+    console.error(options.errorMessage, error);
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    };
+  }
+}
 
 export async function getPublishedBooks(filters?: {
   genre?: string;
@@ -82,69 +132,22 @@ export async function getBookById(id: string) {
 }
 
 export async function getFeaturedBooks(limit = 6) {
-  try {
-    const data = await unstable_cache(
-      async (limit) => {
-        // Use admin client to bypass RLS and avoid cookie dependency for static cache
-        const supabase = createAdminClient();
-        const { data, error } = await supabase
-          .from('books')
-          .select('*, author:authors(*, profile:profiles(*))')
-          .eq('is_featured', true)
-          .eq('status', 'published')
-          .eq('visibility', 'public')
-          .order('featured_at', { ascending: false })
-          .limit(limit);
-
-        if (error) throw error;
-        return data;
-      },
-      ['featured-books'],
-      { tags: ['featured-books'], revalidate: 3600 }
-    )(limit);
-
-    return { data, error: null };
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching featured books:', error);
-    // Return error in a format compatible with Supabase response
-    return {
-      data: null,
-      error: error instanceof Error ? error : new Error('Unknown error'),
-    };
-  }
+  return getCachedHomeBooks(limit, {
+    cacheKey: 'featured-books',
+    orderBy: 'featured_at',
+    ascending: false,
+    errorMessage: 'Error fetching featured books:',
+    featuredOnly: true,
+  });
 }
 
 export async function getTrendingBooks(limit = 12) {
-  try {
-    const data = await unstable_cache(
-      async (limit) => {
-        // Use admin client to bypass RLS and avoid cookie dependency for static cache
-        const supabase = createAdminClient();
-        const { data, error } = await supabase
-          .from('books')
-          .select('*, author:authors(*, profile:profiles(*))')
-          .eq('status', 'published')
-          .eq('visibility', 'public')
-          .order('total_reads', { ascending: false })
-          .limit(limit);
-
-        if (error) throw error;
-        return data;
-      },
-      ['trending-books'],
-      { tags: ['trending-books'], revalidate: 3600 }
-    )(limit);
-
-    return { data, error: null };
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching trending books:', error);
-    return {
-      data: null,
-      error: error instanceof Error ? error : new Error('Unknown error'),
-    };
-  }
+  return getCachedHomeBooks(limit, {
+    cacheKey: 'trending-books',
+    orderBy: 'total_reads',
+    ascending: false,
+    errorMessage: 'Error fetching trending books:',
+  });
 }
 
 export async function searchBooks(query: string, limit = 20) {

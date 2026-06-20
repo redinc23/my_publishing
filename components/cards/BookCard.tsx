@@ -1,10 +1,9 @@
-/* eslint-disable */
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { BookWithAuthor } from '@/types';
+import type { BookWithAuthor } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -14,6 +13,8 @@ interface BookCardProps {
 }
 
 export function BookCard({ book, variant = 'default' }: BookCardProps) {
+  const authorName = book.author.profile?.full_name || book.author.pen_name || 'Unknown Author';
+
   if (variant === 'compact') {
     return (
       <Link href={`/books/${book.slug}`} className="group block">
@@ -32,9 +33,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
           <h3 className="line-clamp-1 font-semibold transition-colors group-hover:text-primary">
             {book.title}
           </h3>
-          <p className="line-clamp-1 text-sm text-muted-foreground">
-            {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
-          </p>
+          <p className="line-clamp-1 text-sm text-muted-foreground">{authorName}</p>
         </div>
       </Link>
     );
@@ -66,9 +65,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             <h3 className="mb-1 line-clamp-1 font-semibold transition-colors group-hover:text-primary">
               {book.title}
             </h3>
-            <p className="mb-2 line-clamp-1 text-sm text-muted-foreground">
-              {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
-            </p>
+            <p className="mb-2 line-clamp-1 text-sm text-muted-foreground">{authorName}</p>
             <div className="flex items-center justify-between">
               {book.average_rating ? (
                 <div className="flex items-center gap-1">

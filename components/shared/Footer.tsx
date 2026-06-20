@@ -17,6 +17,10 @@ const socialLinks = [
   { name: 'LinkedIn', icon: Linkedin, href: '#' },
 ];
 
+const paymentMethods = ['Visa', 'Mastercard', 'Stripe', 'PayPal'] as const;
+
+type PaymentMethod = (typeof paymentMethods)[number];
+
 const footerColumns = [
   {
     heading: 'Discover',
@@ -120,29 +124,41 @@ function AppStoreButton({ store }: { store: 'App Store' | 'Google Play' }) {
   );
 }
 
-function PaymentIcon({ name }: { name: string }) {
-  return (
-    <div className="flex h-8 items-center justify-center rounded-md border border-border bg-secondary/60 px-3 text-xs font-medium text-muted-foreground">
-      {name === 'Stripe' && (
+function PaymentIcon({ name }: { name: PaymentMethod }) {
+  let content: ReactNode;
+
+  switch (name) {
+    case 'Stripe':
+      content = (
         <span className="tracking-wide">
           <span className="text-[#635BFF]">Stripe</span>
         </span>
-      )}
-      {name === 'Visa' && (
-        <span className="font-bold italic tracking-wider text-foreground">VISA</span>
-      )}
-      {name === 'Mastercard' && (
+      );
+      break;
+    case 'Visa':
+      content = <span className="font-bold italic tracking-wider text-foreground">VISA</span>;
+      break;
+    case 'Mastercard':
+      content = (
         <div className="flex items-center gap-0.5">
           <span className="h-3 w-3 rounded-full bg-red-500/90" />
           <span className="-ml-1.5 h-3 w-3 rounded-full bg-yellow-500/90" />
         </div>
-      )}
-      {name === 'PayPal' && (
+      );
+      break;
+    case 'PayPal':
+      content = (
         <span className="font-bold tracking-wide">
           <span className="text-[#003087]">Pay</span>
           <span className="text-[#009CDE]">Pal</span>
         </span>
-      )}
+      );
+      break;
+  }
+
+  return (
+    <div className="flex h-8 items-center justify-center rounded-md border border-border bg-secondary/60 px-3 text-xs font-medium text-muted-foreground">
+      {content}
     </div>
   );
 }
@@ -237,10 +253,9 @@ export function Footer() {
               &copy; {currentYear} MANGU Publishers. All rights reserved.
             </p>
             <div className="flex items-center gap-2">
-              <PaymentIcon name="Visa" />
-              <PaymentIcon name="Mastercard" />
-              <PaymentIcon name="Stripe" />
-              <PaymentIcon name="PayPal" />
+              {paymentMethods.map((method) => (
+                <PaymentIcon key={method} name={method} />
+              ))}
             </div>
             <div className="flex items-center gap-4">
               <span className="text-xs text-muted-foreground">
