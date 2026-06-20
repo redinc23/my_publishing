@@ -127,6 +127,63 @@ export async function getTrendingBooks(limit = 12) {
     .limit(limit);
 }
 
+export async function getTrendingBooksCached(limit = 8) {
+  try {
+    const data = await unstable_cache(
+      async (limit) => {
+        const supabase = createAdminClient();
+        const { data, error } = await supabase
+          .from('books')
+          .select('*, author:authors(*, profile:profiles(*))')
+          .eq('status', 'published')
+          .eq('visibility', 'public')
+          .order('total_reads', { ascending: false })
+          .limit(limit);
+        if (error) throw error;
+        return data;
+      },
+      ['trending-books'],
+      { tags: ['trending-books'], revalidate: 1800 }
+    )(limit);
+    return { data, error: null };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching trending books:', error);
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    };
+  }
+}
+
+export async function getFeaturedAuthors(limit = 4) {
+  try {
+    const data = await unstable_cache(
+      async (limit) => {
+        const supabase = createAdminClient();
+        const { data, error } = await supabase
+          .from('authors')
+          .select('*, profile:profiles(*)')
+          .eq('is_verified', true)
+          .order('total_books', { ascending: false })
+          .limit(limit);
+        if (error) throw error;
+        return data;
+      },
+      ['featured-authors'],
+      { tags: ['featured-authors'], revalidate: 3600 }
+    )(limit);
+    return { data, error: null };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching featured authors:', error);
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    };
+  }
+}
+
 export async function searchBooks(query: string, limit = 20) {
   const supabase = await createClient();
 

@@ -1,0 +1,1 @@
+export { WebPageJsonLd } from './WebPageJsonLd';

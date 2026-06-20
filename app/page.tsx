@@ -1,14 +1,31 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/layout/Container';
 import { ArrowRight } from 'lucide-react';
-import { Stats } from '@/components/landing/Stats';
-import { Features } from '@/components/landing/Features';
-import { CTA } from '@/components/landing/CTA';
+import { WebPageJsonLd } from '@/components/seo';
+import {
+  FeaturedBooksSection,
+  FeaturedBooksSkeleton,
+  TrendingBooksSection,
+  TrendingBooksSkeleton,
+  GenreExplorer,
+  StatsBar,
+  NewsletterCTA,
+  AuthorSpotlight,
+  AuthorSpotlightSkeleton,
+} from '@/components/home';
 
 export default function HomePage() {
+  const siteUrl = 'https://manguprojectz.vercel.app';
+  const pageTitle = 'MANGU Publishers - Digital Publishing Platform';
+  const pageDescription =
+    'Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime.';
+
   return (
     <div className="relative">
+      <WebPageJsonLd url={siteUrl} title={pageTitle} description={pageDescription} />
+
       {/* Background depth layer — giant faded "MANGU" text */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
         <span className="text-[22vw] font-black text-foreground/[0.03] dark:text-foreground/[0.05] select-none tracking-tighter leading-none">
@@ -65,8 +82,7 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <p className="text-lg sm:text-xl text-white/85 font-light leading-relaxed mb-10 max-w-2xl animate-slide-up">
-              Discover a universe of stories. Stream unlimited books, audiobooks,
-              and exclusive videos anywhere, anytime.
+              {pageDescription}
             </p>
 
             {/* CTA Buttons */}
@@ -94,14 +110,29 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* Stats Section */}
-      <Stats />
+      {/* Stats Bar */}
+      <StatsBar />
 
-      {/* Features Section */}
-      <Features />
+      {/* Featured Books */}
+      <Suspense fallback={<FeaturedBooksSkeleton />}>
+        <FeaturedBooksSection />
+      </Suspense>
 
-      {/* CTA Section */}
-      <CTA />
+      {/* Genre Explorer */}
+      <GenreExplorer />
+
+      {/* Trending Books */}
+      <Suspense fallback={<TrendingBooksSkeleton />}>
+        <TrendingBooksSection />
+      </Suspense>
+
+      {/* Author Spotlight */}
+      <Suspense fallback={<AuthorSpotlightSkeleton />}>
+        <AuthorSpotlight />
+      </Suspense>
+
+      {/* Newsletter CTA */}
+      <NewsletterCTA />
     </div>
   );
 }
