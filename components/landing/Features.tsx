@@ -42,7 +42,7 @@ export function Features() {
       <Container>
         <div className="text-center mb-16">
           <p className="text-sm font-medium tracking-widest uppercase text-primary mb-3">
-            Platform
+            What We Offer
           </p>
           <h2 className="text-4xl font-bold mb-4">Why Choose MANGU?</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

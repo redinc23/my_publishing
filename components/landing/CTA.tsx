@@ -50,9 +50,9 @@ export function CTA() {
               size="lg"
               className="rounded-full px-8 py-6 text-base font-semibold shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
-              <Link href="/register">
+              <Link href="/books">
                 <BookOpen className="mr-2 h-5 w-5" />
-                Start Reading
+                Browse Books
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

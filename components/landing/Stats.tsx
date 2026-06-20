@@ -17,7 +17,7 @@ const stats = [
   {
     icon: Star,
     value: '4.8',
-    label: 'Average Rating',
+    label: 'Average Rating (out of 5 ★)',
   },
   {
     icon: Globe,
