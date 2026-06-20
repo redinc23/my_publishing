@@ -113,6 +113,48 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
                   <Link href={`/checkout?book_id=${book.id}`}>Purchase</Link>
                 </Button>
               </div>
+              {(book.amazon_url ||
+                book.kindle_url ||
+                book.apple_books_url ||
+                book.audible_url ||
+                book.barnes_noble_url ||
+                book.google_play_books_url) && (
+                <div className="mb-6">
+                  <p className="text-sm font-medium text-secondary mb-2">Also available at</p>
+                  <div className="flex flex-wrap gap-3">
+                    {book.amazon_url && (
+                      <Button asChild variant="outline" size="sm">
+                        <a href={book.amazon_url} target="_blank" rel="noopener noreferrer">Buy on Amazon</a>
+                      </Button>
+                    )}
+                    {book.kindle_url && (
+                      <Button asChild variant="outline" size="sm">
+                        <a href={book.kindle_url} target="_blank" rel="noopener noreferrer">Buy on Kindle</a>
+                      </Button>
+                    )}
+                    {book.apple_books_url && (
+                      <Button asChild variant="outline" size="sm">
+                        <a href={book.apple_books_url} target="_blank" rel="noopener noreferrer">Apple Books</a>
+                      </Button>
+                    )}
+                    {book.audible_url && (
+                      <Button asChild variant="outline" size="sm">
+                        <a href={book.audible_url} target="_blank" rel="noopener noreferrer">Audible</a>
+                      </Button>
+                    )}
+                    {book.barnes_noble_url && (
+                      <Button asChild variant="outline" size="sm">
+                        <a href={book.barnes_noble_url} target="_blank" rel="noopener noreferrer">Barnes &amp; Noble</a>
+                      </Button>
+                    )}
+                    {book.google_play_books_url && (
+                      <Button asChild variant="outline" size="sm">
+                        <a href={book.google_play_books_url} target="_blank" rel="noopener noreferrer">Google Play Books</a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="text-2xl font-bold">
                 {book.discount_price ? (
                   <>
