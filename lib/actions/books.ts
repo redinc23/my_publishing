@@ -247,6 +247,7 @@ export async function updateBookAdmin(
     title?: string;
     subtitle?: string;
     description?: string;
+    content_type?: 'book' | 'comic' | 'paper';
     slug?: string;
     price?: number;
     isbn?: string;
@@ -307,6 +308,7 @@ export async function updateBookAdmin(
     if (input.title !== undefined) updates.title = input.title;
     if (input.subtitle !== undefined) updates.subtitle = input.subtitle || null;
     if (input.description !== undefined) updates.description = input.description || null;
+    if (input.content_type !== undefined) updates.content_type = input.content_type;
     if (input.slug !== undefined) updates.slug = input.slug;
     if (input.price !== undefined) updates.price = input.price;
     if (input.isbn !== undefined) updates.isbn = input.isbn || null;
