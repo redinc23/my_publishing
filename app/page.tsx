@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/layout/Container';
 import { ArrowRight } from 'lucide-react';
+import { Stats } from '@/components/landing/Stats';
+import { Features } from '@/components/landing/Features';
+import { CTA } from '@/components/landing/CTA';
 
 export default function HomePage() {
   return (
@@ -90,6 +93,15 @@ export default function HomePage() {
           </div>
         </Container>
       </section>
+
+      {/* Stats Section */}
+      <Stats />
+
+      {/* Features Section */}
+      <Features />
+
+      {/* CTA Section */}
+      <CTA />
     </div>
   );
 }
