@@ -67,14 +67,6 @@ export type RateLimitResult = {
   headers: Record<string, string>;
 };
 
-const PASS_THROUGH: RateLimitResult = {
-  success: true,
-  limit: 0,
-  remaining: 0,
-  reset: Date.now(),
-  headers: {},
-};
-
 export async function checkRateLimit(
   identifier: string,
   limiter: Ratelimit | null
