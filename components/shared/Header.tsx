@@ -1,6 +1,7 @@
 /* eslint-disable */
 import Link from 'next/link';
 import { Navigation } from './Navigation';
+import { MobileNav } from './MobileNav';
 import { UserMenu } from './UserMenu';
 import { SearchBar } from './SearchBar';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ export function Header() {
       <Container>
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
+            <MobileNav />
             <Link href="/" className="text-2xl font-bold text-primary">
               MANGU
             </Link>
