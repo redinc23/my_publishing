@@ -72,7 +72,7 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
     >
       <Link
         href={href}
-        className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 inline-block"
+        className="inline-block text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
       >
         {children}
       </Link>
@@ -80,12 +80,20 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-function SocialIcon({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) {
+function SocialIcon({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: ElementType;
+  label: string;
+}) {
   return (
     <motion.a
       href={href}
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors duration-200"
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-muted-foreground transition-colors duration-200 hover:border-primary/50 hover:text-primary"
       whileHover={{ scale: 1.1, y: -2 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -97,10 +105,13 @@ function SocialIcon({ href, icon: Icon, label }: { href: string; icon: ElementTy
 
 function AppStoreButton({ store }: { store: 'App Store' | 'Google Play' }) {
   return (
-    <button className="flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2.5 text-left hover:border-primary/50 hover:bg-secondary transition-all duration-200 group">
-      <Globe className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+    <button
+      type="button"
+      className="group flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2.5 text-left transition-all duration-200 hover:border-primary/50 hover:bg-secondary"
+    >
+      <Globe className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
       <div className="flex flex-col">
-        <span className="text-[10px] leading-none text-muted-foreground uppercase tracking-wide">
+        <span className="text-[10px] uppercase leading-none tracking-wide text-muted-foreground">
           {store === 'App Store' ? 'Download on the' : 'Get it on'}
         </span>
         <span className="text-sm font-semibold leading-tight text-foreground">{store}</span>
@@ -111,17 +122,19 @@ function AppStoreButton({ store }: { store: 'App Store' | 'Google Play' }) {
 
 function PaymentIcon({ name }: { name: string }) {
   return (
-    <div className="flex h-8 items-center justify-center rounded-md bg-secondary/60 px-3 text-xs font-medium text-muted-foreground border border-border">
+    <div className="flex h-8 items-center justify-center rounded-md border border-border bg-secondary/60 px-3 text-xs font-medium text-muted-foreground">
       {name === 'Stripe' && (
         <span className="tracking-wide">
           <span className="text-[#635BFF]">Stripe</span>
         </span>
       )}
-      {name === 'Visa' && <span className="font-bold italic tracking-wider text-foreground">VISA</span>}
+      {name === 'Visa' && (
+        <span className="font-bold italic tracking-wider text-foreground">VISA</span>
+      )}
       {name === 'Mastercard' && (
         <div className="flex items-center gap-0.5">
           <span className="h-3 w-3 rounded-full bg-red-500/90" />
-          <span className="h-3 w-3 rounded-full bg-yellow-500/90 -ml-1.5" />
+          <span className="-ml-1.5 h-3 w-3 rounded-full bg-yellow-500/90" />
         </div>
       )}
       {name === 'PayPal' && (
@@ -141,9 +154,9 @@ export function Footer() {
     <footer className="border-t border-border bg-background">
       {/* Section 1: Main grid */}
       <Container>
-        <div className="py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+        <div className="grid grid-cols-1 gap-10 py-16 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           {/* Brand column */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="space-y-6 lg:col-span-4">
             <Link href="/" className="inline-block">
               <h2 className="text-3xl font-extrabold tracking-tight">
                 <span className="bg-gradient-to-r from-primary via-red-400 to-orange-400 bg-clip-text text-transparent">
@@ -151,7 +164,7 @@ export function Footer() {
                 </span>
               </h2>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+            <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
               Your digital publishing platform for discovering and reading great books.
             </p>
             <div className="flex items-center gap-3 pt-1">
@@ -168,7 +181,7 @@ export function Footer() {
           {/* Link columns */}
           {footerColumns.map((col) => (
             <div key={col.heading} className="lg:col-span-2">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-5">
+              <h3 className="mb-5 text-sm font-semibold uppercase tracking-wider text-foreground">
                 {col.heading}
               </h3>
               <ul className="space-y-3">
@@ -186,24 +199,26 @@ export function Footer() {
       {/* Section 2: Newsletter bar */}
       <div className="border-y border-border bg-muted/30">
         <Container>
-          <div className="py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex flex-col items-start justify-between gap-6 py-10 md:flex-row md:items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-primary" />
-                <h3 className="text-base font-semibold text-foreground">Subscribe to our newsletter</h3>
+                <h3 className="text-base font-semibold text-foreground">
+                  Subscribe to our newsletter
+                </h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 Get the latest books and updates delivered to your inbox.
               </p>
             </div>
             <form
-              className="flex w-full md:w-auto items-center gap-3"
+              className="flex w-full items-center gap-3 md:w-auto"
               onSubmit={(e) => e.preventDefault()}
             >
               <Input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full md:w-72 bg-background border-border"
+                className="w-full border-border bg-background md:w-72"
                 aria-label="Email address for newsletter"
               />
               <Button type="submit" className="shrink-0">
@@ -217,8 +232,8 @@ export function Footer() {
       {/* Section 3: Bottom bar */}
       <div className="bg-muted/20">
         <Container>
-          <div className="py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-muted-foreground text-center md:text-left">
+          <div className="flex flex-col items-center justify-between gap-4 py-6 md:flex-row">
+            <p className="text-center text-xs text-muted-foreground md:text-left">
               &copy; {currentYear} MANGU Publishers. All rights reserved.
             </p>
             <div className="flex items-center gap-2">
@@ -229,9 +244,13 @@ export function Footer() {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-xs text-muted-foreground">
-                Made with <span className="text-primary" aria-label="love">&#9829;</span> for book lovers
+                Made with{' '}
+                <span className="text-primary" aria-label="love">
+                  &#9829;
+                </span>{' '}
+                for book lovers
               </span>
-              <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs text-muted-foreground cursor-pointer hover:border-primary/50 transition-colors">
+              <div className="hidden cursor-pointer items-center gap-1.5 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 sm:flex">
                 <Globe className="h-3 w-3" />
                 <span>EN</span>
                 <ChevronDown className="h-3 w-3" />
