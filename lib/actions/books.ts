@@ -237,6 +237,138 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
   }
 }
 
+/**
+ * Admin-only book update. Unlike updateBook (author-scoped), this lets a user
+ * with the 'admin' role edit ANY book, including the external retailer URLs.
+ */
+export async function updateBookAdmin(
+  bookId: string,
+  input: {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    slug?: string;
+    price?: number;
+    isbn?: string;
+    genre?: string;
+    page_count?: number;
+    word_count?: number;
+    status?: 'draft' | 'published' | 'archived';
+    amazon_url?: string | null;
+    kindle_url?: string | null;
+    apple_books_url?: string | null;
+    audible_url?: string | null;
+    barnes_noble_url?: string | null;
+    google_play_books_url?: string | null;
+  }
+) {
+  try {
+    const supabase = await createClient();
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+    }
+
+    // Role check: role lives on profiles.role (same gate as requireAdmin)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'admin') {
+      return { success: false, error: 'Admin access required', code: 'FORBIDDEN' };
+    }
+
+    checkRateLimit(user.id, 'update_book_admin');
+
+    const { data: existing } = await supabase
+      .from('books')
+      .select('id, deleted_at')
+      .eq('id', bookId)
+      .single();
+
+    if (!existing) {
+      return { success: false, error: 'Book not found', code: 'NOT_FOUND' };
+    }
+    if (existing.deleted_at) {
+      return { success: false, error: 'Book has been deleted', code: 'BOOK_DELETED' };
+    }
+
+    // Normalize a URL input: trimmed string, or null when blank.
+    const url = (v?: string | null) => {
+      const t = (v ?? '').trim();
+      return t.length ? t : null;
+    };
+
+    // Only write keys that were actually provided.
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (input.title !== undefined) updates.title = input.title;
+    if (input.subtitle !== undefined) updates.subtitle = input.subtitle || null;
+    if (input.description !== undefined) updates.description = input.description || null;
+    if (input.slug !== undefined) updates.slug = input.slug;
+    if (input.price !== undefined) updates.price = input.price;
+    if (input.isbn !== undefined) updates.isbn = input.isbn || null;
+    if (input.genre !== undefined) updates.genre = input.genre || null;
+    if (input.page_count !== undefined) updates.page_count = input.page_count;
+    if (input.word_count !== undefined) updates.word_count = input.word_count;
+    if (input.status !== undefined) updates.status = input.status;
+    if (input.amazon_url !== undefined) updates.amazon_url = url(input.amazon_url);
+    if (input.kindle_url !== undefined) updates.kindle_url = url(input.kindle_url);
+    if (input.apple_books_url !== undefined) updates.apple_books_url = url(input.apple_books_url);
+    if (input.audible_url !== undefined) updates.audible_url = url(input.audible_url);
+    if (input.barnes_noble_url !== undefined) updates.barnes_noble_url = url(input.barnes_noble_url);
+    if (input.google_play_books_url !== undefined) updates.google_play_books_url = url(input.google_play_books_url);
+
+    // Slug uniqueness across all books (admin is not author-scoped).
+    if (typeof updates.slug === 'string') {
+      const { data: dupe } = await supabase
+        .from('books')
+        .select('id')
+        .eq('slug', updates.slug)
+        .neq('id', bookId)
+        .is('deleted_at', null)
+        .single();
+      if (dupe) {
+        return {
+          success: false,
+          error: 'Another book with this slug already exists',
+          code: 'DUPLICATE_SLUG',
+        };
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('books')
+      .update(updates)
+      .eq('id', bookId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await logAudit(supabase, 'UPDATE', bookId, 'book', {
+      changes: Object.keys(updates).filter((k) => k !== 'updated_at'),
+      admin: true,
+    });
+
+    revalidatePath('/admin/books');
+    revalidatePath(`/books/${bookId}`);
+    if (data?.slug) revalidatePath(`/books/${data.slug}`);
+    revalidateTag('featured-books');
+
+    return { success: true, data, code: 'BOOK_UPDATED' };
+  } catch (error) {
+    console.error('Admin update book error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update book',
+      code: 'UNKNOWN_ERROR',
+    };
+  }
+}
+
 export async function deleteBook(bookId: string, hardDelete: boolean = false) {
   try {
     const supabase = await createClient();

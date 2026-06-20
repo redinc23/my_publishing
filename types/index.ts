@@ -144,6 +144,12 @@ export interface Book {
   visibility: BookVisibility;
   price?: number;
   currency?: string;
+  amazon_url?: string | null;
+  kindle_url?: string | null;
+  apple_books_url?: string | null;
+  audible_url?: string | null;
+  barnes_noble_url?: string | null;
+  google_play_books_url?: string | null;
   genre?: string;
   tags?: string[];
   word_count?: number;
