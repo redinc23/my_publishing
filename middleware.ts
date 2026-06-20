@@ -64,8 +64,8 @@ export async function middleware(request: NextRequest) {
           getAll() {
             return request.cookies.getAll();
           },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-            cookiesToSet.forEach(({ name, value, options }) =>
+          setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
+            cookiesToSet.forEach(({ name, value }) =>
               request.cookies.set(name, value)
             );
             response = NextResponse.next({
@@ -88,10 +88,6 @@ export async function middleware(request: NextRequest) {
     if (userError && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
       return response;
     }
-
-    // Public routes
-    const publicRoutes = ['/', '/books', '/genres', '/login', '/register', '/reset-password', '/api'];
-    const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
     // Auth routes
     const authRoutes = ['/login', '/register', '/reset-password'];
