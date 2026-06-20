@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { Container } from '@/components/layout/Container';
-import { ChevronRight, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 
 interface AuthorWithProfile {
@@ -73,13 +73,6 @@ export async function AuthorSpotlight() {
               Meet the brilliant minds behind our stories
             </p>
           </div>
-          <Link
-            href="/authors"
-            className="hidden items-center text-sm font-medium text-primary transition-colors hover:text-primary/80 sm:inline-flex"
-          >
-            Meet Our Authors
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -120,16 +113,6 @@ export async function AuthorSpotlight() {
               </div>
             </Link>
           ))}
-        </div>
-
-        <div className="mt-6 text-center sm:hidden">
-          <Link
-            href="/authors"
-            className="inline-flex items-center text-sm font-medium text-primary transition-colors hover:text-primary/80"
-          >
-            Meet Our Authors
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Link>
         </div>
       </Container>
     </section>
