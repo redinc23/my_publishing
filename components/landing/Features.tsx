@@ -1,5 +1,4 @@
-'use client';
-
+// PERF-PHASE2-5 — Converted to RSC: no hooks, no interactivity, static markup only
 import { BookOpen, Users, Zap, Shield, Globe, Heart } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
 

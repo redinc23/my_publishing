@@ -3,13 +3,14 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateBooks } from '@/lib/supabase/queries'; // PERF-PHASE2-2
 import { z } from 'zod';
-import { 
-  CreateBookSchema, 
-  UpdateBookSchema, 
+import {
+  CreateBookSchema,
+  UpdateBookSchema,
   type Book,
-  type CreateBookInput, 
-  type UpdateBookInput 
+  type CreateBookInput,
+  type UpdateBookInput
 } from '@/types/books';
 
 // Rate limiting
@@ -122,6 +123,7 @@ export async function createBook(input: CreateBookInput) {
     revalidatePath('/admin/books');
     revalidatePath('/books');
     revalidateTag('featured-books');
+    revalidateBooks(); // PERF-PHASE2-2
 
     return { success: true, data, code: 'BOOK_CREATED' };
   } catch (error) {
@@ -215,6 +217,7 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
     revalidatePath(`/books/${bookId}`);
     revalidatePath(`/books/${data.slug}`);
     revalidateTag('featured-books');
+    revalidateBooks(); // PERF-PHASE2-2
 
     return { success: true, data, code: 'BOOK_UPDATED' };
   } catch (error) {
@@ -359,6 +362,7 @@ export async function updateBookAdmin(
     revalidatePath(`/books/${bookId}`);
     if (data?.slug) revalidatePath(`/books/${data.slug}`);
     revalidateTag('featured-books');
+    revalidateBooks(); // PERF-PHASE2-2
 
     return { success: true, data, code: 'BOOK_UPDATED' };
   } catch (error) {
@@ -420,6 +424,7 @@ export async function deleteBook(bookId: string, hardDelete: boolean = false) {
     revalidatePath('/admin/books');
     revalidatePath('/books');
     revalidateTag('featured-books');
+    revalidateBooks(); // PERF-PHASE2-2
 
     return { success: true, code: hardDelete ? 'BOOK_HARD_DELETED' : 'BOOK_SOFT_DELETED' };
   } catch (error) {
@@ -471,6 +476,7 @@ export async function restoreBook(bookId: string) {
     revalidatePath('/admin/books');
     revalidatePath('/books');
     revalidateTag('featured-books');
+    revalidateBooks(); // PERF-PHASE2-2
 
     return { success: true, code: 'BOOK_RESTORED' };
   } catch (error) {

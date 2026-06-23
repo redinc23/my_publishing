@@ -4,7 +4,16 @@ import { createClient } from '../../lib/supabase/admin';
 import { unstable_cache } from 'next/cache';
 
 // Mock dependencies
+jest.mock('react', () => {
+  const actual = jest.requireActual('react');
+  return { ...actual, cache: (fn: any) => fn };
+});
+
 jest.mock('../../lib/supabase/admin', () => ({
+  createClient: jest.fn(),
+}));
+
+jest.mock('../../lib/supabase/server', () => ({
   createClient: jest.fn(),
 }));
 

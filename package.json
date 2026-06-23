@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "db:seed": "tsx scripts/seed-database.ts",
     "db:migrate": "tsx scripts/run-migrations.ts",
-    "verify-rls": "tsx scripts/verify-rls.ts"
+    "verify-rls": "tsx scripts/verify-rls.ts",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
@@ -67,6 +68,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.9",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.2.0",
     "@testing-library/react": "^14.1.2",

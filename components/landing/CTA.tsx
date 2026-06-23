@@ -1,5 +1,4 @@
-'use client';
-
+// PERF-PHASE2-5 — Converted to RSC: no hooks, no interactivity, static markup only
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BookOpen, PenTool } from 'lucide-react';

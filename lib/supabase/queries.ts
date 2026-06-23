@@ -1,9 +1,72 @@
+// PERF-PHASE2-2
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
-import { unstable_cache } from 'next/cache';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import type { Database } from '@/types/database';
+import type { BookWithAuthor } from '@/types';
 
 type Tables = Database['public']['Tables'];
+
+// PERF-PHASE2-2 — Invalidation helpers
+export const revalidateBooks = () => revalidateTag('books-list');
+export const revalidateAuthors = () => revalidateTag('authors');
+export const revalidateResonance = () => revalidateTag('resonance');
+
+// PERF-PHASE2-2 — Cached book listing query (60s TTL, tag: books-list)
+export const getBooksPage = cache(async (params: {
+  contentType: string;
+  q?: string;
+  genre?: string;
+  sort?: string;
+  page?: string;
+}): Promise<BookWithAuthor[]> => {
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
+      let query = supabase
+        .from('books')
+        .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+        .eq('status', 'published')
+        .eq('content_type', params.contentType);
+
+      if (params.q) {
+        query = query.textSearch('title', params.q, { type: 'websearch' });
+      }
+      if (params.genre) {
+        query = query.eq('genre', params.genre);
+      }
+
+      const sort = params.sort || 'published_at';
+      const ascending = sort === 'price' || sort === 'title';
+      query = query.order(sort, { ascending });
+
+      const page = parseInt(params.page || '0');
+      const pageSize = 20;
+      query = query.range(page * pageSize, (page + 1) * pageSize - 1);
+
+      const { data } = await query;
+      return (data as BookWithAuthor[]) || [];
+    },
+    ['books-page', params.contentType, params.q ?? '', params.genre ?? '', params.sort ?? '', params.page ?? '0'],
+    { tags: ['books-list'], revalidate: 60 }
+  )();
+});
+
+// PERF-PHASE2-2 — Cached author summary query (10min TTL, tag: authors)
+export const getAuthorSummary = unstable_cache(
+  async (authorId: string) => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from('authors')
+      .select('*, profile:profiles(*)')
+      .eq('id', authorId)
+      .single();
+    return data;
+  },
+  ['author-summary'],
+  { tags: ['authors'], revalidate: 600 }
+);
 
 // ============================================================================
 // BOOKS QUERIES
