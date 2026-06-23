@@ -22,7 +22,7 @@ export const getRecommendations = cache(async (
 
       const { data: books } = await query;
 
-      return (books || []).map((book, index) => ({
+      return (books || []).map<ResonanceRecommendation>((book, index) => ({
         book_id: book.id,
         score: 1 - index * 0.1,
         algorithm: userId ? 'vector_similarity' : 'trending',
