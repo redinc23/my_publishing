@@ -1,6 +1,8 @@
+// PERF-PHASE2-7
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/admin';
 import { generateBookEmbedding } from '@/lib/resonance/embeddings';
+import { revalidateResonance } from '@/lib/supabase/queries';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +43,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
+    revalidateResonance(); // PERF-PHASE2-7
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

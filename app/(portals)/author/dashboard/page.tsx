@@ -37,18 +37,12 @@ async function getAuthorData() {
     return { author: null, books: [], manuscripts: [], earnings: 0 };
   }
 
-  const { data: books } = await supabase
-    .from('books')
-    .select('*')
-    .eq('author_id', author.id);
+  // PERF-PHASE2-3 — Parallelize independent queries
+  const [{ data: books }, { data: manuscripts }] = await Promise.all([
+    supabase.from('books').select('*').eq('author_id', author.id),
+    supabase.from('manuscripts').select('*').eq('author_id', author.id).order('created_at', { ascending: false }),
+  ]);
 
-  const { data: manuscripts } = await supabase
-    .from('manuscripts')
-    .select('*')
-    .eq('author_id', author.id)
-    .order('created_at', { ascending: false });
-
-  // Calculate earnings (simplified - would use view in production)
   const earnings = 0;
 
   return {

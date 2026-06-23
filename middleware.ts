@@ -1,3 +1,4 @@
+// PERF-PHASE2-9
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { checkRateLimit, getAuthLimiter, getUploadLimiter } from '@/lib/rate-limit';

@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 
+// PERF-PHASE2-8 — Bundle analyzer
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 // Build a Content-Security-Policy that covers all required third-party origins.
 // 'unsafe-inline' / 'unsafe-eval' are required by Next.js 14 until nonce-based
 // CSP is fully wired in; tighten further by replacing them with nonces once the
@@ -76,9 +81,10 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '50mb',
+      bodySizeLimit: '1mb', // PERF-PHASE2-9 — Tighten from 50mb to 1mb
     },
   },
 };
 
-module.exports = nextConfig;
+// PERF-PHASE2-8
+module.exports = withBundleAnalyzer(nextConfig);
