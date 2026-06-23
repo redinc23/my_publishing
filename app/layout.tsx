@@ -1,13 +1,23 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { Providers } from './providers';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '700'],
+const inter = localFont({
+  src: [
+    {
+      path: '../node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../node_modules/@fontsource/inter/files/inter-latin-700-normal.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
   variable: '--font-inter',
   display: 'swap',
   fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
