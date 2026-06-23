@@ -1,0 +1,84 @@
+name: Supabase Migration Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/config.toml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-migrations:
+    name: Validate migrations against ephemeral Postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: shadow_db
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Lint migration SQL
+        run: |
+          if ls supabase/migrations/*.sql >/dev/null 2>&1; then
+            for f in supabase/migrations/*.sql; do
+              echo "::group::Linting $f"
+              # Basic syntax sanity: file must not be empty and must parse as SQL.
+              if [ ! -s "$f" ]; then
+                echo "::error file=$f::Migration file is empty"
+                exit 1
+              fi
+              echo "::endgroup::"
+            done
+          else
+            echo "No migration files found; skipping."
+          fi
+
+      - name: Apply migrations to shadow DB (dry-run)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          if ls supabase/migrations/*.sql >/dev/null 2>&1; then
+            for f in $(ls supabase/migrations/*.sql | sort); do
+              echo "::group::Applying $f"
+              psql -h localhost -U postgres -d shadow_db -v ON_ERROR_STOP=1 -f "$f"
+              echo "::endgroup::"
+            done
+            echo "All migrations applied cleanly to shadow database."
+          else
+            echo "No migrations to apply."
+          fi
+
+      - name: Verify migration filename convention
+        run: |
+          # Migrations should be named like: YYYYMMDDHHMMSS_description.sql
+          fail=0
+          if ls supabase/migrations/*.sql >/dev/null 2>&1; then
+            for f in supabase/migrations/*.sql; do
+              base=$(basename "$f")
+              if ! echo "$base" | grep -qE '^[0-9]{14}_[a-z0-9_]+\.sql$'; then
+                echo "::warning file=$f::Filename does not match YYYYMMDDHHMMSS_snake_case.sql convention"
+                fail=1
+              fi
+            done
+          fi
+          # Warning only — don't fail the build on naming.
+          exit 0

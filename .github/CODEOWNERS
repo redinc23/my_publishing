@@ -1,0 +1,41 @@
+# CODEOWNERS for redinc23/my_publishing
+#
+# Owners are automatically requested for review when a PR modifies matching files.
+# The last matching pattern wins. See:
+# https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner — applies to anything not matched by a more specific rule below.
+*                                @redinc23
+
+# CI / GitHub automation
+/.github/                        @redinc23
+/.github/workflows/              @redinc23
+/.github/CODEOWNERS              @redinc23
+
+# Infrastructure & deployment
+/Dockerfile                      @redinc23
+/cloudbuild.yaml                 @redinc23
+/amplify.yml                     @redinc23
+/vercel.json                     @redinc23
+/next.config.js                  @redinc23
+
+# Database — Supabase migrations are production-critical
+/supabase/                       @redinc23
+/supabase/migrations/            @redinc23
+/lib/supabase/                   @redinc23
+
+# Payments — Stripe integration
+/lib/stripe/                     @redinc23
+/app/api/checkout/               @redinc23
+/app/api/webhook/                @redinc23
+
+# Backend API routes
+/app/api/                        @redinc23
+
+# Auth & middleware
+/middleware.ts                   @redinc23
+/lib/middleware/                 @redinc23
+
+# Security-sensitive helpers
+/lib/rate-limit.ts               @redinc23
+/scripts/verify-rls.ts           @redinc23

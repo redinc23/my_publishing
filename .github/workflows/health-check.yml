@@ -1,0 +1,168 @@
+name: Production Health Check
+
+on:
+  schedule:
+    # Every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Override URL to probe (defaults to PROD_HEALTH_URL secret)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: health-check
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Probe /api/health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine target URL
+        id: target
+        env:
+          INPUT_URL: ${{ github.event.inputs.target_url }}
+          SECRET_URL: ${{ secrets.PROD_HEALTH_URL }}
+        run: |
+          if [ -n "$INPUT_URL" ]; then
+            URL="$INPUT_URL"
+          elif [ -n "$SECRET_URL" ]; then
+            URL="$SECRET_URL"
+          else
+            echo "::warning::Neither input.target_url nor secrets.PROD_HEALTH_URL is set; skipping probe."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Probe health endpoint
+        if: steps.target.outputs.skip != 'true'
+        id: probe
+        env:
+          URL: ${{ steps.target.outputs.url }}
+        run: |
+          set +e
+          response=$(curl -sS -o /tmp/body -w "%{http_code}\n%{time_total}" --max-time 10 "$URL")
+          curl_exit=$?
+          status=$(echo "$response" | sed -n '1p')
+          elapsed=$(echo "$response" | sed -n '2p')
+          body=$(cat /tmp/body | head -c 2000)
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "elapsed=$elapsed" >> "$GITHUB_OUTPUT"
+          {
+            echo 'body<<EOF'
+            echo "$body"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$curl_exit" -ne 0 ]; then
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::error::curl failed with exit $curl_exit"
+            exit 0
+          fi
+          if [ "$status" = "200" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+            echo "Healthy (HTTP $status in ${elapsed}s)"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Unhealthy (HTTP $status)"
+          fi
+
+      - name: Open or update issue on failure
+        if: steps.target.outputs.skip != 'true' && steps.probe.outputs.ok != 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const status = '${{ steps.probe.outputs.status }}' || 'no response';
+            const elapsed = '${{ steps.probe.outputs.elapsed }}' || 'n/a';
+            const body = `${{ steps.probe.outputs.body }}`;
+            const url = '${{ steps.target.outputs.url }}';
+            const title = '🚨 Production health check failing';
+            const marker = '<!-- health-check-issue -->';
+
+            const search = await github.rest.issues.listForRepo({
+              owner, repo,
+              state: 'open',
+              labels: 'health-check,incident',
+              per_page: 20
+            });
+            const existing = search.data.find(i => i.body && i.body.includes(marker));
+
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const newBody = [
+              marker,
+              `**URL:** ${url}`,
+              `**Status:** \`${status}\``,
+              `**Elapsed:** \`${elapsed}s\``,
+              `**Run:** ${runUrl}`,
+              `**Timestamp:** ${new Date().toISOString()}`,
+              '',
+              '<details><summary>Response body</summary>',
+              '',
+              '```',
+              body || '(empty)',
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: existing.number,
+                body: `Still failing — status \`${status}\` at ${new Date().toISOString()}. See run ${runUrl}.`
+              });
+              core.info(`Updated existing incident issue #${existing.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner, repo,
+                title,
+                body: newBody,
+                labels: ['health-check', 'incident', 'priority: high']
+              });
+              core.info(`Opened incident issue #${created.data.number}`);
+            }
+
+      - name: Auto-close incident issue on success
+        if: steps.target.outputs.skip != 'true' && steps.probe.outputs.ok == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const marker = '<!-- health-check-issue -->';
+            const search = await github.rest.issues.listForRepo({
+              owner, repo,
+              state: 'open',
+              labels: 'health-check,incident',
+              per_page: 20
+            });
+            for (const issue of search.data) {
+              if (issue.body && issue.body.includes(marker)) {
+                await github.rest.issues.createComment({
+                  owner, repo,
+                  issue_number: issue.number,
+                  body: `✅ Health check recovered at ${new Date().toISOString()}. Closing.`
+                });
+                await github.rest.issues.update({
+                  owner, repo,
+                  issue_number: issue.number,
+                  state: 'closed',
+                  state_reason: 'completed'
+                });
+                core.info(`Closed recovered incident #${issue.number}`);
+              }
+            }

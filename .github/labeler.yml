@@ -1,0 +1,82 @@
+# actions/labeler@v5 path-based labeling config.
+# Reference: https://github.com/actions/labeler
+
+"area: ui":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/**/*.tsx'
+          - 'app/**/*.css'
+          - 'components/**'
+          - 'tailwind.config.ts'
+          - 'postcss.config.js'
+
+"area: api":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/api/**'
+          - 'pages/api/**'
+
+"area: auth":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'middleware.ts'
+          - 'lib/middleware/**'
+          - 'app/api/session/**'
+
+"area: stripe":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'lib/stripe/**'
+          - 'app/api/checkout/**'
+          - 'app/api/webhook/**'
+
+"area: supabase":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'supabase/**'
+          - 'lib/supabase/**'
+
+"area: ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - '.github/dependabot.yml'
+          - '.github/labeler.yml'
+          - '.github/CODEOWNERS'
+
+"area: docs":
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+
+"area: tests":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'tests/**'
+          - '**/*.test.ts'
+          - '**/*.test.tsx'
+          - '**/*.spec.ts'
+          - 'jest.config.js'
+          - 'jest.setup.js'
+          - 'playwright.config.ts'
+
+"area: infra":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'Dockerfile'
+          - 'cloudbuild.yaml'
+          - 'amplify.yml'
+          - 'vercel.json'
+          - 'next.config.js'
+
+"area: scripts":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'scripts/**'
+
+"dependencies":
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'package.json'
+          - 'package-lock.json'

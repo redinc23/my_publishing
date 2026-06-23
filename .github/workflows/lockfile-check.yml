@@ -1,0 +1,42 @@
+name: Lockfile drift check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  lockfile-drift:
+    name: Verify package-lock.json is in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      # `npm ci` fails if package-lock.json is out of sync with package.json.
+      # This is the canonical way to detect lockfile drift.
+      - name: Run npm ci (strict lockfile check)
+        run: npm ci --ignore-scripts
+
+      # Defense in depth: also run a dry-run install and fail if the lockfile would change.
+      - name: Verify lockfile is up-to-date
+        run: |
+          cp package-lock.json /tmp/before-lock.json
+          npm install --package-lock-only --ignore-scripts
+          if ! diff -q /tmp/before-lock.json package-lock.json > /dev/null; then
+            echo "::error::package-lock.json is out of sync with package.json."
+            echo "Run 'npm install' locally and commit the updated package-lock.json."
+            diff /tmp/before-lock.json package-lock.json | head -40 || true
+            exit 1
+          fi
+          echo "package-lock.json is in sync."

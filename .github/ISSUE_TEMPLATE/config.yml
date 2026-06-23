@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/redinc23/my_publishing/security/advisories/new
+    about: Please report security vulnerabilities privately via GitHub Security Advisories, not as public issues.
+  - name: Question / discussion
+    url: https://github.com/redinc23/my_publishing/discussions
+    about: For open-ended questions, use Discussions instead of filing an issue.
