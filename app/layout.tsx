@@ -5,6 +5,7 @@ import { Providers } from './providers';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/seo';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -14,7 +15,7 @@ const inter = Inter({
   fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
-const SITE_URL = 'https://manguprojectz.vercel.app';
+const SITE_URL = getSiteUrl();
 const SITE_NAME = 'MANGU Publishers';
 const SITE_DESCRIPTION =
   'Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime.';

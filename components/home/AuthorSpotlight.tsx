@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { Container } from '@/components/layout/Container';
 import { Users } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
@@ -17,25 +17,25 @@ interface AuthorWithProfile {
   } | null;
 }
 
-async function getFeaturedAuthors(limit = 4): Promise<AuthorWithProfile[]> {
+const getFeaturedAuthors = unstable_cache(
+  async (limit: number): Promise<AuthorWithProfile[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('authors')
+      .select('id, pen_name, bio, total_books, is_verified, profile:profiles(full_name, avatar_url)')
+      .eq('is_verified', true)
+      .order('total_books', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data as unknown as AuthorWithProfile[]) || [];
+  },
+  ['featured-authors'],
+  { tags: ['featured-authors'], revalidate: 3600 }
+);
+
+async function getFeaturedAuthorsSafe(limit = 4): Promise<AuthorWithProfile[]> {
   try {
-    const data = await unstable_cache(
-      async (limit) => {
-        const supabase = createAdminClient();
-        const { data, error } = await supabase
-          .from('authors')
-          .select(
-            'id, pen_name, bio, total_books, is_verified, profile:profiles(full_name, avatar_url)'
-          )
-          .order('total_books', { ascending: false })
-          .limit(limit);
-        if (error) throw error;
-        return (data as unknown as AuthorWithProfile[]) || [];
-      },
-      ['featured-authors'],
-      { tags: ['featured-authors'], revalidate: 3600 }
-    )(limit);
-    return data;
+    return await getFeaturedAuthors(limit);
   } catch (error) {
     console.error('Error fetching featured authors:', error);
     return [];
@@ -43,7 +43,7 @@ async function getFeaturedAuthors(limit = 4): Promise<AuthorWithProfile[]> {
 }
 
 export async function AuthorSpotlight() {
-  const authors = await getFeaturedAuthors(4);
+  const authors = await getFeaturedAuthorsSafe(4);
 
   if (authors.length === 0) {
     return (

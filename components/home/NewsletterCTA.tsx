@@ -9,11 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function NewsletterCTA() {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) return;
 
     setStatus('loading');
     // TODO: replace with real API call, e.g. POST /api/newsletter

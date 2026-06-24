@@ -33,6 +33,7 @@ function AnimatedCounter({
   useEffect(() => {
     if (!inView) return;
     let startTime: number;
+    let animationFrameId: number;
     const duration = 2000;
 
     const animate = (timestamp: number) => {
@@ -40,10 +41,12 @@ function AnimatedCounter({
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.floor(eased * value));
-      if (progress < 1) requestAnimationFrame(animate);
+      if (progress < 1) animationFrameId = requestAnimationFrame(animate);
     };
 
-    requestAnimationFrame(animate);
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [inView, value]);
 
   const formatNumber = (num: number) => {
