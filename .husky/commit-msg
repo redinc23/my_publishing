@@ -1,0 +1,13 @@
+#!/bin/sh
+
+message=$(cat "$1")
+
+if echo "$message" | grep -qE "^(Merge|Revert|feat|fix|docs|style|refactor|perf|test|chore|ci|build)(\(.+\))?!?: .+"; then
+  exit 0
+fi
+
+echo "Error: Commit message does not follow conventional commit format."
+echo "Expected format: type(scope): description"
+echo "Valid types: feat, fix, docs, style, refactor, perf, test, chore, ci, build"
+echo "Example: feat(home): add featured books carousel"
+exit 1
