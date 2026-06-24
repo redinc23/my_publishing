@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "mangu-publishers",
   "version": "1.0.0",
   "private": true,
@@ -65,6 +65,7 @@
     "stripe": "^14.25.0",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.2.0",
+    "tsx": "^4.7.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -89,7 +90,6 @@
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
-    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }
 }
