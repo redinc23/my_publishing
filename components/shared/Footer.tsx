@@ -22,10 +22,10 @@ const footerColumns = [
     links: [
       { label: 'Browse Books', href: '/books' },
       { label: 'Genres', href: '/genres' },
-      { label: 'New Releases', href: '/new-releases' },
-      { label: 'Trending', href: '/trending' },
-      { label: 'Authors', href: '/authors' },
-      { label: 'Audiobooks', href: '/audiobooks' },
+      { label: 'New Releases', href: '/books?sort=newest' },
+      { label: 'Trending', href: '/discover' },
+      { label: 'Authors', href: '/readers-hub' },
+      { label: 'Audiobooks', href: '/audio' },
     ],
   },
   {
@@ -102,9 +102,14 @@ function SocialIcon({
   );
 }
 
-function AppStoreButton({ store }: { store: 'App Store' | 'Google Play' }) {
+function AppStoreButton({ store, href }: { store: 'App Store' | 'Google Play'; href: string }) {
   return (
-    <button className="group flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2.5 text-left transition-all duration-200 hover:border-primary/50 hover:bg-secondary">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2.5 text-left transition-all duration-200 hover:border-primary/50 hover:bg-secondary"
+    >
       <Globe className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
       <div className="flex flex-col">
         <span className="text-[10px] uppercase leading-none tracking-wide text-muted-foreground">
@@ -112,7 +117,7 @@ function AppStoreButton({ store }: { store: 'App Store' | 'Google Play' }) {
         </span>
         <span className="text-sm font-semibold leading-tight text-foreground">{store}</span>
       </div>
-    </button>
+    </a>
   );
 }
 
@@ -167,8 +172,8 @@ export function Footer() {
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <AppStoreButton store="App Store" />
-              <AppStoreButton store="Google Play" />
+              <AppStoreButton store="App Store" href="https://www.apple.com/app-store/" />
+              <AppStoreButton store="Google Play" href="https://play.google.com/store" />
             </div>
           </div>
 
@@ -241,11 +246,15 @@ export function Footer() {
                 </span>{' '}
                 for book lovers
               </span>
-              <div className="hidden cursor-pointer items-center gap-1.5 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 sm:flex">
+              <button
+                type="button"
+                aria-label="Select language"
+                className="hidden items-center gap-1.5 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 sm:flex"
+              >
                 <Globe className="h-3 w-3" />
                 <span>EN</span>
                 <ChevronDown className="h-3 w-3" />
-              </div>
+              </button>
             </div>
           </div>
         </Container>

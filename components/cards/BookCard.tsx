@@ -45,9 +45,11 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
     <motion.div
       whileHover={{ scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className="group block"
     >
-      <Link href={`/books/${book.slug}`}>
+      <Link
+        href={`/books/${book.slug}`}
+        className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
         <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
           <div className="relative aspect-[2/3] overflow-hidden bg-muted">
             {book.cover_url && (

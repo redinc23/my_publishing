@@ -1,4 +1,5 @@
 import React from 'react';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 export interface OgImageConfig {
   url: string;
@@ -109,9 +110,12 @@ export function generateOgMetadata({
   modifiedTime,
   authors,
 }: GenerateOgMetadataOptions) {
-  const baseUrl = 'https://manguprojectz.vercel.app';
-  const fullUrl = path ? `${baseUrl}${path}` : baseUrl;
-  const imageUrl = image.startsWith('http') ? image : `${baseUrl}${image}`;
+  const baseUrl = getSiteUrl();
+  const normalizedPath = path && !path.startsWith('/') ? `/${path}` : path;
+  const fullUrl = normalizedPath ? `${baseUrl}${normalizedPath}` : baseUrl;
+  const imageUrl = image.startsWith('http')
+    ? image
+    : `${baseUrl}${image.startsWith('/') ? image : `/${image}`}`;
 
   return {
     title,
@@ -164,7 +168,7 @@ export function getGenreOgMetadata(genre: string) {
   return generateOgMetadata({
     title: `${genre} Books | MANGU Publishers`,
     description: `Explore ${genre} books on MANGU Publishers. Discover new authors, bestsellers, and hidden gems in the ${genre} genre.`,
-    path: `/genres/${encodeURIComponent(genre.toLowerCase())}`,
+    path: `/genres/${encodeURIComponent(genre)}`,
   });
 }
 

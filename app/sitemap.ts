@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const baseUrl = getSiteUrl();
   const supabase = await createClient();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -71,43 +72,50 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   let bookRoutes: MetadataRoute.Sitemap = [];
-  try {
-    const { data: books, error } = await supabase
-      .from('books')
-      .select('id, slug, updated_at')
-      .eq('status', 'published')
-      .eq('visibility', 'public')
-      .order('updated_at', { ascending: false });
-    if (!error && books) {
-      bookRoutes = books.map((book) => ({
-        url: `${baseUrl}/books/${book.slug || book.id}`,
-        lastModified: new Date(book.updated_at),
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-      }));
-    }
-  } catch (e) {
-    console.error('Sitemap: books fetch failed', e);
-  }
-
   let genreRoutes: MetadataRoute.Sitemap = [];
   try {
-    const { data: genres, error } = await supabase
-      .from('books')
-      .select('genre')
-      .eq('status', 'published')
-      .eq('visibility', 'public');
-    if (!error && genres) {
-      const uniqueGenres = [...new Set(genres.map((g) => g.genre).filter(Boolean))];
-      genreRoutes = uniqueGenres.map((genre) => ({
-        url: `${baseUrl}/genres/${encodeURIComponent(genre!.toLowerCase().replace(/\s+/g, '-'))}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.75,
-      }));
+    const uniqueGenres = new Set<string>();
+    const pageSize = 500;
+    let from = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data: books, error } = await supabase
+        .from('books')
+        .select('id, slug, genre, updated_at')
+        .eq('status', 'published')
+        .eq('visibility', 'public')
+        .order('updated_at', { ascending: false })
+        .range(from, from + pageSize - 1);
+
+      if (error || !books) {
+        break;
+      }
+
+      for (const book of books) {
+        bookRoutes.push({
+          url: `${baseUrl}/books/${book.slug || book.id}`,
+          lastModified: new Date(book.updated_at),
+          changeFrequency: 'weekly' as const,
+          priority: 0.8,
+        });
+
+        const genre = book.genre?.trim();
+        if (genre) uniqueGenres.add(genre);
+      }
+
+      hasMore = books.length === pageSize;
+      from += pageSize;
     }
+
+    genreRoutes = Array.from(uniqueGenres).map((genre) => ({
+      url: `${baseUrl}/genres/${encodeURIComponent(genre)}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.75,
+    }));
   } catch (e) {
-    console.error('Sitemap: genres fetch failed', e);
+    console.error('Sitemap: books fetch failed', e);
   }
 
   let authorRoutes: MetadataRoute.Sitemap = [];

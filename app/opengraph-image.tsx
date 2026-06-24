@@ -5,6 +5,11 @@ export const alt = 'MANGU Publishers - Your digital publishing platform';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+const interFontPromise = fetch(
+  'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyeMZ1rib2Bg-4.ttf',
+  { cache: 'force-cache' }
+).then((response) => response.arrayBuffer());
+
 export default async function OpenGraphImage() {
   return new ImageResponse(
     <div
@@ -141,9 +146,7 @@ export default async function OpenGraphImage() {
       fonts: [
         {
           name: 'Inter',
-          data: await fetch(
-            'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyeMZ1rib2Bg-4.ttf'
-          ).then((r) => r.arrayBuffer()),
+          data: await interFontPromise,
           style: 'normal',
           weight: 300,
         },
