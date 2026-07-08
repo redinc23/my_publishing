@@ -11,7 +11,20 @@
  *   - Rate-limit exceeded error display (simulated via server action response)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+// Next.js injects an empty `[role="alert"]` route announcer on every page;
+// exclude it so alert assertions only match real, application-rendered alerts.
+function appAlert(page: Page) {
+  return page.locator('[role="alert"]:not([id="__next-route-announcer__"])');
+}
+
+// Backend-dependent tests can only pass against a real Supabase project, not
+// the placeholder env used by CI / `scripts/launch-readiness.sh` mock runs.
+const supabaseNotConfigured =
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.USE_MOCKS === 'true' ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL.includes('test.supabase.co');
 
 // ---------------------------------------------------------------------------
 // Login page
@@ -23,7 +36,7 @@ test.describe('Login page', () => {
   });
 
   test('renders the sign-in form with accessible structure', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
@@ -65,25 +78,22 @@ test.describe('Login page', () => {
   test('displays URL error parameter from OAuth callback', async ({ page }) => {
     await page.goto('/login?error=Authentication%20failed');
     // The error must be rendered inside an aria-live region.
-    const alert = page.getByRole('alert');
+    const alert = appAlert(page);
     await expect(alert).toBeVisible();
     await expect(alert).toContainText('Authentication failed');
   });
 
   test('displays error for invalid credentials', async ({ page }) => {
     // Only run against a configured Supabase instance; skip otherwise.
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(supabaseNotConfigured, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
     await page.getByRole('button', { name: /sign in/i }).click();
 
     // Wait for the server round-trip and expect an error to appear.
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/invalid email or password/i);
+    await expect(appAlert(page)).toBeVisible({ timeout: 10_000 });
+    await expect(appAlert(page)).toContainText(/invalid email or password/i);
   });
 });
 
@@ -122,10 +132,7 @@ test.describe('Register page', () => {
   });
 
   test('shows duplicate email error', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(supabaseNotConfigured, 'Supabase not configured');
 
     // Use the known test admin email to trigger the "already registered" path.
     await page.getByLabel(/full name/i).fill('Test User');
@@ -134,8 +141,8 @@ test.describe('Register page', () => {
     await page.getByLabel(/confirm password/i).fill('TestPassword1!');
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/already exists/i);
+    await expect(appAlert(page)).toBeVisible({ timeout: 10_000 });
+    await expect(appAlert(page)).toContainText(/already exists/i);
   });
 });
 
@@ -157,21 +164,19 @@ test.describe('Reset password page', () => {
   test('shows validation error for invalid email', async ({ page }) => {
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByRole('button', { name: /send reset link/i }).click();
-    await expect(page.getByRole('alert')).toBeVisible();
-    await expect(page.getByRole('alert')).toContainText(/invalid email/i);
+    await expect(appAlert(page)).toBeVisible();
+    await expect(appAlert(page)).toContainText(/invalid email/i);
   });
 
   test('shows success message after valid submission', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(supabaseNotConfigured, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
 
     // Supabase always returns success (doesn't reveal whether email exists).
-    await expect(page.getByRole('status')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('status')).toContainText(/check your email/i);
+    // Filter by text: a loading spinner also carries role="status".
+    const successStatus = page.getByRole('status').filter({ hasText: /check your email/i });
+    await expect(successStatus).toBeVisible({ timeout: 10_000 });
   });
 });

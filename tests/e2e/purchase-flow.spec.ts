@@ -7,7 +7,7 @@ test.describe('Purchase Flow', () => {
   });
 
   test('homepage loads', async ({ page }) => {
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('book detail page loads', async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe('Purchase Flow', () => {
 
   test('books listing page loads', async ({ page }) => {
     await page.goto('/books');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('search functionality works', async ({ page }) => {
@@ -34,20 +34,22 @@ test.describe('Purchase Flow', () => {
   });
 
   test('health endpoint returns valid response', async ({ request }) => {
+    // Plain /api/health is the lightweight startup probe ({ status: 'ok' });
+    // the full readiness payload lives behind /api/health?ready=1.
     const response = await request.get('/api/health');
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();
-    expect(data).toHaveProperty('status');
-    expect(['healthy', 'degraded', 'unhealthy']).toContain(data.status);
+    expect(data).toHaveProperty('status', 'ok');
+    expect(data).toHaveProperty('probe', 'startup');
   });
 
   test('authentication pages load', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.getByRole('heading').first()).toBeVisible();
     
     await page.goto('/register');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.getByRole('heading').first()).toBeVisible();
   });
 
   // Note: Purchase flow test requires Stripe test mode and authentication
