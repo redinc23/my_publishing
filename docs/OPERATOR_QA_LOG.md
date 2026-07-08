@@ -4,6 +4,22 @@ Automated checks from plan execution. Manual browser steps still required for au
 
 ## Automated (agent-run)
 
+### 2026-07-08 run (launch plan Phases 2–3, 7–9)
+
+| Check | Command / URL | Result |
+|-------|---------------|--------|
+| Full local gate | `bash scripts/launch-readiness.sh` | PASS (npm ci, type-check, lint, 25 unit tests, migrations, build, lockfile, secret audit) |
+| Type-check | `npm run type-check` | PASS — after adding `@types/jest` (was failing on `lib/supabase/queries.test.ts`) |
+| Migration integrity | `bash scripts/verify-migrations.sh` | PASS — 15 files, none empty. Overlapping `20260619124500` / `20260619162409` both fully idempotent (`ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`) — safe to apply in sequence |
+| E2E (chromium, mock mode) | `npx playwright test --project=chromium` | PASS 26/26 (+3 correctly skipped as backend-dependent) — after fixing `/books` `/comics` `/papers` crash (`cookies()` inside `unstable_cache`) and Playwright strict-mode selectors |
+| Prod liveness | `curl https://mangu-publishers.com/api/live` | HTTP 200 (3/3 attempts) |
+| Prod readiness | `curl https://mangu-publishers.com/api/health?ready=1` | HTTP 200 `{"status":"healthy","ready":true}` — env, database, auth, migrations, Stripe all `pass` |
+| Prod listing pages | `curl https://mangu-publishers.com/{books,comics,papers,login}` | HTTP 200 each; `/books` renders "Browse Books" (no error boundary) |
+| Dependency audit | `npm audit --audit-level=high` | Exit 0 at high gate; 17 advisories total (10 high) — all fixes require breaking major upgrades (`next@16`, `@react-email/components@1`); tracked, not blocking |
+| CI `if:` gates | `.github/workflows/{ci,deploy}.yml` | FIXED — `secrets.*` in job-level `if:` silently skips jobs; now gated on `vars.GCP_PROJECT_ID` / `vars.VERCEL_PROJECT_ID` (operator: define these repo **variables**) |
+
+### 2026-05-31 run
+
 | Check | Command / URL | Result |
 |-------|---------------|--------|
 | Type-check | `npm run type-check` | PASS (2026-05-31) |
