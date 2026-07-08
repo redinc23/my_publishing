@@ -6,8 +6,8 @@ Complete guide for deploying the MANGU platform to production.
 
 ## Deployment Options
 
-- **GCP Cloud Run (canonical):** See [MANGU Production Deployment](./MANGU_PRODUCTION_DEPLOYMENT.md) and [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md). Verify with `./scripts/verify-gcp-production.sh`.
-- **Vercel (optional):** GitHub Actions deploy job runs only when `VERCEL_TOKEN` is set. Steps below.
+- **GCP Cloud Run (canonical):** See [MANGU Production Deployment](./MANGU_PRODUCTION_DEPLOYMENT.md) and [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md). The GitHub Actions Cloud Run workflow runs when repository variable `GCP_DEPLOY_ENABLED` is `true`; GCP credentials remain GitHub Secrets. Verify with `./scripts/verify-gcp-production.sh`.
+- **Vercel (optional):** GitHub Actions deploy job runs when repository variable `VERCEL_DEPLOY_ENABLED` is `true`; `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` must still be configured as secrets. Steps below.
 - **AWS Amplify (legacy):** See [AWS Amplify Deployment](./AWS_AMPLIFY_DEPLOYMENT.md)—not recommended for new releases.
 
 ## Prerequisites
