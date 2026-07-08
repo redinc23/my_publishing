@@ -34,6 +34,10 @@ export async function signIn(formData: FormData) {
     return { error: 'Password must be at least 6 characters long' };
   }
 
+  if (process.env.USE_MOCKS === 'true') {
+    return { error: 'Invalid email or password. Please try again.' };
+  }
+
   try {
     const supabase = await createClient();
 

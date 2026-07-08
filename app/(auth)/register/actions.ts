@@ -39,6 +39,15 @@ export async function registerUser(formData: FormData) {
     return { error: 'Full name must be at least 2 characters long' };
   }
 
+  if (process.env.USE_MOCKS === 'true') {
+    const normalizedEmail = email.trim().toLowerCase();
+    const duplicateEmail = (process.env.TEST_ADMIN_EMAIL ?? 'admin@example.com').toLowerCase();
+    if (normalizedEmail === duplicateEmail) {
+      return { error: 'An account with this email already exists. Please sign in instead.' };
+    }
+    return null;
+  }
+
   try {
     const supabase = await createClient();
 

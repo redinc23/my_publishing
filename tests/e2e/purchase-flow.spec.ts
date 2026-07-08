@@ -7,7 +7,7 @@ test.describe('Purchase Flow', () => {
   });
 
   test('homepage loads', async ({ page }) => {
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('book detail page loads', async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe('Purchase Flow', () => {
 
   test('books listing page loads', async ({ page }) => {
     await page.goto('/books');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('search functionality works', async ({ page }) => {
@@ -44,10 +44,10 @@ test.describe('Purchase Flow', () => {
 
   test('authentication pages load', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
     
     await page.goto('/register');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   // Note: Purchase flow test requires Stripe test mode and authentication

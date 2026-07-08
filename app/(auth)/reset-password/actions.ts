@@ -15,6 +15,10 @@ export async function resetPassword(formData: FormData) {
     return { error: 'Too many password reset requests. Please try again in an hour.' };
   }
 
+  if (process.env.USE_MOCKS === 'true') {
+    return null;
+  }
+
   const supabase = await createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {

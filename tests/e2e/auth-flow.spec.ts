@@ -11,7 +11,10 @@
  *   - Rate-limit exceeded error display (simulated via server action response)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+const appAlert = (page: Page, text: RegExp | string) =>
+  page.getByRole('alert').filter({ hasText: text });
 
 // ---------------------------------------------------------------------------
 // Login page
@@ -65,7 +68,7 @@ test.describe('Login page', () => {
   test('displays URL error parameter from OAuth callback', async ({ page }) => {
     await page.goto('/login?error=Authentication%20failed');
     // The error must be rendered inside an aria-live region.
-    const alert = page.getByRole('alert');
+    const alert = appAlert(page, 'Authentication failed');
     await expect(alert).toBeVisible();
     await expect(alert).toContainText('Authentication failed');
   });
@@ -82,8 +85,9 @@ test.describe('Login page', () => {
     await page.getByRole('button', { name: /sign in/i }).click();
 
     // Wait for the server round-trip and expect an error to appear.
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/invalid email or password/i);
+    const alert = appAlert(page, /invalid email or password/i);
+    await expect(alert).toBeVisible({ timeout: 10_000 });
+    await expect(alert).toContainText(/invalid email or password/i);
   });
 });
 
@@ -134,8 +138,9 @@ test.describe('Register page', () => {
     await page.getByLabel(/confirm password/i).fill('TestPassword1!');
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/already exists/i);
+    const alert = appAlert(page, /already exists/i);
+    await expect(alert).toBeVisible({ timeout: 10_000 });
+    await expect(alert).toContainText(/already exists/i);
   });
 });
 
@@ -157,8 +162,9 @@ test.describe('Reset password page', () => {
   test('shows validation error for invalid email', async ({ page }) => {
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByRole('button', { name: /send reset link/i }).click();
-    await expect(page.getByRole('alert')).toBeVisible();
-    await expect(page.getByRole('alert')).toContainText(/invalid email/i);
+    const alert = appAlert(page, /invalid email/i);
+    await expect(alert).toBeVisible();
+    await expect(alert).toContainText(/invalid email/i);
   });
 
   test('shows success message after valid submission', async ({ page }) => {
