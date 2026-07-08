@@ -23,7 +23,7 @@ test.describe('Login page', () => {
   });
 
   test('renders the sign-in form with accessible structure', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
@@ -64,10 +64,10 @@ test.describe('Login page', () => {
 
   test('displays URL error parameter from OAuth callback', async ({ page }) => {
     await page.goto('/login?error=Authentication%20failed');
-    // The error must be rendered inside an aria-live region.
-    const alert = page.getByRole('alert');
+    // The error must be rendered inside an aria-live region. Filter out the
+    // Next.js route announcer, which also has role="alert".
+    const alert = page.getByRole('alert').filter({ hasText: 'Authentication failed' });
     await expect(alert).toBeVisible();
-    await expect(alert).toContainText('Authentication failed');
   });
 
   test('displays error for invalid credentials', async ({ page }) => {
@@ -157,8 +157,8 @@ test.describe('Reset password page', () => {
   test('shows validation error for invalid email', async ({ page }) => {
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByRole('button', { name: /send reset link/i }).click();
-    await expect(page.getByRole('alert')).toBeVisible();
-    await expect(page.getByRole('alert')).toContainText(/invalid email/i);
+    const alert = page.getByRole('alert').filter({ hasText: /invalid email/i });
+    await expect(alert).toBeVisible();
   });
 
   test('shows success message after valid submission', async ({ page }) => {

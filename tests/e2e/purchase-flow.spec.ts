@@ -7,7 +7,7 @@ test.describe('Purchase Flow', () => {
   });
 
   test('homepage loads', async ({ page }) => {
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('book detail page loads', async ({ page }) => {
@@ -39,15 +39,17 @@ test.describe('Purchase Flow', () => {
     
     const data = await response.json();
     expect(data).toHaveProperty('status');
-    expect(['healthy', 'degraded', 'unhealthy']).toContain(data.status);
+    // Without ?ready=1 the endpoint is a lightweight startup probe ('ok');
+    // with it, it reports readiness ('healthy' | 'degraded' | 'unhealthy').
+    expect(['ok', 'healthy', 'degraded', 'unhealthy']).toContain(data.status);
   });
 
   test('authentication pages load', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('h1, h2')).toBeVisible();
-    
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+
     await page.goto('/register');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
   });
 
   // Note: Purchase flow test requires Stripe test mode and authentication
