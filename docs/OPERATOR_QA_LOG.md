@@ -18,6 +18,11 @@ Automated checks from plan execution. Manual browser steps still required for au
 | Secret scan | ripgrep for `sk_live_`, `sk_test_`, `whsec_`, JWTs, `re_`, `AIza` | Clean — zero secrets in repo |
 | npm audit | `npm audit --audit-level=high` | 17 vulns (10 high) — all in `next@14.2.35` chain; fix requires Next 16 (breaking). Deferred to engineering. |
 | GitHub Actions | `gh run list` | **BLOCKED: account locked due to billing issue** — no jobs start. Workflow-file bug (`secrets.*` in job `if:`) fixed on this branch; runs will stay red until billing is resolved. |
+| Prod RLS: profiles (anon) | PostgREST query with public anon key | PASS — `[]`, no rows leak |
+| Prod RLS: draft books (anon) | PostgREST query with public anon key | PASS — `[]`, drafts hidden |
+| Prod RLS: orders (anon) | PostgREST query with public anon key | PASS — `[]`, orders hidden |
+| Prod migrations | table probes (missing table returns PGRST205; these return `[]`) | Applied — `profiles`, `books`, `orders` exist; matches `migrations: pass` from `/api/health?ready=1` |
+| Prod catalog | published books (anon) | `[]` — catalog empty; seed data pending (matches QA item 7 note) |
 
 ### Fixes landed this run (branch `cursor/launch-readiness-fixes-6de2`)
 
