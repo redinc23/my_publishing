@@ -8,8 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only runs when GCP secrets are configured
-    if: ${{ vars.GCP_PROJECT_ID != '' || secrets.GCP_SA_KEY != '' }}
+    # Only runs when GCP is configured. The secrets context is not available in
+    # job-level `if:` (it silently evaluates empty and skips the job), so gate on
+    # the repository *variable* GCP_PROJECT_ID instead (Settings → Variables).
+    if: ${{ vars.GCP_PROJECT_ID != '' }}
 
     steps:
       - uses: actions/checkout@v4

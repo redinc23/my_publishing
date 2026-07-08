@@ -32,7 +32,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     # Optional secondary host — canonical production is Cloud Run (see docs/CANONICAL_PRODUCTION.md)
-    if: github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != ''
+    # secrets.* is not available in job-level `if:` (job would silently skip);
+    # gate on the repository variable VERCEL_PROJECT_ID instead.
+    if: github.ref == 'refs/heads/main' && vars.VERCEL_PROJECT_ID != ''
     steps:
       - uses: actions/checkout@v4
       - uses: amondnet/vercel-action@v20
