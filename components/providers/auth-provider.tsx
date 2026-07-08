@@ -121,7 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = supabaseRef.current;
     if (!supabase) {
       applySession(null);
-      setIsLoading(false);
       router.push('/login');
       return;
     }
