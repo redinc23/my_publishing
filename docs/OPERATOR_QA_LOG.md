@@ -6,6 +6,14 @@ Automated checks from plan execution. Manual browser steps still required for au
 
 | Check | Command / URL | Result |
 |-------|---------------|--------|
+| Launch readiness | `bash scripts/launch-readiness.sh` | PASS (2026-07-08) — type-check, lint, 25/25 tests, 15 migrations, build |
+| Type-check fix | `tsconfig.json` exclude `**/*.test.ts` | Fixed Jest globals in `lib/supabase/queries.test.ts` blocking `tsc` |
+| Migration integrity | `bash scripts/verify-migrations.sh` | PASS — 15 files; `20260619124500_*` + `20260619162409_*` overlap is idempotent (`IF NOT EXISTS`) |
+| Prod readiness | `curl -skL https://mangu-publishers.com/api/health?ready=1` | HTTP 200 — env, DB, auth, migrations, Stripe all **pass** (2026-07-08) |
+| Prod liveness | `curl -skL https://mangu-publishers.com/api/live` | HTTP 200 `{"status":"alive",...}` (2026-07-08) |
+| Prod smoke `/` | `curl -sk https://mangu-publishers.com/` | HTTP 200 (2026-07-08) |
+| Prod smoke `/books` | `curl -sk https://mangu-publishers.com/books` | HTTP 200 (2026-07-08) |
+| npm audit (high) | `npm audit --audit-level=high` | 10 high (mostly `next@14` transitive); no fix without major bump (2026-07-08) |
 | Type-check | `npm run type-check` | PASS (2026-05-31) |
 | Lint | `npm run lint` | PASS (2026-05-31) |
 | Unit tests | `npm test` | PASS 12/12 (2026-05-31) |
@@ -39,10 +47,11 @@ Automated checks from plan execution. Manual browser steps still required for au
 
 | Item | Script / action | Status |
 |------|-----------------|--------|
-| GCP secrets | `./scripts/sync-gcp-secrets-from-env.sh` | **Blocked:** run `gcloud auth login` locally, then re-run |
-| GCP deploy | `./scripts/gcloud-build-submit.sh` | **Blocked:** same — auth token refresh failed 2026-05-31 |
-| GCP smoke | `./scripts/verify-gcp-production.sh` | Partial: domain live; redeploy needed for new homepage |
-| Supabase migrations | `./scripts/bundle-migrations.sh` → SQL Editor | Operator-dependent |
+| GCP secrets | `./scripts/sync-gcp-secrets-from-env.sh` | **Blocked in cloud agent:** no `gcloud auth` or `.env.local` (operator has env locally) |
+| GCP deploy | `./scripts/gcloud-build-submit.sh` | **Blocked in cloud agent:** same — production already healthy via prior deploy |
+| GCP smoke | `./scripts/verify-gcp-production.sh` | Partial via curl: `/api/health?ready=1` green (2026-07-08); full script needs `gcloud auth login` |
+| Supabase migrations | `./scripts/apply-supabase-migrations.sh` | **Skipped:** prod health `migrations.status=pass`; overlapping content_type migrations are idempotent |
+| verify-rls | `npm run verify-rls` | **Blocked:** requires `.env.local` with `SUPABASE_SERVICE_ROLE_KEY` |
 | Canonical prod | `docs/CANONICAL_PRODUCTION.md` | **Done** — Cloud Run; issue #70 closed |
 | Stripe prod webhook | `https://mangu-publishers.com/api/webhook` → Secret Manager | See [WEBHOOK_TESTING.md](./WEBHOOK_TESTING.md) |
 
