@@ -34,14 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionExpiresIn, setSessionExpiresIn] = useState<number | null>(null);
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null);
   const router = useRouter();
   // Keep a ref to the latest session so the interval always sees fresh data.
   const sessionRef = useRef<Session | null>(null);
-  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
-
-  if (!supabaseRef.current && typeof window !== 'undefined') {
-    supabaseRef.current = createClient();
-  }
 
   const applySession = (s: Session | null) => {
     setSession(s);
@@ -55,7 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const supabase = supabaseRef.current;
+    if (typeof window !== 'undefined') {
+      setSupabase(createClient());
+    }
+  }, []);
+
+  useEffect(() => {
     if (!supabase) {
       setIsLoading(false);
       return;
@@ -82,13 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, supabase]);
 
   // Proactively refresh the token shortly before it expires so long-lived
   // reading sessions (e.g. 30+ minutes idle in a background tab) never
   // experience a sudden logout.
   useEffect(() => {
-    const supabase = supabaseRef.current;
     if (!supabase) {
       return;
     }
@@ -114,10 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, REFRESH_CHECK_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [supabase]);
 
   const signOut = async () => {
-    const supabase = supabaseRef.current;
     if (!supabase) {
       router.push('/login');
       return;
@@ -128,7 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshSession = async () => {
-    const supabase = supabaseRef.current;
     if (!supabase) {
       return;
     }
