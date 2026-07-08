@@ -8,8 +8,13 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only runs when GCP secrets are configured
-    if: ${{ vars.GCP_PROJECT_ID != '' || secrets.GCP_SA_KEY != '' }}
+    # Only runs when GCP is configured. NOTE: the `secrets` context is not
+    # available in `if:` expressions (job- or step-level) — referencing it
+    # there invalidates the whole workflow file. Gate the job on a repository
+    # variable, and expose secret presence via job env for step-level checks.
+    if: ${{ vars.GCP_PROJECT_ID != '' }}
+    env:
+      HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,13 +37,13 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
       - name: Authenticate to Google Cloud
-        if: ${{ secrets.GCP_SA_KEY != '' }}
+        if: ${{ env.HAS_GCP_SA_KEY == 'true' }}
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Cloud Run
-        if: ${{ secrets.GCP_SA_KEY != '' }}
+        if: ${{ env.HAS_GCP_SA_KEY == 'true' }}
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: mangu-publishers
