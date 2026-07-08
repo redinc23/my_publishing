@@ -8,8 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only runs when GCP secrets are configured
-    if: ${{ vars.GCP_PROJECT_ID != '' || secrets.GCP_SA_KEY != '' }}
+    # secrets.* is not available in job-level `if:` (silently breaks the workflow).
+    # Enable by setting repository variable GCP_DEPLOY_ENABLED=true.
+    if: ${{ vars.GCP_DEPLOY_ENABLED == 'true' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,13 +33,11 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
       - name: Authenticate to Google Cloud
-        if: ${{ secrets.GCP_SA_KEY != '' }}
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Cloud Run
-        if: ${{ secrets.GCP_SA_KEY != '' }}
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: mangu-publishers
