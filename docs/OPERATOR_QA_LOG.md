@@ -23,6 +23,8 @@ Automated checks from plan execution. Manual browser steps still required for au
 | Dependency audit (Phase 9) | `npm audit --audit-level=high` | 17 vulns (10 high). All high are in `next@14.2.35` (DoS/cache-poisoning/SSRF advisories → fix is next 16 major) and dev-only ESLint/glob/minimatch chain. No critical. |
 | GitHub Actions | `gh run list` | **BLOCKED** — all jobs fail with "account is locked due to a billing issue"; resolve GitHub billing before CI can go green |
 | Workflow `if:` secret gates (Phase 8) | `.github/workflows/{ci,deploy}.yml` | FIXED — `secrets.*` in job-level `if:` replaced with `vars.VERCEL_DEPLOY_ENABLED` / `vars.GCP_DEPLOY_ENABLED` gates |
+| Playwright e2e (Phase 7) | `npx playwright test --project=chromium` (mock env) | PASS — 23 passed, 6 skipped (backend-dependent tests correctly skip without a real Supabase). Fixed strict-mode selector bugs and stale health-probe expectations in the specs. |
+| `/books` `/comics` `/papers` listing crash | streamed prod HTML + local repro | **BUG FOUND & FIXED** — `getBooksPage` used the cookie-based Supabase client inside `unstable_cache`, which Next.js forbids; the book list crashed to the error boundary (prod HTML streams error digest `3048245647`). Switched to the admin client (same pattern as `getFeaturedBooks`). Needs redeploy to take effect. |
 
 ### Known apex-domain TLS anomaly (found 2026-07-08)
 
