@@ -28,11 +28,30 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  deploy:
+  # Explicit upstream gate: the `secrets` context cannot be read in a job-level
+  # `if:`, so we surface the presence of VERCEL_TOKEN as a job output here (secrets
+  # are readable inside a step's `env`) and gate the deploy job on that output.
+  gate:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      vercel_configured: ${{ steps.check.outputs.vercel_configured }}
+    steps:
+      - id: check
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "vercel_configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "vercel_configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: [test, gate]
+    runs-on: ubuntu-latest
     # Optional secondary host — canonical production is Cloud Run (see docs/CANONICAL_PRODUCTION.md)
-    if: github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != ''
+    if: github.ref == 'refs/heads/main' && needs.gate.outputs.vercel_configured == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: amondnet/vercel-action@v20

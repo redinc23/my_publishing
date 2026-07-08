@@ -8,8 +8,14 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only runs when GCP secrets are configured
-    if: ${{ vars.GCP_PROJECT_ID != '' || secrets.GCP_SA_KEY != '' }}
+    # Gate on the GCP_PROJECT_ID repository *variable*: the `secrets` context is
+    # not available in a job-level `if:` (only github/needs/vars/inputs are), so
+    # gating on a secret here silently skips the whole job. Presence of the
+    # GCP_SA_KEY secret is checked at the step level via the `env` context below.
+    if: ${{ vars.GCP_PROJECT_ID != '' }}
+
+    env:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,13 +38,13 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
       - name: Authenticate to Google Cloud
-        if: ${{ secrets.GCP_SA_KEY != '' }}
+        if: ${{ env.GCP_SA_KEY != '' }}
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Cloud Run
-        if: ${{ secrets.GCP_SA_KEY != '' }}
+        if: ${{ env.GCP_SA_KEY != '' }}
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: mangu-publishers
