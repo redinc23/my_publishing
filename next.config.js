@@ -9,7 +9,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 // 'unsafe-inline' / 'unsafe-eval' are required by Next.js 14 until nonce-based
 // CSP is fully wired in; tighten further by replacing them with nonces once the
 // application supports it.
-const ContentSecurityPolicy = [
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+const siteUsesHttps = siteUrl.startsWith('https://');
+
+const contentSecurityPolicyDirectives = [
   "default-src 'self'",
   // Next.js inline scripts and client-side hydration require 'unsafe-inline'.
   // Stripe JS also needs to load from js.stripe.com.
@@ -31,9 +34,14 @@ const ContentSecurityPolicy = [
   "form-action 'self'",
   // Prevent this page from being embedded in a foreign frame (replaces X-Frame-Options).
   "frame-ancestors 'none'",
-  // Block mixed content.
-  "upgrade-insecure-requests",
-].join('; ');
+];
+
+if (siteUsesHttps) {
+  // Block mixed content on HTTPS deployments without breaking local HTTP e2e assets.
+  contentSecurityPolicyDirectives.push('upgrade-insecure-requests');
+}
+
+const ContentSecurityPolicy = contentSecurityPolicyDirectives.join('; ');
 
 const nextConfig = {
   output: 'standalone',
@@ -43,10 +51,14 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
+          ...(siteUsesHttps
+            ? [
+                {
+                  key: 'Strict-Transport-Security',
+                  value: 'max-age=63072000; includeSubDomains; preload',
+                },
+              ]
+            : []),
           // CSP supersedes X-Frame-Options; keep both for legacy browser coverage.
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
