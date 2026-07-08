@@ -23,10 +23,8 @@ export default function ResetPasswordConfirmPage() {
   const [isClientReady, setIsClientReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      supabaseRef.current = createClient();
-      setIsClientReady(true);
-    }
+    supabaseRef.current = createClient();
+    setIsClientReady(true);
   }, []);
 
   useEffect(() => {

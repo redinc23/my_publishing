@@ -52,10 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      supabaseRef.current = createClient();
-      setIsClientReady(true);
-    }
+    supabaseRef.current = createClient();
+    setIsClientReady(true);
   }, []);
 
   useEffect(() => {
