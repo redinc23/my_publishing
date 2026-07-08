@@ -13,7 +13,10 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 export default function ResetPasswordConfirmPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(
+    () => (typeof window === 'undefined' ? null : createClient()),
+    []
+  );
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [password, setPassword] = useState('');
@@ -22,6 +25,10 @@ export default function ResetPasswordConfirmPage() {
   const [isUpdated, setIsUpdated] = useState(false);
 
   useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
     const handleResetLink = async () => {
       setStatus('loading');
       setError(null);
@@ -69,6 +76,11 @@ export default function ResetPasswordConfirmPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    if (!supabase) {
+      setError('Unable to initialize password reset. Please refresh and try again.');
+      return;
+    }
 
     if (!password || !confirmPassword) {
       setError('Please enter and confirm your new password.');

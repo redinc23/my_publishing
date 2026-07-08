@@ -6,6 +6,8 @@ import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 interface CheckoutSearchParams {
   book_id?: string;
   slug?: string;

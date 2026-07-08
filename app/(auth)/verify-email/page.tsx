@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ResendVerificationForm } from './ResendVerificationForm';
 
+export const dynamic = 'force-dynamic';
+
 async function checkVerificationStatus() {
   const supabase = await createClient();
   const {

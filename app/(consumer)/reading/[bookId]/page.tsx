@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import ReadingClient from './ReadingClient';
 import type { Book, ReadingProgress } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ReadingPage({ params }: { params: { bookId: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
