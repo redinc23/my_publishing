@@ -7,7 +7,7 @@ test.describe('Purchase Flow', () => {
   });
 
   test('homepage loads', async ({ page }) => {
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('book detail page loads', async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe('Purchase Flow', () => {
 
   test('books listing page loads', async ({ page }) => {
     await page.goto('/books');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('search functionality works', async ({ page }) => {
@@ -34,20 +34,25 @@ test.describe('Purchase Flow', () => {
   });
 
   test('health endpoint returns valid response', async ({ request }) => {
-    const response = await request.get('/api/health');
-    expect(response.ok()).toBeTruthy();
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('status');
+    // Startup probe: always 200 with { status: 'ok' } when the process is up.
+    const startup = await request.get('/api/health');
+    expect(startup.ok()).toBeTruthy();
+    expect((await startup.json()).status).toBe('ok');
+
+    // Readiness probe: 200 when healthy; 503 when a dependency check fails
+    // (e.g. mock/CI mode where the placeholder Supabase host is unreachable).
+    const readiness = await request.get('/api/health?ready=1');
+    expect([200, 503]).toContain(readiness.status());
+    const data = await readiness.json();
     expect(['healthy', 'degraded', 'unhealthy']).toContain(data.status);
   });
 
   test('authentication pages load', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('h1, h2')).toBeVisible();
-    
+    await expect(page.locator('h1, h2, h3').first()).toBeVisible();
+
     await page.goto('/register');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2, h3').first()).toBeVisible();
   });
 
   // Note: Purchase flow test requires Stripe test mode and authentication

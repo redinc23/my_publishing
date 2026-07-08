@@ -13,6 +13,12 @@
 
 import { test, expect } from '@playwright/test';
 
+// Backend-dependent tests need a real Supabase instance; skip in mock/CI mode.
+const supabaseNotConfigured =
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.USE_MOCKS === 'true' ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL.startsWith('https://test.supabase.co');
+
 // ---------------------------------------------------------------------------
 // Login page
 // ---------------------------------------------------------------------------
@@ -23,7 +29,7 @@ test.describe('Login page', () => {
   });
 
   test('renders the sign-in form with accessible structure', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
@@ -64,26 +70,23 @@ test.describe('Login page', () => {
 
   test('displays URL error parameter from OAuth callback', async ({ page }) => {
     await page.goto('/login?error=Authentication%20failed');
-    // The error must be rendered inside an aria-live region.
-    const alert = page.getByRole('alert');
+    // The error must be rendered inside an aria-live region. Filter by text to
+    // avoid matching Next.js's route announcer, which also has role="alert".
+    const alert = page.getByRole('alert').filter({ hasText: 'Authentication failed' });
     await expect(alert).toBeVisible();
-    await expect(alert).toContainText('Authentication failed');
   });
 
   test('displays error for invalid credentials', async ({ page }) => {
     // Only run against a configured Supabase instance; skip otherwise.
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(supabaseNotConfigured, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
     await page.getByRole('button', { name: /sign in/i }).click();
 
     // Wait for the server round-trip and expect an error to appear.
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/invalid email or password/i);
+    const alert = page.getByRole('alert').filter({ hasText: /invalid email or password/i });
+    await expect(alert).toBeVisible({ timeout: 10_000 });
   });
 });
 
@@ -122,10 +125,7 @@ test.describe('Register page', () => {
   });
 
   test('shows duplicate email error', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(supabaseNotConfigured, 'Supabase not configured');
 
     // Use the known test admin email to trigger the "already registered" path.
     await page.getByLabel(/full name/i).fill('Test User');
@@ -134,8 +134,8 @@ test.describe('Register page', () => {
     await page.getByLabel(/confirm password/i).fill('TestPassword1!');
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/already exists/i);
+    const alert = page.getByRole('alert').filter({ hasText: /already exists/i });
+    await expect(alert).toBeVisible({ timeout: 10_000 });
   });
 });
 
@@ -157,15 +157,12 @@ test.describe('Reset password page', () => {
   test('shows validation error for invalid email', async ({ page }) => {
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByRole('button', { name: /send reset link/i }).click();
-    await expect(page.getByRole('alert')).toBeVisible();
-    await expect(page.getByRole('alert')).toContainText(/invalid email/i);
+    const alert = page.getByRole('alert').filter({ hasText: /invalid email/i });
+    await expect(alert).toBeVisible();
   });
 
   test('shows success message after valid submission', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(supabaseNotConfigured, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
