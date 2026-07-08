@@ -2,6 +2,32 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Automated (agent-run, 2026-07-08)
+
+| Check | Command / URL | Result |
+|-------|---------------|--------|
+| Launch readiness gate | `bash scripts/launch-readiness.sh` | PASS (npm ci, type-check, lint, 25/25 unit tests, 15 migrations, build, lockfile, secret audit) |
+| Type-check | `npm run type-check` | PASS (after adding `@types/jest`; was failing on `lib/supabase/queries.test.ts`) |
+| E2E (chromium) | `npx playwright test --project=chromium` | PASS 26/26 runnable, 3 skipped (need real Supabase creds) |
+| Prod liveness | `curl https://mangu-publishers.com/api/live` | HTTP 200 |
+| Prod readiness | `curl "https://mangu-publishers.com/api/health?ready=1"` | HTTP 200 `healthy` — env, database, auth, migrations, stripe all `pass` |
+| Prod RBAC | `curl -I https://mangu-publishers.com/admin/dashboard` | 307 → `/login` (unauthenticated blocked) |
+| Prod webhook guard | `POST /api/webhook` without signature | HTTP 400 `Missing signature` (correct rejection) |
+| Prod routes | `/`, `/books`, `/comics`, `/papers`, `/login`, `/register` | All HTTP 200 |
+| Prod env bake | scan served JS for `localhost:3000` | Clean — `NEXT_PUBLIC_SITE_URL` baked correctly |
+| Secret scan | ripgrep for `sk_live_`, `sk_test_`, `whsec_`, JWTs, `re_`, `AIza` | Clean — zero secrets in repo |
+| npm audit | `npm audit --audit-level=high` | 17 vulns (10 high) — all in `next@14.2.35` chain; fix requires Next 16 (breaking). Deferred to engineering. |
+| GitHub Actions | `gh run list` | **BLOCKED: account locked due to billing issue** — no jobs start. Workflow-file bug (`secrets.*` in job `if:`) fixed on this branch; runs will stay red until billing is resolved. |
+
+### Fixes landed this run (branch `cursor/launch-readiness-fixes-6de2`)
+
+- `secrets.*` removed from job-level `if:` in `ci.yml` / `deploy.yml` (invalidated both workflows — every run failed in 0s)
+- `/books`, `/comics`, `/papers` crash fixed: cookie-based Supabase client was used inside `unstable_cache` (`getBooksPage`, `getAuthorSummary`) — now uses admin client with explicit `visibility='public'` filter
+- `/admin/books/new` route created (was a linked 404; known issue in error table) with admin-only `createBookAdmin` action
+- `updateBookAdmin` role check fixed (`profiles.user_id`, not `profiles.id` — admins were rejected)
+- E2E selector bugs fixed (strict-mode violations, `/api/health` startup-probe status)
+- `@types/jest` added so `tsc --noEmit` passes
+
 ## Automated (agent-run)
 
 | Check | Command / URL | Result |
