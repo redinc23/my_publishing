@@ -23,11 +23,14 @@ export const getBooksPage = cache(async (params: {
 }): Promise<BookWithAuthor[]> => {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      // Admin client: unstable_cache scopes cannot access cookies(), and this
+      // query only reads published/public rows (same pattern as getFeaturedBooks).
+      const supabase = createAdminClient();
       let query = supabase
         .from('books')
         .select('*, author:authors!inner(*, profile:profiles!inner(*))')
         .eq('status', 'published')
+        .eq('visibility', 'public')
         .eq('content_type', params.contentType);
 
       if (params.q) {
@@ -56,7 +59,8 @@ export const getBooksPage = cache(async (params: {
 // PERF-PHASE2-2 — Cached author summary query (10min TTL, tag: authors)
 export const getAuthorSummary = unstable_cache(
   async (authorId: string) => {
-    const supabase = await createClient();
+    // Admin client: cookies() is not allowed inside unstable_cache scopes.
+    const supabase = createAdminClient();
     const { data } = await supabase
       .from('authors')
       .select('*, profile:profiles(*)')
