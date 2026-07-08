@@ -2,6 +2,32 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Automated (agent-run) — 2026-07-08 runbook execution
+
+| Check | Command / URL | Result |
+|-------|---------------|--------|
+| Migration integrity (Mission 3.1) | `bash scripts/verify-migrations.sh` | PASS — 15 files present, non-empty (2026-07-08) |
+| Overlap check `20260619124500` vs `20260619162409` | manual review | PASS — both idempotent (`ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`); safe to apply in sequence |
+| Type-check | `npm run type-check` | PASS after adding `@types/jest` (was failing on `lib/supabase/queries.test.ts` — pre-existing on `main`) |
+| Lint | `npm run lint` | PASS — no warnings or errors (2026-07-08) |
+| Unit tests | `npm test` | PASS 25/25 in 6 suites (2026-07-08) |
+| Production build | `npm run build` (CI placeholder env) | PASS — compiled successfully; shared JS 87.5 kB (2026-07-08) |
+| Full gate (Mission 2.1) | `bash scripts/launch-readiness.sh` | PASS — exit 0, incl. lockfile @upstash check + post-build secret audit (2026-07-08) |
+| Prod liveness | `GET https://mangu-publishers.com/api/live` | HTTP 200 (2026-07-08) |
+| Prod readiness | `GET https://mangu-publishers.com/api/health?ready=1` | HTTP 200 `status:healthy, ready:true` — env, database, auth, migrations, stripe all `pass` (2026-07-08) |
+| Migrations applied in prod (Mission 3.2) | `/api/health?ready=1` `checks.migrations` | PASS — required + optional tables present (verified via readiness probe; `supabase db push` not needed) |
+| RLS anon probes (Mission 3.4) | PostgREST with public anon key | PASS — `profiles`, `orders`, `manuscripts`, draft `books` all return 0 rows to anon (2026-07-08) |
+| Storage buckets (Mission 3.3) | Storage public-object endpoint | `book-covers` + `published-epubs` exist and are Public; `manuscripts` not publicly accessible (private or requires service-role check) |
+| RBAC smoke (`/admin`, `/admin/dashboard`, `/library`) | `curl -w %{redirect_url}` | PASS — HTTP 307 → `/login` for unauthenticated (2026-07-08) |
+| Repo secret scan (Phase 12) | ripgrep for `sk_live_`/`sk_test_`/`whsec_`/`re_`/AWS keys/private keys/JWTs | PASS — zero matches in tracked files (2026-07-08) |
+| Dependency audit (Phase 9) | `npm audit --audit-level=high` | 17 vulns (10 high). All high are in `next@14.2.35` (DoS/cache-poisoning/SSRF advisories → fix is next 16 major) and dev-only ESLint/glob/minimatch chain. No critical. |
+| GitHub Actions | `gh run list` | **BLOCKED** — all jobs fail with "account is locked due to a billing issue"; resolve GitHub billing before CI can go green |
+| Workflow `if:` secret gates (Phase 8) | `.github/workflows/{ci,deploy}.yml` | FIXED — `secrets.*` in job-level `if:` replaced with `vars.VERCEL_DEPLOY_ENABLED` / `vars.GCP_DEPLOY_ENABLED` gates |
+
+### Known apex-domain TLS anomaly (found 2026-07-08)
+
+`mangu-publishers.com` A records include both Google Cloud Run IPs (`216.239.32.21` etc.) **and** a Vercel IP (`76.76.21.21`). The Vercel IP serves a cert valid only for `www.mangu-publishers.com`, so roughly 1-in-5 HTTPS connections to the apex fail TLS verification. Fix in DNS: remove the `76.76.21.21` A record from the apex (keep apex → Cloud Run only), or move the apex fully to one host.
+
 ## Automated (agent-run)
 
 | Check | Command / URL | Result |
