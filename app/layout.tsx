@@ -5,6 +5,8 @@ import { Providers } from './providers';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 
+export const dynamic = 'force-dynamic';
+
 const inter = localFont({
   src: [
     {
