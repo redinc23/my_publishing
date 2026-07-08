@@ -1,19 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Purchase Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Wait for page to be ready
-    await page.goto('/');
-  });
+const HEALTH_STATUSES = ['ok', 'healthy', 'degraded', 'unhealthy'];
 
+test.describe('Purchase Flow', () => {
   test('homepage loads', async ({ page }) => {
+    await page.goto('/');
     await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('book detail page loads', async ({ page }) => {
-    // Try to navigate to a book page (will use mock data if database is empty)
     await page.goto('/books/the-memory-keeper');
-    await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1')).toBeVisible({ timeout: 10_000 });
   });
 
   test('books listing page loads', async ({ page }) => {
@@ -24,11 +21,10 @@ test.describe('Purchase Flow', () => {
   test('search functionality works', async ({ page }) => {
     await page.goto('/books');
     const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
-    
+
     if (await searchInput.isVisible()) {
       await searchInput.fill('test');
       await searchInput.press('Enter');
-      // Wait for navigation or results
       await page.waitForTimeout(1000);
     }
   });
@@ -36,18 +32,18 @@ test.describe('Purchase Flow', () => {
   test('health endpoint returns valid response', async ({ request }) => {
     const response = await request.get('/api/health');
     expect(response.ok()).toBeTruthy();
-    
+
     const data = await response.json();
     expect(data).toHaveProperty('status');
-    expect(['healthy', 'degraded', 'unhealthy']).toContain(data.status);
+    expect(HEALTH_STATUSES).toContain(data.status);
   });
 
   test('authentication pages load', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('h1, h2').first()).toBeVisible();
-    
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+
     await page.goto('/register');
-    await expect(page.locator('h1, h2').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
   });
 
   // Note: Purchase flow test requires Stripe test mode and authentication

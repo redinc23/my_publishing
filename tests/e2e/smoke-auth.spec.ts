@@ -11,7 +11,7 @@ test.describe('Auth smoke tests (post-perf)', () => {
 
   test('register page loads after perf changes', async ({ page }) => {
     await page.goto('/register');
-    await expect(page.getByRole('heading', { name: /create your account/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
   });
 

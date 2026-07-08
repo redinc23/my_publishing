@@ -3,24 +3,50 @@ import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { unstable_cache, revalidateTag } from 'next/cache';
+import { getMockBooks, searchMockBooks, shouldUseMocks } from '@/lib/utils/mock-data';
 import type { Database } from '@/types/database';
 import type { BookWithAuthor } from '@/types';
 
 type Tables = Database['public']['Tables'];
-
-// PERF-PHASE2-2 — Invalidation helpers
-export const revalidateBooks = () => revalidateTag('books-list');
-export const revalidateAuthors = () => revalidateTag('authors');
-export const revalidateResonance = () => revalidateTag('resonance');
-
-// PERF-PHASE2-2 — Cached book listing query (60s TTL, tag: books-list)
-export const getBooksPage = cache(async (params: {
+type BooksPageParams = {
   contentType: string;
   q?: string;
   genre?: string;
   sort?: string;
   page?: string;
-}): Promise<BookWithAuthor[]> => {
+};
+
+const BOOKS_LIST_TAG = 'books-list';
+const AUTHORS_TAG = 'authors';
+const RESONANCE_TAG = 'resonance';
+const BOOKS_PAGE_SIZE = 20;
+
+// PERF-PHASE2-2 — Invalidation helpers
+export function revalidateBooks(): void {
+  revalidateTag(BOOKS_LIST_TAG);
+}
+
+export function revalidateAuthors(): void {
+  revalidateTag(AUTHORS_TAG);
+}
+
+export function revalidateResonance(): void {
+  revalidateTag(RESONANCE_TAG);
+}
+
+// PERF-PHASE2-2 — Cached book listing query (60s TTL, tag: books-list)
+async function fetchBooksPage(params: BooksPageParams): Promise<BookWithAuthor[]> {
+  if (shouldUseMocks()) {
+    let books = params.q ? searchMockBooks(params.q) : getMockBooks();
+    books = books.filter((book) => (book.content_type ?? 'book') === params.contentType);
+
+    if (params.genre) {
+      books = books.filter((book) => book.genre === params.genre);
+    }
+
+    return books;
+  }
+
   return unstable_cache(
     async () => {
       const supabase = await createClient();
@@ -42,16 +68,24 @@ export const getBooksPage = cache(async (params: {
       query = query.order(sort, { ascending });
 
       const page = parseInt(params.page || '0');
-      const pageSize = 20;
-      query = query.range(page * pageSize, (page + 1) * pageSize - 1);
+      query = query.range(page * BOOKS_PAGE_SIZE, (page + 1) * BOOKS_PAGE_SIZE - 1);
 
       const { data } = await query;
       return (data as BookWithAuthor[]) || [];
     },
-    ['books-page', params.contentType, params.q ?? '', params.genre ?? '', params.sort ?? '', params.page ?? '0'],
-    { tags: ['books-list'], revalidate: 60 }
+    [
+      'books-page',
+      params.contentType,
+      params.q ?? '',
+      params.genre ?? '',
+      params.sort ?? '',
+      params.page ?? '0',
+    ],
+    { tags: [BOOKS_LIST_TAG], revalidate: 60 }
   )();
-});
+}
+
+export const getBooksPage = cache(fetchBooksPage);
 
 // PERF-PHASE2-2 — Cached author summary query (10min TTL, tag: authors)
 export const getAuthorSummary = unstable_cache(
@@ -65,7 +99,7 @@ export const getAuthorSummary = unstable_cache(
     return data;
   },
   ['author-summary'],
-  { tags: ['authors'], revalidate: 600 }
+  { tags: [AUTHORS_TAG], revalidate: 600 }
 );
 
 // ============================================================================

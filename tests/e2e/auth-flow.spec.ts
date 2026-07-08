@@ -13,8 +13,12 @@
 
 import { test, expect, type Page } from '@playwright/test';
 
-const appAlert = (page: Page, text: RegExp | string) =>
-  page.getByRole('alert').filter({ hasText: text });
+const HAS_SUPABASE_CONFIG = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
+const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? 'admin@example.com';
+
+function appAlert(page: Page, text: RegExp | string) {
+  return page.getByRole('alert').filter({ hasText: text });
+}
 
 // ---------------------------------------------------------------------------
 // Login page
@@ -26,7 +30,7 @@ test.describe('Login page', () => {
   });
 
   test('renders the sign-in form with accessible structure', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
@@ -74,17 +78,12 @@ test.describe('Login page', () => {
   });
 
   test('displays error for invalid credentials', async ({ page }) => {
-    // Only run against a configured Supabase instance; skip otherwise.
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!HAS_SUPABASE_CONFIG, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
     await page.getByRole('button', { name: /sign in/i }).click();
 
-    // Wait for the server round-trip and expect an error to appear.
     const alert = appAlert(page, /invalid email or password/i);
     await expect(alert).toBeVisible({ timeout: 10_000 });
     await expect(alert).toContainText(/invalid email or password/i);
@@ -126,14 +125,10 @@ test.describe('Register page', () => {
   });
 
   test('shows duplicate email error', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!HAS_SUPABASE_CONFIG, 'Supabase not configured');
 
-    // Use the known test admin email to trigger the "already registered" path.
     await page.getByLabel(/full name/i).fill('Test User');
-    await page.getByLabel(/^email/i).fill(process.env.TEST_ADMIN_EMAIL ?? 'admin@example.com');
+    await page.getByLabel(/^email/i).fill(TEST_ADMIN_EMAIL);
     await page.getByLabel(/^password$/i).fill('TestPassword1!');
     await page.getByLabel(/confirm password/i).fill('TestPassword1!');
     await page.getByRole('button', { name: /create account/i }).click();
@@ -168,10 +163,7 @@ test.describe('Reset password page', () => {
   });
 
   test('shows success message after valid submission', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!HAS_SUPABASE_CONFIG, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
