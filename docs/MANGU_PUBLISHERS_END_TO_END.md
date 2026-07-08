@@ -311,7 +311,7 @@ gcloud auth login
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml):
 
 - **On PR / push to `main`:** type-check, lint, test, build (needs Supabase secrets for build).
-- **Deploy job:** Only if `VERCEL_TOKEN` is set; treats Vercel as optional/staging.
+- **Deploy job:** Only if repository variable `VERCEL_DEPLOY_ENABLED=true` and Vercel secrets are set; treats Vercel as optional/staging.
 
 ### 7.3 Legacy: AWS Amplify
 
