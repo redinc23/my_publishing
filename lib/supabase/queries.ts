@@ -23,7 +23,11 @@ export const getBooksPage = cache(async (params: {
 }): Promise<BookWithAuthor[]> => {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      // Admin client: the cookie-based server client cannot be used inside
+      // unstable_cache (Next.js forbids dynamic data sources in a cache scope
+      // and the route crashes at runtime). Only published books are selected,
+      // so bypassing RLS here is safe.
+      const supabase = createAdminClient();
       let query = supabase
         .from('books')
         .select('*, author:authors!inner(*, profile:profiles!inner(*))')
@@ -56,7 +60,9 @@ export const getBooksPage = cache(async (params: {
 // PERF-PHASE2-2 — Cached author summary query (10min TTL, tag: authors)
 export const getAuthorSummary = unstable_cache(
   async (authorId: string) => {
-    const supabase = await createClient();
+    // Admin client for the same reason as getBooksPage: cookies() is not
+    // allowed inside unstable_cache.
+    const supabase = createAdminClient();
     const { data } = await supabase
       .from('authors')
       .select('*, profile:profiles(*)')
