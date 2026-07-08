@@ -120,8 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     const supabase = supabaseRef.current;
     if (!supabase) {
-      applySession(null);
-      router.push('/login');
       return;
     }
 
