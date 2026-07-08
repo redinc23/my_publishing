@@ -2,6 +2,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { revalidateBooks } from '@/lib/supabase/queries'; // PERF-PHASE2-2
 import { z } from 'zod';
@@ -274,11 +275,12 @@ export async function updateBookAdmin(
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
 
-    // Role check: role lives on profiles.role (same gate as requireAdmin)
+    // Role check: role lives on profiles.role (same gate as requireAdmin).
+    // profiles.id is its own UUID; the auth user id is profiles.user_id.
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (!profile || profile.role !== 'admin') {
@@ -370,6 +372,111 @@ export async function updateBookAdmin(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update book',
+      code: 'UNKNOWN_ERROR',
+    };
+  }
+}
+
+/**
+ * Admin-only book creation for /admin/books/new. Unlike createBook
+ * (author-scoped, RLS requires author_id = auth.uid()), this lets an admin
+ * create a book for any author (or none), so the insert uses the service-role
+ * client after the role check passes.
+ */
+export async function createBookAdmin(input: {
+  title: string;
+  slug?: string;
+  description?: string;
+  genre: string;
+  price?: number;
+  status?: 'draft' | 'published';
+  content_type?: 'book' | 'comic' | 'paper';
+  author_id?: string | null;
+}) {
+  try {
+    const supabase = await createClient();
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'admin') {
+      return { success: false, error: 'Admin access required', code: 'FORBIDDEN' };
+    }
+
+    checkRateLimit(user.id, 'create_book_admin');
+
+    const title = (input.title || '').trim();
+    const genre = (input.genre || '').trim();
+    if (!title) {
+      return { success: false, error: 'Title is required', code: 'VALIDATION_ERROR' };
+    }
+    if (!genre) {
+      return { success: false, error: 'Genre is required', code: 'VALIDATION_ERROR' };
+    }
+
+    const slug = (input.slug || title)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    if (!slug) {
+      return { success: false, error: 'Slug could not be derived from title', code: 'VALIDATION_ERROR' };
+    }
+
+    const admin = createAdminClient();
+
+    const { data: dupe } = await admin
+      .from('books')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (dupe) {
+      return { success: false, error: 'A book with this slug already exists', code: 'DUPLICATE_SLUG' };
+    }
+
+    const status = input.status || 'draft';
+    const { data, error } = await admin
+      .from('books')
+      .insert({
+        title,
+        slug,
+        description: input.description?.trim() || null,
+        genre,
+        price: input.price ?? 0,
+        status,
+        content_type: input.content_type || 'book',
+        author_id: input.author_id || null,
+        published_at: status === 'published' ? new Date().toISOString() : null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await logAudit(supabase, 'CREATE', data.id, 'book', {
+      title: data.title,
+      status: data.status,
+      admin: true,
+    });
+
+    revalidatePath('/admin/books');
+    revalidatePath('/books');
+    revalidateTag('featured-books');
+    revalidateBooks(); // PERF-PHASE2-2
+
+    return { success: true, data, code: 'BOOK_CREATED' };
+  } catch (error) {
+    console.error('Admin create book error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create book',
       code: 'UNKNOWN_ERROR',
     };
   }
