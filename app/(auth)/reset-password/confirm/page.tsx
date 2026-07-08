@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -13,15 +13,26 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 export default function ResetPasswordConfirmPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = useMemo(() => createClient(), []);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
+  const [isClientReady, setIsClientReady] = useState(false);
 
   useEffect(() => {
+    supabaseRef.current = createClient();
+    setIsClientReady(true);
+  }, []);
+
+  useEffect(() => {
+    const supabase = supabaseRef.current;
+    if (!isClientReady || !supabase) {
+      return;
+    }
+
     const handleResetLink = async () => {
       setStatus('loading');
       setError(null);
@@ -64,11 +75,17 @@ export default function ResetPasswordConfirmPage() {
     };
 
     handleResetLink();
-  }, [searchParams, supabase]);
+  }, [isClientReady, searchParams]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    const supabase = supabaseRef.current;
+
+    if (!supabase) {
+      setError('Unable to initialize password reset. Please refresh and try again.');
+      return;
+    }
 
     if (!password || !confirmPassword) {
       setError('Please enter and confirm your new password.');

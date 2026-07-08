@@ -5,6 +5,8 @@ import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
 import type { BookWithAuthor } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface OrderItem {
   id: string;
   unit_price: number;

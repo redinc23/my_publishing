@@ -11,6 +11,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 async function getPaper(slug: string): Promise<BookFull | null> {
   const supabase = await createClient();
   const { data } = await supabase

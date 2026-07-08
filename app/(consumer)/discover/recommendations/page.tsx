@@ -6,6 +6,8 @@ import { BookCard } from '@/components/cards/BookCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import type { BookWithAuthor } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 async function getRecommendations() {
   // For now, return trending books
   // In production, this would call the resonance API

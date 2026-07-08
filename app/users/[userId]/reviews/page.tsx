@@ -12,6 +12,8 @@ import {
   Filter
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 interface UserReviewsPageProps {
   params: {
     userId: string;

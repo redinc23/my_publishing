@@ -34,10 +34,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionExpiresIn, setSessionExpiresIn] = useState<number | null>(null);
+  const [isClientReady, setIsClientReady] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
   // Keep a ref to the latest session so the interval always sees fresh data.
   const sessionRef = useRef<Session | null>(null);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
 
   const applySession = (s: Session | null) => {
     setSession(s);
@@ -51,6 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    supabaseRef.current = createClient();
+    setIsClientReady(true);
+  }, []);
+
+  useEffect(() => {
+    const supabase = supabaseRef.current;
+    if (!isClientReady || !supabase) {
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       applySession(session);
@@ -72,12 +83,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [router, supabase]);
+  }, [isClientReady, router]);
 
   // Proactively refresh the token shortly before it expires so long-lived
   // reading sessions (e.g. 30+ minutes idle in a background tab) never
   // experience a sudden logout.
   useEffect(() => {
+    const supabase = supabaseRef.current;
+    if (!isClientReady || !supabase) {
+      return;
+    }
+
     const intervalId = setInterval(async () => {
       const current = sessionRef.current;
       if (!current?.expires_at) return;
@@ -99,14 +115,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, REFRESH_CHECK_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
-  }, [supabase]);
+  }, [isClientReady]);
 
   const signOut = async () => {
+    const supabase = supabaseRef.current;
+    if (!supabase) {
+      return;
+    }
+
     await supabase.auth.signOut();
     router.push('/login');
   };
 
   const refreshSession = async () => {
+    const supabase = supabaseRef.current;
+    if (!supabase) {
+      return;
+    }
+
     const { data } = await supabase.auth.refreshSession();
     applySession(data.session);
   };

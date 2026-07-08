@@ -6,6 +6,8 @@ import { BookCard } from '@/components/cards/BookCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Author, BookWithAuthor, Profile } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface AuthorWithProfile extends Author {
   profile?: Profile;
 }
