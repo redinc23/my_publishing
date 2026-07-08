@@ -6,6 +6,18 @@ Automated checks from plan execution. Manual browser steps still required for au
 
 | Check | Command / URL | Result |
 |-------|---------------|--------|
+| Launch readiness | `bash scripts/launch-readiness.sh` | PASS (2026-07-08; type-check, lint, unit tests, migration files, build, lockfile check, build secret audit) |
+| Migration integrity | `bash scripts/verify-migrations.sh` | PASS: 15 non-empty migrations present (2026-07-08) |
+| Overlapping migrations | `20260619124500_...` + `20260619162409_...` review | PASS: both use `ADD COLUMN IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`; UPDATE/COMMENT are repeat-safe (2026-07-08) |
+| RLS verification | `npm run verify-rls` | BLOCKED: no `.env.local` / exported `NEXT_PUBLIC_SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` in cloud shell (2026-07-08) |
+| Prod live | `GET https://mangu-publishers.com/api/live` | PASS: HTTP 200 (2026-07-08) |
+| Prod readiness | `GET https://mangu-publishers.com/api/health?ready=1` | PASS: HTTP 200, `ready:true`, env/DB/auth/migrations/Stripe pass (2026-07-08) |
+| GitHub Actions deploy gates | `rg "if:.*secrets\\." .github/workflows` | PASS: no workflow `if:` expressions reference `secrets.*` (2026-07-08) |
+| Playwright browser install | `npx playwright install --with-deps` | PASS: browsers installed in this cloud image (2026-07-08) |
+| Playwright e2e | `npm run test:e2e` with placeholder Supabase env | FAIL: 46 passed, 41 failed; remaining failures include test locator strictness and app error pages with placeholder Supabase (2026-07-08) |
+| Playwright no-Supabase mock attempt | existing `next dev` with `USE_MOCKS=true` | BLOCKED: app auth provider still requires Supabase URL/key; `npm run test:e2e` webServer also runs env validation (2026-07-08) |
+| npm high audit | `npm audit --audit-level=high` | FAIL: 10 high vulnerabilities reported; fixes require breaking upgrades for Next/Supabase SSR/tooling (2026-07-08) |
+| Production mutation CLIs | `supabase`, `gcloud`, `stripe` CLI checks | BLOCKED: CLIs missing and MCP servers require auth in this cloud image (2026-07-08) |
 | Type-check | `npm run type-check` | PASS (2026-05-31) |
 | Lint | `npm run lint` | PASS (2026-05-31) |
 | Unit tests | `npm test` | PASS 12/12 (2026-05-31) |
