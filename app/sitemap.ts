@@ -71,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  let bookRoutes: MetadataRoute.Sitemap = [];
+  const bookRoutes: MetadataRoute.Sitemap = [];
   let genreRoutes: MetadataRoute.Sitemap = [];
   try {
     const uniqueGenres = new Set<string>();
