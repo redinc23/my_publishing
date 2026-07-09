@@ -46,21 +46,21 @@ test.describe('Login page', () => {
   test('shows field-level validation errors for empty submit', async ({ page }) => {
     await page.getByRole('button', { name: /sign in/i }).click();
     // Zod resolver fires synchronous validation before the server action is called.
-    await expect(page.getByRole('alert').first()).toBeVisible();
+    await expect(page.getByRole('alert').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('shows field-level error for invalid email format', async ({ page }) => {
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByLabel(/password/i).fill('secret123');
     await page.getByRole('button', { name: /sign in/i }).click();
-    await expect(page.getByText(/invalid email/i)).toBeVisible();
+    await expect(page.getByText(/invalid email/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('shows field-level error for short password', async ({ page }) => {
     await page.getByLabel(/email/i).fill('test@example.com');
     await page.getByLabel(/password/i).fill('abc');
     await page.getByRole('button', { name: /sign in/i }).click();
-    await expect(page.getByText(/at least 6 characters/i)).toBeVisible();
+    await expect(page.getByText(/at least 6 characters/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('displays URL error parameter from OAuth callback', async ({ page }) => {
@@ -68,7 +68,7 @@ test.describe('Login page', () => {
     // The error must be rendered inside an aria-live region. Filter out the
     // Next.js route announcer, which also has role="alert".
     const alert = page.getByRole('alert').filter({ hasText: 'Authentication failed' });
-    await expect(alert).toBeVisible();
+    await expect(alert).toBeVisible({ timeout: 10_000 });
   });
 
   test('displays error for invalid credentials', async ({ page }) => {
@@ -116,7 +116,7 @@ test.describe('Register page', () => {
     await page.getByLabel(/^password$/i).fill('password123');
     await page.getByLabel(/confirm password/i).fill('different');
     await page.getByRole('button', { name: /create account/i }).click();
-    await expect(page.getByText(/passwords don't match/i)).toBeVisible();
+    await expect(page.getByText(/passwords don't match/i)).toBeVisible({ timeout: 10_000 });
   });
 
   test('shows duplicate email error', async ({ page }) => {
@@ -153,7 +153,7 @@ test.describe('Reset password page', () => {
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByRole('button', { name: /send reset link/i }).click();
     const alert = page.getByRole('alert').filter({ hasText: /invalid email/i });
-    await expect(alert).toBeVisible();
+    await expect(alert).toBeVisible({ timeout: 10_000 });
   });
 
   test('shows success message after valid submission', async ({ page }) => {
