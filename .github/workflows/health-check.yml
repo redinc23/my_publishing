@@ -11,10 +11,10 @@ jobs:
     steps:
       - name: Ping /api/health
         run: |
-          TARGET_URL="https://mangu-publishers.com/api/health"
+          TARGET_URL="https://manguprojectz.vercel.app/api/health"
           
           echo "Checking health for $TARGET_URL..."
-          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" $TARGET_URL)
+          HTTP_STATUS=$(curl --retry 3 -o /dev/null -s -w "%{http_code}\n" $TARGET_URL)
           
           if [ "$HTTP_STATUS" -ne 200 ]; then
             echo "❌ Health check failed! HTTP Status: $HTTP_STATUS"

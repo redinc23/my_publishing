@@ -1,0 +1,28 @@
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  TARGET_URL: https://manguprojectz.vercel.app
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+      - run: npm ci
+      - name: Run Lighthouse CI
+        # || true keeps this non-blocking so performance regressions are visible
+        # as warnings rather than hard failures; promote to a gate once budgets are tuned
+        run: |
+          npm install -g @lhci/cli@0.14.x
+          lhci autorun --collect.url=${{ env.TARGET_URL }} || true

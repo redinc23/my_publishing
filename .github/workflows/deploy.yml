@@ -1,18 +1,20 @@
 name: Deploy to Cloud Run
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
+    if: ${{ ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || github.event.workflow_run.conclusion == 'success') && vars.GCP_PROJECT_ID != '' }}
     runs-on: ubuntu-latest
-    # Only runs when GCP is configured. NOTE: the `secrets` context is not
+    # Only runs when GCP is configured and CI passed. NOTE: the `secrets` context is not
     # available in `if:` expressions (job- or step-level) — referencing it
     # there invalidates the whole workflow file. Gate the job on a repository
     # variable, and expose secret presence via job env for step-level checks.
-    if: ${{ vars.GCP_PROJECT_ID != '' }}
     env:
       HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY != '' }}
 
