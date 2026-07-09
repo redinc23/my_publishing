@@ -38,6 +38,10 @@ function main() {
   const result = validateEnvironment();
   printValidationResults(result);
 
+  if (process.env.USE_MOCKS === 'true') {
+    console.log('ℹ️  USE_MOCKS=true — required services will use placeholders.\n');
+  }
+
   if (!result.valid) {
     console.error('\n❌ Environment validation failed!');
     console.error('Please set the missing environment variables in .env.local');

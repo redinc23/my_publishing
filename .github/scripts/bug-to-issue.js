@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const core = require("@actions/core");
 const github = require("@actions/github");
 
 const STATE_PATH = path.join(process.cwd(), ".github", "bug-to-issue-state.json");
@@ -91,7 +90,7 @@ async function main() {
   });
 
   const jobs = jobsResp.data.jobs || [];
-  core.info(`Found ${jobs.length} jobs in workflow run ${runId}. Conclusion: ${conclusion}`);
+  console.log(`Found ${jobs.length} jobs in workflow run ${runId}. Conclusion: ${conclusion}`);
 
   // For each failed job, try to get logs and extract a signature.
   // For successful run, we will decrement/close any issues that were tracked for this workflow+branch by marking success.
@@ -184,7 +183,7 @@ async function main() {
         }
       }
     } catch (e) {
-      core.warning(`Could not fetch logs for job ${job.name}: ${e.message}`);
+      console.warn(`Could not fetch logs for job ${job.name}: ${e.message}`);
     }
 
     // Pick failing step name if available
@@ -219,7 +218,7 @@ async function main() {
 
     state.items[sig] = prev;
 
-    core.info(
+    console.log(
       `Signature ${sig} fail count now ${prev.consecutiveFails} (threshold ${thresholdFails}).`
     );
 
@@ -247,7 +246,7 @@ async function main() {
 
       const issueNumber = await ensureIssueForSignature(sig, meta, body, labels);
       prev.issueNumber = issueNumber;
-      core.info(`Issue ensured for signature ${sig}: #${issueNumber}`);
+      console.log(`Issue ensured for signature ${sig}: #${issueNumber}`);
     }
   }
 
@@ -276,11 +275,11 @@ async function main() {
 
           try {
             await closeIssue(item.issueNumber, comment);
-            core.info(`Closed issue #${item.issueNumber} for signature ${sig}`);
+            console.log(`Closed issue #${item.issueNumber} for signature ${sig}`);
             // Keep record but clear issueNumber so future failures can open new or you can choose to reopen logic
             item.issueNumber = null;
           } catch (e) {
-            core.warning(`Failed to close issue #${item.issueNumber}: ${e.message}`);
+            console.warn(`Failed to close issue #${item.issueNumber}: ${e.message}`);
           }
         }
 
@@ -291,9 +290,10 @@ async function main() {
 
   // Persist state
   writeJson(STATE_PATH, state);
-  core.info(`State written to ${STATE_PATH}`);
+  console.log(`State written to ${STATE_PATH}`);
 }
 
 main().catch((err) => {
-  core.setFailed(err.message);
+  console.error(err.message);
+  process.exit(1);
 });

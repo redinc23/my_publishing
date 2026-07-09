@@ -146,11 +146,16 @@ const envConfigs: EnvConfig[] = [
 export function validateEnvironment(): EnvValidationResult {
   const missing: string[] = [];
   const warnings: string[] = [];
+  const mockMode = process.env.USE_MOCKS === 'true';
 
   for (const config of envConfigs) {
     const value = process.env[config.name];
 
     if (config.required && !value) {
+      if (mockMode) {
+        warnings.push(`${config.name}: using mock mode placeholder`);
+        continue;
+      }
       missing.push(config.name);
       continue;
     }
