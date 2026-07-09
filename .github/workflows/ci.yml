@@ -36,16 +36,15 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     # Optional secondary host — canonical production is Cloud Run (see docs/CANONICAL_PRODUCTION.md)
-    # NOTE: the `secrets` context is not available in `if:` expressions
-    # (job- or step-level) — referencing it there invalidates the whole
-    # workflow file. Expose secret presence via job env instead.
-    if: github.ref == 'refs/heads/main'
+    # Gate on the repository variable (secrets.* is invalid in job-level if:).
+    if: github.ref == 'refs/heads/main' && vars.VERCEL_PROJECT_ID != ''
     env:
       HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: amondnet/vercel-action@v20
         if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
+        continue-on-error: true
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}

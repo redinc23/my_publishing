@@ -16,6 +16,9 @@ REQUIRED_SECRETS=(
 OPTIONAL_SECRETS=(
   resend-api-key
   openai-api-key
+  # Historically missing Upstash bindings broke Cloud Run secret resolution (Phase 4.3).
+  upstash-redis-rest-url
+  upstash-redis-rest-token
 )
 
 echo "=== Grant Secret Manager access for Cloud Run ==="
