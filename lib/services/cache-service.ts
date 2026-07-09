@@ -1,4 +1,3 @@
-
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -29,14 +28,12 @@ export async function setCache(key: string, value: any, ttl?: number): Promise<v
 
   try {
     const supabase = await createClient();
-    await supabase
-      .from('cache')
-      .upsert({
-        key,
-        value: JSON.stringify(value),
-        expires_at: expires.toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+    await supabase.from('cache').upsert({
+      key,
+      value: JSON.stringify(value),
+      expires_at: expires.toISOString(),
+      updated_at: new Date().toISOString(),
+    });
   } catch (error) {
     console.warn('Failed to set cache:', error);
   }
@@ -45,10 +42,7 @@ export async function setCache(key: string, value: any, ttl?: number): Promise<v
 export async function invalidateCache(pattern: string): Promise<void> {
   try {
     const supabase = await createClient();
-    await supabase
-      .from('cache')
-      .delete()
-      .like('key', `%${pattern}%`);
+    await supabase.from('cache').delete().like('key', `%${pattern}%`);
   } catch (error) {
     console.warn('Failed to invalidate cache:', error);
   }

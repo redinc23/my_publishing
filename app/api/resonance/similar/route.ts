@@ -14,11 +14,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
 
     // Get the book's genre
-    const { data: book } = await supabase
-      .from('books')
-      .select('genre')
-      .eq('id', bookId)
-      .single();
+    const { data: book } = await supabase.from('books').select('genre').eq('id', bookId).single();
 
     if (!book) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });

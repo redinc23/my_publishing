@@ -3,23 +3,20 @@
 # Requires: gcloud authenticated (gcloud auth login)
 set -euo pipefail
 
-PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}"
-REGION="${REGION:-us-central1}"
-SERVICE_NAME="${SERVICE_NAME:-mangu-publishers}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=scripts/gcp-config.sh
+source "${ROOT}/scripts/gcp-config.sh"
+
 PROD_DOMAIN="${PROD_DOMAIN:-https://mangu-publishers.com}"
 
-REQUIRED_SECRETS=(
-  supabase-service-role-key
-  stripe-secret-key
-  stripe-webhook-secret
-)
-
-OPTIONAL_SECRETS=(
-  resend-api-key
-  openai-api-key
-  upstash-redis-rest-url
-  upstash-redis-rest-token
-)
+REQUIRED_SECRETS=()
+OPTIONAL_SECRETS=()
+for mapping in "${GCP_REQUIRED_SECRETS[@]}"; do
+  REQUIRED_SECRETS+=("${mapping%%:*}")
+done
+for mapping in "${GCP_OPTIONAL_SECRETS[@]}"; do
+  OPTIONAL_SECRETS+=("${mapping%%:*}")
+done
 
 echo "=== GCP production verification ==="
 echo "Project: ${PROJECT_ID}"
@@ -95,13 +92,13 @@ if gcloud run services describe "${SERVICE_NAME}" \
   fi
 
   echo
-  echo "--- Readiness check GET ${url}/api/health ---"
-  if curl -sfS "${url}/api/health" | head -c 500; then
+  echo "--- Readiness check GET ${url}/api/health?ready=1 ---"
+  if curl -sfS "${url}/api/health?ready=1" | head -c 500; then
     echo
     echo
-    echo "Readiness endpoint responded."
+    echo "Readiness endpoint responded (ready=1 probe)."
   else
-    echo "WARNING: /api/health failed or returned non-2xx"
+    echo "WARNING: /api/health?ready=1 failed or returned non-2xx"
     exit 1
   fi
 else

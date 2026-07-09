@@ -6,8 +6,8 @@ export default function ReadersHubPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Readers Hub</h1>
-        <div className="grid md:grid-cols-3 gap-6">
+        <h1 className="mb-8 text-4xl font-bold">Readers Hub</h1>
+        <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>My Library</CardTitle>

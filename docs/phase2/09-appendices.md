@@ -6,17 +6,17 @@ Source baseline: `docs/phase2/_sources/litstream_phase2_sec08.md`
 
 Complete classification (consolidated from `litstream_phase2_sec08.md`). Client-bound vars **must** use the `NEXT_PUBLIC_` prefix so only non-secrets are inlined into the browser bundle.
 
-| Variable | NEXT_PUBLIC prefix? | Source | Used by | Required? | Notes |
-|---|---|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | `.env.local` / Cloud Build env | Client JS, server components | Required | Public Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | `.env.local` / Cloud Build env | Client JS, server components | Required | Public anon key for client-side queries |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Yes | `.env.local` / Cloud Build env | Client JS | Required | Stripe publishable key for checkout |
-| `NEXT_PUBLIC_SITE_URL` | Yes | `.env.local` / Cloud Build env | Sitemap, SEO meta | Required | Canonical site URL |
-| `NEXT_PUBLIC_APP_VERSION` | Yes | Cloud Build (`SHORT_SHA`) | Client, Sentry release | Required | Set in CI |
-| `SUPABASE_SERVICE_ROLE_KEY` | **No** | Secret Manager → runtime only | Server-side API routes / server actions | Required | Never `NEXT_PUBLIC_` prefixed |
-| `STRIPE_SECRET_KEY` | **No** | Secret Manager → runtime only | Server-side API routes / server actions | Required | Never `NEXT_PUBLIC_` prefixed |
-| `RESEND_API_KEY` | **No** | Secret Manager → runtime only | Server-side API routes / server actions | Required | Never `NEXT_PUBLIC_` prefixed |
-| `PORT` | No | Cloud Run / Next.js standalone | Node.js server | Auto | Do not set manually |
+| Variable                             | NEXT_PUBLIC prefix? | Source                         | Used by                                 | Required? | Notes                                   |
+| ------------------------------------ | ------------------- | ------------------------------ | --------------------------------------- | --------- | --------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Yes                 | `.env.local` / Cloud Build env | Client JS, server components            | Required  | Public Supabase project URL             |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Yes                 | `.env.local` / Cloud Build env | Client JS, server components            | Required  | Public anon key for client-side queries |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Yes                 | `.env.local` / Cloud Build env | Client JS                               | Required  | Stripe publishable key for checkout     |
+| `NEXT_PUBLIC_SITE_URL`               | Yes                 | `.env.local` / Cloud Build env | Sitemap, SEO meta                       | Required  | Canonical site URL                      |
+| `NEXT_PUBLIC_APP_VERSION`            | Yes                 | Cloud Build (`SHORT_SHA`)      | Client, Sentry release                  | Required  | Set in CI                               |
+| `SUPABASE_SERVICE_ROLE_KEY`          | **No**              | Secret Manager → runtime only  | Server-side API routes / server actions | Required  | Never `NEXT_PUBLIC_` prefixed           |
+| `STRIPE_SECRET_KEY`                  | **No**              | Secret Manager → runtime only  | Server-side API routes / server actions | Required  | Never `NEXT_PUBLIC_` prefixed           |
+| `RESEND_API_KEY`                     | **No**              | Secret Manager → runtime only  | Server-side API routes / server actions | Required  | Never `NEXT_PUBLIC_` prefixed           |
+| `PORT`                               | No                  | Cloud Run / Next.js standalone | Node.js server                          | Auto      | Do not set manually                     |
 
 **Security boundary.** `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `RESEND_API_KEY` must be injected via `secretEnv` or Google Secret Manager at Cloud Run deploy time only. They must never be present in the Docker build context, build-time environment, or client bundle. `NEXT_PUBLIC_*` variables are safe for the client because they contain only public credentials.
 
@@ -35,12 +35,12 @@ Key behavior:
 
 ## Appendix C: Cloud Build Step Categories
 
-| Category | Purpose |
-|---|---|
-| setup | install dependencies and prep build context |
-| build | Next.js compile (`npm run build`) producing `.next/standalone/` |
-| security gates | bundle secret scan; vulnerability scan **after** image push to Artifact Registry |
-| artifact/deploy | image build/push and Cloud Run deployment with runtime secrets |
+| Category        | Purpose                                                                          |
+| --------------- | -------------------------------------------------------------------------------- |
+| setup           | install dependencies and prep build context                                      |
+| build           | Next.js compile (`npm run build`) producing `.next/standalone/`                  |
+| security gates  | bundle secret scan; vulnerability scan **after** image push to Artifact Registry |
+| artifact/deploy | image build/push and Cloud Run deployment with runtime secrets                   |
 
 ## Appendix D: File Inventory (Documentation Package)
 
@@ -77,14 +77,14 @@ Adjust actual estimates by team maturity, cloud readiness, and existing pipeline
 
 ### F.1 Repository targets (typical Drive → repo)
 
-| Artifact | Milestone | Repo destination |
-|---|---|---|
-| `cloudbuild.yaml` | M5 | Repo root |
-| `Dockerfile` | M3 | Repo root |
-| `next.config.js` | M3 | Repo root |
-| `firebase.json` | M6 | Repo root |
-| `artifact-cleanup-policy.json` | M4 | Repo root |
-| `prune-cloud-run-tags.sh` | M7b | `scripts/ops/prune-cloud-run-tags.sh` |
+| Artifact                       | Milestone | Repo destination                      |
+| ------------------------------ | --------- | ------------------------------------- |
+| `cloudbuild.yaml`              | M5        | Repo root                             |
+| `Dockerfile`                   | M3        | Repo root                             |
+| `next.config.js`               | M3        | Repo root                             |
+| `firebase.json`                | M6        | Repo root                             |
+| `artifact-cleanup-policy.json` | M4        | Repo root                             |
+| `prune-cloud-run-tags.sh`      | M7b       | `scripts/ops/prune-cloud-run-tags.sh` |
 
 ### F.2 Drive download checklist
 

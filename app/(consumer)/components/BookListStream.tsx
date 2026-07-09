@@ -13,7 +13,11 @@ interface BookListStreamProps {
   emptyMessage?: string;
 }
 
-export async function BookListStream({ contentType, searchParams, emptyMessage }: BookListStreamProps) {
+export async function BookListStream({
+  contentType,
+  searchParams,
+  emptyMessage,
+}: BookListStreamProps) {
   const books = await getBooksPage({
     contentType,
     q: searchParams.q,
@@ -24,14 +28,16 @@ export async function BookListStream({ contentType, searchParams, emptyMessage }
 
   if (books.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">{emptyMessage || 'No items found. Try adjusting your filters.'}</p>
+      <div className="py-12 text-center">
+        <p className="text-muted-foreground">
+          {emptyMessage || 'No items found. Try adjusting your filters.'}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 mt-8">
+    <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
       {books.map((book) => (
         <BookListItem key={book.id} book={book} />
       ))}

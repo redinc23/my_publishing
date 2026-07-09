@@ -27,19 +27,19 @@ const stats = [
 
 export function Stats() {
   return (
-    <section className="py-16 bg-muted/40 border-y border-border">
+    <section className="border-y border-border bg-muted/40 py-16">
       <Container>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.label} className="flex flex-col items-center text-center gap-3">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+              <div key={stat.label} className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                   <Icon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="text-3xl font-bold tracking-tight">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               </div>
             );

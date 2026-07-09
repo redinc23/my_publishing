@@ -17,11 +17,13 @@ Use this checklist to ensure a smooth AWS Amplify deployment.
 #### 1. External Services Setup
 
 **Supabase (Required):**
+
 - [ ] Create Supabase project at https://supabase.com
 - [ ] Apply database migrations (see `docs/MIGRATIONS.md`)
 - [ ] Copy Project URL, Anon Key, and Service Role Key
 
 **Stripe (Required):**
+
 - [ ] Create Stripe account at https://stripe.com
 - [ ] Get API keys (use test keys first)
 - [ ] Copy Publishable Key and Secret Key
@@ -115,32 +117,38 @@ NODE_ENV=production
 These features are fully implemented and ready for immediate use:
 
 ✅ **User Management:**
+
 - User registration and authentication
 - Profile management
 - Password reset
 
 ✅ **Book Catalog:**
+
 - Browse all books
 - Search functionality
 - Book detail pages
 - Categories and genres
 
 ✅ **Reading Experience:**
+
 - Reading interface
 - Progress tracking
 - Bookmarks
 
 ✅ **Author Portal:**
+
 - Manuscript submission
 - Manuscript management
 - Author dashboard
 
 ✅ **Payments:**
+
 - Stripe checkout integration
 - Payment processing
 - Order history
 
 ✅ **Admin Dashboard:**
+
 - Basic admin functions
 - Content management
 
@@ -149,16 +157,19 @@ These features are fully implemented and ready for immediate use:
 These features require additional services and can be added later:
 
 **AI Recommendations** (Requires OpenAI API):
+
 - Add `OPENAI_API_KEY` environment variable
 - Redeploy application
 - Resonance Engine will activate automatically
 
 **Email Notifications** (Requires Resend):
+
 - Add `RESEND_API_KEY` environment variable
 - Redeploy application
 - Email notifications will activate automatically
 
 **Coming in Future Updates:**
+
 - Audiobook support
 - User reviews and ratings
 - Social sharing
@@ -170,11 +181,13 @@ These features require additional services and can be added later:
 #### Build Fails
 
 **Check:**
+
 - All environment variables are set correctly
 - Build logs in Amplify Console for specific errors
 - No syntax errors in recent commits
 
 **Common Issues:**
+
 - Missing environment variables
 - Invalid environment variable values
 - Build timeout (increase timeout in Amplify settings)
@@ -182,6 +195,7 @@ These features require additional services and can be added later:
 #### App Doesn't Load
 
 **Check:**
+
 - DNS settings (if using custom domain)
 - CloudFront distribution status
 - Browser console for JavaScript errors
@@ -189,6 +203,7 @@ These features require additional services and can be added later:
 #### Database Connection Fails
 
 **Check:**
+
 - Supabase URL and keys are correct
 - Migrations have been applied
 - `/api/health` endpoint for specific error
@@ -197,6 +212,7 @@ These features require additional services and can be added later:
 #### Payments Don't Work
 
 **Check:**
+
 - Stripe keys are correct (test vs live)
 - Webhook is configured correctly
 - Webhook secret is correct
@@ -214,6 +230,7 @@ These features require additional services and can be added later:
 Once all items in this checklist are complete, your MANGU platform is ready for production use on AWS Amplify!
 
 **Next Steps After Launch:**
+
 1. Monitor application performance
 2. Gather user feedback
 3. Plan Phase 2 feature rollout

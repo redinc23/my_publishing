@@ -18,7 +18,9 @@ const payoutRequests = new Map<string, { count: number; lastRequest: number }>()
 export async function getPayoutStatus(): Promise<AuthorPayout[]> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
@@ -47,7 +49,9 @@ export async function requestPayout(): Promise<{
 }> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return { success: false, error: 'Not authenticated' };
@@ -57,9 +61,9 @@ export async function requestPayout(): Promise<{
     const userId = user.id;
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
-    
+
     const userRequests = payoutRequests.get(userId) || { count: 0, lastRequest: 0 };
-    
+
     if (userRequests.lastRequest > oneHourAgo && userRequests.count >= 3) {
       return {
         success: false,
@@ -162,7 +166,8 @@ export async function requestPayout(): Promise<{
         .from('author_payouts')
         .update({
           status: 'failed',
-          failure_reason: stripeError instanceof Error ? stripeError.message : 'Stripe transfer failed',
+          failure_reason:
+            stripeError instanceof Error ? stripeError.message : 'Stripe transfer failed',
         })
         .eq('id', payout.id);
 

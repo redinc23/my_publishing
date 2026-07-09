@@ -10,17 +10,17 @@ Optional probes (`SAMPLE_HASHED_JS_BASENAME`, `P0_8_SAMPLE_ROUTE`, `SENTRY_*`) a
 
 ## P0 Test Inventory
 
-| ID | Requirement | Evidence Type |
-|---|---|---|
-| P0-1 | No secret leakage | grep scans, runtime env inspection, layer inspection, logging checks |
-| P0-2 | Build before Docker | step ordering verification, `.next/standalone/` verification |
-| P0-3 | Next.js route serving | route probes and direct URL checks |
-| P0-4 | Security header enforcement | response header inspection |
-| P0-5 | Health and liveness | `/api/health` success and uptime checks |
-| P0-6 | Cloud Run deployment config | service describe checks for memory/scaling/gen2 |
-| P0-7 | CI security gates | audit and vulnerability gate behavior |
-| P0-8 | Content update automation | webhook publish-to-deploy verification |
-| P0-9 | Observability and cost controls | alert and budget configuration checks |
+| ID   | Requirement                     | Evidence Type                                                        |
+| ---- | ------------------------------- | -------------------------------------------------------------------- |
+| P0-1 | No secret leakage               | grep scans, runtime env inspection, layer inspection, logging checks |
+| P0-2 | Build before Docker             | step ordering verification, `.next/standalone/` verification         |
+| P0-3 | Next.js route serving           | route probes and direct URL checks                                   |
+| P0-4 | Security header enforcement     | response header inspection                                           |
+| P0-5 | Health and liveness             | `/api/health` success and uptime checks                              |
+| P0-6 | Cloud Run deployment config     | service describe checks for memory/scaling/gen2                      |
+| P0-7 | CI security gates               | audit and vulnerability gate behavior                                |
+| P0-8 | Content update automation       | webhook publish-to-deploy verification                               |
+| P0-9 | Observability and cost controls | alert and budget configuration checks                                |
 
 ## P0-1 No Secret Leakage
 

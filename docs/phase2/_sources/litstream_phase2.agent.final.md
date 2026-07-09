@@ -22,15 +22,15 @@ The goal of Phase 2 is singular: a real user must be able to type the domain int
 
 Phase 2 is organized into seven sequential milestones (M1 through M7), summarized below. Launch occurs at the completion of M6; M7 provides post-launch production hardening.
 
-| Milestone | Goal | Key Deliverable |
-|---|---|---|
-| M1 — Local Security Hardening | Eliminate secret exposure risk before any infrastructure work begins | Renamed token (`SANITY_API_READ_TOKEN`), Zod validation, `.gitignore`, `.dockerignore`, secret audit script |
-| M2 — Build Pipeline Scripts | Five npm scripts that transform Sanity content into a complete `dist/` directory | `build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap` plus combined `build` and smoke tests |
-| M3 — Runtime Container | Hardened container that serves only pre-built static files | `Dockerfile` (`nginx:1.27-alpine`), `nginx.conf.template`, non-root execution (UID 1001), hard-fail on missing `dist/` |
-| M4 — GCP Foundation | All Google Cloud resources provisioned with correct IAM bindings | Artifact Registry, Secret Manager, Cloud Build service account, Developer Connect (GitHub), build trigger |
-| M5 — Cloud Build End-to-End | Push to `main` triggers automated build and Cloud Run deployment | `cloudbuild.yaml` (16-step pipeline including vulnerability scan, `--memory=512Mi`, `--no-default-url`) |
-| M6 — Firebase Hosting & Custom Domain | Public site live on custom domain over HTTPS with CDN | `firebase.json` rewrite to Cloud Run, DNS configuration, TLS provisioning, SPA routing |
-| M7 — Production Guardrails | Observability, auto-rebuild on content changes, cost controls | Sentry release tracking, Sanity webhook validator, Cloud Monitoring uptime checks, billing alerts, tag pruning |
+| Milestone                             | Goal                                                                             | Key Deliverable                                                                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| M1 — Local Security Hardening         | Eliminate secret exposure risk before any infrastructure work begins             | Renamed token (`SANITY_API_READ_TOKEN`), Zod validation, `.gitignore`, `.dockerignore`, secret audit script             |
+| M2 — Build Pipeline Scripts           | Five npm scripts that transform Sanity content into a complete `dist/` directory | `build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap` plus combined `build` and smoke tests |
+| M3 — Runtime Container                | Hardened container that serves only pre-built static files                       | `Dockerfile` (`nginx:1.27-alpine`), `nginx.conf.template`, non-root execution (UID 1001), hard-fail on missing `dist/`  |
+| M4 — GCP Foundation                   | All Google Cloud resources provisioned with correct IAM bindings                 | Artifact Registry, Secret Manager, Cloud Build service account, Developer Connect (GitHub), build trigger               |
+| M5 — Cloud Build End-to-End           | Push to `main` triggers automated build and Cloud Run deployment                 | `cloudbuild.yaml` (16-step pipeline including vulnerability scan, `--memory=512Mi`, `--no-default-url`)                 |
+| M6 — Firebase Hosting & Custom Domain | Public site live on custom domain over HTTPS with CDN                            | `firebase.json` rewrite to Cloud Run, DNS configuration, TLS provisioning, SPA routing                                  |
+| M7 — Production Guardrails            | Observability, auto-rebuild on content changes, cost controls                    | Sentry release tracking, Sanity webhook validator, Cloud Monitoring uptime checks, billing alerts, tag pruning          |
 
 The milestones form a strict dependency chain. M2 requires M1's `node-env.ts` module. M3 requires M2's `dist/` output. M4 has no dependency on M2 or M3 and may be provisioned in parallel with local build work. M5 requires all four prior milestones to be complete. M6 and M7 depend on M5.
 
@@ -86,15 +86,15 @@ Establish production observability and cost governance. **Sentry** tracks errors
 
 #### 1.3.1 Feature Table: Seven Milestones
 
-| Milestone | Name | Deliverables | Exit Criteria |
-|---|---|---|---|
-| M1 | Local Security Hardening | Token rename (`VITE_` prefix removal); `scripts/_lib/node-env.ts` (Zod validation, required token); `scripts/_lib/sanity-node-client.ts` (`useCdn: false`, `perspective: "published"`); `.gitignore` and `.dockerignore`; `audit:secrets` script | `audit:secrets` exits 0; grep for token in `dist/assets/` returns empty; `node-env.ts` throws on missing token |
-| M2 | Build Pipeline Scripts | Five npm scripts (`build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap`); content snapshot with `contentHash`, `buildCommit`, `sanityDataset`; route generator; prerenderer (Playwright Chromium); sitemap generator; smoke test script | `dist/` contains `index.html`, hashed assets, prerendered HTML shells, `sitemap.xml`; snapshot has all three provenance fields |
-| M3 | Runtime Container | `Dockerfile` (`nginx:1.27-alpine`, UID 1001, hard-fail without `dist/`); `nginx.conf.template` (CSP, `/healthz`, immutable cache, SPA fallback, `.map` 404) | `docker build` succeeds; fails without `dist/`; `/healthz` returns 200; CSP excludes `api.sanity.io`; container runs as UID 1001 |
-| M4 | GCP Foundation | Artifact Registry `web-images` with cleanup policy; Secret Manager secret `sanity-api-read-token`; Cloud Build SA `cloudbuild-mangu-publishers`; GCS cache bucket; Developer Connect GitHub link; Cloud Build trigger on `^main$` | All `gcloud describe` commands succeed; push to `main` starts Cloud Build |
-| M5 | Cloud Build End-to-End | `cloudbuild.yaml` with 16 steps; vulnerability scan gate; `--memory=512Mi --no-default-url` deploy flags | Full pipeline green; Cloud Run URL returns 200; no token in logs; image tagged with `SHORT_SHA` and `latest` |
-| M6 | Firebase Hosting | `firebase.json` (rewrite all routes to Cloud Run, `pinTag: true`); `public-placeholder/`; custom domain with TLS; CDN edge caching | `https://www.yourdomain.com/` loads over HTTPS; deep links return 200; security headers present |
-| M7 | Production Guardrails | Sentry release tracking with hidden source maps; Sanity webhook validator (HMAC + replay protection); Cloud Monitoring uptime check and alert policies; billing budget alerts at 50/75/90%; Artifact Registry cleanup; Cloud Run tag pruning (`KEEP=50`); Portable Text renderer; Formspree contact form | Sentry shows events tagged with SHA; webhook triggers build within ~60s; monitoring green; budget alerts active |
+| Milestone | Name                     | Deliverables                                                                                                                                                                                                                                                                                             | Exit Criteria                                                                                                                    |
+| --------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| M1        | Local Security Hardening | Token rename (`VITE_` prefix removal); `scripts/_lib/node-env.ts` (Zod validation, required token); `scripts/_lib/sanity-node-client.ts` (`useCdn: false`, `perspective: "published"`); `.gitignore` and `.dockerignore`; `audit:secrets` script                                                         | `audit:secrets` exits 0; grep for token in `dist/assets/` returns empty; `node-env.ts` throws on missing token                   |
+| M2        | Build Pipeline Scripts   | Five npm scripts (`build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap`); content snapshot with `contentHash`, `buildCommit`, `sanityDataset`; route generator; prerenderer (Playwright Chromium); sitemap generator; smoke test script                                      | `dist/` contains `index.html`, hashed assets, prerendered HTML shells, `sitemap.xml`; snapshot has all three provenance fields   |
+| M3        | Runtime Container        | `Dockerfile` (`nginx:1.27-alpine`, UID 1001, hard-fail without `dist/`); `nginx.conf.template` (CSP, `/healthz`, immutable cache, SPA fallback, `.map` 404)                                                                                                                                              | `docker build` succeeds; fails without `dist/`; `/healthz` returns 200; CSP excludes `api.sanity.io`; container runs as UID 1001 |
+| M4        | GCP Foundation           | Artifact Registry `web-images` with cleanup policy; Secret Manager secret `sanity-api-read-token`; Cloud Build SA `cloudbuild-mangu-publishers`; GCS cache bucket; Developer Connect GitHub link; Cloud Build trigger on `^main$`                                                                        | All `gcloud describe` commands succeed; push to `main` starts Cloud Build                                                        |
+| M5        | Cloud Build End-to-End   | `cloudbuild.yaml` with 16 steps; vulnerability scan gate; `--memory=512Mi --no-default-url` deploy flags                                                                                                                                                                                                 | Full pipeline green; Cloud Run URL returns 200; no token in logs; image tagged with `SHORT_SHA` and `latest`                     |
+| M6        | Firebase Hosting         | `firebase.json` (rewrite all routes to Cloud Run, `pinTag: true`); `public-placeholder/`; custom domain with TLS; CDN edge caching                                                                                                                                                                       | `https://www.yourdomain.com/` loads over HTTPS; deep links return 200; security headers present                                  |
+| M7        | Production Guardrails    | Sentry release tracking with hidden source maps; Sanity webhook validator (HMAC + replay protection); Cloud Monitoring uptime check and alert policies; billing budget alerts at 50/75/90%; Artifact Registry cleanup; Cloud Run tag pruning (`KEEP=50`); Portable Text renderer; Formspree contact form | Sentry shows events tagged with SHA; webhook triggers build within ~60s; monitoring green; budget alerts active                  |
 
 #### 1.3.2 Build Pipeline Producing Complete dist/
 
@@ -134,16 +134,16 @@ The Artifact Registry cleanup policy retains 15 most recent tagged images and de
 
 The following features are explicitly excluded from Phase 2. These exclusions are non-negotiable scope boundaries; any request to implement them during Phase 2 must be deferred to Phase 3 or later.
 
-| # | Excluded Feature | Rationale | Deferral Target |
-|---|---|---|---|
-| 1 | Authentication / user accounts | No authenticated visitor experience required for public content site | Phase 3 |
-| 2 | Search functionality | No search index, API, or UI component; prerendered HTML is crawlable by external search engines | Phase 3 |
-| 3 | Comments, ratings, user-generated content | Platform is strictly publisher-to-consumer with no visitor input channels | Phase 3 or later |
-| 4 | Email subscriptions / newsletters | Formspree contact form (M7) is unidirectional messaging only; no subscriber management | Phase 3 or later |
-| 5 | Mobile native applications | No iOS or Android app development | Future phase |
-| 6 | Analytics dashboards | Basic GCP Cloud Monitoring metrics only; no custom analytics UI | Phase 3 |
-| 7 | A/B testing | No experiment framework or traffic splitting for feature comparison | Future phase |
-| 8 | Internationalization | Language field in Sanity schema only; no multi-locale routing or content translation | Phase 3 |
+| #   | Excluded Feature                          | Rationale                                                                                       | Deferral Target  |
+| --- | ----------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- |
+| 1   | Authentication / user accounts            | No authenticated visitor experience required for public content site                            | Phase 3          |
+| 2   | Search functionality                      | No search index, API, or UI component; prerendered HTML is crawlable by external search engines | Phase 3          |
+| 3   | Comments, ratings, user-generated content | Platform is strictly publisher-to-consumer with no visitor input channels                       | Phase 3 or later |
+| 4   | Email subscriptions / newsletters         | Formspree contact form (M7) is unidirectional messaging only; no subscriber management          | Phase 3 or later |
+| 5   | Mobile native applications                | No iOS or Android app development                                                               | Future phase     |
+| 6   | Analytics dashboards                      | Basic GCP Cloud Monitoring metrics only; no custom analytics UI                                 | Phase 3          |
+| 7   | A/B testing                               | No experiment framework or traffic splitting for feature comparison                             | Future phase     |
+| 8   | Internationalization                      | Language field in Sanity schema only; no multi-locale routing or content translation            | Phase 3          |
 
 ### 1.5 Success Metrics (Definition of Done)
 
@@ -151,22 +151,22 @@ The following features are explicitly excluded from Phase 2. These exclusions ar
 
 Phase 2 is complete when all 14 acceptance criteria below are satisfied. Each criterion maps to a canonical P0 ID from [`06-acceptance-and-test-protocol.md`](../06-acceptance-and-test-protocol.md) (see [`change-log-and-decisions.md`](../change-log-and-decisions.md) Decision 5 for legacy→canonical mapping).
 
-| # | Acceptance Criterion | P0 Test ID | Verification Method |
-|---|---|---|---|
-| 1 | Push to `main` triggers Cloud Build within 60s; build runs green | P0-7 | `gcloud builds list` shows SUCCESS within 60s of push; all 16 steps pass |
-| 2 | `https://www.yourdomain.com/` loads over HTTPS | P0-5, P0-6 | `curl -sI` returns `HTTP/2 200` |
-| 3 | `/healthz` returns HTTP 200 | P0-5 | `curl` to `/healthz` returns `200 ok` |
-| 4 | Deep links load correctly with no server 404 | P0-3, P0-4 | `curl` to deep link returns 200; SPA fallback serves `index.html` |
-| 5 | `grep -R SANITY_API_READ_TOKEN dist/` returns empty (entire `dist/`, not only `dist/assets/`) | P0-1 | `rg` scan produces empty output |
-| 6 | Cloud Run runtime contains no `SANITY_API_READ_TOKEN` | P0-1 | `gcloud run services describe` shows no secret in env |
-| 7 | Hashed assets return `Cache-Control: public, max-age=31536000, immutable` | P0-4 | `curl -sI` on `/assets/*.js` or `/assets/*.css` returns correct header |
-| 8 | Source map URLs return HTTP 404 | P0-4 | `curl` to any `.map` URL returns 404 |
-| 9 | CSP `connect-src` excludes `*.api.sanity.io` | P0-4 | Response headers show CSP without `api.sanity.io` in `connect-src` |
-| 10 | Container runs as non-root (UID 1001) | P0-2, P0-6 | `docker exec <container> id` returns `uid=1001` |
-| 11 | Sanity content publish triggers rebuild (target ~60s typical; worst-case see `06` P0-8) | P0-8 | Publish in Sanity; Cloud Build start vs visibility vs thresholds |
-| 12 | Sentry receives errors tagged with git SHA as release | P0-9 | Sentry dashboard shows `release = SHORT_SHA` |
-| 13 | Cloud Monitoring uptime check on `/healthz` is green | P0-9 | Console shows green checkmark |
-| 14 | Billing budget alerts at 50%, 75%, 90% | P0-9 | Billing Console shows budget with three thresholds |
+| #   | Acceptance Criterion                                                                          | P0 Test ID | Verification Method                                                      |
+| --- | --------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------ |
+| 1   | Push to `main` triggers Cloud Build within 60s; build runs green                              | P0-7       | `gcloud builds list` shows SUCCESS within 60s of push; all 16 steps pass |
+| 2   | `https://www.yourdomain.com/` loads over HTTPS                                                | P0-5, P0-6 | `curl -sI` returns `HTTP/2 200`                                          |
+| 3   | `/healthz` returns HTTP 200                                                                   | P0-5       | `curl` to `/healthz` returns `200 ok`                                    |
+| 4   | Deep links load correctly with no server 404                                                  | P0-3, P0-4 | `curl` to deep link returns 200; SPA fallback serves `index.html`        |
+| 5   | `grep -R SANITY_API_READ_TOKEN dist/` returns empty (entire `dist/`, not only `dist/assets/`) | P0-1       | `rg` scan produces empty output                                          |
+| 6   | Cloud Run runtime contains no `SANITY_API_READ_TOKEN`                                         | P0-1       | `gcloud run services describe` shows no secret in env                    |
+| 7   | Hashed assets return `Cache-Control: public, max-age=31536000, immutable`                     | P0-4       | `curl -sI` on `/assets/*.js` or `/assets/*.css` returns correct header   |
+| 8   | Source map URLs return HTTP 404                                                               | P0-4       | `curl` to any `.map` URL returns 404                                     |
+| 9   | CSP `connect-src` excludes `*.api.sanity.io`                                                  | P0-4       | Response headers show CSP without `api.sanity.io` in `connect-src`       |
+| 10  | Container runs as non-root (UID 1001)                                                         | P0-2, P0-6 | `docker exec <container> id` returns `uid=1001`                          |
+| 11  | Sanity content publish triggers rebuild (target ~60s typical; worst-case see `06` P0-8)       | P0-8       | Publish in Sanity; Cloud Build start vs visibility vs thresholds         |
+| 12  | Sentry receives errors tagged with git SHA as release                                         | P0-9       | Sentry dashboard shows `release = SHORT_SHA`                             |
+| 13  | Cloud Monitoring uptime check on `/healthz` is green                                          | P0-9       | Console shows green checkmark                                            |
+| 14  | Billing budget alerts at 50%, 75%, 90%                                                        | P0-9       | Billing Console shows budget with three thresholds                       |
 
 #### 1.5.2 CI/CD Trigger and End-to-End Build Success
 
@@ -231,11 +231,11 @@ The cycle from Sanity publish to live deployment completes in approximately 3 to
 
 The Sanity CMS defines three document types — **book**, **author**, and **category** — forming a directed acyclic graph in which books reference authors and categories. The build pipeline resolves these references at snapshot time, producing denormalized JSON consumed by the frontend without additional API calls.
 
-| Document Type | Purpose | Key Fields | Validation | Relationships |
-|---------------|---------|------------|------------|---------------|
-| **book** | Published books in the catalog | title, slug, author, description, coverImage, publishedAt, featured, category, body, isbn, pageCount, language | title: required, max 200 chars; slug: required; author: required reference; description: required, max 500 chars; coverImage: required; isbn: ISBN-10/13 regex; pageCount: integer 1-5000 | author -> author (required); category -> category (optional) |
-| **author** | Book authors | name, slug, bio, photo, email, website, social | name: required, max 100; slug: required; email: email format | Referenced by book documents |
-| **category** | Book genres/categories | name, slug, description, color | name: required, max 50; slug: required; description: max 300 chars | Referenced by book documents |
+| Document Type | Purpose                        | Key Fields                                                                                                     | Validation                                                                                                                                                                                | Relationships                                                |
+| ------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **book**      | Published books in the catalog | title, slug, author, description, coverImage, publishedAt, featured, category, body, isbn, pageCount, language | title: required, max 200 chars; slug: required; author: required reference; description: required, max 500 chars; coverImage: required; isbn: ISBN-10/13 regex; pageCount: integer 1-5000 | author -> author (required); category -> category (optional) |
+| **author**    | Book authors                   | name, slug, bio, photo, email, website, social                                                                 | name: required, max 100; slug: required; email: email format                                                                                                                              | Referenced by book documents                                 |
+| **category**  | Book genres/categories         | name, slug, description, color                                                                                 | name: required, max 50; slug: required; description: max 300 chars                                                                                                                        | Referenced by book documents                                 |
 
 #### 2.2.2 Book Schema
 
@@ -275,13 +275,13 @@ Images are served from `cdn.sanity.io` with the format: `https://cdn.sanity.io/i
 
 The pipeline consists of five ordered steps chained with `&&` for fail-fast behavior.
 
-| Step | Script | Input | Output | Dependencies |
-|------|--------|-------|--------|--------------|
-| 1 — Content Snapshot | `npm run build:content` | Sanity CMS via authenticated API | `src/generated/contentSnapshot.json` | `SANITY_API_READ_TOKEN`; `scripts/_lib/node-env.ts`; `scripts/_lib/sanity-node-client.ts` |
-| 2 — Route Generation | `npm run build:routes` | `contentSnapshot.json` | `.cache/routes.json` | Static routes (`/`, `/about`, `/contact`) + dynamic routes from content |
-| 3 — Vite Build | `npm run build:vite` | React source, `contentSnapshot.json` | `dist/index.html`, hashed `dist/assets/*.{js,css}` | VITE_* env vars |
-| 4 — Prerender | `npm run build:prerender` | `dist/index.html`, `.cache/routes.json` | `dist/{route}/index.html` for every route | Playwright Chromium; local server on port 4173 |
-| 5 — Sitemap | `npm run build:sitemap` | `.cache/routes.json`, `VITE_SITE_URL` | `dist/sitemap.xml` | Route manifest; site URL |
+| Step                 | Script                    | Input                                   | Output                                             | Dependencies                                                                              |
+| -------------------- | ------------------------- | --------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1 — Content Snapshot | `npm run build:content`   | Sanity CMS via authenticated API        | `src/generated/contentSnapshot.json`               | `SANITY_API_READ_TOKEN`; `scripts/_lib/node-env.ts`; `scripts/_lib/sanity-node-client.ts` |
+| 2 — Route Generation | `npm run build:routes`    | `contentSnapshot.json`                  | `.cache/routes.json`                               | Static routes (`/`, `/about`, `/contact`) + dynamic routes from content                   |
+| 3 — Vite Build       | `npm run build:vite`      | React source, `contentSnapshot.json`    | `dist/index.html`, hashed `dist/assets/*.{js,css}` | VITE\_\* env vars                                                                         |
+| 4 — Prerender        | `npm run build:prerender` | `dist/index.html`, `.cache/routes.json` | `dist/{route}/index.html` for every route          | Playwright Chromium; local server on port 4173                                            |
+| 5 — Sitemap          | `npm run build:sitemap`   | `.cache/routes.json`, `VITE_SITE_URL`   | `dist/sitemap.xml`                                 | Route manifest; site URL                                                                  |
 
 #### 2.3.2 Step 1 — build:content
 
@@ -317,20 +317,20 @@ The `&&` operator provides fail-fast behavior: any non-zero exit aborts the pipe
 
 ### 2.4 Security Functional Requirements
 
-#### 2.4.1 VITE_ Prefix Rule and Variable Classification
+#### 2.4.1 VITE\_ Prefix Rule and Variable Classification
 
 Vite inlines all `VITE_*` environment variables into the client JavaScript bundle at compile time via `import.meta.env.VITE_*`. This design enables public configuration in browser code, but creates a critical security boundary: any secret assigned a `VITE_` prefix is exposed to every visitor, visible in DevTools and stored permanently in the JS bundle.
 
-| Variable | VITE_ Prefix | Source | Used By | Classification |
-|----------|-------------|--------|---------|---------------|
-| `VITE_SANITY_PROJECT_ID` | Yes | `.env.local` / Cloud Build | Client JS, build scripts | **Public** — visible in CDN URLs |
-| `VITE_SANITY_DATASET` | Yes | `.env.local` / Cloud Build | Client JS, build scripts | **Public** — non-sensitive name |
-| `VITE_SANITY_API_VERSION` | Yes | `.env.local` / Cloud Build | Client JS, build scripts | **Public** — version string |
-| `VITE_SITE_URL` | Yes | `.env.local` / Cloud Build | Sitemap, SEO meta | **Public** — canonical domain |
-| `VITE_APP_VERSION` | Yes | Cloud Build (`SHORT_SHA`) | Client JS, Sentry release | **Public** — git SHA |
-| `SANITY_API_READ_TOKEN` | **No** | Secret Manager only | `build-content-snapshot.ts` | **Secret** — NEVER use VITE_ prefix |
-| `SENTRY_AUTH_TOKEN` | **No** | Secret Manager (optional) | Sentry Vite plugin | **Secret** — source map upload only |
-| `PORT` | **No** | Cloud Run (auto-set) | nginx runtime | **Non-secret** — auto-set to 8080 |
+| Variable                  | VITE\_ Prefix | Source                     | Used By                     | Classification                       |
+| ------------------------- | ------------- | -------------------------- | --------------------------- | ------------------------------------ |
+| `VITE_SANITY_PROJECT_ID`  | Yes           | `.env.local` / Cloud Build | Client JS, build scripts    | **Public** — visible in CDN URLs     |
+| `VITE_SANITY_DATASET`     | Yes           | `.env.local` / Cloud Build | Client JS, build scripts    | **Public** — non-sensitive name      |
+| `VITE_SANITY_API_VERSION` | Yes           | `.env.local` / Cloud Build | Client JS, build scripts    | **Public** — version string          |
+| `VITE_SITE_URL`           | Yes           | `.env.local` / Cloud Build | Sitemap, SEO meta           | **Public** — canonical domain        |
+| `VITE_APP_VERSION`        | Yes           | Cloud Build (`SHORT_SHA`)  | Client JS, Sentry release   | **Public** — git SHA                 |
+| `SANITY_API_READ_TOKEN`   | **No**        | Secret Manager only        | `build-content-snapshot.ts` | **Secret** — NEVER use VITE\_ prefix |
+| `SENTRY_AUTH_TOKEN`       | **No**        | Secret Manager (optional)  | Sentry Vite plugin          | **Secret** — source map upload only  |
+| `PORT`                    | **No**        | Cloud Run (auto-set)       | nginx runtime               | **Non-secret** — auto-set to 8080    |
 
 #### 2.4.2 SANITY_API_READ_TOKEN Validation
 
@@ -358,14 +358,14 @@ In Cloud Build, this runs as **step 9** (`audit-secrets`), between the build pha
 
 The `cloudbuild.yaml` specifies `options.logging: CLOUD_LOGGING_ONLY`, preventing build logs from reaching the legacy GCS log bucket. Combined with `secretEnv` scoping, this ensures `SANITY_API_READ_TOKEN` never appears in persistent log storage.
 
-| Requirement | Implementation | Verification |
-|-------------|---------------|--------------|
-| No secret uses VITE_ prefix | `SANITY_API_READ_TOKEN` has no prefix; old name renamed across codebase | `grep -rn "VITE_SANITY_API_READ_TOKEN" src/` returns empty |
-| Token required | Zod `z.string().min(1)` on `SANITY_API_READ_TOKEN` | Build crashes with exit 1 if missing |
-| Token scoped to one step | `secretEnv` only on Cloud Build step 4 | `grep "secretEnv" cloudbuild.yaml` shows single occurrence |
-| Audit catches leaks | `audit:secrets` runs as Cloud Build step 9 | Pipeline fails if token string found in `dist/assets/` |
-| Files excluded | `.gitignore` and `.dockerignore` cover all generated files and secrets | Git and Docker contexts are clean |
-| Logs protected | `CLOUD_LOGGING_ONLY` in build options | No legacy GCS log bucket writes |
+| Requirement                  | Implementation                                                          | Verification                                               |
+| ---------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
+| No secret uses VITE\_ prefix | `SANITY_API_READ_TOKEN` has no prefix; old name renamed across codebase | `grep -rn "VITE_SANITY_API_READ_TOKEN" src/` returns empty |
+| Token required               | Zod `z.string().min(1)` on `SANITY_API_READ_TOKEN`                      | Build crashes with exit 1 if missing                       |
+| Token scoped to one step     | `secretEnv` only on Cloud Build step 4                                  | `grep "secretEnv" cloudbuild.yaml` shows single occurrence |
+| Audit catches leaks          | `audit:secrets` runs as Cloud Build step 9                              | Pipeline fails if token string found in `dist/assets/`     |
+| Files excluded               | `.gitignore` and `.dockerignore` cover all generated files and secrets  | Git and Docker contexts are clean                          |
+| Logs protected               | `CLOUD_LOGGING_ONLY` in build options                                   | No legacy GCS log bucket writes                            |
 
 ---
 
@@ -405,10 +405,12 @@ The `firebase.json` uses `public: "public-placeholder"` (an empty directory). Fi
 {
   "hosting": {
     "public": "public-placeholder",
-    "rewrites": [{
-      "source": "**",
-      "run": { "serviceId": "mangu-publishers", "region": "us-central1", "pinTag": true }
-    }]
+    "rewrites": [
+      {
+        "source": "**",
+        "run": { "serviceId": "mangu-publishers", "region": "us-central1", "pinTag": true }
+      }
+    ]
   }
 }
 ```
@@ -457,24 +459,24 @@ The pipeline triggers on pushes to `^main$` via **Developer Connect GitHub integ
 
 The `cloudbuild.yaml` defines a 16-step sequential pipeline with fail-fast behavior. Steps 1-10 are the **build phase**; steps 11-16 are the **deploy phase**.
 
-| Step | ID | Name | Purpose | Image |
-|------|-----|------|---------|-------|
-| 1 | restore-npm-cache | Restore cache | Pull npm cache from GCS | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 2 | install | Install deps | `npm ci` with cache dir | `node:20` |
-| 3 | production-audit | npm audit | Non-blocking audit output | `node:20` |
-| 4 | content-snapshot | Content fetch | Fetch Sanity content via secret token | `node:20` |
-| 5 | generate-routes | Route gen | Read snapshot; write `.cache/routes.json` | `node:20` |
-| 6 | vite-build | Vite build | Bundle React; inject `VITE_APP_VERSION=${SHORT_SHA}` | `node:20` |
-| 7 | prerender | Prerender | Playwright visits routes; write HTML shells | `mcr.microsoft.com/playwright:v1.43.0-jammy` |
-| 8 | sitemap | Sitemap | Generate `dist/sitemap.xml` | `node:20` |
-| 9 | audit-secrets | Secret audit | `grep dist/assets/` for token; fail if found | `node:20` |
-| 10 | smoke-test | Smoke test | Verify all routes have prerendered HTML | `node:20` |
-| 11 | docker-build | Docker build | Build nginx container with SHA+latest tags | `gcr.io/cloud-builders/docker` |
-| 12 | docker-push | Docker push | Push both tags to Artifact Registry | `gcr.io/cloud-builders/docker` |
-| 13 | enforce-vulnerability-policy | CVE scan | Scan image; block on HIGH/CRITICAL | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 14 | deploy-run | Deploy | Deploy SHA-tagged image to Cloud Run | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 15 | prune-tags | Tag prune | Remove old Cloud Run tags; keep 50 | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 16 | save-npm-cache | Save cache | Upload npm cache to GCS | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| Step | ID                           | Name          | Purpose                                              | Image                                           |
+| ---- | ---------------------------- | ------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| 1    | restore-npm-cache            | Restore cache | Pull npm cache from GCS                              | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 2    | install                      | Install deps  | `npm ci` with cache dir                              | `node:20`                                       |
+| 3    | production-audit             | npm audit     | Non-blocking audit output                            | `node:20`                                       |
+| 4    | content-snapshot             | Content fetch | Fetch Sanity content via secret token                | `node:20`                                       |
+| 5    | generate-routes              | Route gen     | Read snapshot; write `.cache/routes.json`            | `node:20`                                       |
+| 6    | vite-build                   | Vite build    | Bundle React; inject `VITE_APP_VERSION=${SHORT_SHA}` | `node:20`                                       |
+| 7    | prerender                    | Prerender     | Playwright visits routes; write HTML shells          | `mcr.microsoft.com/playwright:v1.43.0-jammy`    |
+| 8    | sitemap                      | Sitemap       | Generate `dist/sitemap.xml`                          | `node:20`                                       |
+| 9    | audit-secrets                | Secret audit  | `grep dist/assets/` for token; fail if found         | `node:20`                                       |
+| 10   | smoke-test                   | Smoke test    | Verify all routes have prerendered HTML              | `node:20`                                       |
+| 11   | docker-build                 | Docker build  | Build nginx container with SHA+latest tags           | `gcr.io/cloud-builders/docker`                  |
+| 12   | docker-push                  | Docker push   | Push both tags to Artifact Registry                  | `gcr.io/cloud-builders/docker`                  |
+| 13   | enforce-vulnerability-policy | CVE scan      | Scan image; block on HIGH/CRITICAL                   | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 14   | deploy-run                   | Deploy        | Deploy SHA-tagged image to Cloud Run                 | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 15   | prune-tags                   | Tag prune     | Remove old Cloud Run tags; keep 50                   | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 16   | save-npm-cache               | Save cache    | Upload npm cache to GCS                              | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
 
 #### 2.7.3 Vulnerability Scan Gate
 
@@ -540,26 +542,26 @@ All end-user requests follow: **User → Firebase Hosting Edge → Cloud Run →
 
 **Table 1: Technology Stack Summary**
 
-| Layer | Technology | Version | Role |
-|-------|-----------|---------|------|
-| Frontend Framework | React | 19 | UI component library with concurrent features |
-| Build Tool | Vite | 5.x | Module bundler, dev server, tree-shaking |
-| Styling | Tailwind CSS | 3.x | Utility-first CSS with production purge |
-| Language | TypeScript | 5.x | Type-safe development for src/ and scripts/ |
-| Content CMS | Sanity | Current | Headless CMS with GROQ query language |
-| Content Rendering | @portabletext/react | Current | Portable Text to React component renderer |
-| Script Execution | tsx | 4.x | Zero-config TypeScript execution for Node.js |
-| Prerendering | Playwright | v1.43.0-jammy | Headless Chromium for static HTML generation |
-| Local Server | serve | Current | Lightweight static file server for dev |
-| Container | nginx | 1.27-alpine | Production static file server, minimal CVE footprint |
-| Container Platform | Cloud Run (gen2) | — | Serverless container with concurrency and traffic splitting |
-| Edge/CDN | Firebase Hosting | — | TLS termination, custom domain, global CDN |
-| Image Registry | Artifact Registry | — | Docker storage with immutable tags and CVE scanning |
-| Secrets | Secret Manager | — | Encrypted storage with IAM-scoped access |
-| CI/CD | Cloud Build | — | 16-step pipeline with per-step secret scoping |
-| Error Tracking | Sentry | Current | Frontend error monitoring with release tracking |
-| Monitoring | Cloud Monitoring | — | Uptime checks, latency/5xx/memory alerting |
-| Source Control | GitHub | — | Repository with Developer Connect trigger integration |
+| Layer              | Technology          | Version       | Role                                                        |
+| ------------------ | ------------------- | ------------- | ----------------------------------------------------------- |
+| Frontend Framework | React               | 19            | UI component library with concurrent features               |
+| Build Tool         | Vite                | 5.x           | Module bundler, dev server, tree-shaking                    |
+| Styling            | Tailwind CSS        | 3.x           | Utility-first CSS with production purge                     |
+| Language           | TypeScript          | 5.x           | Type-safe development for src/ and scripts/                 |
+| Content CMS        | Sanity              | Current       | Headless CMS with GROQ query language                       |
+| Content Rendering  | @portabletext/react | Current       | Portable Text to React component renderer                   |
+| Script Execution   | tsx                 | 4.x           | Zero-config TypeScript execution for Node.js                |
+| Prerendering       | Playwright          | v1.43.0-jammy | Headless Chromium for static HTML generation                |
+| Local Server       | serve               | Current       | Lightweight static file server for dev                      |
+| Container          | nginx               | 1.27-alpine   | Production static file server, minimal CVE footprint        |
+| Container Platform | Cloud Run (gen2)    | —             | Serverless container with concurrency and traffic splitting |
+| Edge/CDN           | Firebase Hosting    | —             | TLS termination, custom domain, global CDN                  |
+| Image Registry     | Artifact Registry   | —             | Docker storage with immutable tags and CVE scanning         |
+| Secrets            | Secret Manager      | —             | Encrypted storage with IAM-scoped access                    |
+| CI/CD              | Cloud Build         | —             | 16-step pipeline with per-step secret scoping               |
+| Error Tracking     | Sentry              | Current       | Frontend error monitoring with release tracking             |
+| Monitoring         | Cloud Monitoring    | —             | Uptime checks, latency/5xx/memory alerting                  |
+| Source Control     | GitHub              | —             | Repository with Developer Connect trigger integration       |
 
 #### 3.2.1 Frontend: React 19 + Vite + Tailwind CSS + TypeScript
 
@@ -593,22 +595,22 @@ The environment variable architecture enforces one security principle: **secrets
 
 **Table 2: Environment Variables Reference**
 
-| Variable | Vite Prefix | Source | Used By | Required | Example |
-|----------|------------|--------|---------|----------|---------|
-| `VITE_SANITY_PROJECT_ID` | Yes | `.env.local` / Cloud Build `env` | Client JS, build scripts | Yes | `abc123de` |
-| `VITE_SANITY_DATASET` | Yes | `.env.local` / Cloud Build `env` | Client JS, build scripts | Yes | `production` |
-| `VITE_SANITY_API_VERSION` | Yes | `.env.local` / Cloud Build `env` | Client JS, build scripts | Yes | `2024-01-01` |
-| `VITE_SITE_URL` | Yes | `.env.local` / Cloud Build `env` | Sitemap, SEO meta tags | Yes | `https://www.mangupublishers.com` |
-| `VITE_APP_VERSION` | Yes | Cloud Build `${SHORT_SHA}` | Client JS, Sentry release | Yes | `a1b2c3d` |
-| `SANITY_API_READ_TOKEN` | **No** | **Secret Manager only** | `build-content-snapshot.ts` | Yes | `skProductionToken...` |
-| `SENTRY_AUTH_TOKEN` | **No** | Secret Manager (optional) | Sentry Vite plugin | Optional | `sntrys_...` |
-| `PORT` | **No** | Cloud Run (auto-injected) | nginx `listen ${PORT}` | Auto-set | `8080` |
+| Variable                  | Vite Prefix | Source                           | Used By                     | Required | Example                           |
+| ------------------------- | ----------- | -------------------------------- | --------------------------- | -------- | --------------------------------- |
+| `VITE_SANITY_PROJECT_ID`  | Yes         | `.env.local` / Cloud Build `env` | Client JS, build scripts    | Yes      | `abc123de`                        |
+| `VITE_SANITY_DATASET`     | Yes         | `.env.local` / Cloud Build `env` | Client JS, build scripts    | Yes      | `production`                      |
+| `VITE_SANITY_API_VERSION` | Yes         | `.env.local` / Cloud Build `env` | Client JS, build scripts    | Yes      | `2024-01-01`                      |
+| `VITE_SITE_URL`           | Yes         | `.env.local` / Cloud Build `env` | Sitemap, SEO meta tags      | Yes      | `https://www.mangupublishers.com` |
+| `VITE_APP_VERSION`        | Yes         | Cloud Build `${SHORT_SHA}`       | Client JS, Sentry release   | Yes      | `a1b2c3d`                         |
+| `SANITY_API_READ_TOKEN`   | **No**      | **Secret Manager only**          | `build-content-snapshot.ts` | Yes      | `skProductionToken...`            |
+| `SENTRY_AUTH_TOKEN`       | **No**      | Secret Manager (optional)        | Sentry Vite plugin          | Optional | `sntrys_...`                      |
+| `PORT`                    | **No**      | Cloud Run (auto-injected)        | nginx `listen ${PORT}`      | Auto-set | `8080`                            |
 
-#### 3.3.2 Public Variables (VITE_ Prefix)
+#### 3.3.2 Public Variables (VITE\_ Prefix)
 
 Variables with the `VITE_` prefix are inlined by Vite into the client-side bundle and are safe for public exposure. `VITE_SANITY_PROJECT_ID` is the Sanity project identifier (appears in CDN URLs). `VITE_SANITY_DATASET` is the dataset name. `VITE_SANITY_API_VERSION` is a date-based version pin preventing API breakage. `VITE_SITE_URL` is the canonical public URL used for sitemaps and OpenGraph. `VITE_APP_VERSION` is the 7-character git SHA injected by Cloud Build step 6; local dev uses `"local"`.
 
-#### 3.3.3 Secret Variables (No VITE_ Prefix)
+#### 3.3.3 Secret Variables (No VITE\_ Prefix)
 
 Variables without the `VITE_` prefix are **not** inlined by Vite and are accessible only to Node.js build scripts via `process.env`.
 
@@ -634,7 +636,7 @@ Variables flow through three environments with progressively restricted secret a
 
 **Consequences.** Positive: **zero runtime secrets**, minimal CVE attack surface, faster cold starts (nginx starts in milliseconds), lower memory usage, and simplified CSP (no `connect-src` for Sanity). Negative: no runtime SSR, no runtime API endpoints, and content updates require a rebuild. Mitigation: the Sanity webhook auto-triggers Cloud Build on content changes, bounding staleness to ~3–5 minutes.
 
-#### 3.4.2 ADR-002: No VITE_ Prefix on SANITY_API_READ_TOKEN
+#### 3.4.2 ADR-002: No VITE\_ Prefix on SANITY_API_READ_TOKEN
 
 **Context.** Vite inlines all `VITE_`-prefixed variables into the client bundle. The Sanity read token is a secret with read access to all published content.
 
@@ -688,24 +690,24 @@ Variables flow through three environments with progressively restricted secret a
 
 **Table 3: Cloud Build Pipeline Step Reference**
 
-| Step # | ID | Name | Purpose | Critical Config |
-|--------|----|------|---------|----------------|
-| 1 | restore-npm-cache | Restore npm Cache | Restores cache from GCS | `gsutil cp` from `${_CACHE_BUCKET}` |
-| 2 | install | Install Dependencies | Runs `npm ci` | `node:20`; `--no-audit --no-fund` |
-| 3 | production-audit | Production Audit | Audits prod deps | Non-blocking (`\|\| true`) |
-| 4 | content-snapshot | Content Snapshot | Fetches Sanity content | **`secretEnv` only — sole secret consumer** |
-| 5 | generate-routes | Generate Routes | Outputs `.cache/routes.json` | Consumes content snapshot |
-| 6 | vite-build | Vite Build | Compiles to `dist/` | Sets `VITE_APP_VERSION=${SHORT_SHA}` |
-| 7 | prerender | Prerender HTML | Renders static HTML per route | Pinned `playwright:v1.43.0-jammy` |
-| 8 | sitemap | Generate Sitemap | Produces `dist/sitemap.xml` | Uses `VITE_SITE_URL` |
-| 9 | audit-secrets | Secret Audit | Scans for leaked secrets | **Build fails (exit 1) if found** |
-| 10 | smoke-test | Smoke Tests | Validates build output | `npm run smoke:check-routes` |
-| 11 | docker-build | Docker Build | Packages `dist/` into nginx | No build commands; COPY only |
-| 12 | docker-push | Docker Push | Pushes to Artifact Registry | Tags: `${SHORT_SHA}` and `latest` |
-| 13 | enforce-vulnerability-policy | Vulnerability Scan | Checks for HIGH/CRITICAL CVEs | **Blocks deploy with exit 1** |
-| 14 | deploy-run | Deploy to Cloud Run | Deploys SHA-tagged image | `--memory=512Mi --execution-environment=gen2` |
-| 15 | prune-tags | Prune Tags | Removes old traffic tags | Keeps 50 most recent |
-| 16 | save-npm-cache | Save npm Cache | Archives cache to GCS | `gsutil cp` to `${_CACHE_BUCKET}` |
+| Step # | ID                           | Name                 | Purpose                       | Critical Config                               |
+| ------ | ---------------------------- | -------------------- | ----------------------------- | --------------------------------------------- |
+| 1      | restore-npm-cache            | Restore npm Cache    | Restores cache from GCS       | `gsutil cp` from `${_CACHE_BUCKET}`           |
+| 2      | install                      | Install Dependencies | Runs `npm ci`                 | `node:20`; `--no-audit --no-fund`             |
+| 3      | production-audit             | Production Audit     | Audits prod deps              | Non-blocking (`\|\| true`)                    |
+| 4      | content-snapshot             | Content Snapshot     | Fetches Sanity content        | **`secretEnv` only — sole secret consumer**   |
+| 5      | generate-routes              | Generate Routes      | Outputs `.cache/routes.json`  | Consumes content snapshot                     |
+| 6      | vite-build                   | Vite Build           | Compiles to `dist/`           | Sets `VITE_APP_VERSION=${SHORT_SHA}`          |
+| 7      | prerender                    | Prerender HTML       | Renders static HTML per route | Pinned `playwright:v1.43.0-jammy`             |
+| 8      | sitemap                      | Generate Sitemap     | Produces `dist/sitemap.xml`   | Uses `VITE_SITE_URL`                          |
+| 9      | audit-secrets                | Secret Audit         | Scans for leaked secrets      | **Build fails (exit 1) if found**             |
+| 10     | smoke-test                   | Smoke Tests          | Validates build output        | `npm run smoke:check-routes`                  |
+| 11     | docker-build                 | Docker Build         | Packages `dist/` into nginx   | No build commands; COPY only                  |
+| 12     | docker-push                  | Docker Push          | Pushes to Artifact Registry   | Tags: `${SHORT_SHA}` and `latest`             |
+| 13     | enforce-vulnerability-policy | Vulnerability Scan   | Checks for HIGH/CRITICAL CVEs | **Blocks deploy with exit 1**                 |
+| 14     | deploy-run                   | Deploy to Cloud Run  | Deploys SHA-tagged image      | `--memory=512Mi --execution-environment=gen2` |
+| 15     | prune-tags                   | Prune Tags           | Removes old traffic tags      | Keeps 50 most recent                          |
+| 16     | save-npm-cache               | Save npm Cache       | Archives cache to GCS         | `gsutil cp` to `${_CACHE_BUCKET}`             |
 
 #### 3.5.2 Security-Critical Step Sequencing
 
@@ -733,21 +735,21 @@ The `nginx.conf.template` uses `listen ${PORT}` (substituted via `envsubst` at s
 
 **Table 4: Cloud Run Service Configuration**
 
-| Parameter | Value | Rationale |
-|-----------|-------|-----------|
-| `--image` | SHA-tagged from Artifact Registry | Immutable deployment reference |
-| `--region` | `us-central1` | Resource co-location |
-| `--allow-unauthenticated` | `true` | Public website |
-| `--port` | `8080` | Matches nginx configuration |
-| `--cpu` | `1` | Sufficient for static serving |
-| `--memory` | `512Mi` | Gen2 minimum (ADR-003) |
-| `--concurrency` | `80` | Max concurrent requests per instance |
-| `--min-instances` | `0` | Scale-to-zero for cost optimization |
-| `--max-instances` | `10` | Hard cap preventing runaway costs |
-| `--execution-environment` | `gen2` | Concurrency, traffic splitting, CPU boost |
-| `--no-default-url` | `true` | Forces Firebase Hosting access only |
-| `--cpu-boost` | `true` | Reduced cold start latency |
-| `--labels` | `env=prod,app=mangu-publishers` | Cost attribution |
+| Parameter                 | Value                             | Rationale                                 |
+| ------------------------- | --------------------------------- | ----------------------------------------- |
+| `--image`                 | SHA-tagged from Artifact Registry | Immutable deployment reference            |
+| `--region`                | `us-central1`                     | Resource co-location                      |
+| `--allow-unauthenticated` | `true`                            | Public website                            |
+| `--port`                  | `8080`                            | Matches nginx configuration               |
+| `--cpu`                   | `1`                               | Sufficient for static serving             |
+| `--memory`                | `512Mi`                           | Gen2 minimum (ADR-003)                    |
+| `--concurrency`           | `80`                              | Max concurrent requests per instance      |
+| `--min-instances`         | `0`                               | Scale-to-zero for cost optimization       |
+| `--max-instances`         | `10`                              | Hard cap preventing runaway costs         |
+| `--execution-environment` | `gen2`                            | Concurrency, traffic splitting, CPU boost |
+| `--no-default-url`        | `true`                            | Forces Firebase Hosting access only       |
+| `--cpu-boost`             | `true`                            | Reduced cold start latency                |
+| `--labels`                | `env=prod,app=mangu-publishers`   | Cost attribution                          |
 
 The service scales from 0 to 10 instances based on request load. With concurrency=80, 1–2 instances handle normal load. `--min-instances=0` eliminates idle cost; `--cpu-boost` and nginx's sub-millisecond startup mitigate cold start latency. `pinTag: true` enables instant rollback by retagging a previous deployment. Cloud Monitoring checks `/healthz` every 60 seconds and replaces unhealthy instances automatically.
 
@@ -790,14 +792,14 @@ Both commands must return without error. The billing command must show `billingE
 
 The following tools must be installed and functional on the local development workstation:
 
-| Tool | Version / Spec | Installation Command | Verification |
-|------|---------------|---------------------|------------|
-| Node.js | 20.x (LTS) | `nvm install 20 && nvm use 20` | `node --version` |
-| tsx | latest (global) | `npm install -g tsx` | `tsx --version` |
-| firebase-tools | latest (global) | `npm install -g firebase-tools` | `firebase --version` |
-| gcloud CLI | latest | Google Cloud SDK installer | `gcloud version` |
-| Docker Desktop | 4.x or later | docker.com/products/docker-desktop | `docker --version` |
-| jq | 1.6 or later | `brew install jq` (macOS) or `apt install jq` (Linux) | `jq --version` |
+| Tool           | Version / Spec  | Installation Command                                  | Verification         |
+| -------------- | --------------- | ----------------------------------------------------- | -------------------- |
+| Node.js        | 20.x (LTS)      | `nvm install 20 && nvm use 20`                        | `node --version`     |
+| tsx            | latest (global) | `npm install -g tsx`                                  | `tsx --version`      |
+| firebase-tools | latest (global) | `npm install -g firebase-tools`                       | `firebase --version` |
+| gcloud CLI     | latest          | Google Cloud SDK installer                            | `gcloud version`     |
+| Docker Desktop | 4.x or later    | docker.com/products/docker-desktop                    | `docker --version`   |
+| jq             | 1.6 or later    | `brew install jq` (macOS) or `apt install jq` (Linux) | `jq --version`       |
 
 **Authentication requirements.** After installing the gcloud CLI, authenticate with both user credentials and application default credentials:
 
@@ -842,16 +844,16 @@ The audit output establishes a baseline. It identifies every file that requires 
 
 Download all eight code and configuration files from the shared Drive folder into a local `_drive_files/` directory outside the repository. These files are authored externally and are copied into the repository at specific milestones.
 
-| File | Milestone Used | Purpose |
-|------|---------------|---------|
-| `cloudbuild.yaml` | M5 | 16-step Cloud Build pipeline definition |
-| `Dockerfile` | M3 | nginx container build specification |
-| `nginx.conf.template` | M3 | nginx runtime configuration with CSP and SPA fallback |
-| `firebase.json` | M6 | Firebase Hosting rewrite configuration |
-| `artifact-cleanup-policy.json` | M4, M7 | Artifact Registry lifecycle policy |
-| `node-env.ts` | M1 | Zod-based environment validation (build-time only) |
-| `sanity-node-client.ts` | M1 | Build-time Sanity client with `useCdn: false` |
-| `prune-cloud-run-tags.sh` | M7 | Cloud Run traffic tag pruning script |
+| File                           | Milestone Used | Purpose                                               |
+| ------------------------------ | -------------- | ----------------------------------------------------- |
+| `cloudbuild.yaml`              | M5             | 16-step Cloud Build pipeline definition               |
+| `Dockerfile`                   | M3             | nginx container build specification                   |
+| `nginx.conf.template`          | M3             | nginx runtime configuration with CSP and SPA fallback |
+| `firebase.json`                | M6             | Firebase Hosting rewrite configuration                |
+| `artifact-cleanup-policy.json` | M4, M7         | Artifact Registry lifecycle policy                    |
+| `node-env.ts`                  | M1             | Zod-based environment validation (build-time only)    |
+| `sanity-node-client.ts`        | M1             | Build-time Sanity client with `useCdn: false`         |
+| `prune-cloud-run-tags.sh`      | M7             | Cloud Run traffic tag pruning script                  |
 
 Store `_drive_files/` in the home or projects directory — not inside the repository. This prevents accidental commits of configuration files that belong at specific paths within the repo.
 
@@ -863,15 +865,15 @@ Store `_drive_files/` in the home or projects directory — not inside the repos
 
 Milestone 1 addresses the most critical security vulnerability in the Phase 1 codebase: the Sanity read token is prefixed with `VITE_`, which causes Vite to inline the value into client-side JavaScript at build time. The fix renames the variable, introduces Zod-based validation, establishes defensive ignore files, and adds an automated audit script that runs on every build.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 1.1 | Rename `VITE_SANITY_API_READ_TOKEN` → `SANITY_API_READ_TOKEN` | `find . -type f -exec sed -i 's/VITE_SANITY_API_READ_TOKEN/SANITY_API_READ_TOKEN/g' {} +` | `grep -rn "VITE_SANITY_API_READ_TOKEN" .` returns empty |
-| 1.2 | Create `scripts/_lib/` directory | `mkdir -p scripts/_lib` | `ls -la scripts/_lib/` succeeds |
-| 1.3 | Copy `node-env.ts` from Drive | `cp _drive_files/node-env.ts scripts/_lib/node-env.ts` | Zod validation throws on missing token |
-| 1.4 | Copy `sanity-node-client.ts` from Drive | `cp _drive_files/sanity-node-client.ts scripts/_lib/sanity-node-client.ts` | Imports from `node-env.ts`; `useCdn: false`, `perspective: "published"` |
-| 1.5 | Add `.gitignore` entries | Append 3 lines to `.gitignore` | `grep` checks confirm all entries present |
-| 1.6 | Create `.dockerignore` | `cat > .dockerignore << 'EOF'` (heredoc with 11 lines) | `cat .dockerignore` shows correct content |
-| 1.7 | Add `audit:secrets` npm script | Add to `package.json` scripts block | `npm run audit:secrets` exits 0 |
+| #   | Task                                                          | Operation                                                                                 | Verification                                                            |
+| --- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1.1 | Rename `VITE_SANITY_API_READ_TOKEN` → `SANITY_API_READ_TOKEN` | `find . -type f -exec sed -i 's/VITE_SANITY_API_READ_TOKEN/SANITY_API_READ_TOKEN/g' {} +` | `grep -rn "VITE_SANITY_API_READ_TOKEN" .` returns empty                 |
+| 1.2 | Create `scripts/_lib/` directory                              | `mkdir -p scripts/_lib`                                                                   | `ls -la scripts/_lib/` succeeds                                         |
+| 1.3 | Copy `node-env.ts` from Drive                                 | `cp _drive_files/node-env.ts scripts/_lib/node-env.ts`                                    | Zod validation throws on missing token                                  |
+| 1.4 | Copy `sanity-node-client.ts` from Drive                       | `cp _drive_files/sanity-node-client.ts scripts/_lib/sanity-node-client.ts`                | Imports from `node-env.ts`; `useCdn: false`, `perspective: "published"` |
+| 1.5 | Add `.gitignore` entries                                      | Append 3 lines to `.gitignore`                                                            | `grep` checks confirm all entries present                               |
+| 1.6 | Create `.dockerignore`                                        | `cat > .dockerignore << 'EOF'` (heredoc with 11 lines)                                    | `cat .dockerignore` shows correct content                               |
+| 1.7 | Add `audit:secrets` npm script                                | Add to `package.json` scripts block                                                       | `npm run audit:secrets` exits 0                                         |
 
 #### 4.2.1 Variable Rename Across All Files
 
@@ -977,16 +979,16 @@ Commit at this point with message `feat: milestone 1 - local security hardening`
 
 Milestone 2 establishes the entire build-time content pipeline. The pipeline is designed to run identically in local development and in Cloud Build (M5). Each script reads the output of the previous step, creating a linear dependency chain: content snapshot → route list → Vite build → prerender → sitemap.
 
-| # | Task | Script File | npm Script | Output |
-|---|------|-------------|------------|--------|
-| 2.1 | Update `package.json` scripts block | — | 8 entries in `"scripts"` | Pipeline definition |
-| 2.2 | Create `build-content-snapshot.ts` | `scripts/build-content-snapshot.ts` | `build:content` | `src/generated/contentSnapshot.json` |
-| 2.3 | Create `generate-routes.ts` | `scripts/generate-routes.ts` | `build:routes` | `.cache/routes.json` |
-| 2.4 | Create `prerender.ts` | `scripts/prerender.ts` | `build:prerender` | `dist/{route}/index.html` |
-| 2.5 | Create `generate-sitemap.ts` | `scripts/generate-sitemap.ts` | `build:sitemap` | `dist/sitemap.xml` |
-| 2.6 | Create `check-routes.ts` | `scripts/smoke/check-routes.ts` | `smoke:check-routes` | Console pass/fail |
-| 2.7 | Create `.env.local` | `.env.local` | — | Local environment config |
-| 2.8 | Run full pipeline | — | `npm run build` | Complete `dist/` directory |
+| #   | Task                                | Script File                         | npm Script               | Output                               |
+| --- | ----------------------------------- | ----------------------------------- | ------------------------ | ------------------------------------ |
+| 2.1 | Update `package.json` scripts block | —                                   | 8 entries in `"scripts"` | Pipeline definition                  |
+| 2.2 | Create `build-content-snapshot.ts`  | `scripts/build-content-snapshot.ts` | `build:content`          | `src/generated/contentSnapshot.json` |
+| 2.3 | Create `generate-routes.ts`         | `scripts/generate-routes.ts`        | `build:routes`           | `.cache/routes.json`                 |
+| 2.4 | Create `prerender.ts`               | `scripts/prerender.ts`              | `build:prerender`        | `dist/{route}/index.html`            |
+| 2.5 | Create `generate-sitemap.ts`        | `scripts/generate-sitemap.ts`       | `build:sitemap`          | `dist/sitemap.xml`                   |
+| 2.6 | Create `check-routes.ts`            | `scripts/smoke/check-routes.ts`     | `smoke:check-routes`     | Console pass/fail                    |
+| 2.7 | Create `.env.local`                 | `.env.local`                        | —                        | Local environment config             |
+| 2.8 | Run full pipeline                   | —                                   | `npm run build`          | Complete `dist/` directory           |
 
 #### 4.3.1 `package.json` Scripts Block
 
@@ -1020,12 +1022,12 @@ This script fetches all published content from Sanity and writes a snapshot JSON
 
 The script imports `sanityNodeClient` from `scripts/_lib/sanity-node-client.ts` and fetches books and authors using GROQ queries. The snapshot object contains:
 
-| Field | Source | Purpose |
-|-------|--------|---------|
-| `buildCommit` | `process.env.VITE_APP_VERSION` or `"local"` | Traceability: identifies which commit produced the build |
-| `sanityDataset` | `env.VITE_SANITY_DATASET` | Identifies which Sanity dataset was the content source |
-| `generatedAt` | `new Date().toISOString()` | Timestamp for cache invalidation decisions |
-| `contentHash` | SHA-256 of the serialized snapshot JSON | Cache-busting key for downstream consumers |
+| Field           | Source                                      | Purpose                                                  |
+| --------------- | ------------------------------------------- | -------------------------------------------------------- |
+| `buildCommit`   | `process.env.VITE_APP_VERSION` or `"local"` | Traceability: identifies which commit produced the build |
+| `sanityDataset` | `env.VITE_SANITY_DATASET`                   | Identifies which Sanity dataset was the content source   |
+| `generatedAt`   | `new Date().toISOString()`                  | Timestamp for cache invalidation decisions               |
+| `contentHash`   | SHA-256 of the serialized snapshot JSON     | Cache-busting key for downstream consumers               |
 
 The `contentHash` is computed as the hex digest of `SHA256(JSON.stringify(snapshot))`. This hash changes whenever any content field changes, providing a reliable signal for cache invalidation and build comparison.
 
@@ -1102,18 +1104,18 @@ Milestone 2 is complete when all of the following are verified:
 
 Milestone 3 introduces the production runtime artifact: a Docker image based on `nginx:1.27-alpine` that runs as a non-root user and serves the contents of `dist/` over port 8080. The container contains no Node.js runtime, no build tools, and no secrets.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 3.1 | Copy `Dockerfile` from Drive | `cp _drive_files/Dockerfile .` | `ls Dockerfile` succeeds |
-| 3.2 | Copy `nginx.conf.template` from Drive | `cp _drive_files/nginx.conf.template .` | `ls nginx.conf.template` succeeds |
-| 3.3 | Build image with `dist/` present | `docker build -t mangu-publishers-test .` | Build succeeds |
-| 3.4 | Verify hard-fail without `dist/` | `mv dist dist-backup && docker build -t mangu-publishers-fail .` | Build fails with missing-file error |
-| 3.5 | Run container locally | `docker run -d -p 8080:8080 --name mangu-publishers-local mangu-publishers-test` | Container starts, `docker ps` shows it |
-| 3.6 | Verify health check | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/healthz` | Returns `200` |
-| 3.7 | Verify CSP excludes Sanity API | `curl -sI http://localhost:8080/ \| grep -i "content-security-policy"` | Does NOT contain `api.sanity.io` |
-| 3.8 | Verify asset cache headers | `curl -sI http://localhost:8080/assets/{hashed-file}` | `Cache-Control: public, max-age=31536000, immutable` |
-| 3.9 | Verify source map 404 | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/assets/index.js.map` | Returns `404` |
-| 3.10 | Verify non-root user | `docker exec mangu-publishers-local id` | Shows `uid=1001` |
+| #    | Task                                  | Operation                                                                          | Verification                                         |
+| ---- | ------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 3.1  | Copy `Dockerfile` from Drive          | `cp _drive_files/Dockerfile .`                                                     | `ls Dockerfile` succeeds                             |
+| 3.2  | Copy `nginx.conf.template` from Drive | `cp _drive_files/nginx.conf.template .`                                            | `ls nginx.conf.template` succeeds                    |
+| 3.3  | Build image with `dist/` present      | `docker build -t mangu-publishers-test .`                                          | Build succeeds                                       |
+| 3.4  | Verify hard-fail without `dist/`      | `mv dist dist-backup && docker build -t mangu-publishers-fail .`                   | Build fails with missing-file error                  |
+| 3.5  | Run container locally                 | `docker run -d -p 8080:8080 --name mangu-publishers-local mangu-publishers-test`   | Container starts, `docker ps` shows it               |
+| 3.6  | Verify health check                   | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/healthz`             | Returns `200`                                        |
+| 3.7  | Verify CSP excludes Sanity API        | `curl -sI http://localhost:8080/ \| grep -i "content-security-policy"`             | Does NOT contain `api.sanity.io`                     |
+| 3.8  | Verify asset cache headers            | `curl -sI http://localhost:8080/assets/{hashed-file}`                              | `Cache-Control: public, max-age=31536000, immutable` |
+| 3.9  | Verify source map 404                 | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/assets/index.js.map` | Returns `404`                                        |
+| 3.10 | Verify non-root user                  | `docker exec mangu-publishers-local id`                                            | Shows `uid=1001`                                     |
 
 #### 4.4.1 Dockerfile Specification
 
@@ -1182,16 +1184,16 @@ Milestone 3 is complete when all runtime verification checks pass. The container
 
 Milestone 4 is the infrastructure provisioning phase. It has no dependency on local code changes (M1–M3) and may be executed in parallel with them to reduce overall wall-clock time. All commands are run via the `gcloud` CLI with an authenticated user who has Project Owner or equivalent permissions.
 
-| # | Task | gcloud Command(s) | Verification |
-|---|------|-------------------|-------------|
-| 4.1 | Set environment variables | `export` block (8 variables) | All variables non-empty in `env` |
-| 4.2 | Enable 10 GCP APIs | `gcloud services enable` (10 APIs) | `gcloud services list --enabled` shows all 10 |
-| 4.3 | Create Artifact Registry | `gcloud artifacts repositories create` + cleanup policy | `gcloud artifacts repositories describe` succeeds |
-| 4.4 | Create Secret Manager secret | `gcloud secrets create sanity-api-read-token` | `gcloud secrets versions access latest` returns token |
-| 4.5 | Create Cloud Build service account | `gcloud iam service-accounts create` + 5 role grants + secret binding | `gcloud iam service-accounts describe` succeeds |
-| 4.6 | Create cache bucket | `gcloud storage buckets create` + IAM binding | `gcloud storage buckets describe` succeeds |
-| 4.7 | Developer Connect GitHub link | `gcloud developer-connect connections create` + `git-repository-links create` | OAuth flow completes; link shows in console |
-| 4.8 | Cloud Build trigger | `gcloud builds triggers create developer-connect` | `gcloud builds triggers describe mangu-publishers-main` succeeds |
+| #   | Task                               | gcloud Command(s)                                                             | Verification                                                     |
+| --- | ---------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 4.1 | Set environment variables          | `export` block (8 variables)                                                  | All variables non-empty in `env`                                 |
+| 4.2 | Enable 10 GCP APIs                 | `gcloud services enable` (10 APIs)                                            | `gcloud services list --enabled` shows all 10                    |
+| 4.3 | Create Artifact Registry           | `gcloud artifacts repositories create` + cleanup policy                       | `gcloud artifacts repositories describe` succeeds                |
+| 4.4 | Create Secret Manager secret       | `gcloud secrets create sanity-api-read-token`                                 | `gcloud secrets versions access latest` returns token            |
+| 4.5 | Create Cloud Build service account | `gcloud iam service-accounts create` + 5 role grants + secret binding         | `gcloud iam service-accounts describe` succeeds                  |
+| 4.6 | Create cache bucket                | `gcloud storage buckets create` + IAM binding                                 | `gcloud storage buckets describe` succeeds                       |
+| 4.7 | Developer Connect GitHub link      | `gcloud developer-connect connections create` + `git-repository-links create` | OAuth flow completes; link shows in console                      |
+| 4.8 | Cloud Build trigger                | `gcloud builds triggers create developer-connect`                             | `gcloud builds triggers describe mangu-publishers-main` succeeds |
 
 #### 4.5.1 Environment Variables
 
@@ -1374,15 +1376,15 @@ Milestone 4 is complete when all resources are verifiable via `gcloud describe` 
 
 Milestone 5 is the integration point where all prior milestones converge. The `cloudbuild.yaml` file from the Drive folder defines a 16-step pipeline that executes the same build scripts verified locally in M2, packages the output in the container verified in M3, and deploys it using the infrastructure provisioned in M4.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 5.1 | Copy `cloudbuild.yaml` from Drive | `cp _drive_files/cloudbuild.yaml .` | File present at repo root |
-| 5.2 | Pre-flight checks on `cloudbuild.yaml` | 6 grep-based verifications | All checks match expected values |
-| 5.3 | Commit and push to `main` | `git add && git commit && git push` | Build triggers within 60 seconds |
-| 5.4 | Monitor 16-step pipeline | `gcloud builds log <BUILD_ID>` | All 16 steps complete (green) |
-| 5.5 | Verify deployed service | `gcloud run services describe` + `curl` | Memory 512Mi, port 8080, URL returns 200 |
-| 5.6 | Verify no secret leakage | `gcloud logging read` query | No results for token name in logs |
-| 5.7 | Verify image tags in AR | `gcloud artifacts docker images list` | Both `SHORT_SHA` and `latest` tags present |
+| #   | Task                                   | Operation                               | Verification                               |
+| --- | -------------------------------------- | --------------------------------------- | ------------------------------------------ |
+| 5.1 | Copy `cloudbuild.yaml` from Drive      | `cp _drive_files/cloudbuild.yaml .`     | File present at repo root                  |
+| 5.2 | Pre-flight checks on `cloudbuild.yaml` | 6 grep-based verifications              | All checks match expected values           |
+| 5.3 | Commit and push to `main`              | `git add && git commit && git push`     | Build triggers within 60 seconds           |
+| 5.4 | Monitor 16-step pipeline               | `gcloud builds log <BUILD_ID>`          | All 16 steps complete (green)              |
+| 5.5 | Verify deployed service                | `gcloud run services describe` + `curl` | Memory 512Mi, port 8080, URL returns 200   |
+| 5.6 | Verify no secret leakage               | `gcloud logging read` query             | No results for token name in logs          |
+| 5.7 | Verify image tags in AR                | `gcloud artifacts docker images list`   | Both `SHORT_SHA` and `latest` tags present |
 
 #### 4.6.1 `cloudbuild.yaml` Pre-flight Checks
 
@@ -1414,24 +1416,24 @@ Each grep must match the expected value. A failure at any check indicates that t
 
 The Cloud Build pipeline executes the following steps in order:
 
-| Step | ID | Purpose | Key Details |
-|------|-----|---------|-------------|
-| 1 | `restore-npm-cache` | Restore npm cache from GCS bucket | `gsutil cp` from `${_CACHE_BUCKET}` |
-| 2 | `install` | Install Node.js dependencies | `npm ci` with cache at `/workspace/.npm` |
-| 3 | `production-audit` | Run `npm audit` (non-blocking) | `--audit-level=high`, `|| true` |
-| 4 | `content-snapshot` | Fetch Sanity content | **Only step with `secretEnv: [SANITY_API_READ_TOKEN]`** |
-| 5 | `generate-routes` | Build `.cache/routes.json` from snapshot | `npm run build:routes` |
-| 6 | `vite-build` | Vite production build | Sets `VITE_APP_VERSION=${SHORT_SHA}` |
-| 7 | `prerender` | Playwright Chromium renders all routes | Uses pinned `mcr.microsoft.com/playwright:v1.43.0-jammy` |
-| 8 | `sitemap` | Generate `dist/sitemap.xml` | `npm run build:sitemap` |
-| 9 | `audit-secrets` | Verify no secrets under **`dist/`** (including HTML shells, not only `dist/assets/`) | Exits 1 if forbidden strings appear |
-| 10 | `smoke-test` | Verify all routes have `index.html` | `npm run smoke:check-routes` |
-| 11 | `docker-build` | Build nginx container from `dist/` | Tags with both `SHORT_SHA` and `latest` |
-| 12 | `docker-push` | Push image to Artifact Registry | `--all-tags` pushes both tags |
-| 13 | `enforce-vulnerability-policy` | CVE scan blocks on HIGH/CRITICAL | Exits 1 if CRITICAL or HIGH findings detected |
-| 14 | `deploy-run` | Deploy to Cloud Run | `--memory=512Mi --no-default-url --execution-environment=gen2` |
-| 15 | `prune-tags` | Remove old Cloud Run traffic tags | Calls `scripts/ops/prune-cloud-run-tags.sh` |
-| 16 | `save-npm-cache` | Save npm cache to GCS bucket | `gsutil cp` to `${_CACHE_BUCKET}` |
+| Step | ID                             | Purpose                                                                              | Key Details                                                    |
+| ---- | ------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------- | --- | ----- |
+| 1    | `restore-npm-cache`            | Restore npm cache from GCS bucket                                                    | `gsutil cp` from `${_CACHE_BUCKET}`                            |
+| 2    | `install`                      | Install Node.js dependencies                                                         | `npm ci` with cache at `/workspace/.npm`                       |
+| 3    | `production-audit`             | Run `npm audit` (non-blocking)                                                       | `--audit-level=high`, `                                        |     | true` |
+| 4    | `content-snapshot`             | Fetch Sanity content                                                                 | **Only step with `secretEnv: [SANITY_API_READ_TOKEN]`**        |
+| 5    | `generate-routes`              | Build `.cache/routes.json` from snapshot                                             | `npm run build:routes`                                         |
+| 6    | `vite-build`                   | Vite production build                                                                | Sets `VITE_APP_VERSION=${SHORT_SHA}`                           |
+| 7    | `prerender`                    | Playwright Chromium renders all routes                                               | Uses pinned `mcr.microsoft.com/playwright:v1.43.0-jammy`       |
+| 8    | `sitemap`                      | Generate `dist/sitemap.xml`                                                          | `npm run build:sitemap`                                        |
+| 9    | `audit-secrets`                | Verify no secrets under **`dist/`** (including HTML shells, not only `dist/assets/`) | Exits 1 if forbidden strings appear                            |
+| 10   | `smoke-test`                   | Verify all routes have `index.html`                                                  | `npm run smoke:check-routes`                                   |
+| 11   | `docker-build`                 | Build nginx container from `dist/`                                                   | Tags with both `SHORT_SHA` and `latest`                        |
+| 12   | `docker-push`                  | Push image to Artifact Registry                                                      | `--all-tags` pushes both tags                                  |
+| 13   | `enforce-vulnerability-policy` | CVE scan blocks on HIGH/CRITICAL                                                     | Exits 1 if CRITICAL or HIGH findings detected                  |
+| 14   | `deploy-run`                   | Deploy to Cloud Run                                                                  | `--memory=512Mi --no-default-url --execution-environment=gen2` |
+| 15   | `prune-tags`                   | Remove old Cloud Run traffic tags                                                    | Calls `scripts/ops/prune-cloud-run-tags.sh`                    |
+| 16   | `save-npm-cache`               | Save npm cache to GCS bucket                                                         | `gsutil cp` to `${_CACHE_BUCKET}`                              |
 
 Steps 1–10 constitute the **build phase**: they produce `dist/` and verify its integrity. Steps 11–14 constitute the **deploy phase**: they containerize, scan, and deploy. Steps 15–16 are **cleanup phase**: they maintain resource hygiene and cache state.
 
@@ -1483,14 +1485,14 @@ Milestone 5 is complete when:
 
 Milestone 6 is the launch milestone. When this milestone is complete, the site is publicly accessible on a custom domain over HTTPS. Firebase Hosting provides the edge network, TLS certificate provisioning, and rewrite rules that route all traffic to the Cloud Run service deployed in M5.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 6.1 | Create `public-placeholder/` | `mkdir -p public-placeholder && touch public-placeholder/.gitkeep` | Directory exists, tracked by git |
-| 6.2 | Copy `firebase.json` from Drive | `cp _drive_files/firebase.json .` | `public: "public-placeholder"`, rewrite to `mangu-publishers` with `pinTag: true` |
-| 6.3 | Initialize Firebase Hosting | `firebase init hosting` | Select existing project, `public-placeholder`, SPA yes, no GitHub auto-deploys |
-| 6.4 | Deploy Firebase Hosting | `firebase deploy --only hosting` | Default Firebase URL serves the site |
-| 6.5 | Add custom domain | Firebase Console → Hosting → Add custom domain | DNS records added at registrar |
-| 6.6 | Verify launch | 7 verification checks (HTTPS, deep links, headers, cache, SPA) | All checks pass |
+| #   | Task                            | Operation                                                          | Verification                                                                      |
+| --- | ------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| 6.1 | Create `public-placeholder/`    | `mkdir -p public-placeholder && touch public-placeholder/.gitkeep` | Directory exists, tracked by git                                                  |
+| 6.2 | Copy `firebase.json` from Drive | `cp _drive_files/firebase.json .`                                  | `public: "public-placeholder"`, rewrite to `mangu-publishers` with `pinTag: true` |
+| 6.3 | Initialize Firebase Hosting     | `firebase init hosting`                                            | Select existing project, `public-placeholder`, SPA yes, no GitHub auto-deploys    |
+| 6.4 | Deploy Firebase Hosting         | `firebase deploy --only hosting`                                   | Default Firebase URL serves the site                                              |
+| 6.5 | Add custom domain               | Firebase Console → Hosting → Add custom domain                     | DNS records added at registrar                                                    |
+| 6.6 | Verify launch                   | 7 verification checks (HTTPS, deep links, headers, cache, SPA)     | All checks pass                                                                   |
 
 #### 4.7.1 `public-placeholder/` Directory
 
@@ -1591,17 +1593,17 @@ Milestone 6 — and the launch — is complete when the site loads on the custom
 
 Milestone 7 implements the production hardening that makes the site maintainable after launch. The work items are independent and may be executed in any order. They fall into five categories: error tracking (Sentry), content-driven rebuilds (webhook validator), monitoring and alerting, cost controls, and code quality (Portable Text renderer + Formspree).
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 7.1 | Sentry release tracking | `npm install --save-dev @sentry/vite-plugin @sentry/react`; update `vite.config.ts`; add `SENTRY_AUTH_TOKEN` to Secret Manager | Sentry dashboard shows events tagged with SHA |
-| 7.2 | Sanity webhook validator | Deploy Cloud Run Function with HMAC verification + replay protection | Publish in Sanity triggers build within 60s; unsigned request returns 401 |
-| 7.3 | Cloud Monitoring uptime check | `gcloud monitoring uptime create mangu-publishers-healthz` | Green check on `/healthz` in Monitoring Console |
-| 7.4 | Alert policies | Create 4 policies: 5xx rate, p99 latency, memory, instance count | Policies show as active in Alerting Console |
-| 7.5 | Billing budget alerts | Cloud Console → Billing → Budgets & alerts | Notifications at 50%, 75%, 90% |
-| 7.6 | Artifact Registry cleanup | Verify policy from M4.3 | `gcloud artifacts repositories describe` shows policy |
-| 7.7 | Cloud Run tag pruning | Copy `prune-cloud-run-tags.sh`; run or schedule | Excess tags removed; most recent 50 retained |
-| 7.8 | Portable Text renderer | `npm install @portabletext/react`; create `PortableTextRenderer.tsx` | Renders Sanity rich text correctly |
-| 7.9 | Replace Netlify Forms | Sign up for Formspree; update contact form POST endpoint | Form submissions arrive at configured destination |
+| #   | Task                          | Operation                                                                                                                      | Verification                                                              |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| 7.1 | Sentry release tracking       | `npm install --save-dev @sentry/vite-plugin @sentry/react`; update `vite.config.ts`; add `SENTRY_AUTH_TOKEN` to Secret Manager | Sentry dashboard shows events tagged with SHA                             |
+| 7.2 | Sanity webhook validator      | Deploy Cloud Run Function with HMAC verification + replay protection                                                           | Publish in Sanity triggers build within 60s; unsigned request returns 401 |
+| 7.3 | Cloud Monitoring uptime check | `gcloud monitoring uptime create mangu-publishers-healthz`                                                                     | Green check on `/healthz` in Monitoring Console                           |
+| 7.4 | Alert policies                | Create 4 policies: 5xx rate, p99 latency, memory, instance count                                                               | Policies show as active in Alerting Console                               |
+| 7.5 | Billing budget alerts         | Cloud Console → Billing → Budgets & alerts                                                                                     | Notifications at 50%, 75%, 90%                                            |
+| 7.6 | Artifact Registry cleanup     | Verify policy from M4.3                                                                                                        | `gcloud artifacts repositories describe` shows policy                     |
+| 7.7 | Cloud Run tag pruning         | Copy `prune-cloud-run-tags.sh`; run or schedule                                                                                | Excess tags removed; most recent 50 retained                              |
+| 7.8 | Portable Text renderer        | `npm install @portabletext/react`; create `PortableTextRenderer.tsx`                                                           | Renders Sanity rich text correctly                                        |
+| 7.9 | Replace Netlify Forms         | Sign up for Formspree; update contact form POST endpoint                                                                       | Form submissions arrive at configured destination                         |
 
 #### 4.8.1 Sentry Release Tracking and Hidden Source Maps
 
@@ -1614,20 +1616,20 @@ npm install --save-dev @sentry/vite-plugin @sentry/react
 Update `vite.config.ts` to include the `sentryVitePlugin`:
 
 ```typescript
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
   build: { sourcemap: true },
   plugins: [
     // ... existing plugins
     sentryVitePlugin({
-      org: "your-sentry-org",
-      project: "mangu-publishers",
+      org: 'your-sentry-org',
+      project: 'mangu-publishers',
       authToken: process.env.SENTRY_AUTH_TOKEN,
       sourcemaps: {
-        assets: "./dist/**",
-        ignore: ["./node_modules/**"],
-        filesToDeleteAfterUpload: "./dist/**/*.map",
+        assets: './dist/**',
+        ignore: ['./node_modules/**'],
+        filesToDeleteAfterUpload: './dist/**/*.map',
       },
     }),
   ],
@@ -1688,12 +1690,12 @@ Verify in the Cloud Monitoring Console → Uptime checks that the check shows gr
 
 Create four alert policies in Cloud Monitoring:
 
-| Alert | Condition | Threshold | Rationale |
-|-------|-----------|-----------|-----------|
-| 5xx error rate | `metric.type=run.googleapis.com/request_count` with response class 5xx | > 5% over 5 minutes | Detects server errors affecting users |
-| p99 latency | `metric.type=run.googleapis.com/request_latencies` | > 2000ms over 10 minutes | Detects performance degradation |
-| Memory utilization | `metric.type=run.googleapis.com/container/memory/utilizations` | > 85% over 10 minutes | Prevents OOM kills |
-| Instance count | `metric.type=run.googleapis.com/container/instance_count` | >= 8 over 5 minutes | Signals traffic spike or runaway process (maxScale=10) |
+| Alert              | Condition                                                              | Threshold                | Rationale                                              |
+| ------------------ | ---------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------ |
+| 5xx error rate     | `metric.type=run.googleapis.com/request_count` with response class 5xx | > 5% over 5 minutes      | Detects server errors affecting users                  |
+| p99 latency        | `metric.type=run.googleapis.com/request_latencies`                     | > 2000ms over 10 minutes | Detects performance degradation                        |
+| Memory utilization | `metric.type=run.googleapis.com/container/memory/utilizations`         | > 85% over 10 minutes    | Prevents OOM kills                                     |
+| Instance count     | `metric.type=run.googleapis.com/container/instance_count`              | >= 8 over 5 minutes      | Signals traffic spike or runaway process (maxScale=10) |
 
 #### 4.8.5 Billing Budget Alerts
 
@@ -1765,17 +1767,17 @@ This chapter summarizes the suite for narrative continuity. Every check must be 
 
 #### 5.1.1 P0 Test Inventory (Canonical)
 
-| Test ID | Requirement validated | Evidence focus | Typical milestones |
-|---|---|---|---|
-| **P0-1** | No secret leakage (bundle, layers, runtime, logs) | `rg`/`grep`, `gcloud run describe`, logging queries | M1, M5 |
-| **P0-2** | Build before Docker; deterministic Dockerfile | `cloudbuild.yaml` ordering; inverted Dockerfile `npm` check | M3, M5 |
-| **P0-3** | Static deep-link / SPA routing | HTTPS probes on deep URLs | M6 |
-| **P0-4** | Security headers (CSP, cache immutability, `.map` 404) | `curl -sI` evidence | M3, M6 |
-| **P0-5** | Health / liveness (`/healthz`) | uptime + direct probe | M5, M6 |
-| **P0-6** | Cloud Run deployment shape | memory `512Mi`, scaling, gen2 | M5 |
-| **P0-7** | CI security gates (secret audit, CVE policy **after image push**) | build logs, scan step | M4, M5 |
-| **P0-8** | Content rebuild automation (signed webhook path) | publish → build latency (target ~60s typical; worst-case SLO in `06`) | M7a/M7b |
-| **P0-9** | Observability + cost (Sentry release, alerts **per Decision 7**, budgets) | console screenshots / API proof | M7a/M7b |
+| Test ID  | Requirement validated                                                     | Evidence focus                                                        | Typical milestones |
+| -------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------ |
+| **P0-1** | No secret leakage (bundle, layers, runtime, logs)                         | `rg`/`grep`, `gcloud run describe`, logging queries                   | M1, M5             |
+| **P0-2** | Build before Docker; deterministic Dockerfile                             | `cloudbuild.yaml` ordering; inverted Dockerfile `npm` check           | M3, M5             |
+| **P0-3** | Static deep-link / SPA routing                                            | HTTPS probes on deep URLs                                             | M6                 |
+| **P0-4** | Security headers (CSP, cache immutability, `.map` 404)                    | `curl -sI` evidence                                                   | M3, M6             |
+| **P0-5** | Health / liveness (`/healthz`)                                            | uptime + direct probe                                                 | M5, M6             |
+| **P0-6** | Cloud Run deployment shape                                                | memory `512Mi`, scaling, gen2                                         | M5                 |
+| **P0-7** | CI security gates (secret audit, CVE policy **after image push**)         | build logs, scan step                                                 | M4, M5             |
+| **P0-8** | Content rebuild automation (signed webhook path)                          | publish → build latency (target ~60s typical; worst-case SLO in `06`) | M7a/M7b            |
+| **P0-9** | Observability + cost (Sentry release, alerts **per Decision 7**, budgets) | console screenshots / API proof                                       | M7a/M7b            |
 
 Optional **`SENTRY_AUTH_TOKEN`** (source maps) is build-step scoped only — dual-secret posture is described in `03-functional-requirements.md` and Appendix A of `09-appendices.md`.
 
@@ -1998,14 +2000,14 @@ grep '"public"' firebase.json
 
 #### 5.7.1 Cloud Run Configuration Verification Table
 
-| Parameter | Specified Value | GCP Spec Path | Verification Command |
-|---|---|---|---|
-| `max-instances` | 10 | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/maxScale)"` |
-| `min-instances` | 0 | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/minScale)"` |
-| `execution-environment` | gen2 | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.run.googleapis.com/execution-environment)"` |
-| `memory` | 512Mi | `spec.template.spec.containers[0].resources.limits.memory` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].resources.limits.memory)"` |
-| `port` | 8080 | `spec.template.spec.containers[0].ports[0].containerPort` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].ports[0].containerPort)"` |
-| `allow-unauthenticated` | true | IAM binding: `allUsers` with `roles/run.invoker` | `gcloud run services get-iam-policy mangu-publishers --region=us-central1 --format="yaml(bindings)" \| grep -A 1 "role: roles/run.invoker"` |
+| Parameter               | Specified Value | GCP Spec Path                                                                    | Verification Command                                                                                                                                               |
+| ----------------------- | --------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `max-instances`         | 10              | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]`         | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/maxScale)"`         |
+| `min-instances`         | 0               | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]`         | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/minScale)"`         |
+| `execution-environment` | gen2            | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.run.googleapis.com/execution-environment)"` |
+| `memory`                | 512Mi           | `spec.template.spec.containers[0].resources.limits.memory`                       | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].resources.limits.memory)"`                    |
+| `port`                  | 8080            | `spec.template.spec.containers[0].ports[0].containerPort`                        | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].ports[0].containerPort)"`                     |
+| `allow-unauthenticated` | true            | IAM binding: `allUsers` with `roles/run.invoker`                                 | `gcloud run services get-iam-policy mangu-publishers --region=us-central1 --format="yaml(bindings)" \| grep -A 1 "role: roles/run.invoker"`                        |
 
 **Consolidated verification:**
 
@@ -2046,13 +2048,13 @@ curl -sI https://www.yourdomain.com/ | grep -iE \
 
 **Expected:** All five headers present:
 
-| Header | Expected Value |
-|---|---|
-| `X-Frame-Options` | `DENY` or `SAMEORIGIN` |
-| `X-Content-Type-Options` | `nosniff` |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Permissions-Policy` | Restricted defaults (camera=(), microphone=(), geolocation=()) |
-| `Content-Security-Policy` | All directives with no `api.sanity.io` in `connect-src` |
+| Header                    | Expected Value                                                 |
+| ------------------------- | -------------------------------------------------------------- |
+| `X-Frame-Options`         | `DENY` or `SAMEORIGIN`                                         |
+| `X-Content-Type-Options`  | `nosniff`                                                      |
+| `Referrer-Policy`         | `strict-origin-when-cross-origin`                              |
+| `Permissions-Policy`      | Restricted defaults (camera=(), microphone=(), geolocation=()) |
+| `Content-Security-Policy` | All directives with no `api.sanity.io` in `connect-src`        |
 
 #### 5.8.2 Test C: .map URLs Return 404; Test D: Deep Links Return SPA HTML
 
@@ -2193,24 +2195,24 @@ The pipeline consists of 16 discrete steps defined in `cloudbuild.yaml` (Section
 
 **Table 6-1: Cloud Build Step Verification Checklist**
 
-| Step | ID | Expected Output Pattern | Failure Indicator |
-|------|-----|------------------------|-------------------|
-| 1 | `restore-npm-cache` | `✓ npm cache restored` or `⚠ No npm cache found — cold install` | `gsutil` permission denied or GCS path not found |
-| 2 | `install` | `added N packages` without `npm ERR!` | `npm ERR!` exit code 1 |
-| 3 | `production-audit` | Audit results displayed, `✓ npm audit complete` | Blocking error (step is non-blocking by design) |
-| 4 | `content-snapshot` | `✓ Content snapshot generated` with book/author counts | Sanity API error, auth failure, or empty dataset |
-| 5 | `generate-routes` | `✓ Routes JSON generated` | Missing `.cache/routes.json` output |
-| 6 | `vite-build` | Vite build completes, asset manifest output | Build error, out of memory, or missing assets |
-| 7 | `prerender` | `✓ Prerender complete` with page count | Playwright timeout or prerender crash |
-| 8 | `sitemap` | `sitemap.xml` generated with expected entry count | Missing sitemap file or route mismatch |
-| 9 | `audit-secrets` | Exit code 0, no leaked secret patterns found | `audit-secrets` non-zero exit (secret leakage detected) |
-| 10 | `smoke-test` | `Smoke check: N passed, 0 failed` | Any failed smoke test (non-zero failure count) |
-| 11 | `docker-build` | Docker build output, final image digest | `COPY failed` (missing `dist/`) or build error |
-| 12 | `docker-push` | `digest: sha256:…` for both `SHORT_SHA` and `latest` tags | Push permission denied or network timeout |
-| 13 | `enforce-vulnerability-policy` | `✓ No HIGH/CRITICAL vulnerabilities — deploy approved` | `DEPLOY BLOCKED: HIGH/CRITICAL vulnerability detected` |
-| 14 | `deploy-run` | `Service [mangu-publishers] revision [mangu-publishers-XXXXX] has been deployed` | Cloud Run deployment error or quota exceeded |
-| 15 | `prune-tags` | `✓ Pruned N old tags` or `✓ No tags to prune` | Cloud Run API error or permission denied |
-| 16 | `save-npm-cache` | Cache saved to `gs://mangu-publishers-cloudbuild-cache/npm-cache.tgz` | GCS write failure or bucket not found |
+| Step | ID                             | Expected Output Pattern                                                          | Failure Indicator                                       |
+| ---- | ------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 1    | `restore-npm-cache`            | `✓ npm cache restored` or `⚠ No npm cache found — cold install`                  | `gsutil` permission denied or GCS path not found        |
+| 2    | `install`                      | `added N packages` without `npm ERR!`                                            | `npm ERR!` exit code 1                                  |
+| 3    | `production-audit`             | Audit results displayed, `✓ npm audit complete`                                  | Blocking error (step is non-blocking by design)         |
+| 4    | `content-snapshot`             | `✓ Content snapshot generated` with book/author counts                           | Sanity API error, auth failure, or empty dataset        |
+| 5    | `generate-routes`              | `✓ Routes JSON generated`                                                        | Missing `.cache/routes.json` output                     |
+| 6    | `vite-build`                   | Vite build completes, asset manifest output                                      | Build error, out of memory, or missing assets           |
+| 7    | `prerender`                    | `✓ Prerender complete` with page count                                           | Playwright timeout or prerender crash                   |
+| 8    | `sitemap`                      | `sitemap.xml` generated with expected entry count                                | Missing sitemap file or route mismatch                  |
+| 9    | `audit-secrets`                | Exit code 0, no leaked secret patterns found                                     | `audit-secrets` non-zero exit (secret leakage detected) |
+| 10   | `smoke-test`                   | `Smoke check: N passed, 0 failed`                                                | Any failed smoke test (non-zero failure count)          |
+| 11   | `docker-build`                 | Docker build output, final image digest                                          | `COPY failed` (missing `dist/`) or build error          |
+| 12   | `docker-push`                  | `digest: sha256:…` for both `SHORT_SHA` and `latest` tags                        | Push permission denied or network timeout               |
+| 13   | `enforce-vulnerability-policy` | `✓ No HIGH/CRITICAL vulnerabilities — deploy approved`                           | `DEPLOY BLOCKED: HIGH/CRITICAL vulnerability detected`  |
+| 14   | `deploy-run`                   | `Service [mangu-publishers] revision [mangu-publishers-XXXXX] has been deployed` | Cloud Run deployment error or quota exceeded            |
+| 15   | `prune-tags`                   | `✓ Pruned N old tags` or `✓ No tags to prune`                                    | Cloud Run API error or permission denied                |
+| 16   | `save-npm-cache`               | Cache saved to `gs://mangu-publishers-cloudbuild-cache/npm-cache.tgz`            | GCS write failure or bucket not found                   |
 
 Steps 9 and 13 are **gate steps** — failures halt the pipeline. A failure at step 9 indicates the `SANITY_API_READ_TOKEN` or another secret value was detected in the compiled `dist/` output, which constitutes a P0 security incident per Section 5.3.1. A failure at step 13 means the container image contains HIGH or CRITICAL CVEs that must be remediated before deployment proceeds. All other step failures should be treated as blocking errors that prevent continuation of the pipeline.
 
@@ -2251,19 +2253,19 @@ Table 6-2 specifies every configuration parameter that must be present in the de
 
 **Table 6-2: Cloud Run Expected Configuration Parameters**
 
-| Parameter | Expected Value | Verification Path | Purpose |
-|-----------|---------------|-------------------|---------|
-| Container image | `us-central1-docker.pkg.dev/$PROJECT_ID/web-images/mangu-publishers:$SHORT_SHA` | `spec.template.spec.containers[0].image` | Immutable SHA-tagged image reference |
-| Container port | `8080` | `spec.template.spec.containers[0].ports[0].containerPort` | nginx listens on 8080 |
-| Memory limit | `512Mi` | `spec.template.spec.containers[0].resources.limits.memory` | gen2 execution environment requirement |
-| CPU limit | `1` | `spec.template.spec.containers[0].resources.limits.cpu` | Single vCPU per instance |
-| Concurrency | `80` | `spec.template.spec.containerConcurrency` | Max 80 concurrent requests per instance |
-| Min instances | `0` | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]` | Scale to zero when idle |
-| Max instances | `10` | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]` | Upper bound for cost control |
-| Execution environment | `gen2` | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | Second-gen Cloud Run runtime |
-| CPU throttling | `true` | `spec.template.metadata.annotations["run.googleapis.com/cpu-throttling"]` | Throttle CPU outside request handling |
-| Default URL | disabled | `--no-default-url` flag | Traffic routes through Firebase Hosting only |
-| Labels | `env=prod,app=mangu-publishers` | `spec.template.metadata.labels` | Resource identification and filtering |
+| Parameter             | Expected Value                                                                  | Verification Path                                                                | Purpose                                      |
+| --------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------- |
+| Container image       | `us-central1-docker.pkg.dev/$PROJECT_ID/web-images/mangu-publishers:$SHORT_SHA` | `spec.template.spec.containers[0].image`                                         | Immutable SHA-tagged image reference         |
+| Container port        | `8080`                                                                          | `spec.template.spec.containers[0].ports[0].containerPort`                        | nginx listens on 8080                        |
+| Memory limit          | `512Mi`                                                                         | `spec.template.spec.containers[0].resources.limits.memory`                       | gen2 execution environment requirement       |
+| CPU limit             | `1`                                                                             | `spec.template.spec.containers[0].resources.limits.cpu`                          | Single vCPU per instance                     |
+| Concurrency           | `80`                                                                            | `spec.template.spec.containerConcurrency`                                        | Max 80 concurrent requests per instance      |
+| Min instances         | `0`                                                                             | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]`         | Scale to zero when idle                      |
+| Max instances         | `10`                                                                            | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]`         | Upper bound for cost control                 |
+| Execution environment | `gen2`                                                                          | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | Second-gen Cloud Run runtime                 |
+| CPU throttling        | `true`                                                                          | `spec.template.metadata.annotations["run.googleapis.com/cpu-throttling"]`        | Throttle CPU outside request handling        |
+| Default URL           | disabled                                                                        | `--no-default-url` flag                                                          | Traffic routes through Firebase Hosting only |
+| Labels                | `env=prod,app=mangu-publishers`                                                 | `spec.template.metadata.labels`                                                  | Resource identification and filtering        |
 
 Any deviation from the values in Table 6-2 indicates a deployment configuration drift. The most common causes are manual service edits through the GCP Console, prior deployments with different flags, or substitution variable overrides in the Cloud Build trigger.
 
@@ -2380,12 +2382,12 @@ Four distinct methods exist for triggering a rebuild when no code changes are re
 
 **Table 6-3: Manual Rebuild Method Comparison**
 
-| Method | Prerequisites | Speed | Automation Readiness | Audit Trail | Best For | Risk Level |
-|--------|--------------|-------|---------------------|-------------|----------|------------|
-| `gcloud builds submit` | Local gcloud auth, `cloudbuild.yaml` | ~8–12 min | Manual only | Cloud Build history | Ad-hoc rebuilds, local testing | Low |
-| `gcloud builds triggers run` | Trigger `mangu-publishers-main` exists | ~8–12 min | Scriptable via API | Cloud Build history + trigger attribution | Operator-initiated content rebuilds | Low |
-| Empty commit + push | Write access to `main`, Git CLI | ~8–12 min | Fully automated via CI | Git commit + Cloud Build history | Routine content-update rebuilds | Low |
-| Sanity webhook (M7) | Webhook validator deployed, HMAC secret | ~3–5 min | Fully automated | Cloud Build history + webhook log | Production content publishing | Low |
+| Method                       | Prerequisites                           | Speed     | Automation Readiness   | Audit Trail                               | Best For                            | Risk Level |
+| ---------------------------- | --------------------------------------- | --------- | ---------------------- | ----------------------------------------- | ----------------------------------- | ---------- |
+| `gcloud builds submit`       | Local gcloud auth, `cloudbuild.yaml`    | ~8–12 min | Manual only            | Cloud Build history                       | Ad-hoc rebuilds, local testing      | Low        |
+| `gcloud builds triggers run` | Trigger `mangu-publishers-main` exists  | ~8–12 min | Scriptable via API     | Cloud Build history + trigger attribution | Operator-initiated content rebuilds | Low        |
+| Empty commit + push          | Write access to `main`, Git CLI         | ~8–12 min | Fully automated via CI | Git commit + Cloud Build history          | Routine content-update rebuilds     | Low        |
+| Sanity webhook (M7)          | Webhook validator deployed, HMAC secret | ~3–5 min  | Fully automated        | Cloud Build history + webhook log         | Production content publishing       | Low        |
 
 The Sanity webhook method (Section 6.4.5) is the target state after Milestone 7 implementation. Until then, the empty commit method (Section 6.4.4) is the recommended approach for routine rebuilds because it preserves a complete audit trail in both Git and Cloud Build.
 
@@ -2497,13 +2499,13 @@ Table 6-4 defines the phased timeline for completing token rotation safely.
 
 **Table 6-4: Token Rotation Timeline**
 
-| Phase | Time After Rotation | Action | Command / Location |
-|-------|---------------------|--------|-------------------|
-| T+0 | Immediate | Generate new token, add to Secret Manager as new version | `gcloud secrets versions add sanity-api-read-token` |
-| T+0 | Immediate | Verify `versions/latest` resolves to new token | `gcloud secrets versions access latest --secret=sanity-api-read-token` |
-| T+0 | Immediate | Trigger test build and verify content snapshot succeeds | `gcloud builds triggers run mangu-publishers-main --branch=main` |
-| T+24h | 24 hours | Disable old Secret Manager version (do NOT delete) | `OLD_VERSION=$(gcloud secrets versions list sanity-api-read-token --format="table(version, state)" \| grep ENABLED \| tail -1 \| awk '{print $1}')` then `gcloud secrets versions disable $OLD_VERSION --secret=sanity-api-read-token` |
-| T+7d | 7 days | Delete old Sanity token from Sanity Studio console | `sanity.io/manage` → API → Tokens → Delete old token |
+| Phase | Time After Rotation | Action                                                   | Command / Location                                                                                                                                                                                                                     |
+| ----- | ------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T+0   | Immediate           | Generate new token, add to Secret Manager as new version | `gcloud secrets versions add sanity-api-read-token`                                                                                                                                                                                    |
+| T+0   | Immediate           | Verify `versions/latest` resolves to new token           | `gcloud secrets versions access latest --secret=sanity-api-read-token`                                                                                                                                                                 |
+| T+0   | Immediate           | Trigger test build and verify content snapshot succeeds  | `gcloud builds triggers run mangu-publishers-main --branch=main`                                                                                                                                                                       |
+| T+24h | 24 hours            | Disable old Secret Manager version (do NOT delete)       | `OLD_VERSION=$(gcloud secrets versions list sanity-api-read-token --format="table(version, state)" \| grep ENABLED \| tail -1 \| awk '{print $1}')` then `gcloud secrets versions disable $OLD_VERSION --secret=sanity-api-read-token` |
+| T+7d  | 7 days              | Delete old Sanity token from Sanity Studio console       | `sanity.io/manage` → API → Tokens → Delete old token                                                                                                                                                                                   |
 
 The 24-hour window between enabling the new version and disabling the old version ensures that any in-flight builds or cached references have time to drain. The 7-day window before deleting the Sanity token provides a recovery path if the new token is found to be defective after extended use. After 7 days, only one `ENABLED` Secret Manager version should remain.
 
@@ -2580,7 +2582,7 @@ Firebase Hosting's `pinTag: true` configuration creates a new Cloud Run traffic 
   name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
   entrypoint: bash
   args:
-    - "-c"
+    - '-c'
     - |
       set -euo pipefail
       bash scripts/ops/prune-cloud-run-tags.sh || true
@@ -2640,18 +2642,18 @@ The risk register contains eight risks spanning security, infrastructure, deploy
 
 #### 7.1.1 Risk Matrix
 
-| ID | Description | Probability | Impact | Mitigation | Owner |
-|---|---|---|---|---|---|
-| R1 | Secret leakage via `VITE_` prefix inlining token into browser bundle | Medium | Critical | `audit:secrets` script, Zod validation, grep checks across `src/` | Security Lead |
-| R2 | Cloud Run deployment failure due to 256Mi memory floor on gen2 | High | High | ADR-003 correction to `--memory=512Mi`; validate in cloudbuild.yaml | Platform Engineer |
-| R3 | Developer Connect OAuth interruption blocking GitHub-triggered builds | Medium | High | Verify GitHub owner rights before starting; allow retry with delete/recreate | Platform Engineer |
-| R4 | Immutable tag conflict on `:latest` push blocking Artifact Registry write | Medium | Medium | Remove `--immutable-tags` from repository or push SHA-only images | Platform Engineer |
-| R5 | Vulnerability scan (HIGH/CRITICAL CVE) blocking deployment pipeline | Medium | Medium | Update base image to latest patch; acceptable-risk override with documented exception | Security Lead |
-| R6 | Playwright timeout during prerender in Cloud Build environment | Medium | Medium | Increase step timeout to 600s; upgrade Playwright image to `v1.59.1-noble` | Build Engineer |
-| R7 | Webhook content update not reflected on site after Sanity publish | Medium | Medium | Clear npm cache; verify token dataset access; check webhook payload | Build Engineer |
-| R8 | `.env.local` committed to git exposing SANITY_API_READ_TOKEN | Low | Critical | `git filter-repo` history rewrite; rotate token; force push; update `.gitignore` | Security Lead |
+| ID  | Description                                                               | Probability | Impact   | Mitigation                                                                            | Owner             |
+| --- | ------------------------------------------------------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------- | ----------------- |
+| R1  | Secret leakage via `VITE_` prefix inlining token into browser bundle      | Medium      | Critical | `audit:secrets` script, Zod validation, grep checks across `src/`                     | Security Lead     |
+| R2  | Cloud Run deployment failure due to 256Mi memory floor on gen2            | High        | High     | ADR-003 correction to `--memory=512Mi`; validate in cloudbuild.yaml                   | Platform Engineer |
+| R3  | Developer Connect OAuth interruption blocking GitHub-triggered builds     | Medium      | High     | Verify GitHub owner rights before starting; allow retry with delete/recreate          | Platform Engineer |
+| R4  | Immutable tag conflict on `:latest` push blocking Artifact Registry write | Medium      | Medium   | Remove `--immutable-tags` from repository or push SHA-only images                     | Platform Engineer |
+| R5  | Vulnerability scan (HIGH/CRITICAL CVE) blocking deployment pipeline       | Medium      | Medium   | Update base image to latest patch; acceptable-risk override with documented exception | Security Lead     |
+| R6  | Playwright timeout during prerender in Cloud Build environment            | Medium      | Medium   | Increase step timeout to 600s; upgrade Playwright image to `v1.59.1-noble`            | Build Engineer    |
+| R7  | Webhook content update not reflected on site after Sanity publish         | Medium      | Medium   | Clear npm cache; verify token dataset access; check webhook payload                   | Build Engineer    |
+| R8  | `.env.local` committed to git exposing SANITY_API_READ_TOKEN              | Low         | Critical | `git filter-repo` history rewrite; rotate token; force push; update `.gitignore`      | Security Lead     |
 
-#### 7.1.2 R1 — Secret Leakage via VITE_ Prefix
+#### 7.1.2 R1 — Secret Leakage via VITE\_ Prefix
 
 A developer reintroduces `VITE_SANITY_API_READ_TOKEN` or fails to complete the rename to `SANITY_API_READ_TOKEN`, causing Vite to inline the secret into the client-side JavaScript bundle. Vite exposes all `VITE_`-prefixed variables to browser code via `import.meta.env` — any visitor could extract the token from `dist/assets/*.js` and gain read access to all Sanity content.
 
@@ -2872,15 +2874,15 @@ The seven gates form a structured checklist: PLAN → BUILD → REVIEW → TEST 
 
 #### 7.4.1 Quality Gates Summary
 
-| Gate | Name | Question | Description | Skip Condition |
-|---|---|---|---|---|
-| 1 | PLAN | Do you understand the task? | Name milestone, identify source doc, define done criteria, list dependencies, estimate effort | One-line command from a doc already read |
-| 2 | BUILD | Can you undo the work? | Work on a branch, commit BEFORE state, follow docs literally, scope changes, save GCP output | Comment-only or doc-only change |
-| 3 | REVIEW | Have you read what you wrote? | Read `git diff`, check for accidental files, debug code, secrets, commented-out code | gcloud command not changing repo files |
-| 4 | TEST | Does it work? | Run locally, verify exit criteria, run smoke check and secrets audit; infra: `gcloud describe` | Never skip |
-| 5 | STAGE | Is the change committed cleanly? | Commit message follows format, single logical change, branch up to date | Infra-only work not touching repo |
-| 6 | SHIP | Ready to push to `main`? | Previous milestone done, branch rebased, present at computer, build queue checked | Infra-only task not pushing code |
-| 7 | VERIFY | Working in production? | Cloud Build green, service healthy, behavior observable, checklist updated | Task did not deploy anything |
+| Gate | Name   | Question                         | Description                                                                                    | Skip Condition                           |
+| ---- | ------ | -------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 1    | PLAN   | Do you understand the task?      | Name milestone, identify source doc, define done criteria, list dependencies, estimate effort  | One-line command from a doc already read |
+| 2    | BUILD  | Can you undo the work?           | Work on a branch, commit BEFORE state, follow docs literally, scope changes, save GCP output   | Comment-only or doc-only change          |
+| 3    | REVIEW | Have you read what you wrote?    | Read `git diff`, check for accidental files, debug code, secrets, commented-out code           | gcloud command not changing repo files   |
+| 4    | TEST   | Does it work?                    | Run locally, verify exit criteria, run smoke check and secrets audit; infra: `gcloud describe` | Never skip                               |
+| 5    | STAGE  | Is the change committed cleanly? | Commit message follows format, single logical change, branch up to date                        | Infra-only work not touching repo        |
+| 6    | SHIP   | Ready to push to `main`?         | Previous milestone done, branch rebased, present at computer, build queue checked              | Infra-only task not pushing code         |
+| 7    | VERIFY | Working in production?           | Cloud Build green, service healthy, behavior observable, checklist updated                     | Task did not deploy anything             |
 
 #### 7.4.2 Gate 1 — PLAN
 
@@ -2912,18 +2914,18 @@ Requirements: Cloud Build status is `SUCCESS`; `curl -s https://www.yourdomain.c
 
 #### 7.4.9 Anti-Patterns Reference
 
-| Anti-Pattern | Gate That Catches It | Corrective Action |
-|---|---|---|
-| "I'll just push and see if it builds" | TEST | Run the local build first. Cloud Build is slow and noisy. |
-| "I'll fix the lint errors later" | REVIEW | Fix them now. Lint errors compound and obscure real issues. |
-| "Let me just edit `main` directly" | BUILD | Create a feature branch. Direct `main` commits are not reversible. |
-| "I think this is what the doc said" | PLAN | Open the source document. Read the exact section. Copy the command verbatim. |
-| "I'll skip the smoke test, it's only a small change" | TEST | The smoke test takes approximately 3 seconds. Run it. |
-| "I'll do M3 in parallel with M2 — they look unrelated" | PLAN | M3 requires `dist/` from M2. These milestones are sequential. |
-| Committing a Sanity token, even briefly | REVIEW | Rotate the token immediately. `git push --force` does not remove it from history if anyone fetched. |
-| "It's just a tiny config change, I'll skip the commit format" | STAGE | The format enables future debugging at 11pm. Use it for every commit. |
-| Running `npm run build` without `audit:secrets` after | TEST | The audit is the final backstop against secret leakage. Always run it. |
-| Not checking `gcloud builds list` before pushing M5+ | SHIP | A failing build in the queue may be unrelated. Verify first. |
+| Anti-Pattern                                                  | Gate That Catches It | Corrective Action                                                                                   |
+| ------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------- |
+| "I'll just push and see if it builds"                         | TEST                 | Run the local build first. Cloud Build is slow and noisy.                                           |
+| "I'll fix the lint errors later"                              | REVIEW               | Fix them now. Lint errors compound and obscure real issues.                                         |
+| "Let me just edit `main` directly"                            | BUILD                | Create a feature branch. Direct `main` commits are not reversible.                                  |
+| "I think this is what the doc said"                           | PLAN                 | Open the source document. Read the exact section. Copy the command verbatim.                        |
+| "I'll skip the smoke test, it's only a small change"          | TEST                 | The smoke test takes approximately 3 seconds. Run it.                                               |
+| "I'll do M3 in parallel with M2 — they look unrelated"        | PLAN                 | M3 requires `dist/` from M2. These milestones are sequential.                                       |
+| Committing a Sanity token, even briefly                       | REVIEW               | Rotate the token immediately. `git push --force` does not remove it from history if anyone fetched. |
+| "It's just a tiny config change, I'll skip the commit format" | STAGE                | The format enables future debugging at 11pm. Use it for every commit.                               |
+| Running `npm run build` without `audit:secrets` after         | TEST                 | The audit is the final backstop against secret leakage. Always run it.                              |
+| Not checking `gcloud builds list` before pushing M5+          | SHIP                 | A failing build in the queue may be unrelated. Verify first.                                        |
 
 These anti-patterns represent the majority of preventable failures observed during Phase 2. Each gate corresponds to a specific failure mode with measurable recovery cost. Catching a secret leak at REVIEW costs minutes; catching it in production costs hours of rotation, history rewriting, and incident communication. Catching a build failure at TEST costs seconds; catching it in Cloud Build costs 5–10 minutes of pipeline execution plus log analysis. The gates exist to make the cheapest detection stage the most likely one.
 
@@ -2939,16 +2941,16 @@ The following appendices consolidate reference material that is scattered across
 
 The Mangu Publishers project uses eight environment variables, divided into two security classes: **public variables** (prefixed with `VITE_` and inlined into the client bundle) and **secret/server-only variables** (not prefixed and never exposed to the browser). The `VITE_` prefix rule is enforced by the `audit:secrets` script, which scans `dist/assets/` for secret names and fails the build if any are found.
 
-| Variable | Vite Prefix? | Source | Used By | Required? | Example Value |
-|----------|-------------|--------|---------|-----------|---------------|
-| `VITE_SANITY_PROJECT_ID` | Yes | `.env.local` / Cloud Build env | Client JS, `sanity-node-client.ts` | Required | `abc123de` |
-| `VITE_SANITY_DATASET` | Yes | `.env.local` / Cloud Build env | Client JS, `sanity-node-client.ts` | Required | `production` |
-| `VITE_SANITY_API_VERSION` | Yes | `.env.local` / Cloud Build env | Client JS, `sanity-node-client.ts` | Required | `2024-01-01` |
-| `VITE_SITE_URL` | Yes | `.env.local` / Cloud Build env | Sitemap generator, SEO meta tags | Required | `https://www.mangupublishers.com` |
-| `VITE_APP_VERSION` | Yes | Cloud Build (`${SHORT_SHA}`) | Client JS (footer, Sentry release) | Required | `a1b2c3d` |
-| `SANITY_API_READ_TOKEN` | **No** | Secret Manager only | `build-content-snapshot.ts` (build-time only) | Required | `skProductionToken...` |
-| `SENTRY_AUTH_TOKEN` | No | Secret Manager / `.env.local` | Sentry Vite plugin (source maps) | Optional | `sntrys_...` |
-| `PORT` | No | Cloud Run (auto-injected) | nginx runtime (`listen ${PORT}`) | Auto-set | `8080` |
+| Variable                  | Vite Prefix? | Source                         | Used By                                       | Required? | Example Value                     |
+| ------------------------- | ------------ | ------------------------------ | --------------------------------------------- | --------- | --------------------------------- |
+| `VITE_SANITY_PROJECT_ID`  | Yes          | `.env.local` / Cloud Build env | Client JS, `sanity-node-client.ts`            | Required  | `abc123de`                        |
+| `VITE_SANITY_DATASET`     | Yes          | `.env.local` / Cloud Build env | Client JS, `sanity-node-client.ts`            | Required  | `production`                      |
+| `VITE_SANITY_API_VERSION` | Yes          | `.env.local` / Cloud Build env | Client JS, `sanity-node-client.ts`            | Required  | `2024-01-01`                      |
+| `VITE_SITE_URL`           | Yes          | `.env.local` / Cloud Build env | Sitemap generator, SEO meta tags              | Required  | `https://www.mangupublishers.com` |
+| `VITE_APP_VERSION`        | Yes          | Cloud Build (`${SHORT_SHA}`)   | Client JS (footer, Sentry release)            | Required  | `a1b2c3d`                         |
+| `SANITY_API_READ_TOKEN`   | **No**       | Secret Manager only            | `build-content-snapshot.ts` (build-time only) | Required  | `skProductionToken...`            |
+| `SENTRY_AUTH_TOKEN`       | No           | Secret Manager / `.env.local`  | Sentry Vite plugin (source maps)              | Optional  | `sntrys_...`                      |
+| `PORT`                    | No           | Cloud Run (auto-injected)      | nginx runtime (`listen ${PORT}`)              | Auto-set  | `8080`                            |
 
 **Key security properties.** The `SANITY_API_READ_TOKEN` variable is the critical security boundary in this project. It is injected **only** into Cloud Build Step 4 (`content-snapshot`) via `secretEnv`, and is not available to any other step, the Docker build context, or the Cloud Run runtime. The `PORT` variable is auto-injected by Cloud Run and must never be manually set. The `VITE_APP_VERSION` variable is automatically set to the 7-character git SHA by Cloud Build during Step 6 (`vite-build`) and is used for cache-busting and Sentry release tracking.
 
@@ -2960,11 +2962,11 @@ The Mangu Publishers project uses eight environment variables, divided into two 
 
 The Sanity CMS defines three document types: `book`, `author`, and `category`. The `book` type is the primary content entity, with `author` and `category` serving as reference-linked supporting types. All three types are registered in `sanity.config.ts` and are queried at build time by `build-content-snapshot.ts`.
 
-| Document Type | Purpose | Key Fields | Relationships |
-|---------------|---------|-----------|---------------|
-| `book` | Published books in the catalog | `title`, `slug`, `author` (ref), `description`, `coverImage`, `publishedAt`, `featured`, `body`, `isbn`, `pageCount`, `language` | References `author` (required) and `category` (optional) |
-| `author` | Book authors | `name`, `slug`, `bio`, `photo`, `email`, `website`, `social` | Referenced by `book.author`; no outgoing references |
-| `category` | Book categories/genres | `name`, `slug`, `description`, `color` | Referenced by `book.category` (optional) |
+| Document Type | Purpose                        | Key Fields                                                                                                                       | Relationships                                            |
+| ------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `book`        | Published books in the catalog | `title`, `slug`, `author` (ref), `description`, `coverImage`, `publishedAt`, `featured`, `body`, `isbn`, `pageCount`, `language` | References `author` (required) and `category` (optional) |
+| `author`      | Book authors                   | `name`, `slug`, `bio`, `photo`, `email`, `website`, `social`                                                                     | Referenced by `book.author`; no outgoing references      |
+| `category`    | Book categories/genres         | `name`, `slug`, `description`, `color`                                                                                           | Referenced by `book.category` (optional)                 |
 
 The `book` type contains 12 fields, of which 5 are required (`title`, `slug`, `author`, `description`, `coverImage`, `publishedAt`). The `body` field stores content in **Portable Text** format (Sanity's structured JSON block content). The `coverImage` field includes hotspot data for responsive cropping and a low-quality image placeholder (LQIP) for blur-up loading. The `isbn` field is validated with a regex matching both ISBN-10 and ISBN-13 formats. The `language` field defaults to `"en"` and supports English, Swahili, and French via a select list.
 
@@ -2994,24 +2996,24 @@ The build pipeline executes five GROQ (Graph-Relational Object Queries) at build
 
 The `cloudbuild.yaml` pipeline defines 16 sequential steps. Steps 1–10 constitute the **build phase** (produce and validate `dist/`), Steps 11–13 constitute the **containerization phase** (build, push, and scan the image), and Steps 14–16 constitute the **deployment phase** (deploy to Cloud Run, prune tags, save cache).
 
-| Step ID | Name | Docker Image | Entrypoint | Purpose | Critical Notes |
-|---------|------|-------------|------------|---------|----------------|
-| 1 | `restore-npm-cache` | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash` | Restore cached `node_modules` from GCS bucket | Non-blocking: proceeds with cold install if cache miss |
-| 2 | `install` | `node:20` | `npm` | Install dependencies with `npm ci` | Uses `--no-audit --no-fund` for speed; writes to `/workspace/.npm` |
-| 3 | `production-audit` | `node:20` | `bash` | Audit production deps for HIGH+ CVEs | Non-blocking (`\|\| true`); informational only |
-| 4 | `content-snapshot` | `node:20` | `bash` | Run `build:content` to fetch Sanity data | **Only step with `secretEnv`**. Token scoped here exclusively. Fails on missing `SANITY_API_READ_TOKEN` |
-| 5 | `generate-routes` | `node:20` | `bash` | Run `build:routes` to produce `.cache/routes.json` | Outputs route manifest used by prerender step |
-| 6 | `vite-build` | `node:20` | `npm` | Run `build:vite` (Vite production build) | Injects `VITE_APP_VERSION=${SHORT_SHA}`. Produces `dist/` directory |
-| 7 | `prerender` | `mcr.microsoft.com/playwright:v1.43.0-jammy` | `bash` | Run `build:prerender` to generate static HTML | Pinned Playwright image for reproducibility. v11 fix applied |
-| 8 | `sitemap` | `node:20` | `npm` | Run `build:sitemap` to generate `sitemap.xml` | Consumes routes from `.cache/routes.json` |
-| 9 | `audit-secrets` | `node:20` | `npm` | Run `audit:secrets` to scan for leaked tokens | **P0 enforcement**. Scans `dist/assets/` for secret string patterns. Build fails if found |
-| 10 | `smoke-test` | `node:20` | `npm` | Run `smoke:check-routes` for route integrity | v12 addition. Validates prerendered HTML before containerizing |
-| 11 | `docker-build` | `gcr.io/cloud-builders/docker` | `docker` | Build container image with nginx | Receives pre-built `dist/` only. Contains **zero** build logic or secrets |
-| 12 | `docker-push` | `gcr.io/cloud-builders/docker` | `docker` | Push SHA-tagged and `latest` tags to Artifact Registry | Uses `--all-tags` to push both tags simultaneously |
-| 13 | `enforce-vulnerability-policy` | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash` | Scan image for HIGH/CRITICAL CVEs | **Deployment gate**. Blocks deploy if HIGH or CRITICAL findings exist. Requires `ondemandscanning.googleapis.com` API |
-| 14 | `deploy-run` | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `gcloud` | Deploy container to Cloud Run | Uses SHA-tagged image. Config: `--memory=512Mi`, `--cpu=1`, `--concurrency=80`, `--execution-environment=gen2` |
-| 15 | `prune-tags` | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash` | Remove old Cloud Run tags | Executes `scripts/ops/prune-cloud-run-tags.sh`. Non-blocking (`\|\| true`) |
-| 16 | `save-npm-cache` | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash` | Save `node_modules` cache to GCS | Uploads `npm-cache.tgz` to Cloud Storage for next build |
+| Step ID | Name                           | Docker Image                                    | Entrypoint | Purpose                                                | Critical Notes                                                                                                        |
+| ------- | ------------------------------ | ----------------------------------------------- | ---------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| 1       | `restore-npm-cache`            | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash`     | Restore cached `node_modules` from GCS bucket          | Non-blocking: proceeds with cold install if cache miss                                                                |
+| 2       | `install`                      | `node:20`                                       | `npm`      | Install dependencies with `npm ci`                     | Uses `--no-audit --no-fund` for speed; writes to `/workspace/.npm`                                                    |
+| 3       | `production-audit`             | `node:20`                                       | `bash`     | Audit production deps for HIGH+ CVEs                   | Non-blocking (`\|\| true`); informational only                                                                        |
+| 4       | `content-snapshot`             | `node:20`                                       | `bash`     | Run `build:content` to fetch Sanity data               | **Only step with `secretEnv`**. Token scoped here exclusively. Fails on missing `SANITY_API_READ_TOKEN`               |
+| 5       | `generate-routes`              | `node:20`                                       | `bash`     | Run `build:routes` to produce `.cache/routes.json`     | Outputs route manifest used by prerender step                                                                         |
+| 6       | `vite-build`                   | `node:20`                                       | `npm`      | Run `build:vite` (Vite production build)               | Injects `VITE_APP_VERSION=${SHORT_SHA}`. Produces `dist/` directory                                                   |
+| 7       | `prerender`                    | `mcr.microsoft.com/playwright:v1.43.0-jammy`    | `bash`     | Run `build:prerender` to generate static HTML          | Pinned Playwright image for reproducibility. v11 fix applied                                                          |
+| 8       | `sitemap`                      | `node:20`                                       | `npm`      | Run `build:sitemap` to generate `sitemap.xml`          | Consumes routes from `.cache/routes.json`                                                                             |
+| 9       | `audit-secrets`                | `node:20`                                       | `npm`      | Run `audit:secrets` to scan for leaked tokens          | **P0 enforcement**. Scans `dist/assets/` for secret string patterns. Build fails if found                             |
+| 10      | `smoke-test`                   | `node:20`                                       | `npm`      | Run `smoke:check-routes` for route integrity           | v12 addition. Validates prerendered HTML before containerizing                                                        |
+| 11      | `docker-build`                 | `gcr.io/cloud-builders/docker`                  | `docker`   | Build container image with nginx                       | Receives pre-built `dist/` only. Contains **zero** build logic or secrets                                             |
+| 12      | `docker-push`                  | `gcr.io/cloud-builders/docker`                  | `docker`   | Push SHA-tagged and `latest` tags to Artifact Registry | Uses `--all-tags` to push both tags simultaneously                                                                    |
+| 13      | `enforce-vulnerability-policy` | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash`     | Scan image for HIGH/CRITICAL CVEs                      | **Deployment gate**. Blocks deploy if HIGH or CRITICAL findings exist. Requires `ondemandscanning.googleapis.com` API |
+| 14      | `deploy-run`                   | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `gcloud`   | Deploy container to Cloud Run                          | Uses SHA-tagged image. Config: `--memory=512Mi`, `--cpu=1`, `--concurrency=80`, `--execution-environment=gen2`        |
+| 15      | `prune-tags`                   | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash`     | Remove old Cloud Run tags                              | Executes `scripts/ops/prune-cloud-run-tags.sh`. Non-blocking (`\|\| true`)                                            |
+| 16      | `save-npm-cache`               | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` | `bash`     | Save `node_modules` cache to GCS                       | Uploads `npm-cache.tgz` to Cloud Storage for next build                                                               |
 
 **Build configuration.** The pipeline uses substitutions defined at the top of `cloudbuild.yaml`: `_REGION` (`us-central1`), `_AR_REPO` (`web-images`), `_SERVICE` (`mangu-publishers`), and `_CACHE_BUCKET` (`mangu-publishers-cloudbuild-cache`). Build options specify `E2_HIGHCPU_8` machine type and `CLOUD_LOGGING_ONLY` logging (prevents secret values from appearing in legacy build logs). The timeout is set to 1800 seconds. The `availableSecrets` block binds `sanity-api-read-token` from Secret Manager exclusively to Step 4.
 
@@ -3023,16 +3025,16 @@ The `cloudbuild.yaml` pipeline defines 16 sequential steps. Steps 1–10 constit
 
 The following files are copied from the Drive folder into the `my_publishing` repository at specific paths. Each file maps to a milestone and has a defined purpose within the build, deploy, or runtime pipeline.
 
-| Filename | Milestone | Purpose | Repo Destination |
-|----------|-----------|---------|-----------------|
-| `cloudbuild.yaml` | M5 | CI/CD pipeline definition (16 steps) | Repo root |
-| `Dockerfile` | M3 | nginx runtime container | Repo root |
-| `nginx.conf.template` | M3 | nginx configuration with `envsubst` | Repo root |
-| `firebase.json` | M6 | Firebase Hosting rewrite rules + CDN headers | Repo root |
-| `artifact-cleanup-policy.json` | M4 | Artifact Registry lifecycle policy | Repo root |
-| `node-env.ts` | M1 | Zod-validated environment variable parser | `scripts/_lib/node-env.ts` |
-| `sanity-node-client.ts` | M1 | Authenticated Sanity client for build scripts | `scripts/_lib/sanity-node-client.ts` |
-| `prune-cloud-run-tags.sh` | M7 | Tag pruning script for Cloud Run revision cleanup | `scripts/ops/prune-cloud-run-tags.sh` |
+| Filename                       | Milestone | Purpose                                           | Repo Destination                      |
+| ------------------------------ | --------- | ------------------------------------------------- | ------------------------------------- |
+| `cloudbuild.yaml`              | M5        | CI/CD pipeline definition (16 steps)              | Repo root                             |
+| `Dockerfile`                   | M3        | nginx runtime container                           | Repo root                             |
+| `nginx.conf.template`          | M3        | nginx configuration with `envsubst`               | Repo root                             |
+| `firebase.json`                | M6        | Firebase Hosting rewrite rules + CDN headers      | Repo root                             |
+| `artifact-cleanup-policy.json` | M4        | Artifact Registry lifecycle policy                | Repo root                             |
+| `node-env.ts`                  | M1        | Zod-validated environment variable parser         | `scripts/_lib/node-env.ts`            |
+| `sanity-node-client.ts`        | M1        | Authenticated Sanity client for build scripts     | `scripts/_lib/sanity-node-client.ts`  |
+| `prune-cloud-run-tags.sh`      | M7        | Tag pruning script for Cloud Run revision cleanup | `scripts/ops/prune-cloud-run-tags.sh` |
 
 Several additional files must be authored during implementation and are not present in the Drive folder. These include: `scripts/build-content-snapshot.ts` (M2), `scripts/generate-routes.ts` (M2), `scripts/prerender.ts` (M2), `scripts/generate-sitemap.ts` (M2), `scripts/smoke/check-routes.ts` (M5), `src/components/PortableTextRenderer.tsx` (M2), `.dockerignore` (M3), and the Sanity webhook validator (M7). Sample code for each is provided in the Remediation Guide.
 
@@ -3040,16 +3042,16 @@ Several additional files must be authored during implementation and are not pres
 
 The following files from the Google Drive folder are referenced during implementation. They should be downloaded, renamed if necessary (Drive sometimes misidentifies `.ts` files as `video/vnd.dlna.mpeg-tts`), and placed at the corresponding repository paths.
 
-| Drive Filename | Purpose | Repo Destination |
-|----------------|---------|-----------------|
-| `cloudbuild.yaml` | Production CI/CD pipeline | Repo root |
-| `Dockerfile` | Hardened nginx container (non-root, gen2) | Repo root |
-| `nginx.conf.template` | nginx config with CSP, Gzip, security headers | Repo root |
-| `firebase.json` | Firebase Hosting SPA routing + CDN config | Repo root |
-| `artifact-cleanup-policy.json` | Registry cleanup (keep last 30 revisions) | Repo root |
-| `node-env.ts` | Environment variable validation (Zod schemas) | `scripts/_lib/node-env.ts` |
-| `sanity-node-client.ts` | Sanity client with token auth for build scripts | `scripts/_lib/sanity-node-client.ts` |
-| `prune-cloud-run-tags.sh` | Automated tag pruning (called from Step 15) | `scripts/ops/prune-cloud-run-tags.sh` |
+| Drive Filename                 | Purpose                                         | Repo Destination                      |
+| ------------------------------ | ----------------------------------------------- | ------------------------------------- |
+| `cloudbuild.yaml`              | Production CI/CD pipeline                       | Repo root                             |
+| `Dockerfile`                   | Hardened nginx container (non-root, gen2)       | Repo root                             |
+| `nginx.conf.template`          | nginx config with CSP, Gzip, security headers   | Repo root                             |
+| `firebase.json`                | Firebase Hosting SPA routing + CDN config       | Repo root                             |
+| `artifact-cleanup-policy.json` | Registry cleanup (keep last 30 revisions)       | Repo root                             |
+| `node-env.ts`                  | Environment variable validation (Zod schemas)   | `scripts/_lib/node-env.ts`            |
+| `sanity-node-client.ts`        | Sanity client with token auth for build scripts | `scripts/_lib/sanity-node-client.ts`  |
+| `prune-cloud-run-tags.sh`      | Automated tag pruning (called from Step 15)     | `scripts/ops/prune-cloud-run-tags.sh` |
 
 ---
 
@@ -3059,15 +3061,15 @@ The following files from the Google Drive folder are referenced during implement
 
 The following estimates assume a solo developer working evenings and weekends at a realistic pace. A "session" is defined as one contiguous block of focused work (approximately 2–4 hours). Estimates account for the reality that first-time Cloud Build runs always surface unexpected issues, OAuth flows interrupt workflow, and Sanity schema customization requires iterative testing against real data.
 
-| Milestone | Description | Realistic Sessions | Key Dependencies |
-|-----------|------------|-------------------|-----------------|
-| M1 | Local Security Hardening | 1–2 | None (first milestone) |
-| M2 | Build Pipeline Scripts | 2–4 | M1 (`node-env.ts` must exist) |
-| M3 | Runtime Container | 1 | M2 (`dist/` output must exist) |
-| M4 | GCP Foundation | 1–2 | None (can parallel with M2/M3) |
-| M5 | Cloud Build End-to-End | 2–4 | M1, M2, M3, M4 (all prior milestones) |
-| M6 | Firebase Hosting + Custom Domain | 1 | M5 (Cloud Run service must be live) |
-| M7 | Production Guardrails | 3–6 | M6 (site must be deployed) |
+| Milestone | Description                      | Realistic Sessions | Key Dependencies                      |
+| --------- | -------------------------------- | ------------------ | ------------------------------------- |
+| M1        | Local Security Hardening         | 1–2                | None (first milestone)                |
+| M2        | Build Pipeline Scripts           | 2–4                | M1 (`node-env.ts` must exist)         |
+| M3        | Runtime Container                | 1                  | M2 (`dist/` output must exist)        |
+| M4        | GCP Foundation                   | 1–2                | None (can parallel with M2/M3)        |
+| M5        | Cloud Build End-to-End           | 2–4                | M1, M2, M3, M4 (all prior milestones) |
+| M6        | Firebase Hosting + Custom Domain | 1                  | M5 (Cloud Run service must be live)   |
+| M7        | Production Guardrails            | 3–6                | M6 (site must be deployed)            |
 
 #### 8.5.2 Critical Path Analysis
 

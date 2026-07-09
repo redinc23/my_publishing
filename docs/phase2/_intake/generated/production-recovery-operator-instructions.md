@@ -36,11 +36,12 @@ Optional: push local secrets to GCP before verify:
 ./scripts/bootstrap-operator-access.sh --sync-secrets
 ```
 
-If output shows **ALL CHECKS PASSED**, tell the agent: *bootstrap passed — go verify production*.
+If output shows **ALL CHECKS PASSED**, tell the agent: _bootstrap passed — go verify production_.
 
 ---
 
 Environment this document targets:
+
 - GCP project: `delta-wonder-488420-i3`
 - Cloud Run service: `mangu-publishers`
 - Region: `us-central1`
@@ -136,6 +137,7 @@ npm run type-check
 ```
 
 Success indicator:
+
 - working tree status understood
 - `npm ci`, lint, and type-check all exit 0.
 
@@ -149,6 +151,7 @@ PROJECT_ID=delta-wonder-488420-i3 REGION=us-central1 SERVICE_NAME=mangu-publishe
 ```
 
 Success indicator:
+
 - required secrets reported as `OK`:
   - `supabase-service-role-key`
   - `stripe-secret-key`
@@ -176,13 +179,11 @@ Success indicator: endpoint `https://mangu-publishers.com/api/webhook` is enable
 
 ```bash
 cd /Users/city/my_publishing_recovery_20260529
-gcloud builds submit \
-  --config cloudbuild.yaml \
-  --project delta-wonder-488420-i3 \
-  --substitutions=_REGION=us-central1,_SERVICE_NAME=mangu-publishers
+./scripts/gcloud-build-submit.sh
 ```
 
 Success indicator:
+
 - Cloud Build finishes with `SUCCESS`
 - deploy step updates Cloud Run service `mangu-publishers`
 - verify step returns service YAML without errors.
@@ -197,6 +198,7 @@ gcloud run services describe mangu-publishers \
 ```
 
 Success indicator:
+
 - `latestReadyRevisionName` populated
 - condition status is `True`
 - URL present.
@@ -213,6 +215,7 @@ curl -i https://mangu-publishers.com/api/health
 ```
 
 Success indicator:
+
 - all four HTTP calls return `200` or expected healthy JSON payload.
 
 ### Step 8 - Post-deploy confidence checks [NON-BLOCKING]
@@ -249,7 +252,7 @@ export PROD_DOMAIN="https://mangu-publishers.com"
 
 PROJECT_ID="$PROJECT_ID" REGION="$REGION" SERVICE_NAME="$SERVICE_NAME" ./scripts/verify-gcp-production.sh
 
-gcloud builds submit --config cloudbuild.yaml --project "$PROJECT_ID" --substitutions=_REGION="$REGION",_SERVICE_NAME="$SERVICE_NAME"
+./scripts/gcloud-build-submit.sh
 
 SERVICE_URL="$(gcloud run services describe "$SERVICE_NAME" --project "$PROJECT_ID" --region "$REGION" --format='value(status.url)')"
 curl -fsS "$SERVICE_URL/api/live" && echo "Cloud Run live OK"
@@ -341,5 +344,5 @@ Go/No-Go Decision:
 1. [BLOCKING] Authenticate and set GCP project/region correctly.
 2. [BLOCKING] Run `./scripts/verify-gcp-production.sh` and fix any missing required secrets.
 3. [BLOCKING] Verify Stripe webhook endpoint is `https://mangu-publishers.com/api/webhook` and secret is current.
-4. [BLOCKING] Deploy with `gcloud builds submit --config cloudbuild.yaml ...`.
+4. [BLOCKING] Deploy with `./scripts/gcloud-build-submit.sh` (loads `NEXT_PUBLIC_*` from `.env.local`).
 5. [BLOCKING] Prove `/api/live` and `/api/health` work on both Cloud Run URL and production domain.

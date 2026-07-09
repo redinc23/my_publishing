@@ -6,11 +6,12 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "validate-env": "tsx scripts/validate-env.ts",
+    "validate-env": "npx --yes dotenv-cli -e .env.local -- npx --yes tsx@4.23.0 scripts/validate-env.ts",
     "dev": "npm run validate-env && next dev",
     "build": "next build",
     "start": "NODE_ENV=production next start",
     "lint": "next lint",
+    "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:e2e": "playwright test",

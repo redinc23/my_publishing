@@ -6,17 +6,17 @@ This section defines the complete P0 acceptance test suite for the Mangu Publish
 
 #### 5.1.1 P0 Test Inventory
 
-| Test ID | Requirement Validated | Test Method | Expected Result | Milestone |
-|---|---|---|---|---|
-| P0-1 | No secret values leak into browser bundles, Docker layers, or runtime env | `grep` scan of `dist/assets/`, Docker layers, Cloud Run env | No `SANITY_API_READ_TOKEN` in any target | M5 |
-| P0-2 | Build pipeline produces `dist/` before Docker; Dockerfile has no fallback | Step-order verification in `cloudbuild.yaml`; negative build test | Build steps precede `docker-build`; Dockerfile fails without `dist/` | M3, M5 |
-| P0-3 | Runtime container serves static files via nginx; no Node or Sanity calls | HTTP probe of `/healthz`; image inspection; CSP header analysis | HTTP 200 from `/healthz`; image contains `nginx`; CSP excludes `api.sanity.io` | M3, M5 |
-| P0-4 | GitHub remains source of truth; Developer Connect triggers builds | `gcloud builds triggers describe`; push-to-main latency test | Trigger on `^main$` exists; push starts build within 60s | M4, M5 |
-| P0-5 | Firebase Hosting rewrites all traffic to Cloud Run with custom domain/TLS | HTTPS probes of root and deep links; `firebase.json` validation | HTTPS 200 on root and deep links; `public-placeholder` configured | M6 |
-| P0-6 | Cloud Run deployment applies specified resource and scaling config | `gcloud run services describe` with JSON/YAML filters | `maxScale=10`, `minScale=0`, `gen2`, `512Mi`, `port=8080` | M5 |
-| P0-7 | nginx serves hashed assets with immutable cache; SPA fallback works | HTTP header inspection; `.map` URL probe | `immutable` cache on assets; five security headers; `.map` returns 404 | M3, M6 |
-| CVE-GATE | HIGH/CRITICAL CVE findings block deployment | `cloudbuild.yaml` step inspection; vulnerable-image negative test | `enforce-vulnerability-policy` step exits 1 on HIGH/CRITICAL | M5 |
-| WEBHOOK | Sanity publish triggers rebuild; webhook is secure | End-to-end publish latency; unsigned rejection; replay protection | Build starts within ~60s; unsigned returns 401; replay rejected | M7 |
+| Test ID  | Requirement Validated                                                     | Test Method                                                       | Expected Result                                                                | Milestone |
+| -------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------- |
+| P0-1     | No secret values leak into browser bundles, Docker layers, or runtime env | `grep` scan of `dist/assets/`, Docker layers, Cloud Run env       | No `SANITY_API_READ_TOKEN` in any target                                       | M5        |
+| P0-2     | Build pipeline produces `dist/` before Docker; Dockerfile has no fallback | Step-order verification in `cloudbuild.yaml`; negative build test | Build steps precede `docker-build`; Dockerfile fails without `dist/`           | M3, M5    |
+| P0-3     | Runtime container serves static files via nginx; no Node or Sanity calls  | HTTP probe of `/healthz`; image inspection; CSP header analysis   | HTTP 200 from `/healthz`; image contains `nginx`; CSP excludes `api.sanity.io` | M3, M5    |
+| P0-4     | GitHub remains source of truth; Developer Connect triggers builds         | `gcloud builds triggers describe`; push-to-main latency test      | Trigger on `^main$` exists; push starts build within 60s                       | M4, M5    |
+| P0-5     | Firebase Hosting rewrites all traffic to Cloud Run with custom domain/TLS | HTTPS probes of root and deep links; `firebase.json` validation   | HTTPS 200 on root and deep links; `public-placeholder` configured              | M6        |
+| P0-6     | Cloud Run deployment applies specified resource and scaling config        | `gcloud run services describe` with JSON/YAML filters             | `maxScale=10`, `minScale=0`, `gen2`, `512Mi`, `port=8080`                      | M5        |
+| P0-7     | nginx serves hashed assets with immutable cache; SPA fallback works       | HTTP header inspection; `.map` URL probe                          | `immutable` cache on assets; five security headers; `.map` returns 404         | M3, M6    |
+| CVE-GATE | HIGH/CRITICAL CVE findings block deployment                               | `cloudbuild.yaml` step inspection; vulnerable-image negative test | `enforce-vulnerability-policy` step exits 1 on HIGH/CRITICAL                   | M5        |
+| WEBHOOK  | Sanity publish triggers rebuild; webhook is secure                        | End-to-end publish latency; unsigned rejection; replay protection | Build starts within ~60s; unsigned returns 401; replay rejected                | M7        |
 
 #### 5.1.2 Seven P0 Tests Plus Two Additional Gates
 
@@ -235,14 +235,14 @@ grep '"public"' firebase.json
 
 #### 5.7.1 Cloud Run Configuration Verification Table
 
-| Parameter | Specified Value | GCP Spec Path | Verification Command |
-|---|---|---|---|
-| `max-instances` | 10 | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/maxScale)"` |
-| `min-instances` | 0 | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/minScale)"` |
-| `execution-environment` | gen2 | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.run.googleapis.com/execution-environment)"` |
-| `memory` | 512Mi | `spec.template.spec.containers[0].resources.limits.memory` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].resources.limits.memory)"` |
-| `port` | 8080 | `spec.template.spec.containers[0].ports[0].containerPort` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].ports[0].containerPort)"` |
-| `allow-unauthenticated` | true | IAM binding: `allUsers` with `roles/run.invoker` | `gcloud run services get-iam-policy mangu-publishers --region=us-central1 --format="yaml(bindings)" \| grep -A 1 "role: roles/run.invoker"` |
+| Parameter               | Specified Value | GCP Spec Path                                                                    | Verification Command                                                                                                                                               |
+| ----------------------- | --------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `max-instances`         | 10              | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]`         | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/maxScale)"`         |
+| `min-instances`         | 0               | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]`         | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.autoscaling.knative.dev/minScale)"`         |
+| `execution-environment` | gen2            | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.metadata.annotations.run.googleapis.com/execution-environment)"` |
+| `memory`                | 512Mi           | `spec.template.spec.containers[0].resources.limits.memory`                       | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].resources.limits.memory)"`                    |
+| `port`                  | 8080            | `spec.template.spec.containers[0].ports[0].containerPort`                        | `gcloud run services describe mangu-publishers --region=us-central1 --format="value(spec.template.spec.containers[0].ports[0].containerPort)"`                     |
+| `allow-unauthenticated` | true            | IAM binding: `allUsers` with `roles/run.invoker`                                 | `gcloud run services get-iam-policy mangu-publishers --region=us-central1 --format="yaml(bindings)" \| grep -A 1 "role: roles/run.invoker"`                        |
 
 **Consolidated verification:**
 
@@ -283,13 +283,13 @@ curl -sI https://www.yourdomain.com/ | grep -iE \
 
 **Expected:** All five headers present:
 
-| Header | Expected Value |
-|---|---|
-| `X-Frame-Options` | `DENY` or `SAMEORIGIN` |
-| `X-Content-Type-Options` | `nosniff` |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Permissions-Policy` | Restricted defaults (camera=(), microphone=(), geolocation=()) |
-| `Content-Security-Policy` | All directives with no `api.sanity.io` in `connect-src` |
+| Header                    | Expected Value                                                 |
+| ------------------------- | -------------------------------------------------------------- |
+| `X-Frame-Options`         | `DENY` or `SAMEORIGIN`                                         |
+| `X-Content-Type-Options`  | `nosniff`                                                      |
+| `Referrer-Policy`         | `strict-origin-when-cross-origin`                              |
+| `Permissions-Policy`      | Restricted defaults (camera=(), microphone=(), geolocation=()) |
+| `Content-Security-Policy` | All directives with no `api.sanity.io` in `connect-src`        |
 
 #### 5.8.2 Test C: .map URLs Return 404; Test D: Deep Links Return SPA HTML
 

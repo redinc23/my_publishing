@@ -124,8 +124,9 @@ async function testRLS(): Promise<TestResult[]> {
     });
 
     if (policies && Array.isArray(policies) && policies.length > 0) {
-      const hasUserPolicy = policies.some((p: any) =>
-        p.policyname?.toLowerCase().includes('own') || p.definition?.includes('auth.uid()')
+      const hasUserPolicy = policies.some(
+        (p: any) =>
+          p.policyname?.toLowerCase().includes('own') || p.definition?.includes('auth.uid()')
       );
       results.push({
         name: 'Reading progress has user-specific policy',
@@ -156,8 +157,9 @@ async function testRLS(): Promise<TestResult[]> {
     });
 
     if (policies && Array.isArray(policies) && policies.length > 0) {
-      const hasAuthorPolicy = policies.some((p: any) =>
-        p.policyname?.toLowerCase().includes('author') || p.definition?.includes('author_id')
+      const hasAuthorPolicy = policies.some(
+        (p: any) =>
+          p.policyname?.toLowerCase().includes('author') || p.definition?.includes('author_id')
       );
       results.push({
         name: 'Manuscripts have author-specific policies',

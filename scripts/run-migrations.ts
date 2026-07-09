@@ -66,7 +66,7 @@ async function ensureMigrationsTable(supabase: ReturnType<typeof createClient>) 
   `;
 
   const { error } = await supabase.rpc('exec_sql', { sql: createTableSQL });
-  
+
   // If RPC doesn't exist, try direct query (requires service role)
   if (error) {
     console.warn('Note: Using direct SQL execution. Ensure you have service role key.');
@@ -79,9 +79,7 @@ async function ensureMigrationsTable(supabase: ReturnType<typeof createClient>) 
 /**
  * Get list of applied migrations
  */
-async function getAppliedMigrations(
-  supabase: ReturnType<typeof createClient>
-): Promise<string[]> {
+async function getAppliedMigrations(supabase: ReturnType<typeof createClient>): Promise<string[]> {
   try {
     // Try to query the migrations table
     const { data, error } = await supabase
@@ -103,10 +101,7 @@ async function getAppliedMigrations(
 /**
  * Record a migration as applied
  */
-async function recordMigration(
-  supabase: ReturnType<typeof createClient>,
-  migrationName: string
-) {
+async function recordMigration(supabase: ReturnType<typeof createClient>, migrationName: string) {
   const { error } = await supabase.from(MIGRATIONS_TABLE).insert({
     name: migrationName,
     applied_at: new Date().toISOString(),
@@ -147,11 +142,11 @@ async function executeMigration(
         // Note: This requires using the Supabase REST API or direct PostgreSQL connection
         console.warn(`Warning: Could not execute via RPC, trying alternative method...`);
         console.error(`SQL Error:`, error.message);
-        
+
         // For now, we'll provide instructions
         throw new Error(
           `Migration execution requires direct database access. ` +
-          `Please run migrations manually in Supabase SQL Editor or use Supabase CLI.`
+            `Please run migrations manually in Supabase SQL Editor or use Supabase CLI.`
         );
       }
     }
@@ -206,14 +201,10 @@ async function runMigrations(options: { dryRun?: boolean; specificMigration?: st
   }
 
   // Filter migrations
-  let migrationsToApply = migrationFiles.filter(
-    (m) => !appliedMigrations.includes(m.name)
-  );
+  let migrationsToApply = migrationFiles.filter((m) => !appliedMigrations.includes(m.name));
 
   if (options.specificMigration) {
-    migrationsToApply = migrationsToApply.filter(
-      (m) => m.name === options.specificMigration
-    );
+    migrationsToApply = migrationsToApply.filter((m) => m.name === options.specificMigration);
     if (migrationsToApply.length === 0) {
       console.error(`❌ Migration ${options.specificMigration} not found or already applied`);
       process.exit(1);

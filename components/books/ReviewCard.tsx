@@ -13,12 +13,17 @@ import {
   Star,
   AlertTriangle,
   User,
-  Book
+  Book,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { voteOnReview, reportReview } from '@/lib/actions/reviews';
 import { formatDistanceToNow } from 'date-fns';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StarRating } from './StarRating';
@@ -52,13 +57,13 @@ interface ReviewCardProps {
   onVoteChange?: () => void;
 }
 
-export function ReviewCard({ 
-  review, 
-  user, 
-  book, 
+export function ReviewCard({
+  review,
+  user,
+  book,
   compact = false,
   showBookInfo = false,
-  onVoteChange 
+  onVoteChange,
 }: ReviewCardProps) {
   const [helpfulCount, setHelpfulCount] = useState(review.helpful_count);
   const [userVote, setUserVote] = useState<boolean | null>(review.user_vote || null);
@@ -68,19 +73,28 @@ export function ReviewCard({
 
   const handleVote = async (helpful: boolean) => {
     if (isLoading) return;
-    
+
     setIsLoading(true);
     try {
       const newVoteState = userVote === helpful ? null : helpful;
-      
+
       // Optimistic update
-      const delta = newVoteState === null 
-        ? (userVote ? -1 : 0) // Removing vote
-        : (userVote === null ? (helpful ? 1 : 0) : (helpful ? 0 : -1)); // Changing vote
-      
-      setHelpfulCount(prev => Math.max(0, prev + delta));
+      const delta =
+        newVoteState === null
+          ? userVote
+            ? -1
+            : 0 // Removing vote
+          : userVote === null
+            ? helpful
+              ? 1
+              : 0
+            : helpful
+              ? 0
+              : -1; // Changing vote
+
+      setHelpfulCount((prev) => Math.max(0, prev + delta));
       setUserVote(newVoteState);
-      
+
       await voteOnReview(review.id, helpful);
       onVoteChange?.();
     } catch (error) {
@@ -104,10 +118,7 @@ export function ReviewCard({
   };
 
   const renderUserAvatar = () => (
-    <Link 
-      href={`/users/${user.id}`}
-      className="flex-shrink-0 hover:opacity-80 transition-opacity"
-    >
+    <Link href={`/users/${user.id}`} className="flex-shrink-0 transition-opacity hover:opacity-80">
       <div className="relative">
         {user.avatar_url ? (
           <Image
@@ -118,14 +129,13 @@ export function ReviewCard({
             className="rounded-full border-2 border-white shadow-sm"
           />
         ) : (
-          <div className={cn(
-            'rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center border-2 border-white shadow-sm',
-            compact ? 'w-8 h-8' : 'w-10 h-10'
-          )}>
-            <User className={cn(
-              'text-blue-600',
-              compact ? 'w-4 h-4' : 'w-5 h-5'
-            )} />
+          <div
+            className={cn(
+              'flex items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-blue-100 to-purple-100 shadow-sm',
+              compact ? 'h-8 w-8' : 'h-10 w-10'
+            )}
+          >
+            <User className={cn('text-blue-600', compact ? 'h-4 w-4' : 'h-5 w-5')} />
           </div>
         )}
       </div>
@@ -133,9 +143,9 @@ export function ReviewCard({
   );
 
   const renderBookInfo = () => (
-    <Link 
+    <Link
       href={`/books/${book?.id}`}
-      className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+      className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 transition-colors hover:bg-gray-100"
     >
       {book?.cover_url ? (
         <Image
@@ -146,47 +156,45 @@ export function ReviewCard({
           className="rounded object-cover"
         />
       ) : (
-        <div className="w-10 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded flex items-center justify-center">
-          <Book className="w-5 h-5 text-gray-500" />
+        <div className="flex h-12 w-10 items-center justify-center rounded bg-gradient-to-br from-gray-200 to-gray-300">
+          <Book className="h-5 w-5 text-gray-500" />
         </div>
       )}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">
-          {book?.title}
-        </p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-gray-900">{book?.title}</p>
         <p className="text-xs text-gray-500">Book Review</p>
       </div>
     </Link>
   );
 
   return (
-    <article className={cn(
-      'bg-white border rounded-lg p-4 transition-all hover:shadow-sm',
-      compact ? 'p-3' : 'p-4'
-    )}>
+    <article
+      className={cn(
+        'rounded-lg border bg-white p-4 transition-all hover:shadow-sm',
+        compact ? 'p-3' : 'p-4'
+      )}
+    >
       {/* Header */}
-      <div className="flex gap-3 mb-3">
+      <div className="mb-3 flex gap-3">
         {renderUserAvatar()}
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
+
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center justify-between">
             <div>
-              <Link 
+              <Link
                 href={`/users/${user.id}`}
-                className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                className="font-medium text-gray-900 transition-colors hover:text-blue-600"
               >
                 {user.full_name || user.username}
               </Link>
-              <span className="text-gray-500 text-sm ml-2">
+              <span className="ml-2 text-sm text-gray-500">
                 {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
               </span>
               {review.updated_at !== review.created_at && (
-                <span className="text-gray-400 text-xs ml-2">
-                  (edited)
-                </span>
+                <span className="ml-2 text-xs text-gray-400">(edited)</span>
               )}
             </div>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -195,13 +203,13 @@ export function ReviewCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleReport} disabled={isReported}>
-                  <Flag className="h-4 w-4 mr-2" />
+                  <Flag className="mr-2 h-4 w-4" />
                   {isReported ? 'Reported' : 'Report Review'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
+
           <StarRating rating={review.rating} size={compact ? 'sm' : 'md'} />
         </div>
       </div>
@@ -210,20 +218,16 @@ export function ReviewCard({
       {showBookInfo && book && renderBookInfo()}
 
       {/* Review Title */}
-      {review.title && (
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          {review.title}
-        </h3>
-      )}
+      {review.title && <h3 className="mb-2 text-lg font-semibold text-gray-900">{review.title}</h3>}
 
       {/* Spoiler Warning */}
       {review.is_spoiler && !showSpoiler && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-center gap-2 text-yellow-800 mb-2">
-            <AlertTriangle className="w-5 h-5" />
+        <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+          <div className="mb-2 flex items-center gap-2 text-yellow-800">
+            <AlertTriangle className="h-5 w-5" />
             <span className="font-medium">Spoiler Alert</span>
           </div>
-          <p className="text-sm text-yellow-700 mb-3">
+          <p className="mb-3 text-sm text-yellow-700">
             This review contains spoilers for the book.
           </p>
           <Button
@@ -238,13 +242,13 @@ export function ReviewCard({
       )}
 
       {/* Review Content */}
-      <div className={cn(
-        'prose prose-sm max-w-none mb-4',
-        !showSpoiler && review.is_spoiler && 'blur-sm select-none'
-      )}>
-        <p className="whitespace-pre-wrap text-gray-700">
-          {review.content}
-        </p>
+      <div
+        className={cn(
+          'prose prose-sm mb-4 max-w-none',
+          !showSpoiler && review.is_spoiler && 'select-none blur-sm'
+        )}
+      >
+        <p className="whitespace-pre-wrap text-gray-700">{review.content}</p>
       </div>
 
       {/* Actions */}
@@ -256,34 +260,28 @@ export function ReviewCard({
               size="sm"
               onClick={() => handleVote(true)}
               disabled={isLoading}
-              className={cn(
-                'h-8 px-2',
-                userVote === true && 'text-blue-600 bg-blue-50'
-              )}
+              className={cn('h-8 px-2', userVote === true && 'bg-blue-50 text-blue-600')}
             >
-              <ThumbsUp className="h-4 w-4 mr-1" />
+              <ThumbsUp className="mr-1 h-4 w-4" />
               <span className="font-medium">{helpfulCount}</span>
             </Button>
-            
+
             {!compact && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => handleVote(false)}
                 disabled={isLoading}
-                className={cn(
-                  'h-8 px-2',
-                  userVote === false && 'text-gray-600 bg-gray-100'
-                )}
+                className={cn('h-8 px-2', userVote === false && 'bg-gray-100 text-gray-600')}
               >
                 <ThumbsDown className="h-4 w-4" />
               </Button>
             )}
           </div>
-          
+
           {!compact && (
             <Button variant="ghost" size="sm" className="h-8">
-              <MessageCircle className="h-4 w-4 mr-1" />
+              <MessageCircle className="mr-1 h-4 w-4" />
               Comment
             </Button>
           )}
@@ -292,7 +290,7 @@ export function ReviewCard({
         {/* Status Badges */}
         <div className="flex items-center gap-2">
           {review.is_spoiler && (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+            <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">
               Spoiler
             </Badge>
           )}

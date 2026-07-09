@@ -20,6 +20,7 @@ const customJestConfig = {
   ],
   testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
   testPathIgnorePatterns: ['<rootDir>/tests/e2e/'],
+  modulePathIgnorePatterns: ['<rootDir>/node_modules.bak.'],
 };
 
 // Use async form so we can override transformIgnorePatterns AFTER nextJest sets them.

@@ -32,8 +32,8 @@ export default async function AuthorsPage() {
     <div>
       <Section className="bg-muted">
         <Container>
-          <h1 className="text-4xl font-bold mb-2">Authors</h1>
-          <p className="text-secondary max-w-2xl">
+          <h1 className="mb-2 text-4xl font-bold">Authors</h1>
+          <p className="max-w-2xl text-secondary">
             Meet the storytellers behind the books on Mangu Publishers.
           </p>
         </Container>
@@ -44,7 +44,7 @@ export default async function AuthorsPage() {
           {authors.length === 0 ? (
             <p className="text-secondary">No authors to show yet. Check back soon.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {authors.map((author) => (
                 <AuthorCard key={author.id} author={author} />
               ))}

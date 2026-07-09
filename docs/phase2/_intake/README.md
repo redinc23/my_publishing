@@ -28,13 +28,13 @@ Then use **[`FIELDS_TO_GATHER.md`](FIELDS_TO_GATHER.md)** as the field checklist
 
 ## Minimum fields (from worksheet)
 
-| Variable | Purpose |
-|---|---|
-| `PROJECT_ID` | GCP project |
-| `REGION` | e.g. `us-central1` |
-| `CUSTOM_DOMAIN` | hostname only (no `https://`) |
-| `BILLING_ACCOUNT_ID` | budgets / billing commands |
-| `KNOWN_GOOD_REVISION` | rollback drill revision name |
-| `SAMPLE_*_SLUG` | smoke URLs |
-| `BUILD_ID` | optional example build for log tail command |
-| `SAMPLE_HASHED_JS_BASENAME` | optional `curl -I` on hashed asset |
+| Variable                    | Purpose                                     |
+| --------------------------- | ------------------------------------------- |
+| `PROJECT_ID`                | GCP project                                 |
+| `REGION`                    | e.g. `us-central1`                          |
+| `CUSTOM_DOMAIN`             | hostname only (no `https://`)               |
+| `BILLING_ACCOUNT_ID`        | budgets / billing commands                  |
+| `KNOWN_GOOD_REVISION`       | rollback drill revision name                |
+| `SAMPLE_*_SLUG`             | smoke URLs                                  |
+| `BUILD_ID`                  | optional example build for log tail command |
+| `SAMPLE_HASHED_JS_BASENAME` | optional `curl -I` on hashed asset          |

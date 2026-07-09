@@ -66,11 +66,11 @@ Phase 2 uses a Next.js 14 standalone runtime architecture:
 
 Canonical **stage** numbering matches [`05-milestone-implementation-plan.md`](05-milestone-implementation-plan.md). Detailed step IDs (`restore-npm-cache`, `nextjs-build`, `docker-build`, …) are defined in repository `cloudbuild.yaml` and summarized in [`09-appendices.md`](09-appendices.md) Appendix C.
 
-| Phase | Canonical steps | Notes |
-|---|---|---|
-| Build | 1–8 | Checkout, `npm ci`, lockfile verify, Next.js build, `.next/standalone/` integrity check; fail-closed secret audit before container image |
-| Container | 9–12 | Docker build → push to Artifact Registry → vulnerability scan **on pushed image** |
-| Deploy + verify | 13–14 | Cloud Run deploy with runtime secrets, post-deploy checks per YAML |
+| Phase           | Canonical steps | Notes                                                                                                                                    |
+| --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Build           | 1–8             | Checkout, `npm ci`, lockfile verify, Next.js build, `.next/standalone/` integrity check; fail-closed secret audit before container image |
+| Container       | 9–12            | Docker build → push to Artifact Registry → vulnerability scan **on pushed image**                                                        |
+| Deploy + verify | 13–14           | Cloud Run deploy with runtime secrets, post-deploy checks per YAML                                                                       |
 
 ## Request And Content Flows
 

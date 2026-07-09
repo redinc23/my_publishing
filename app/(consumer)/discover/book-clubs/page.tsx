@@ -7,8 +7,8 @@ export default function BookClubsPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Book Clubs</h1>
-        <div className="text-center py-12">
+        <h1 className="mb-8 text-4xl font-bold">Book Clubs</h1>
+        <div className="py-12 text-center">
           <p className="text-secondary">Book clubs feature coming soon!</p>
         </div>
       </Container>

@@ -278,12 +278,13 @@ You do **not** put these in `environment.local.sh` committed to git.
 | `_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
 | `_NEXT_PUBLIC_SITE_URL` | `https://YOUR_CUSTOM_DOMAIN` |
 
-**Alternative (one-off manual build):**
+**Preferred (loads substitutions from `.env.local`):**
 
 ```bash
-gcloud builds submit --config=cloudbuild.yaml \
-  --substitutions=_NEXT_PUBLIC_SUPABASE_URL="https://xxx.supabase.co",_NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ...",_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_...",_NEXT_PUBLIC_SITE_URL="https://your-domain.com"
+./scripts/gcloud-build-submit.sh
 ```
+
+Do not run raw `gcloud builds submit` without `_NEXT_PUBLIC_*` substitutions — use the script above.
 
 ---
 

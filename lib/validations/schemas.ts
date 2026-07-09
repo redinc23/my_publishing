@@ -26,9 +26,7 @@ export const SlugSchema = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens');
 
 /** Safe string (no XSS) */
-export const SafeStringSchema = z
-  .string()
-  .transform((val) => val.replace(/<[^>]*>/g, '').trim());
+export const SafeStringSchema = z.string().transform((val) => val.replace(/<[^>]*>/g, '').trim());
 
 /** Positive integer */
 export const PositiveIntSchema = z.number().int().positive();

@@ -5,7 +5,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ROOT}/.env.local"
-PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}"
+# shellcheck source=scripts/gcp-config.sh
+source "${ROOT}/scripts/gcp-config.sh"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "ERROR: ${ENV_FILE} not found"

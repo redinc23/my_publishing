@@ -98,7 +98,7 @@ export default function ResetPasswordConfirmPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <Link href="/" className="text-3xl font-bold text-primary mb-2 block">
+        <Link href="/" className="mb-2 block text-3xl font-bold text-primary">
           MANGU
         </Link>
         <CardTitle className="text-2xl">Create a new password</CardTitle>
@@ -110,14 +110,14 @@ export default function ResetPasswordConfirmPage() {
             <LoadingSpinner />
           </div>
         ) : status === 'error' ? (
-          <div className="text-center space-y-4">
+          <div className="space-y-4 text-center">
             <p className="text-sm text-red-500">{error}</p>
             <Button asChild className="w-full">
               <Link href="/reset-password">Request a new link</Link>
             </Button>
           </div>
         ) : isUpdated ? (
-          <div className="text-center space-y-2">
+          <div className="space-y-2 text-center">
             <p className="text-sm text-green-600">Password updated! Redirecting to sign in...</p>
           </div>
         ) : (

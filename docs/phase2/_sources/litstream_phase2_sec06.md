@@ -33,24 +33,24 @@ The pipeline consists of 16 discrete steps defined in `cloudbuild.yaml` (Section
 
 **Table 6-1: Cloud Build Step Verification Checklist**
 
-| Step | ID | Expected Output Pattern | Failure Indicator |
-|------|-----|------------------------|-------------------|
-| 1 | `restore-npm-cache` | `✓ npm cache restored` or `⚠ No npm cache found — cold install` | `gsutil` permission denied or GCS path not found |
-| 2 | `install` | `added N packages` without `npm ERR!` | `npm ERR!` exit code 1 |
-| 3 | `production-audit` | Audit results displayed, `✓ npm audit complete` | Blocking error (step is non-blocking by design) |
-| 4 | `content-snapshot` | `✓ Content snapshot generated` with book/author counts | Sanity API error, auth failure, or empty dataset |
-| 5 | `generate-routes` | `✓ Routes JSON generated` | Missing `.cache/routes.json` output |
-| 6 | `vite-build` | Vite build completes, asset manifest output | Build error, out of memory, or missing assets |
-| 7 | `prerender` | `✓ Prerender complete` with page count | Playwright timeout or prerender crash |
-| 8 | `sitemap` | `sitemap.xml` generated with expected entry count | Missing sitemap file or route mismatch |
-| 9 | `audit-secrets` | Exit code 0, no leaked secret patterns found | `audit-secrets` non-zero exit (secret leakage detected) |
-| 10 | `smoke-test` | `Smoke check: N passed, 0 failed` | Any failed smoke test (non-zero failure count) |
-| 11 | `docker-build` | Docker build output, final image digest | `COPY failed` (missing `dist/`) or build error |
-| 12 | `docker-push` | `digest: sha256:…` for both `SHORT_SHA` and `latest` tags | Push permission denied or network timeout |
-| 13 | `enforce-vulnerability-policy` | `✓ No HIGH/CRITICAL vulnerabilities — deploy approved` | `DEPLOY BLOCKED: HIGH/CRITICAL vulnerability detected` |
-| 14 | `deploy-run` | `Service [mangu-publishers] revision [mangu-publishers-XXXXX] has been deployed` | Cloud Run deployment error or quota exceeded |
-| 15 | `prune-tags` | `✓ Pruned N old tags` or `✓ No tags to prune` | Cloud Run API error or permission denied |
-| 16 | `save-npm-cache` | Cache saved to `gs://mangu-publishers-cloudbuild-cache/npm-cache.tgz` | GCS write failure or bucket not found |
+| Step | ID                             | Expected Output Pattern                                                          | Failure Indicator                                       |
+| ---- | ------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 1    | `restore-npm-cache`            | `✓ npm cache restored` or `⚠ No npm cache found — cold install`                  | `gsutil` permission denied or GCS path not found        |
+| 2    | `install`                      | `added N packages` without `npm ERR!`                                            | `npm ERR!` exit code 1                                  |
+| 3    | `production-audit`             | Audit results displayed, `✓ npm audit complete`                                  | Blocking error (step is non-blocking by design)         |
+| 4    | `content-snapshot`             | `✓ Content snapshot generated` with book/author counts                           | Sanity API error, auth failure, or empty dataset        |
+| 5    | `generate-routes`              | `✓ Routes JSON generated`                                                        | Missing `.cache/routes.json` output                     |
+| 6    | `vite-build`                   | Vite build completes, asset manifest output                                      | Build error, out of memory, or missing assets           |
+| 7    | `prerender`                    | `✓ Prerender complete` with page count                                           | Playwright timeout or prerender crash                   |
+| 8    | `sitemap`                      | `sitemap.xml` generated with expected entry count                                | Missing sitemap file or route mismatch                  |
+| 9    | `audit-secrets`                | Exit code 0, no leaked secret patterns found                                     | `audit-secrets` non-zero exit (secret leakage detected) |
+| 10   | `smoke-test`                   | `Smoke check: N passed, 0 failed`                                                | Any failed smoke test (non-zero failure count)          |
+| 11   | `docker-build`                 | Docker build output, final image digest                                          | `COPY failed` (missing `dist/`) or build error          |
+| 12   | `docker-push`                  | `digest: sha256:…` for both `SHORT_SHA` and `latest` tags                        | Push permission denied or network timeout               |
+| 13   | `enforce-vulnerability-policy` | `✓ No HIGH/CRITICAL vulnerabilities — deploy approved`                           | `DEPLOY BLOCKED: HIGH/CRITICAL vulnerability detected`  |
+| 14   | `deploy-run`                   | `Service [mangu-publishers] revision [mangu-publishers-XXXXX] has been deployed` | Cloud Run deployment error or quota exceeded            |
+| 15   | `prune-tags`                   | `✓ Pruned N old tags` or `✓ No tags to prune`                                    | Cloud Run API error or permission denied                |
+| 16   | `save-npm-cache`               | Cache saved to `gs://mangu-publishers-cloudbuild-cache/npm-cache.tgz`            | GCS write failure or bucket not found                   |
 
 Steps 9 and 13 are **gate steps** — failures halt the pipeline. A failure at step 9 indicates the `SANITY_API_READ_TOKEN` or another secret value was detected in the compiled `dist/` output, which constitutes a P0 security incident per Section 5.3.1. A failure at step 13 means the container image contains HIGH or CRITICAL CVEs that must be remediated before deployment proceeds. All other step failures should be treated as blocking errors that prevent continuation of the pipeline.
 
@@ -91,19 +91,19 @@ Table 6-2 specifies every configuration parameter that must be present in the de
 
 **Table 6-2: Cloud Run Expected Configuration Parameters**
 
-| Parameter | Expected Value | Verification Path | Purpose |
-|-----------|---------------|-------------------|---------|
-| Container image | `us-central1-docker.pkg.dev/$PROJECT_ID/web-images/mangu-publishers:$SHORT_SHA` | `spec.template.spec.containers[0].image` | Immutable SHA-tagged image reference |
-| Container port | `8080` | `spec.template.spec.containers[0].ports[0].containerPort` | nginx listens on 8080 |
-| Memory limit | `512Mi` | `spec.template.spec.containers[0].resources.limits.memory` | gen2 execution environment requirement |
-| CPU limit | `1` | `spec.template.spec.containers[0].resources.limits.cpu` | Single vCPU per instance |
-| Concurrency | `80` | `spec.template.spec.containerConcurrency` | Max 80 concurrent requests per instance |
-| Min instances | `0` | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]` | Scale to zero when idle |
-| Max instances | `10` | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]` | Upper bound for cost control |
-| Execution environment | `gen2` | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | Second-gen Cloud Run runtime |
-| CPU throttling | `true` | `spec.template.metadata.annotations["run.googleapis.com/cpu-throttling"]` | Throttle CPU outside request handling |
-| Default URL | disabled | `--no-default-url` flag | Traffic routes through Firebase Hosting only |
-| Labels | `env=prod,app=mangu-publishers` | `spec.template.metadata.labels` | Resource identification and filtering |
+| Parameter             | Expected Value                                                                  | Verification Path                                                                | Purpose                                      |
+| --------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------- |
+| Container image       | `us-central1-docker.pkg.dev/$PROJECT_ID/web-images/mangu-publishers:$SHORT_SHA` | `spec.template.spec.containers[0].image`                                         | Immutable SHA-tagged image reference         |
+| Container port        | `8080`                                                                          | `spec.template.spec.containers[0].ports[0].containerPort`                        | nginx listens on 8080                        |
+| Memory limit          | `512Mi`                                                                         | `spec.template.spec.containers[0].resources.limits.memory`                       | gen2 execution environment requirement       |
+| CPU limit             | `1`                                                                             | `spec.template.spec.containers[0].resources.limits.cpu`                          | Single vCPU per instance                     |
+| Concurrency           | `80`                                                                            | `spec.template.spec.containerConcurrency`                                        | Max 80 concurrent requests per instance      |
+| Min instances         | `0`                                                                             | `spec.template.metadata.annotations["autoscaling.knative.dev/minScale"]`         | Scale to zero when idle                      |
+| Max instances         | `10`                                                                            | `spec.template.metadata.annotations["autoscaling.knative.dev/maxScale"]`         | Upper bound for cost control                 |
+| Execution environment | `gen2`                                                                          | `spec.template.metadata.annotations["run.googleapis.com/execution-environment"]` | Second-gen Cloud Run runtime                 |
+| CPU throttling        | `true`                                                                          | `spec.template.metadata.annotations["run.googleapis.com/cpu-throttling"]`        | Throttle CPU outside request handling        |
+| Default URL           | disabled                                                                        | `--no-default-url` flag                                                          | Traffic routes through Firebase Hosting only |
+| Labels                | `env=prod,app=mangu-publishers`                                                 | `spec.template.metadata.labels`                                                  | Resource identification and filtering        |
 
 Any deviation from the values in Table 6-2 indicates a deployment configuration drift. The most common causes are manual service edits through the GCP Console, prior deployments with different flags, or substitution variable overrides in the Cloud Build trigger.
 
@@ -220,12 +220,12 @@ Four distinct methods exist for triggering a rebuild when no code changes are re
 
 **Table 6-3: Manual Rebuild Method Comparison**
 
-| Method | Prerequisites | Speed | Automation Readiness | Audit Trail | Best For | Risk Level |
-|--------|--------------|-------|---------------------|-------------|----------|------------|
-| `gcloud builds submit` | Local gcloud auth, `cloudbuild.yaml` | ~8–12 min | Manual only | Cloud Build history | Ad-hoc rebuilds, local testing | Low |
-| `gcloud builds triggers run` | Trigger `mangu-publishers-main` exists | ~8–12 min | Scriptable via API | Cloud Build history + trigger attribution | Operator-initiated content rebuilds | Low |
-| Empty commit + push | Write access to `main`, Git CLI | ~8–12 min | Fully automated via CI | Git commit + Cloud Build history | Routine content-update rebuilds | Low |
-| Sanity webhook (M7) | Webhook validator deployed, HMAC secret | ~3–5 min | Fully automated | Cloud Build history + webhook log | Production content publishing | Low |
+| Method                       | Prerequisites                           | Speed     | Automation Readiness   | Audit Trail                               | Best For                            | Risk Level |
+| ---------------------------- | --------------------------------------- | --------- | ---------------------- | ----------------------------------------- | ----------------------------------- | ---------- |
+| `gcloud builds submit`       | Local gcloud auth, `cloudbuild.yaml`    | ~8–12 min | Manual only            | Cloud Build history                       | Ad-hoc rebuilds, local testing      | Low        |
+| `gcloud builds triggers run` | Trigger `mangu-publishers-main` exists  | ~8–12 min | Scriptable via API     | Cloud Build history + trigger attribution | Operator-initiated content rebuilds | Low        |
+| Empty commit + push          | Write access to `main`, Git CLI         | ~8–12 min | Fully automated via CI | Git commit + Cloud Build history          | Routine content-update rebuilds     | Low        |
+| Sanity webhook (M7)          | Webhook validator deployed, HMAC secret | ~3–5 min  | Fully automated        | Cloud Build history + webhook log         | Production content publishing       | Low        |
 
 The Sanity webhook method (Section 6.4.5) is the target state after Milestone 7 implementation. Until then, the empty commit method (Section 6.4.4) is the recommended approach for routine rebuilds because it preserves a complete audit trail in both Git and Cloud Build.
 
@@ -337,13 +337,13 @@ Table 6-4 defines the phased timeline for completing token rotation safely.
 
 **Table 6-4: Token Rotation Timeline**
 
-| Phase | Time After Rotation | Action | Command / Location |
-|-------|---------------------|--------|-------------------|
-| T+0 | Immediate | Generate new token, add to Secret Manager as new version | `gcloud secrets versions add sanity-api-read-token` |
-| T+0 | Immediate | Verify `versions/latest` resolves to new token | `gcloud secrets versions access latest --secret=sanity-api-read-token` |
-| T+0 | Immediate | Trigger test build and verify content snapshot succeeds | `gcloud builds triggers run mangu-publishers-main --branch=main` |
-| T+24h | 24 hours | Disable old Secret Manager version (do NOT delete) | `OLD_VERSION=$(gcloud secrets versions list sanity-api-read-token --format="table(version, state)" \| grep ENABLED \| tail -1 \| awk '{print $1}')` then `gcloud secrets versions disable $OLD_VERSION --secret=sanity-api-read-token` |
-| T+7d | 7 days | Delete old Sanity token from Sanity Studio console | `sanity.io/manage` → API → Tokens → Delete old token |
+| Phase | Time After Rotation | Action                                                   | Command / Location                                                                                                                                                                                                                     |
+| ----- | ------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T+0   | Immediate           | Generate new token, add to Secret Manager as new version | `gcloud secrets versions add sanity-api-read-token`                                                                                                                                                                                    |
+| T+0   | Immediate           | Verify `versions/latest` resolves to new token           | `gcloud secrets versions access latest --secret=sanity-api-read-token`                                                                                                                                                                 |
+| T+0   | Immediate           | Trigger test build and verify content snapshot succeeds  | `gcloud builds triggers run mangu-publishers-main --branch=main`                                                                                                                                                                       |
+| T+24h | 24 hours            | Disable old Secret Manager version (do NOT delete)       | `OLD_VERSION=$(gcloud secrets versions list sanity-api-read-token --format="table(version, state)" \| grep ENABLED \| tail -1 \| awk '{print $1}')` then `gcloud secrets versions disable $OLD_VERSION --secret=sanity-api-read-token` |
+| T+7d  | 7 days              | Delete old Sanity token from Sanity Studio console       | `sanity.io/manage` → API → Tokens → Delete old token                                                                                                                                                                                   |
 
 The 24-hour window between enabling the new version and disabling the old version ensures that any in-flight builds or cached references have time to drain. The 7-day window before deleting the Sanity token provides a recovery path if the new token is found to be defective after extended use. After 7 days, only one `ENABLED` Secret Manager version should remain.
 
@@ -420,7 +420,7 @@ Firebase Hosting's `pinTag: true` configuration creates a new Cloud Run traffic 
   name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
   entrypoint: bash
   args:
-    - "-c"
+    - '-c'
     - |
       set -euo pipefail
       bash scripts/ops/prune-cloud-run-tags.sh || true

@@ -64,17 +64,13 @@ export default function AnalyticsDashboard({ bookId }: AnalyticsDashboardProps) 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground">
             Track your book's performance and reader engagement
           </p>
         </div>
       </div>
 
-      <AnalyticsOverview
-        bookId={bookId}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-      />
+      <AnalyticsOverview bookId={bookId} dateRange={dateRange} onDateRangeChange={setDateRange} />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
@@ -85,17 +81,12 @@ export default function AnalyticsDashboard({ bookId }: AnalyticsDashboardProps) 
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ViewsChart stats={stats} />
             <LiveReaders bookId={bookId} />
           </div>
           <GeographyMap data={geography} />
-          <AIInsightsPanel
-            bookId={bookId}
-            dateRange={dateRange}
-            stats={stats}
-            heatmap={heatmap}
-          />
+          <AIInsightsPanel bookId={bookId} dateRange={dateRange} stats={stats} heatmap={heatmap} />
         </TabsContent>
 
         <TabsContent value="readers" className="space-y-6">

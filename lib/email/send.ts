@@ -20,11 +20,7 @@ function getResend() {
   return resend;
 }
 
-export async function sendEmail(
-  to: string,
-  subject: string,
-  react: React.ReactElement
-) {
+export async function sendEmail(to: string, subject: string, react: React.ReactElement) {
   try {
     const client = getResend();
     const { data, error } = await client.emails.send({
@@ -47,11 +43,7 @@ export async function sendEmail(
 }
 
 export async function sendWelcomeEmail(user: { email: string; name: string }) {
-  return sendEmail(
-    user.email,
-    'Welcome to MANGU',
-    WelcomeEmail({ userName: user.name })
-  );
+  return sendEmail(user.email, 'Welcome to MANGU', WelcomeEmail({ userName: user.name }));
 }
 
 export async function sendPurchaseConfirmation(order: {

@@ -6,8 +6,8 @@ export default function Loading() {
   return (
     <Section>
       <Container>
-        <div className="grid md:grid-cols-2 gap-8">
-          <Skeleton className="aspect-[2/3] w-full max-w-sm mx-auto" />
+        <div className="grid gap-8 md:grid-cols-2">
+          <Skeleton className="mx-auto aspect-[2/3] w-full max-w-sm" />
           <div className="space-y-4">
             <Skeleton className="h-12 w-3/4" />
             <Skeleton className="h-6 w-1/2" />

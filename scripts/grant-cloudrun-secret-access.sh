@@ -3,23 +3,21 @@
 # Usage: ./scripts/grant-cloudrun-secret-access.sh
 set -euo pipefail
 
-PROJECT_ID="${PROJECT_ID:-delta-wonder-488420-i3}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=scripts/gcp-config.sh
+source "${ROOT}/scripts/gcp-config.sh"
+
 PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')"
 RUNTIME_SA="${RUNTIME_SA:-${PROJECT_NUMBER}-compute@developer.gserviceaccount.com}"
 
-REQUIRED_SECRETS=(
-  supabase-service-role-key
-  stripe-secret-key
-  stripe-webhook-secret
-)
-
-OPTIONAL_SECRETS=(
-  resend-api-key
-  openai-api-key
-  # Historically missing Upstash bindings broke Cloud Run secret resolution (Phase 4.3).
-  upstash-redis-rest-url
-  upstash-redis-rest-token
-)
+REQUIRED_SECRETS=()
+OPTIONAL_SECRETS=()
+for mapping in "${GCP_REQUIRED_SECRETS[@]}"; do
+  REQUIRED_SECRETS+=("${mapping%%:*}")
+done
+for mapping in "${GCP_OPTIONAL_SECRETS[@]}"; do
+  OPTIONAL_SECRETS+=("${mapping%%:*}")
+done
 
 echo "=== Grant Secret Manager access for Cloud Run ==="
 echo "Project:  ${PROJECT_ID}"

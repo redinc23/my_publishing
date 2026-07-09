@@ -14,48 +14,57 @@ export const revalidateAuthors = () => revalidateTag('authors');
 export const revalidateResonance = () => revalidateTag('resonance');
 
 // PERF-PHASE2-2 — Cached book listing query (60s TTL, tag: books-list)
-export const getBooksPage = cache(async (params: {
-  contentType: string;
-  q?: string;
-  genre?: string;
-  sort?: string;
-  page?: string;
-}): Promise<BookWithAuthor[]> => {
-  return unstable_cache(
-    async () => {
-      // Admin client: the cookie-based server client cannot be used inside
-      // unstable_cache (Next.js forbids dynamic data sources in cache scope).
-      // RLS is bypassed, so filter explicitly to published + public books.
-      const supabase = createAdminClient();
-      let query = supabase
-        .from('books')
-        .select('*, author:authors!inner(*, profile:profiles!inner(*))')
-        .eq('status', 'published')
-        .eq('visibility', 'public')
-        .eq('content_type', params.contentType);
+export const getBooksPage = cache(
+  async (params: {
+    contentType: string;
+    q?: string;
+    genre?: string;
+    sort?: string;
+    page?: string;
+  }): Promise<BookWithAuthor[]> => {
+    return unstable_cache(
+      async () => {
+        // Admin client: the cookie-based server client cannot be used inside
+        // unstable_cache (Next.js forbids dynamic data sources in cache scope).
+        // RLS is bypassed, so filter explicitly to published + public books.
+        const supabase = createAdminClient();
+        let query = supabase
+          .from('books')
+          .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+          .eq('status', 'published')
+          .eq('visibility', 'public')
+          .eq('content_type', params.contentType);
 
-      if (params.q) {
-        query = query.textSearch('title', params.q, { type: 'websearch' });
-      }
-      if (params.genre) {
-        query = query.eq('genre', params.genre);
-      }
+        if (params.q) {
+          query = query.textSearch('title', params.q, { type: 'websearch' });
+        }
+        if (params.genre) {
+          query = query.eq('genre', params.genre);
+        }
 
-      const sort = params.sort || 'published_at';
-      const ascending = sort === 'price' || sort === 'title';
-      query = query.order(sort, { ascending });
+        const sort = params.sort || 'published_at';
+        const ascending = sort === 'price' || sort === 'title';
+        query = query.order(sort, { ascending });
 
-      const page = parseInt(params.page || '0');
-      const pageSize = 20;
-      query = query.range(page * pageSize, (page + 1) * pageSize - 1);
+        const page = parseInt(params.page || '0');
+        const pageSize = 20;
+        query = query.range(page * pageSize, (page + 1) * pageSize - 1);
 
-      const { data } = await query;
-      return (data as BookWithAuthor[]) || [];
-    },
-    ['books-page', params.contentType, params.q ?? '', params.genre ?? '', params.sort ?? '', params.page ?? '0'],
-    { tags: ['books-list'], revalidate: 60 }
-  )();
-});
+        const { data } = await query;
+        return (data as BookWithAuthor[]) || [];
+      },
+      [
+        'books-page',
+        params.contentType,
+        params.q ?? '',
+        params.genre ?? '',
+        params.sort ?? '',
+        params.page ?? '0',
+      ],
+      { tags: ['books-list'], revalidate: 60 }
+    )();
+  }
+);
 
 // PERF-PHASE2-2 — Cached author summary query (10min TTL, tag: authors)
 export const getAuthorSummary = unstable_cache(
@@ -229,21 +238,13 @@ export async function getBooksByGenre(genre: string, limit = 20) {
 export async function getAuthorById(id: string) {
   const supabase = await createClient();
 
-  return supabase
-    .from('authors')
-    .select('*, profile:profiles(*)')
-    .eq('id', id)
-    .single();
+  return supabase.from('authors').select('*, profile:profiles(*)').eq('id', id).single();
 }
 
 export async function getAuthorBySlug(slug: string) {
   const supabase = await createClient();
 
-  return supabase
-    .from('authors')
-    .select('*, profile:profiles(*)')
-    .eq('pen_name', slug)
-    .single();
+  return supabase.from('authors').select('*, profile:profiles(*)').eq('pen_name', slug).single();
 }
 
 export async function getAuthorBooks(authorId: string) {
@@ -283,11 +284,7 @@ export async function getReadingProgress(userId: string, bookId: string) {
     .single();
 }
 
-export async function updateReadingProgress(
-  userId: string,
-  bookId: string,
-  position: number
-) {
+export async function updateReadingProgress(userId: string, bookId: string, position: number) {
   const supabase = await createClient();
 
   return supabase.rpc('update_reading_progress', {
@@ -300,26 +297,21 @@ export async function updateReadingProgress(
 export async function markBookAsFinished(userId: string, bookId: string, rating?: number) {
   const supabase = await createClient();
 
-  return supabase
-    .from('reading_progress')
-    .upsert({
-      user_id: userId,
-      book_id: bookId,
-      current_position: 100,
-      is_finished: true,
-      finished_at: new Date().toISOString(),
-      rating: rating || null,
-    });
+  return supabase.from('reading_progress').upsert({
+    user_id: userId,
+    book_id: bookId,
+    current_position: 100,
+    is_finished: true,
+    finished_at: new Date().toISOString(),
+    rating: rating || null,
+  });
 }
 
 // ============================================================================
 // RECOMMENDATIONS QUERIES
 // ============================================================================
 
-export async function getPersonalizedRecommendations(
-  userId: string,
-  limit = 12
-) {
+export async function getPersonalizedRecommendations(userId: string, limit = 12) {
   const supabase = await createClient();
 
   return supabase.rpc('get_recommendations', {
@@ -382,11 +374,7 @@ export async function submitManuscript(data: {
     .single();
 }
 
-export async function updateManuscriptStatus(
-  id: string,
-  status: string,
-  editorial_notes?: string
-) {
+export async function updateManuscriptStatus(id: string, status: string, editorial_notes?: string) {
   const supabase = await createClient();
 
   return supabase
@@ -460,9 +448,7 @@ export async function createOrder(data: {
     license_key: `LIC-${Date.now()}-${item.book_id}`,
   }));
 
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems);
+  const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
 
   if (itemsError) {
     return { error: itemsError };
@@ -498,11 +484,7 @@ export async function trackEngagement(data: {
 export async function getProfile(userId: string) {
   const supabase = await createClient();
 
-  return supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
+  return supabase.from('profiles').select('*').eq('user_id', userId).single();
 }
 
 export async function updateProfile(
@@ -511,10 +493,5 @@ export async function updateProfile(
 ) {
   const supabase = await createClient();
 
-  return supabase
-    .from('profiles')
-    .update(updates)
-    .eq('user_id', userId)
-    .select()
-    .single();
+  return supabase.from('profiles').update(updates).eq('user_id', userId).select().single();
 }

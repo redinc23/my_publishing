@@ -15,7 +15,12 @@ interface FileUploadProps {
   className?: string;
 }
 
-export function FileUpload({ onUpload, accept, maxSize = 50 * 1024 * 1024, className }: FileUploadProps) {
+export function FileUpload({
+  onUpload,
+  accept,
+  maxSize = 50 * 1024 * 1024,
+  className,
+}: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -70,9 +75,9 @@ export function FileUpload({ onUpload, accept, maxSize = 50 * 1024 * 1024, class
     <div className={cn('space-y-4', className)}>
       <div
         className={cn(
-          'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
+          'cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors',
           'border-border hover:border-primary',
-          uploading && 'opacity-50 cursor-not-allowed'
+          uploading && 'cursor-not-allowed opacity-50'
         )}
       >
         <input
@@ -85,12 +90,8 @@ export function FileUpload({ onUpload, accept, maxSize = 50 * 1024 * 1024, class
         />
         <label htmlFor="file-upload" className="cursor-pointer">
           <div className="space-y-2">
-            <p className="text-sm text-secondary">
-              Drag & drop file here, or click to select
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Max size: {maxSize / 1024 / 1024}MB
-            </p>
+            <p className="text-sm text-secondary">Drag & drop file here, or click to select</p>
+            <p className="text-xs text-muted-foreground">Max size: {maxSize / 1024 / 1024}MB</p>
           </div>
         </label>
       </div>
@@ -98,12 +99,12 @@ export function FileUpload({ onUpload, accept, maxSize = 50 * 1024 * 1024, class
       {uploading && (
         <div className="space-y-2">
           <Progress value={progress} />
-          <p className="text-sm text-secondary text-center">{progress}%</p>
+          <p className="text-center text-sm text-secondary">{progress}%</p>
         </div>
       )}
 
       {error && (
-        <div className="rounded-md bg-red-500/10 border border-red-500 p-3 text-sm text-red-500">
+        <div className="rounded-md border border-red-500 bg-red-500/10 p-3 text-sm text-red-500">
           {error}
         </div>
       )}

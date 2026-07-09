@@ -57,7 +57,7 @@ export interface UploadOptions {
 export const UPLOAD_CONFIGS: Record<string, FileUploadConfig> = {
   cover: {
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']
+      'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif'],
     },
     maxSize: 10 * 1024 * 1024, // 10MB
     maxFiles: 1,
@@ -68,51 +68,48 @@ export const UPLOAD_CONFIGS: Record<string, FileUploadConfig> = {
       enabled: true,
       quality: 85,
       maxWidth: 2000,
-      maxHeight: 2000
-    }
+      maxHeight: 2000,
+    },
   },
   manuscript: {
     accept: {
-      'application/*': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.md']
+      'application/*': ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.md'],
     },
     maxSize: 100 * 1024 * 1024, // 100MB
     bucket: 'manuscripts',
     virusScan: true,
-    autoProcess: false
+    autoProcess: false,
   },
   epub: {
     accept: {
       'application/epub+zip': ['.epub'],
-      'application/x-fictionbook+xml': ['.fb2']
+      'application/x-fictionbook+xml': ['.fb2'],
     },
     maxSize: 50 * 1024 * 1024, // 50MB
     maxFiles: 1,
     bucket: 'published-epubs',
     virusScan: true,
-    autoProcess: true
+    autoProcess: true,
   },
   audio: {
     accept: {
-      'audio/*': ['.mp3', '.m4a', '.wav', '.ogg', '.flac']
+      'audio/*': ['.mp3', '.m4a', '.wav', '.ogg', '.flac'],
     },
     maxSize: 200 * 1024 * 1024, // 200MB
     bucket: 'audiobooks',
     compression: {
       enabled: true,
-      quality: 90
-    }
-  }
+      quality: 90,
+    },
+  },
 } as const;
 
 // Upload validation functions
-export const validateFile = (
-  file: File, 
-  config: FileUploadConfig
-): FileValidationError | null => {
+export const validateFile = (file: File, config: FileUploadConfig): FileValidationError | null => {
   if (file.size > config.maxSize) {
     return {
       code: 'FILE_TOO_LARGE',
-      message: `File exceeds maximum size of ${config.maxSize / 1024 / 1024}MB`
+      message: `File exceeds maximum size of ${config.maxSize / 1024 / 1024}MB`,
     };
   }
 
@@ -137,7 +134,7 @@ export const validateFile = (
   if (!isValid) {
     return {
       code: 'INVALID_FILE_TYPE',
-      message: `File type not supported. Accepted types: ${Object.values(config.accept).flat().join(', ')}`
+      message: `File type not supported. Accepted types: ${Object.values(config.accept).flat().join(', ')}`,
     };
   }
 

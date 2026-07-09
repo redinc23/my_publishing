@@ -23,7 +23,7 @@ export default function Error({
         <p className="mb-8 text-lg text-secondary">
           {error.message || 'An unexpected error occurred'}
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="flex justify-center gap-4">
           <Button onClick={reset} variant="default">
             Try again
           </Button>

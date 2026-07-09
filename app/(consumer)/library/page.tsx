@@ -61,19 +61,19 @@ export default async function LibraryPage() {
   return (
     <Section>
       <Container>
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold">Your Library</h1>
-            <p className="text-secondary mt-2">Access every book you&apos;ve purchased.</p>
+            <p className="mt-2 text-secondary">Access every book you&apos;ve purchased.</p>
           </div>
         </div>
 
         {purchasedItems.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="py-16 text-center">
             <p className="text-secondary">Your library is empty. Purchase a book to get started.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {purchasedItems.map((item) => (
               <div key={item.id} className="space-y-3">
                 <BookCard book={item.book} />
