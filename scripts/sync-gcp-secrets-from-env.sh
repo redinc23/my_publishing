@@ -44,6 +44,12 @@ upsert_secret supabase-service-role-key "${SUPABASE_SERVICE_ROLE_KEY:-}"
 upsert_secret stripe-secret-key "${STRIPE_SECRET_KEY:-}"
 upsert_secret stripe-webhook-secret "${STRIPE_WEBHOOK_SECRET:-}"
 
+# Build-time public env vars (used by Cloud Build when trigger substitutions are empty)
+upsert_secret next-public-supabase-url "${NEXT_PUBLIC_SUPABASE_URL:-}"
+upsert_secret next-public-supabase-anon-key "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}"
+upsert_secret next-public-stripe-publishable-key "${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}"
+upsert_secret next-public-site-url "${NEXT_PUBLIC_SITE_URL:-}"
+
 # Optional — only if set locally
 if [[ -n "${RESEND_API_KEY:-}" ]]; then
   upsert_secret resend-api-key "${RESEND_API_KEY}"

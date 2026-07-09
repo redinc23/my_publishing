@@ -46,13 +46,32 @@ steps:
         # Fail closed: never bake placeholder NEXT_PUBLIC_* into a deployable image.
         # Production submits must pass real substitutions via ./scripts/gcloud-build-submit.sh
         # (or a Cloud Build trigger with the same _NEXT_PUBLIC_* values).
-        # Do NOT add silent placeholder fallbacks here — that would ship mock URLs to Cloud Run.
+        # When trigger substitutions are empty, fall back to Secret Manager (synced via
+        # ./scripts/sync-gcp-secrets-from-env.sh).
+        read_secret() {
+          local name="$1"
+          gcloud secrets versions access latest --secret="$${name}" --project="$PROJECT_ID" 2>/dev/null || true
+        }
+        resolve_pub() {
+          local current="$1"
+          local secret_name="$2"
+          if [ -n "$${current}" ] && [[ "$${current}" != *placeholder* ]] && [[ "$${current}" != *example.com* ]]; then
+            printf '%s' "$${current}"
+            return
+          fi
+          read_secret "$${secret_name}"
+        }
+        export NEXT_PUBLIC_SUPABASE_URL="$$(resolve_pub "$${NEXT_PUBLIC_SUPABASE_URL}" next-public-supabase-url)"
+        export NEXT_PUBLIC_SUPABASE_ANON_KEY="$$(resolve_pub "$${NEXT_PUBLIC_SUPABASE_ANON_KEY}" next-public-supabase-anon-key)"
+        export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$$(resolve_pub "$${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}" next-public-stripe-publishable-key)"
+        export NEXT_PUBLIC_SITE_URL="$$(resolve_pub "$${NEXT_PUBLIC_SITE_URL}" next-public-site-url)"
         require_pub() {
           local name="$1"
           local val="$2"
           if [ -z "$${val}" ] || [[ "$${val}" == *placeholder* ]] || [[ "$${val}" == *example.com* ]]; then
             echo "ERROR: $${name} is empty or placeholder (got: '$${val}')."
             echo "Submit with: ./scripts/gcloud-build-submit.sh (loads .env.local substitutions)."
+            echo "Or sync build-time public vars: ./scripts/sync-gcp-secrets-from-env.sh"
             exit 1
           fi
         }

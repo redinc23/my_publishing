@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { useMocks } from '@/lib/utils/env-validation';
+import { getMockBookBySlug, getMockBooks } from '@/lib/utils/mock-data';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
@@ -13,6 +15,11 @@ import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
 
 async function getBook(slug: string): Promise<BookFull | null> {
+  if (useMocks()) {
+    const mock = getMockBookBySlug(slug);
+    return mock ? (mock as BookFull) : null;
+  }
+
   const supabase = await createClient();
   const { data } = await supabase
     .from('books')
@@ -26,6 +33,12 @@ async function getBook(slug: string): Promise<BookFull | null> {
 }
 
 async function getSimilarBooks(genre: string | undefined, excludeId: string) {
+  if (useMocks()) {
+    return getMockBooks()
+      .filter((book) => book.id !== excludeId && (!genre || book.genre === genre))
+      .slice(0, 6);
+  }
+
   const supabase = await createClient();
   let query = supabase
     .from('books')
