@@ -12,6 +12,11 @@ interface EnvValidationResult {
 interface EnvConfig {
   name: string;
   required: boolean;
+  /**
+   * Required for launch, but may be omitted when USE_MOCKS=true
+   * (local dev / CI without live Stripe or Upstash credentials). Fix C9.
+   */
+  requiredUnlessMocks?: boolean;
   description: string;
   validate?: (value: string) => boolean | string;
 }
@@ -53,6 +58,7 @@ const envConfigs: EnvConfig[] = [
   {
     name: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',
     required: false,
+    requiredUnlessMocks: true,
     description: 'Stripe publishable key (required for payments)',
     validate: (value) => {
       if (value && !value.startsWith('pk_')) {
@@ -64,6 +70,7 @@ const envConfigs: EnvConfig[] = [
   {
     name: 'STRIPE_SECRET_KEY',
     required: false,
+    requiredUnlessMocks: true,
     description: 'Stripe secret key (required for payments)',
     validate: (value) => {
       if (value && !value.startsWith('sk_')) {
@@ -108,6 +115,7 @@ const envConfigs: EnvConfig[] = [
   {
     name: 'UPSTASH_REDIS_REST_URL',
     required: false,
+    requiredUnlessMocks: true,
     description: 'Upstash Redis REST URL (required for distributed rate limiting)',
     validate: (value) => {
       if (value && !value.startsWith('https://')) {
@@ -119,6 +127,7 @@ const envConfigs: EnvConfig[] = [
   {
     name: 'UPSTASH_REDIS_REST_TOKEN',
     required: false,
+    requiredUnlessMocks: true,
     description: 'Upstash Redis REST token (required for distributed rate limiting)',
     validate: (value) => {
       if (value && value.length < 10) {
@@ -146,11 +155,14 @@ const envConfigs: EnvConfig[] = [
 export function validateEnvironment(): EnvValidationResult {
   const missing: string[] = [];
   const warnings: string[] = [];
+  const mocksEnabled = process.env.USE_MOCKS === 'true';
 
   for (const config of envConfigs) {
     const value = process.env[config.name];
+    const isRequired =
+      config.required || (config.requiredUnlessMocks === true && !mocksEnabled);
 
-    if (config.required && !value) {
+    if (isRequired && !value) {
       missing.push(config.name);
       continue;
     }

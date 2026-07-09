@@ -11,7 +11,7 @@ export async function resetPassword(formData: FormData) {
   }
 
   // Rate limiting for password reset
-  if (!passwordResetRateLimit(email)) {
+  if (!(await passwordResetRateLimit(email))) {
     return { error: 'Too many password reset requests. Please try again in an hour.' };
   }
 

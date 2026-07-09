@@ -110,7 +110,7 @@ Log results in [docs/OPERATOR_QA_LOG.md](./OPERATOR_QA_LOG.md).
 1. **Release:** Merge to `main` → Cloud Build → Cloud Run revision.
 2. **Secrets:** GCP Secret Manager names must match `cloudbuild.yaml` `--set-secrets`.
 3. **Verify:** `./scripts/verify-gcp-production.sh` + `bash scripts/launch-readiness.sh` locally first.
-4. **Vercel:** Optional preview only when `VERCEL_TOKEN` is set in GitHub.
+4. **Vercel:** Retired (Fix C10 + PR #144). The standalone `vercel-deploy.yml` workflow duplicated CI lint/build with dummy credentials and never deployed; it and the optional ci.yml Vercel job have both been removed. Cloud Run is the only deploy target.
 5. **Amplify:** Legacy reference only — do not use for new releases.
 
 ## Operator scripts

@@ -5,11 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { 
-  apiRateLimit, 
-  getClientIdentifier,
-  createRateLimitHeaders 
-} from '@/lib/utils/rate-limit';
+import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { RecommendRequestSchema, validateSafe, getFirstError } from '@/lib/validations/schemas';
 import type { BookWithStats, ApiResponse } from '@/types';
 
@@ -26,19 +22,22 @@ interface RecommendationResult {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
 
-  // Rate limiting
+  // Rate limiting (fail-closed, Fix C8)
   const clientId = getClientIdentifier(request);
-  const rateLimitResult = apiRateLimit.checkWithInfo(30, clientId);
-  const rateLimitHeaders = createRateLimitHeaders(rateLimitResult);
+  const rateLimitResult = await enforceRateLimit('api', clientId);
+  const rateLimitHeaders = rateLimitResult.headers;
 
-  if (!rateLimitResult.allowed) {
+  if (!rateLimitResult.success) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Rate limit exceeded. Please try again later.',
+        error:
+          rateLimitResult.reason === 'unavailable'
+            ? 'Rate limiter unavailable. Please try again shortly.'
+            : 'Rate limit exceeded. Please try again later.',
       } satisfies ApiResponse,
       { 
-        status: 429,
+        status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
         headers: rateLimitHeaders,
       }
     );

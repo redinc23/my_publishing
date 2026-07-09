@@ -16,7 +16,7 @@ export async function registerUser(formData: FormData) {
   const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
   const identifier = getAuthIdentifier(ip, email);
   
-  if (!authRateLimit(identifier)) {
+  if (!(await authRateLimit(identifier))) {
     return { error: 'Too many registration attempts. Please try again in 15 minutes.' };
   }
 

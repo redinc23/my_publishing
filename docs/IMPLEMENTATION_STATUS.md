@@ -42,6 +42,18 @@ This document tracks the completion status of the prioritized platform fixes.
 - ✅ Created admin health dashboard (`app/admin/health/page.tsx`)
 - ✅ Fixed and improved E2E tests (`tests/e2e/purchase-flow.spec.ts`)
 
+### Phase 12: Near-Term Fix Sprint (C1–C10) — agent sweep 2026-07-11
+- ✅ **C1** `/admin/books/new` route verified present (`app/admin/books/new/page.tsx` + `BookCreateForm.tsx`)
+- ✅ **C2** Created `/authors` index page (`app/(consumer)/authors/page.tsx`) — nav links no longer 404
+- ✅ **C3** Duplicate `content_type` migrations verified idempotent; documented in `docs/MIGRATIONS.md`
+- ✅ **C4** README + MIGRATIONS.md migration lists corrected (15 files; fixed `20260117000006_storage_policies.sql` timestamp; added the three `20260619*` migrations)
+- ✅ **C5** Deleted duplicate `components/shared/ErrorBoundary.tsx`; `components/common/ErrorBoundary.tsx` is canonical
+- ✅ **C6** Growth rate implemented (`calculatePeriodGrowthRate` — previous-period compare, `null`/em-dash when no prior data) in `AnalyticsOverview`
+- ✅ **C7** Upload dedup: SHA-256 content-addressed paths + pre-upload existence check in `lib/actions/upload.ts`; `hash` field populated
+- ✅ **C8** Unified fail-closed rate limiting in `lib/rate-limit.ts` (Upstash; in-memory fallback in dev/test/mocks; fail-closed in production and on Upstash errors). Migrated middleware, auth actions, webhook, analytics/track, resonance/recommend. Deleted `lib/utils/rate-limit.ts` + `lib/middleware/rate-limit.ts`
+- ✅ **C9** Env validation: Stripe + Upstash now required unless `USE_MOCKS=true` (`requiredUnlessMocks` in `lib/utils/env-validation.ts`)
+- ✅ **C10** Retired `.github/workflows/vercel-deploy.yml` (duplicate lint/build with dummy creds); Vercel removed from CI entirely (see PR #144) — Cloud Run is the only deploy target
+
 ## 📋 Remaining Items (Require Manual Testing)
 
 ### Phase 3: Authentication Flow

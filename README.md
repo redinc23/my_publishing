@@ -78,16 +78,19 @@ Migrations are located in `supabase/migrations/` and **must be applied in this e
 
 1. `20260116000000_initial_schema.sql` - Creates `profiles` table and core schema (required for health check)
 2. `20260117000000_analytics_events.sql` - Analytics event tracking
-3. `20260117000000_storage_policies.sql` - Storage bucket policies
-4. `20260117000001_analytics_sessions.sql` - Session tracking
-5. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
-6. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
-7. `20260117000004_author_payouts.sql` - Author payout system
-8. `20260117000005_book_pricing.sql` - Pricing logic and discounts
+3. `20260117000001_analytics_sessions.sql` - Session tracking
+4. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
+5. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
+6. `20260117000004_author_payouts.sql` - Author payout system
+7. `20260117000005_book_pricing.sql` - Pricing logic and discounts
+8. `20260117000006_storage_policies.sql` - Storage bucket policies
 9. `20260118000000_critical_fixes.sql` - Bug fixes and corrections
 10. `20260120000006_performance_optimizations.sql` - Performance indexes
 11. `20260121000000_profile_trigger.sql` - Profile trigger consistency fixes
 12. `20260122000000_social_features.sql` - Social features schema
+13. `20260619124500_add_content_type_to_books.sql` - Adds `content_type` to books (idempotent)
+14. `20260619162409_add_content_type.sql` - `content_type` follow-up (idempotent, safe re-run)
+15. `20260619170000_add_retailer_urls.sql` - Retailer URL fields
 
 **To apply migrations:**
 

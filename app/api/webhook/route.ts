@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
-import { webhookRateLimit, getClientIdentifier } from '@/lib/utils/rate-limit';
+import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
 import type { 
   WebhookProcessingResult, 
@@ -280,11 +280,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  if (!webhookRateLimit.check(1000, clientId)) {
-    console.warn('[Webhook] Rate limit exceeded for:', clientId);
+  const rateLimitResult = await enforceRateLimit('webhook', clientId);
+  if (!rateLimitResult.success) {
+    // Fail-closed: 503 lets Stripe retry the event; 429 signals real overload.
+    console.warn('[Webhook] Rate limit rejection for:', clientId, rateLimitResult.reason);
     return NextResponse.json(
-      { error: 'Rate limit exceeded' },
-      { status: 429 }
+      {
+        error:
+          rateLimitResult.reason === 'unavailable'
+            ? 'Rate limiter unavailable'
+            : 'Rate limit exceeded',
+      },
+      {
+        status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
+        headers: rateLimitResult.headers,
+      }
     );
   }
 

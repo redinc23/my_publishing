@@ -19,36 +19,36 @@ Migrations **must be applied in this exact order** due to dependencies between t
    - Sets up analytics tracking
    - **Dependencies**: `books`, `profiles`
 
-3. **20260117000000_storage_policies.sql**
-   - Creates storage buckets
-   - Sets up Row Level Security (RLS) policies for storage
-   - **Dependencies**: `profiles`, `books`
-
-4. **20260117000001_analytics_sessions.sql**
+3. **20260117000001_analytics_sessions.sql**
    - Creates `analytics_sessions` table
    - Creates session tracking functionality
    - **Dependencies**: `analytics_events`
 
-5. **20260117000002_book_stats_materialized.sql**
+4. **20260117000002_book_stats_materialized.sql**
    - Creates materialized views for book statistics
    - Creates refresh functions
    - **Dependencies**: `books`, `analytics_events`
 
-6. **20260117000003_revenue_tracking.sql**
+5. **20260117000003_revenue_tracking.sql**
    - Creates `orders` table
    - Creates `revenue_events` table
    - Sets up payment tracking
    - **Dependencies**: `books`, `profiles`
 
-7. **20260117000004_author_payouts.sql**
+6. **20260117000004_author_payouts.sql**
    - Creates `payouts` table
    - Creates payout calculation functions
    - **Dependencies**: `orders`, `authors`, `books`
 
-8. **20260117000005_book_pricing.sql**
+7. **20260117000005_book_pricing.sql**
    - Creates pricing tables and logic
    - Sets up discount system
    - **Dependencies**: `books`
+
+8. **20260117000006_storage_policies.sql**
+   - Creates storage buckets
+   - Sets up Row Level Security (RLS) policies for storage
+   - **Dependencies**: `profiles`, `books`
 
 9. **20260118000000_critical_fixes.sql**
     - Applies bug fixes
@@ -67,6 +67,25 @@ Migrations **must be applied in this exact order** due to dependencies between t
 12. **20260122000000_social_features.sql**
     - Social tables (reviews, follows, etc.)
     - **Dependencies**: `profiles`, `books`
+
+13. **20260619124500_add_content_type_to_books.sql**
+    - Adds `content_type` column, constraint, and index to `books`
+    - **Dependencies**: `books`
+
+14. **20260619162409_add_content_type.sql**
+    - Later duplicate of the `content_type` change (see note below)
+    - **Dependencies**: `books`
+
+15. **20260619170000_add_retailer_urls.sql**
+    - Adds retailer URL fields to `books`
+    - **Dependencies**: `books`
+
+> **Note — duplicate `content_type` migrations (Fix C3):** `20260619124500` and
+> `20260619162409` intentionally overlap. Both are written with
+> `IF NOT EXISTS` / conditional guards, so each is idempotent and applying both
+> (in either a fresh or partially-migrated database) is safe and results in the
+> same schema. Do **not** delete either file — removing one would break
+> `schema_migrations` history on environments where it was already recorded.
 
 ### Bundle for SQL Editor
 

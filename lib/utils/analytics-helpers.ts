@@ -13,6 +13,19 @@ export function calculatePercentageChange(current: number, previous: number): nu
   return Math.round(((current - previous) / previous) * 100);
 }
 
+/**
+ * Growth rate between two periods (Fix C6).
+ * Returns null when the previous period has no data, so callers can
+ * render an em dash instead of a misleading 0% / 100%.
+ */
+export function calculatePeriodGrowthRate(
+  current: number,
+  previous: number
+): number | null {
+  if (previous === 0) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
 export function calculateGrowthRate(values: number[]): number {
   if (values.length < 2) return 0;
   

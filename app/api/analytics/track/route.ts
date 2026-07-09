@@ -5,11 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { 
-  analyticsRateLimit, 
-  getClientIdentifier,
-  createRateLimitHeaders 
-} from '@/lib/utils/rate-limit';
+import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { AnalyticsEventSchema, validateSafe, getFirstError } from '@/lib/validations/schemas';
 import type { TrackEventResponse, AnalyticsEvent } from '@/types/analytics';
 
@@ -53,19 +49,22 @@ function getReferrerDomain(referrer: string | null): string | null {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
 
-  // Rate limiting
+  // Rate limiting (fail-closed, Fix C8)
   const clientId = getClientIdentifier(request);
-  const rateLimitResult = analyticsRateLimit.checkWithInfo(100, clientId);
-  const rateLimitHeaders = createRateLimitHeaders(rateLimitResult);
+  const rateLimitResult = await enforceRateLimit('analytics', clientId);
+  const rateLimitHeaders = rateLimitResult.headers;
 
-  if (!rateLimitResult.allowed) {
+  if (!rateLimitResult.success) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Rate limit exceeded. Please slow down.',
+        error:
+          rateLimitResult.reason === 'unavailable'
+            ? 'Rate limiter unavailable. Please try again shortly.'
+            : 'Rate limit exceeded. Please slow down.',
       } satisfies TrackEventResponse,
       { 
-        status: 429,
+        status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
         headers: rateLimitHeaders,
       }
     );

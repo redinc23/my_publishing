@@ -97,6 +97,19 @@ Do **not** merge PR #136’s `cloudbuild.yaml` placeholder fallbacks. Prefer thi
 
 ## Automated (agent-run)
 
+### 2026-07-11 — Phase 12 fix sprint (C1–C10)
+
+All ten near-term fixes from the master checklist are done (code + docs). Evidence:
+
+| Check | Command | Result |
+|-------|---------|--------|
+| Type-check | `npm run type-check` | PASS (2026-07-11) |
+| Lint | `npm run lint` | PASS — no warnings or errors (2026-07-11) |
+| Unit tests | `npm test` | PASS 42/42, 7 suites (2026-07-11; baseline was 25/6 — added fail-closed rate-limit + growth-rate suites) |
+| Production build | CI-style env (`USE_MOCKS=true` + placeholder Supabase vars) `npm run build` | PASS — 54/54 pages (2026-07-11) |
+
+Changes: C8 unified fail-closed rate limiter (`lib/rate-limit.ts`; legacy `lib/utils/rate-limit.ts` + `lib/middleware/rate-limit.ts` deleted); C2 `/authors` index page; C5 duplicate ErrorBoundary removed; C6 growth rate (null-safe previous-period compare); C7 SHA-256 upload dedup; C9 strict env validation (Stripe/Upstash required unless mocks); C10 `vercel-deploy.yml` retired (Vercel also removed from ci.yml by PR #144); C1 verified; C3/C4 migration docs corrected (15-file order). Note: no `.env.local` exists on this machine — build gate used the same env shape as `ci.yml`.
+
 | Check | Command / URL | Result |
 |-------|---------------|--------|
 | Type-check | `npm run type-check` | PASS (2026-05-31) |

@@ -5,7 +5,7 @@ import { emailVerificationRateLimit } from '@/lib/utils/auth-rate-limit';
 
 export async function resendVerificationEmail(email: string) {
   // Rate limiting
-  if (!emailVerificationRateLimit(email)) {
+  if (!(await emailVerificationRateLimit(email))) {
     return { error: 'Too many verification email requests. Please try again in an hour.' };
   }
 

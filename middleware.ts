@@ -1,13 +1,27 @@
 // PERF-PHASE2-9
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { checkRateLimit, getAuthLimiter, getUploadLimiter } from '@/lib/rate-limit';
+import { enforceRateLimit } from '@/lib/rate-limit';
+
+/** Reject a request per rate-limit result: 429 when limited, 503 when the limiter is unavailable (fail-closed). */
+function rateLimitRejection(result: { reason: string; headers: Record<string, string> }) {
+  if (result.reason === 'unavailable') {
+    return new NextResponse('Service Unavailable', {
+      status: 503,
+      headers: result.headers,
+    });
+  }
+  return new NextResponse('Too Many Requests', {
+    status: 429,
+    headers: result.headers,
+  });
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
-  // ── Rate limiting ──────────────────────────────────────────────────────────
+  // ── Rate limiting (fail-closed, Fix C8) ────────────────────────────────────
   // Apply to /api/auth/* endpoints AND to server-action POSTs on auth pages.
   // Next.js server actions POST to the page URL itself (with next-action header).
   const isAuthApiPath = pathname.startsWith('/api/auth/');
@@ -18,38 +32,21 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/reset-password'));
 
   if (isAuthApiPath || isAuthPageAction) {
-    try {
-      const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
-      const limiter = getAuthLimiter();
-      const result = await checkRateLimit(ip, limiter);
+    const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const result = await enforceRateLimit('auth', ip);
 
-      if (!result.success) {
-        return new NextResponse('Too Many Requests', {
-          status: 429,
-          headers: result.headers,
-        });
-      }
-    } catch (error) {
-      console.error('Rate limit check failed for auth endpoint:', error);
-      // Fail-open: allow the request if the rate-limiter is unavailable.
+    if (!result.success) {
+      return rateLimitRejection(result);
     }
   }
 
   // Apply rate limiting to upload endpoints
   if (pathname.startsWith('/api/upload') || pathname.includes('/upload')) {
-    try {
-      const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
-      const limiter = getUploadLimiter();
-      const result = await checkRateLimit(ip, limiter);
+    const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const result = await enforceRateLimit('upload', ip);
 
-      if (!result.success) {
-        return new NextResponse('Too Many Requests', {
-          status: 429,
-          headers: result.headers,
-        });
-      }
-    } catch (error) {
-      console.error('Rate limit check failed for upload endpoint:', error);
+    if (!result.success) {
+      return rateLimitRejection(result);
     }
   }
 

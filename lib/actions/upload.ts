@@ -1,6 +1,7 @@
 /* eslint-disable */
 'use server';
 
+import { createHash } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { UPLOAD_CONFIGS, type UploadResult } from '@/types/upload';
 
@@ -28,18 +29,34 @@ export async function uploadFile(
       throw new Error(`File size exceeds ${config.maxSize / (1024 * 1024)}MB limit`);
     }
 
+    // Content-addressed path: SHA-256 of the file bytes (Fix C7).
+    // Identical uploads by the same user map to the same object.
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const hash = createHash('sha256').update(fileBuffer).digest('hex');
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const fileName = `${hash}.${fileExt}`;
     const filePath = `${user.id}/${fileName}`;
 
-    const { data, error } = await supabase.storage
+    // Deduplication: reuse the existing object when present.
+    const { data: existing } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+      .list(user.id, { search: fileName });
+    const alreadyUploaded = existing?.some((obj) => obj.name === fileName) ?? false;
 
-    if (error) throw error;
+    if (!alreadyUploaded) {
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, fileBuffer, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
+
+      // A concurrent upload of the same content is not an error (409 duplicate).
+      if (error && !/already exists|duplicate/i.test(error.message)) {
+        throw error;
+      }
+    }
 
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
@@ -51,8 +68,8 @@ export async function uploadFile(
       fileName: file.name,
       fileSize: file.size,
       mimeType: file.type,
-      hash: '', // TODO: Generate file hash for deduplication
-      metadata: {},
+      hash,
+      metadata: { deduplicated: alreadyUploaded },
     };
   } catch (error) {
     console.error('Upload error:', error);

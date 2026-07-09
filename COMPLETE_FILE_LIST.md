@@ -60,7 +60,7 @@
 ### Middleware
 - ✅ `middleware.ts` - Route protection
 - ✅ `lib/middleware/auth.ts` - Auth utilities
-- ✅ `lib/middleware/rate-limit.ts` - Rate limiting
+- ✅ `lib/rate-limit.ts` - Unified fail-closed rate limiting (Upstash + in-memory dev fallback; Fix C8)
 
 ### Stripe Integration
 - ✅ `lib/stripe/client.ts` - Client-side Stripe
@@ -101,7 +101,7 @@
 - ✅ `components/shared/UserMenu.tsx` - User menu
 - ✅ `components/shared/SearchBar.tsx` - Search bar
 - ✅ `components/shared/LoadingSpinner.tsx` - Loading spinner
-- ✅ `components/shared/ErrorBoundary.tsx` - Error boundary
+- ✅ `components/common/ErrorBoundary.tsx` - Error boundary (single canonical implementation; Fix C5)
 - ✅ `components/shared/ProgressBar.tsx` - Progress bar
 
 ### Card Components
