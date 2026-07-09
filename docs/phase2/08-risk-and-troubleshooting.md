@@ -12,19 +12,19 @@ Source baseline: `docs/phase2/_sources/litstream_phase2_sec07.md`
 
 ## Risk Register
 
-| Risk ID | Risk | Probability | Impact | Primary Mitigation | Risk Owner (Named) | Status | Escalation Path |
-|---|---|---|---|---|---|---|---|
-| R1 | Secret leak via `NEXT_PUBLIC_*` misuse (public vars containing secrets) or server secret exposed to client | Medium | Critical | Enforced token naming + audit gate | Same person as **Security Lead Primary** (`12` Role Directory) | Open | Security Lead -> Engineering Lead |
-| R2 | Cloud Run deploy fails due to invalid memory config | High | High | Enforce `--memory=512Mi` (Next.js standalone may need additional headroom) | Same person as **Platform Engineer Primary** (`12`) | Open | Platform Lead -> Engineering Lead |
-| R3 | Developer Connect / OAuth interruption | Medium | High | Connection health checks + fallback auth remediation | Same person as **Platform Engineer Primary** (`12`) | Open | Platform Lead -> Engineering Lead |
-| R4 | Artifact tagging conflict or immutable tag failure | Medium | Medium | SHA-tag canonical deploy path | Same person as **Platform Engineer Primary** (`12`) | Open | Platform Lead |
-| R5 | Vulnerability scan blocks deploy | Medium | High | Patch/update base image and rerun | Same person as **Security Lead Primary** (`12`) | Open | Security Lead -> Platform Lead |
-| R6 | Next.js build memory limit or build timeout during `npm run build` | Medium | Medium | Increase Cloud Build machine type; optimize build; split steps | Same person as **Engineering Lead Primary** (`12`) | Open | Engineering Lead |
-| R7 | Webhook pipeline not updating site | Medium | High | Webhook auth/trigger diagnostics; verify Supabase event triggers rebuild | Same person as **Platform Engineer Primary** (`12`) | Open | On-call Operator -> Platform Lead |
-| R8 | `.env.local` committed to repo history | Low | Critical | Ignore rules + history cleanup + token rotation | Same person as **Security Lead Primary** (`12`) | Open | Security Lead -> Engineering Lead |
-| R9 | Missing runtime environment variables (`SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY` not injected at Cloud Run) | Medium | Critical | Verify `--set-secrets` mapping in every deploy; validate `/api/health` before traffic shift | Same person as **Platform Engineer Primary** (`12`) | Open | Platform Lead -> Engineering Lead |
-| R10 | Next.js standalone output misconfiguration (`output: 'standalone'` missing from `next.config.js`) | Low | High | CI build gate asserts `.next/standalone/` exists; block deploy if absent | Same person as **Engineering Lead Primary** (`12`) | Open | Engineering Lead -> Platform Lead |
-| R11 | API route failure in production (`/api/health` or other API routes fail due to missing secrets) | Medium | High | Pre-traffic `/api/health` check; runtime env validation in server bootstrap | Same person as **Engineering Lead Primary** (`12`) | Open | Engineering Lead -> Security Lead |
+| Risk ID | Risk                                                                                                                                 | Probability | Impact   | Primary Mitigation                                                                          | Risk Owner (Named)                                             | Status | Escalation Path                   |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------- | -------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------ | --------------------------------- |
+| R1      | Secret leak via `NEXT_PUBLIC_*` misuse (public vars containing secrets) or server secret exposed to client                           | Medium      | Critical | Enforced token naming + audit gate                                                          | Same person as **Security Lead Primary** (`12` Role Directory) | Open   | Security Lead -> Engineering Lead |
+| R2      | Cloud Run deploy fails due to invalid memory config                                                                                  | High        | High     | Enforce `--memory=512Mi` (Next.js standalone may need additional headroom)                  | Same person as **Platform Engineer Primary** (`12`)            | Open   | Platform Lead -> Engineering Lead |
+| R3      | Developer Connect / OAuth interruption                                                                                               | Medium      | High     | Connection health checks + fallback auth remediation                                        | Same person as **Platform Engineer Primary** (`12`)            | Open   | Platform Lead -> Engineering Lead |
+| R4      | Artifact tagging conflict or immutable tag failure                                                                                   | Medium      | Medium   | SHA-tag canonical deploy path                                                               | Same person as **Platform Engineer Primary** (`12`)            | Open   | Platform Lead                     |
+| R5      | Vulnerability scan blocks deploy                                                                                                     | Medium      | High     | Patch/update base image and rerun                                                           | Same person as **Security Lead Primary** (`12`)                | Open   | Security Lead -> Platform Lead    |
+| R6      | Next.js build memory limit or build timeout during `npm run build`                                                                   | Medium      | Medium   | Increase Cloud Build machine type; optimize build; split steps                              | Same person as **Engineering Lead Primary** (`12`)             | Open   | Engineering Lead                  |
+| R7      | Webhook pipeline not updating site                                                                                                   | Medium      | High     | Webhook auth/trigger diagnostics; verify Supabase event triggers rebuild                    | Same person as **Platform Engineer Primary** (`12`)            | Open   | On-call Operator -> Platform Lead |
+| R8      | `.env.local` committed to repo history                                                                                               | Low         | Critical | Ignore rules + history cleanup + token rotation                                             | Same person as **Security Lead Primary** (`12`)                | Open   | Security Lead -> Engineering Lead |
+| R9      | Missing runtime environment variables (`SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY` not injected at Cloud Run) | Medium      | Critical | Verify `--set-secrets` mapping in every deploy; validate `/api/health` before traffic shift | Same person as **Platform Engineer Primary** (`12`)            | Open   | Platform Lead -> Engineering Lead |
+| R10     | Next.js standalone output misconfiguration (`output: 'standalone'` missing from `next.config.js`)                                    | Low         | High     | CI build gate asserts `.next/standalone/` exists; block deploy if absent                    | Same person as **Engineering Lead Primary** (`12`)             | Open   | Engineering Lead -> Platform Lead |
+| R11     | API route failure in production (`/api/health` or other API routes fail due to missing secrets)                                      | Medium      | High     | Pre-traffic `/api/health` check; runtime env validation in server bootstrap                 | Same person as **Engineering Lead Primary** (`12`)             | Open   | Engineering Lead -> Security Lead |
 
 ### Risk Ownership Gate
 
@@ -127,14 +127,14 @@ Use `07-operational-runbook.md` procedures as primary response flow and record o
 
 These seven gates structure engineering work from planning through verified production behavior. Treat each gate as mandatory for Phase 2 closure unless the release evidence log records an explicit, approved exception.
 
-| Gate | Purpose | Primary artifacts / checks |
-|---|---|---|
-| PLAN | Scope, milestones, RACI, and risks agreed | `02-business-requirements.md`, `05-milestone-implementation-plan.md`, `08-risk-and-troubleshooting.md`, `12-ownership-raci.md` |
-| BUILD | Deterministic repo build produces complete `.next/standalone/` | Local + CI build scripts; `audit:secrets`; `output: 'standalone'` in `next.config.js`; no Dockerfile fallback |
-| REVIEW | Architecture and security boundaries reviewed | `04-architecture-decisions.md`; secret naming; CSP and logging choices |
-| TEST | P0 protocol passes with command evidence | `06-acceptance-and-test-protocol.md`, `14-evidence-and-signoff-log.md` |
-| STAGE | CI/CD produces signed image and passes gates | `cloudbuild.yaml` ordering; vulnerability policy; Artifact Registry image |
-| SHIP | Traffic cutover and hosting configuration correct | Cloud Run `--port 3000`, DNS/TLS, Cloud Run revision |
-| VERIFY | Monitoring, alerts, and cost controls active | `07-operational-runbook.md`, `06` P0-9; thresholds per `change-log-and-decisions.md` Decision 7 |
+| Gate   | Purpose                                                        | Primary artifacts / checks                                                                                                     |
+| ------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| PLAN   | Scope, milestones, RACI, and risks agreed                      | `02-business-requirements.md`, `05-milestone-implementation-plan.md`, `08-risk-and-troubleshooting.md`, `12-ownership-raci.md` |
+| BUILD  | Deterministic repo build produces complete `.next/standalone/` | Local + CI build scripts; `audit:secrets`; `output: 'standalone'` in `next.config.js`; no Dockerfile fallback                  |
+| REVIEW | Architecture and security boundaries reviewed                  | `04-architecture-decisions.md`; secret naming; CSP and logging choices                                                         |
+| TEST   | P0 protocol passes with command evidence                       | `06-acceptance-and-test-protocol.md`, `14-evidence-and-signoff-log.md`                                                         |
+| STAGE  | CI/CD produces signed image and passes gates                   | `cloudbuild.yaml` ordering; vulnerability policy; Artifact Registry image                                                      |
+| SHIP   | Traffic cutover and hosting configuration correct              | Cloud Run `--port 3000`, DNS/TLS, Cloud Run revision                                                                           |
+| VERIFY | Monitoring, alerts, and cost controls active                   | `07-operational-runbook.md`, `06` P0-9; thresholds per `change-log-and-decisions.md` Decision 7                                |
 
 Skipping a gate without documentation is a **NO-GO** for launch (`11-handoff-master-checklist.md`).

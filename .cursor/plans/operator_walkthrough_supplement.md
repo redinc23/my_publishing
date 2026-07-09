@@ -12,13 +12,13 @@ Work through the parts in order unless a section says “skip for now.”
 
 ## Before you start
 
-| You need | Used in |
-|----------|---------|
-| GitHub login with admin on `redinc23/my_publishing` | Parts 2, 7 |
-| Supabase project (create one if missing) | Parts 1, 2, 5 |
-| Stripe account (test mode OK for dev) | Parts 1, 4, 6 |
-| GCP project with billing (for Cloud Run only) | Part 4 |
-| Vercel account (only if you keep Vercel deploys) | Part 3 |
+| You need                                            | Used in       |
+| --------------------------------------------------- | ------------- |
+| GitHub login with admin on `redinc23/my_publishing` | Parts 2, 7    |
+| Supabase project (create one if missing)            | Parts 1, 2, 5 |
+| Stripe account (test mode OK for dev)               | Parts 1, 4, 6 |
+| GCP project with billing (for Cloud Run only)       | Part 4        |
+| Vercel account (only if you keep Vercel deploys)    | Part 3        |
 
 **Never commit:** `.env.local`, `environment.local.sh`, or any file containing real keys.
 
@@ -53,11 +53,11 @@ cp .env.local.example .env.local
 
 **What to copy:**
 
-| Label in Supabase UI | Paste into `.env.local` as |
-|----------------------|---------------------------|
-| **Project URL** | `NEXT_PUBLIC_SUPABASE_URL=` |
+| Label in Supabase UI                         | Paste into `.env.local` as       |
+| -------------------------------------------- | -------------------------------- |
+| **Project URL**                              | `NEXT_PUBLIC_SUPABASE_URL=`      |
 | **anon public** key (under Project API keys) | `NEXT_PUBLIC_SUPABASE_ANON_KEY=` |
-| **service_role** key (click Reveal) | `SUPABASE_SERVICE_ROLE_KEY=` |
+| **service_role** key (click Reveal)          | `SUPABASE_SERVICE_ROLE_KEY=`     |
 
 **Example shape** (use your real values):
 
@@ -91,10 +91,10 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 **What to copy → `.env.local`:**
 
-| Stripe UI | `.env.local` variable |
-|-----------|------------------------|
+| Stripe UI                           | `.env.local` variable                 |
+| ----------------------------------- | ------------------------------------- |
 | **Publishable key** (`pk_test_...`) | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=` |
-| **Secret key** (`sk_test_...`) | `STRIPE_SECRET_KEY=` |
+| **Secret key** (`sk_test_...`)      | `STRIPE_SECRET_KEY=`                  |
 
 Webhook secret comes in Part 6 (local) or Part 4 (production).
 
@@ -102,10 +102,10 @@ Webhook secret comes in Part 6 (local) or Part 4 (production).
 
 ### Step 1.5 — Optional services (skip until needed)
 
-| Service | Where to get key | `.env.local` line |
-|---------|------------------|-------------------|
-| OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | `OPENAI_API_KEY=sk-proj-...` |
-| Resend | [resend.com/api-keys](https://resend.com/api-keys) | `RESEND_API_KEY=re_...` |
+| Service | Where to get key                                                     | `.env.local` line            |
+| ------- | -------------------------------------------------------------------- | ---------------------------- |
+| OpenAI  | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | `OPENAI_API_KEY=sk-proj-...` |
+| Resend  | [resend.com/api-keys](https://resend.com/api-keys)                   | `RESEND_API_KEY=re_...`      |
 
 ---
 
@@ -125,10 +125,10 @@ npm run dev
 
 **Where to check in browser:**
 
-| URL | Expected |
-|-----|----------|
+| URL                                | Expected                                                       |
+| ---------------------------------- | -------------------------------------------------------------- |
 | `http://localhost:3000/api/health` | JSON with `"status":"healthy"` (or warnings if Stripe not set) |
-| `http://localhost:3000` | App loads |
+| `http://localhost:3000`            | App loads                                                      |
 
 If `npm run dev` fails immediately with “Missing required environment variables”, re-check Step 1.2.
 
@@ -147,21 +147,21 @@ If `npm run dev` fails immediately with “Missing required environment variable
 
 **Important:** Secret **Name** must match exactly (case-sensitive). **Secret** is the value you paste.
 
-| Click “New repository secret” → Name | Secret value (paste from) |
-|--------------------------------------|---------------------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Same as in `.env.local` → `NEXT_PUBLIC_SUPABASE_URL` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same as `.env.local` → anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Same as `.env.local` → service role key |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe Dashboard → publishable `pk_test_...` or `pk_live_...` |
-| `NEXT_PUBLIC_SITE_URL` | Production URL, e.g. `https://your-domain.com` — or `http://localhost:3000` for testing only |
+| Click “New repository secret” → Name | Secret value (paste from)                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Same as in `.env.local` → `NEXT_PUBLIC_SUPABASE_URL`                                         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Same as `.env.local` → anon key                                                              |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Same as `.env.local` → service role key                                                      |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe Dashboard → publishable `pk_test_...` or `pk_live_...`                                |
+| `NEXT_PUBLIC_SITE_URL`               | Production URL, e.g. `https://your-domain.com` — or `http://localhost:3000` for testing only |
 
 **Optional (only if you want Vercel deploy on every `main` push):**
 
-| Name | Where to get value |
-|------|-------------------|
-| `VERCEL_TOKEN` | [vercel.com/account/tokens](https://vercel.com/account/tokens) → Create Token |
-| `VERCEL_ORG_ID` | Vercel project → Settings → General → **Team ID** or personal ID |
-| `VERCEL_PROJECT_ID` | Same page → **Project ID** |
+| Name                | Where to get value                                                            |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `VERCEL_TOKEN`      | [vercel.com/account/tokens](https://vercel.com/account/tokens) → Create Token |
+| `VERCEL_ORG_ID`     | Vercel project → Settings → General → **Team ID** or personal ID              |
+| `VERCEL_PROJECT_ID` | Same page → **Project ID**                                                    |
 
 ---
 
@@ -189,15 +189,15 @@ If `npm run dev` fails immediately with “Missing required environment variable
 
 **Add each variable** (name must match; enable **Production**, **Preview**, **Development** as needed):
 
-| Key | Value source |
-|-----|--------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | From Supabase API settings |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | From Supabase |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | From Stripe |
-| `NEXT_PUBLIC_SITE_URL` | Your Vercel URL or custom domain |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role (server only) |
-| `STRIPE_SECRET_KEY` | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | From Stripe webhook (Part 6) |
+| Key                                  | Value source                        |
+| ------------------------------------ | ----------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`           | From Supabase API settings          |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | From Supabase                       |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | From Stripe                         |
+| `NEXT_PUBLIC_SITE_URL`               | Your Vercel URL or custom domain    |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Supabase service role (server only) |
+| `STRIPE_SECRET_KEY`                  | Stripe secret key                   |
+| `STRIPE_WEBHOOK_SECRET`              | From Stripe webhook (Part 6)        |
 
 **Server-only secrets** in Vercel: do **not** prefix with `NEXT_PUBLIC_`.
 
@@ -225,14 +225,14 @@ cp docs/phase2/_intake/environment.example.sh docs/phase2/_intake/environment.lo
 
 Edit `docs/phase2/_intake/environment.local.sh`:
 
-| Variable in file | Where to find in GCP |
-|------------------|----------------------|
-| `PROJECT_ID` | Console project picker or `gcloud config get-value project` |
-| `REGION` | Usually `us-central1` (must match [cloudbuild.yaml](cloudbuild.yaml)) |
-| `SERVICE_NAME` | Keep `mangu-publishers` unless you renamed Cloud Run service |
-| `AR_REPO` | Artifact Registry → Repositories → Docker repo name (default `web-images`) |
-| `CUSTOM_DOMAIN` | Your live hostname only, e.g. `publish.example.com` (no `https://`) |
-| `BILLING_ACCOUNT_ID` | Billing → Account management → Billing account ID |
+| Variable in file     | Where to find in GCP                                                       |
+| -------------------- | -------------------------------------------------------------------------- |
+| `PROJECT_ID`         | Console project picker or `gcloud config get-value project`                |
+| `REGION`             | Usually `us-central1` (must match [cloudbuild.yaml](cloudbuild.yaml))      |
+| `SERVICE_NAME`       | Keep `mangu-publishers` unless you renamed Cloud Run service               |
+| `AR_REPO`            | Artifact Registry → Repositories → Docker repo name (default `web-images`) |
+| `CUSTOM_DOMAIN`      | Your live hostname only, e.g. `publish.example.com` (no `https://`)        |
+| `BILLING_ACCOUNT_ID` | Billing → Account management → Billing account ID                          |
 
 ---
 
@@ -245,13 +245,13 @@ Edit `docs/phase2/_intake/environment.local.sh`:
 
 **Secret ID** (name in GCP) must match what [cloudbuild.yaml](cloudbuild.yaml) expects on the right side of `=`:
 
-| Secret ID (create this name) | Secret value (paste) |
-|------------------------------|----------------------|
-| `supabase-service-role-key` | Supabase → Settings → API → **service_role** key |
-| `stripe-secret-key` | Stripe → Secret key `sk_live_...` or `sk_test_...` |
-| `stripe-webhook-secret` | Stripe webhook signing secret `whsec_...` (Part 6) |
-| `resend-api-key` | Resend API key (if using email) |
-| `openai-api-key` | OpenAI API key (if using resonance/AI) |
+| Secret ID (create this name) | Secret value (paste)                               |
+| ---------------------------- | -------------------------------------------------- |
+| `supabase-service-role-key`  | Supabase → Settings → API → **service_role** key   |
+| `stripe-secret-key`          | Stripe → Secret key `sk_live_...` or `sk_test_...` |
+| `stripe-webhook-secret`      | Stripe webhook signing secret `whsec_...` (Part 6) |
+| `resend-api-key`             | Resend API key (if using email)                    |
+| `openai-api-key`             | OpenAI API key (if using resonance/AI)             |
 
 **Where Cloud Run reads them:** Deploy step maps:
 
@@ -271,12 +271,12 @@ You do **not** put these in `environment.local.sh` committed to git.
 
 **Set these substitution keys** (must match leading underscore in yaml):
 
-| Substitution variable | Value |
-|----------------------|--------|
-| `_NEXT_PUBLIC_SUPABASE_URL` | Full Supabase Project URL |
-| `_NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
-| `_NEXT_PUBLIC_SITE_URL` | `https://YOUR_CUSTOM_DOMAIN` |
+| Substitution variable                 | Value                        |
+| ------------------------------------- | ---------------------------- |
+| `_NEXT_PUBLIC_SUPABASE_URL`           | Full Supabase Project URL    |
+| `_NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Supabase anon key            |
+| `_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key       |
+| `_NEXT_PUBLIC_SITE_URL`               | `https://YOUR_CUSTOM_DOMAIN` |
 
 **Alternative (one-off manual build):**
 
@@ -308,10 +308,10 @@ Expect JSON with healthy or degraded status, not 503 from missing Supabase.
 
 ### Step 5.1 — Choose method
 
-| Method | Best for |
-|--------|----------|
-| **SQL Editor** (recommended) | One-time setup, full control |
-| `npm run db:migrate` | Machine with DB URL / service role and network access |
+| Method                       | Best for                                              |
+| ---------------------------- | ----------------------------------------------------- |
+| **SQL Editor** (recommended) | One-time setup, full control                          |
+| `npm run db:migrate`         | Machine with DB URL / service role and network access |
 
 ### Step 5.2 — SQL Editor (step by step)
 
@@ -387,11 +387,11 @@ Restart `npm run dev` after changing `.env.local`.
 
 **Where to enter the signing secret:**
 
-| Deploy target | Where |
-|---------------|--------|
-| Cloud Run | GCP Secret Manager → secret `stripe-webhook-secret` (Part 4.2) |
-| Vercel | Project → Settings → Environment Variables → `STRIPE_WEBHOOK_SECRET` |
-| Local only | `.env.local` |
+| Deploy target | Where                                                                |
+| ------------- | -------------------------------------------------------------------- |
+| Cloud Run     | GCP Secret Manager → secret `stripe-webhook-secret` (Part 4.2)       |
+| Vercel        | Project → Settings → Environment Variables → `STRIPE_WEBHOOK_SECRET` |
+| Local only    | `.env.local`                                                         |
 
 ---
 
@@ -406,17 +406,17 @@ Restart `npm run dev` after changing `.env.local`.
 
 ### Step 7.2 — Post-merge checks
 
-| Check | Where |
-|-------|--------|
-| GitHub Actions on `main` | Repo → **Actions** tab → latest workflow on `main` |
-| Cloud Build (if trigger exists) | GCP → Cloud Build → History |
-| Health | `https://<prod-domain>/api/health` |
+| Check                           | Where                                              |
+| ------------------------------- | -------------------------------------------------- |
+| GitHub Actions on `main`        | Repo → **Actions** tab → latest workflow on `main` |
+| Cloud Build (if trigger exists) | GCP → Cloud Build → History                        |
+| Health                          | `https://<prod-domain>/api/health`                 |
 
 ### Step 7.3 — Stale PR cleanup (optional)
 
 **Where:** [Pull requests](https://github.com/redinc23/my_publishing/pulls) → filter **Open**
 
-For each old agent PR (#48, codex/*, etc.): open → if diff is obsolete vs `main` → **Close pull request** with note “superseded by main / PR #73”.
+For each old agent PR (#48, codex/\*, etc.): open → if diff is obsolete vs `main` → **Close pull request** with note “superseded by main / PR #73”.
 
 ---
 
@@ -459,17 +459,17 @@ Replace `_(worksheet: …)_` with real names and Slack/email contacts.
 
 Do in browser after Parts 1 and 5 (and 6 if testing payments).
 
-| # | Action | Where | Pass? |
-|---|--------|-------|-------|
-| 1 | Register new user | `/register` | ☐ |
-| 2 | Confirm profile exists | Supabase → **Table Editor** → `profiles` | ☐ |
-| 3 | Login / logout | `/login` | ☐ |
-| 4 | Password reset email | `/reset-password` | ☐ |
-| 5 | Non-admin blocked from `/admin` | Incognito → `/admin/dashboard` | ☐ |
-| 6 | Admin health page | Admin login → `/admin/health` | ☐ |
-| 7 | Browse books | `/books` | ☐ |
-| 8 | Checkout (test card) | Book → checkout; Stripe test card `4242...` | ☐ |
-| 9 | Webhook received | Stripe Dashboard → Webhooks → event log | ☐ |
+| #   | Action                          | Where                                       | Pass? |
+| --- | ------------------------------- | ------------------------------------------- | ----- |
+| 1   | Register new user               | `/register`                                 | ☐     |
+| 2   | Confirm profile exists          | Supabase → **Table Editor** → `profiles`    | ☐     |
+| 3   | Login / logout                  | `/login`                                    | ☐     |
+| 4   | Password reset email            | `/reset-password`                           | ☐     |
+| 5   | Non-admin blocked from `/admin` | Incognito → `/admin/dashboard`              | ☐     |
+| 6   | Admin health page               | Admin login → `/admin/health`               | ☐     |
+| 7   | Browse books                    | `/books`                                    | ☐     |
+| 8   | Checkout (test card)            | Book → checkout; Stripe test card `4242...` | ☐     |
+| 9   | Webhook received                | Stripe Dashboard → Webhooks → event log     | ☐     |
 
 Stripe test cards: [stripe.com/docs/testing](https://stripe.com/docs/testing)
 
@@ -477,18 +477,18 @@ Stripe test cards: [stripe.com/docs/testing](https://stripe.com/docs/testing)
 
 ## Quick map — “I have a value, where does it go?”
 
-| Value | Local file | GitHub Actions | GCP Secret Manager | Cloud Build subs | Vercel env |
-|-------|------------|----------------|--------------------|------------------|------------|
-| Supabase URL | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local` | `NEXT_PUBLIC_SUPABASE_URL` | — | `_NEXT_PUBLIC_SUPABASE_URL` | same name |
-| Supabase anon | `.env.local` | secret | — | `_NEXT_PUBLIC_SUPABASE_ANON_KEY` | same |
-| Supabase service role | `.env.local` | `SUPABASE_SERVICE_ROLE_KEY` | `supabase-service-role-key` | — (via deploy secrets) | `SUPABASE_SERVICE_ROLE_KEY` |
-| Stripe publishable | `.env.local` | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | — | `_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | same |
-| Stripe secret | `.env.local` | — | `stripe-secret-key` | — | `STRIPE_SECRET_KEY` |
-| Stripe webhook | `.env.local` | — | `stripe-webhook-secret` | — | `STRIPE_WEBHOOK_SECRET` |
-| Site URL | `.env.local` | `NEXT_PUBLIC_SITE_URL` | — | `_NEXT_PUBLIC_SITE_URL` | same |
-| OpenAI | `.env.local` | — | `openai-api-key` | — | optional |
-| Resend | `.env.local` | — | `resend-api-key` | — | optional |
-| GCP project ID | `environment.local.sh` | — | — | `$PROJECT_ID` in build | — |
+| Value                 | Local file                                 | GitHub Actions                       | GCP Secret Manager          | Cloud Build subs                      | Vercel env                  |
+| --------------------- | ------------------------------------------ | ------------------------------------ | --------------------------- | ------------------------------------- | --------------------------- |
+| Supabase URL          | `NEXT_PUBLIC_SUPABASE_URL` in `.env.local` | `NEXT_PUBLIC_SUPABASE_URL`           | —                           | `_NEXT_PUBLIC_SUPABASE_URL`           | same name                   |
+| Supabase anon         | `.env.local`                               | secret                               | —                           | `_NEXT_PUBLIC_SUPABASE_ANON_KEY`      | same                        |
+| Supabase service role | `.env.local`                               | `SUPABASE_SERVICE_ROLE_KEY`          | `supabase-service-role-key` | — (via deploy secrets)                | `SUPABASE_SERVICE_ROLE_KEY` |
+| Stripe publishable    | `.env.local`                               | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | —                           | `_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | same                        |
+| Stripe secret         | `.env.local`                               | —                                    | `stripe-secret-key`         | —                                     | `STRIPE_SECRET_KEY`         |
+| Stripe webhook        | `.env.local`                               | —                                    | `stripe-webhook-secret`     | —                                     | `STRIPE_WEBHOOK_SECRET`     |
+| Site URL              | `.env.local`                               | `NEXT_PUBLIC_SITE_URL`               | —                           | `_NEXT_PUBLIC_SITE_URL`               | same                        |
+| OpenAI                | `.env.local`                               | —                                    | `openai-api-key`            | —                                     | optional                    |
+| Resend                | `.env.local`                               | —                                    | `resend-api-key`            | —                                     | optional                    |
+| GCP project ID        | `environment.local.sh`                     | —                                    | —                           | `$PROJECT_ID` in build                | —                           |
 
 ---
 
@@ -496,24 +496,24 @@ Stripe test cards: [stripe.com/docs/testing](https://stripe.com/docs/testing)
 
 Comment on GitHub issues when you decide:
 
-| Decision | Issue |
-|----------|-------|
+| Decision                                            | Issue                                                      |
+| --------------------------------------------------- | ---------------------------------------------------------- |
 | Production = Cloud Run **or** Vercel **or** Amplify | [#70](https://github.com/redinc23/my_publishing/issues/70) |
-| Rename repo to `mangu-publishers`? | [#71](https://github.com/redinc23/my_publishing/issues/71) |
+| Rename repo to `mangu-publishers`?                  | [#71](https://github.com/redinc23/my_publishing/issues/71) |
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| CI: “URL and Key are required” for Supabase | GitHub secrets empty | Part 2 |
-| `npm run dev` exits on env validation | Missing 3 Supabase vars | Part 1.2 |
-| Webhook 400/401 | Wrong `STRIPE_WEBHOOK_SECRET` | Part 6; restart app |
-| Cloud Run healthy but no payments | Missing Stripe secrets in Secret Manager | Part 4.2 |
-| Empty books page | Migrations not run or no seed | Part 5 |
-| Vercel deploy failed on PR | Vercel project env not set | Part 3 |
+| Symptom                                     | Likely cause                             | Fix                 |
+| ------------------------------------------- | ---------------------------------------- | ------------------- |
+| CI: “URL and Key are required” for Supabase | GitHub secrets empty                     | Part 2              |
+| `npm run dev` exits on env validation       | Missing 3 Supabase vars                  | Part 1.2            |
+| Webhook 400/401                             | Wrong `STRIPE_WEBHOOK_SECRET`            | Part 6; restart app |
+| Cloud Run healthy but no payments           | Missing Stripe secrets in Secret Manager | Part 4.2            |
+| Empty books page                            | Migrations not run or no seed            | Part 5              |
+| Vercel deploy failed on PR                  | Vercel project env not set               | Part 3              |
 
 ---
 
-*End of supplement. Return to [Master RICEF](mangu_publishers_master_ricef.md) for requirements, controls, backlog, and signoff gates.*
+_End of supplement. Return to [Master RICEF](mangu_publishers_master_ricef.md) for requirements, controls, backlog, and signoff gates._

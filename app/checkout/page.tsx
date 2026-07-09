@@ -34,7 +34,9 @@ async function getBookSummary({ book_id, slug }: CheckoutSearchParams) {
   const supabase = await createClient();
   let query = supabase
     .from('books')
-    .select('id, slug, title, cover_url, price, discount_price, author:authors!inner(pen_name, profile:profiles!inner(full_name))')
+    .select(
+      'id, slug, title, cover_url, price, discount_price, author:authors!inner(pen_name, profile:profiles!inner(full_name))'
+    )
     .eq('status', 'published');
 
   if (book_id) {
@@ -112,12 +114,7 @@ export default async function CheckoutPage({
             <div className="mt-6 flex flex-col gap-6 sm:flex-row">
               <div className="relative h-56 w-40 overflow-hidden rounded-md bg-muted">
                 {book.cover_url && (
-                  <Image
-                    src={book.cover_url}
-                    alt={book.title}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={book.cover_url} alt={book.title} fill className="object-cover" />
                 )}
               </div>
               <div className="flex-1">
@@ -126,7 +123,7 @@ export default async function CheckoutPage({
                 <div className="mt-4 text-xl font-semibold">
                   {book.discount_price ? (
                     <>
-                      <span className="text-secondary line-through mr-2">${book.price}</span>
+                      <span className="mr-2 text-secondary line-through">${book.price}</span>
                       <span className="text-primary">${book.discount_price}</span>
                     </>
                   ) : (
@@ -153,7 +150,7 @@ export default async function CheckoutPage({
               <span>Taxes</span>
               <span>Calculated at checkout</span>
             </div>
-            <div className="mt-6 border-t pt-4 flex items-center justify-between font-semibold">
+            <div className="mt-6 flex items-center justify-between border-t pt-4 font-semibold">
               <span>Total</span>
               <span>${book.discount_price ?? book.price}</span>
             </div>

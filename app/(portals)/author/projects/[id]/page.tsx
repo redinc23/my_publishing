@@ -57,18 +57,14 @@ export default async function ManuscriptDetailPage({ params }: { params: { id: s
     <Section>
       <Container>
         <div className="max-w-4xl">
-          <div className="flex items-start justify-between mb-6">
+          <div className="mb-6 flex items-start justify-between">
             <h1 className="text-4xl font-bold">{manuscript.title}</h1>
-            <Badge
-              className={`text-white ${
-                statusColors[manuscript.status] || 'bg-gray-500'
-              }`}
-            >
+            <Badge className={`text-white ${statusColors[manuscript.status] || 'bg-gray-500'}`}>
               {manuscript.status.replace('_', ' ')}
             </Badge>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="mb-6 grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Details</CardTitle>

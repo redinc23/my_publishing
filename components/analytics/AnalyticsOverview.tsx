@@ -21,7 +21,7 @@ interface AnalyticsOverviewProps {
 export function AnalyticsOverview({
   bookId,
   dateRange,
-  onDateRangeChange
+  onDateRangeChange,
 }: AnalyticsOverviewProps) {
   const [stats, setStats] = useState<{
     totalViews: number;
@@ -56,8 +56,7 @@ export function AnalyticsOverview({
         dateRange.from && dateRange.to
           ? {
               from: new Date(
-                dateRange.from.getTime() -
-                  (dateRange.to.getTime() - dateRange.from.getTime())
+                dateRange.from.getTime() - (dateRange.to.getTime() - dateRange.from.getTime())
               ),
               to: dateRange.from,
             }
@@ -74,12 +73,14 @@ export function AnalyticsOverview({
       const totalViews = analytics.reduce((sum, day) => sum + day.views, 0);
       const uniqueReaders = analytics.reduce((sum, day) => sum + day.unique_users, 0);
       const totalDownloads = analytics.reduce((sum, day) => sum + (day.downloads || 0), 0);
-      const avgCompletionRate = analytics.length > 0
-        ? analytics.reduce((sum, day) => sum + (day.completion_rate || 0), 0) / analytics.length
-        : 0;
-      const avgReadTime = analytics.length > 0
-        ? analytics.reduce((sum, day) => sum + (day.avg_time_spent || 0), 0) / analytics.length
-        : 0;
+      const avgCompletionRate =
+        analytics.length > 0
+          ? analytics.reduce((sum, day) => sum + (day.completion_rate || 0), 0) / analytics.length
+          : 0;
+      const avgReadTime =
+        analytics.length > 0
+          ? analytics.reduce((sum, day) => sum + (day.avg_time_spent || 0), 0) / analytics.length
+          : 0;
 
       const previousViews = previousAnalytics.reduce((sum, day) => sum + day.views, 0);
 
@@ -102,7 +103,7 @@ export function AnalyticsOverview({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <Skeleton key={i} className="h-32" />
         ))}
@@ -142,7 +143,7 @@ export function AnalyticsOverview({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Views</CardTitle>
@@ -150,7 +151,7 @@ export function AnalyticsOverview({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatLargeNumber(stats.totalViews)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {stats.growthRate === null
                 ? '— no data for previous period'
                 : `${stats.growthRate > 0 ? '+' : ''}${stats.growthRate}% from last period`}
@@ -165,7 +166,7 @@ export function AnalyticsOverview({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatLargeNumber(stats.uniqueReaders)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {stats.completionRate.toFixed(1)}% completion rate
             </p>
           </CardContent>
@@ -178,7 +179,7 @@ export function AnalyticsOverview({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatLargeNumber(stats.totalDownloads)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {Math.round(stats.avgReadTime / 60)}m avg read time
             </p>
           </CardContent>
@@ -191,7 +192,7 @@ export function AnalyticsOverview({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(stats.revenue * 100)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {stats.countriesReached} countries reached
             </p>
           </CardContent>

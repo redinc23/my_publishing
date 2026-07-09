@@ -67,17 +67,17 @@ flowchart TD
 
 Full table: [`09-appendices.md`](09-appendices.md) Appendix A.
 
-| Variable | NEXT_PUBLIC prefix? | Typical source | Consumer | Secret? |
-|---|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | `.env.local` / CI | Client + server | No |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | `.env.local` / CI | Client + server | No |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Yes | `.env.local` / CI | Client | No |
-| `NEXT_PUBLIC_SITE_URL` | Yes | `.env.local` / CI | Sitemap / SEO | No |
-| `NEXT_PUBLIC_APP_VERSION` | Yes | CI (`SHORT_SHA`) | Client / Sentry release tag | No |
-| `SUPABASE_SERVICE_ROLE_KEY` | **No** | Secret Manager → runtime only | Server-side code only | **Yes** |
-| `STRIPE_SECRET_KEY` | **No** | Secret Manager → runtime only | Server-side code only | **Yes** |
-| `RESEND_API_KEY` | **No** | Secret Manager → runtime only | Server-side code only | **Yes** |
-| `PORT` | No | Cloud Run / Next.js standalone | Node.js server | Auto |
+| Variable                             | NEXT_PUBLIC prefix? | Typical source                 | Consumer                    | Secret? |
+| ------------------------------------ | ------------------- | ------------------------------ | --------------------------- | ------- |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Yes                 | `.env.local` / CI              | Client + server             | No      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Yes                 | `.env.local` / CI              | Client + server             | No      |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Yes                 | `.env.local` / CI              | Client                      | No      |
+| `NEXT_PUBLIC_SITE_URL`               | Yes                 | `.env.local` / CI              | Sitemap / SEO               | No      |
+| `NEXT_PUBLIC_APP_VERSION`            | Yes                 | CI (`SHORT_SHA`)               | Client / Sentry release tag | No      |
+| `SUPABASE_SERVICE_ROLE_KEY`          | **No**              | Secret Manager → runtime only  | Server-side code only       | **Yes** |
+| `STRIPE_SECRET_KEY`                  | **No**              | Secret Manager → runtime only  | Server-side code only       | **Yes** |
+| `RESEND_API_KEY`                     | **No**              | Secret Manager → runtime only  | Server-side code only       | **Yes** |
+| `PORT`                               | No                  | Cloud Run / Next.js standalone | Node.js server              | Auto    |
 
 ## Hosting And Domain Requirements
 

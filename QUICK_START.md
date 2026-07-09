@@ -104,7 +104,7 @@ my_publishing/
 ✅ Email notifications  
 ✅ File upload system  
 ✅ Responsive design  
-✅ Dark theme  
+✅ Dark theme
 
 ## 🔧 Available Scripts
 

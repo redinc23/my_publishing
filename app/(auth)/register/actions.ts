@@ -15,7 +15,7 @@ export async function registerUser(formData: FormData) {
   const headersList = await headers();
   const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
   const identifier = getAuthIdentifier(ip, email);
-  
+
   if (!(await authRateLimit(identifier))) {
     return { error: 'Too many registration attempts. Please try again in 15 minutes.' };
   }
@@ -43,10 +43,7 @@ export async function registerUser(formData: FormData) {
     const supabase = await createClient();
 
     // Check if profiles table exists by attempting a simple query
-    const { error: tableCheckError } = await supabase
-      .from('profiles')
-      .select('id')
-      .limit(1);
+    const { error: tableCheckError } = await supabase.from('profiles').select('id').limit(1);
 
     if (tableCheckError) {
       if (tableCheckError.message.includes('relation "profiles" does not exist')) {
@@ -94,7 +91,7 @@ export async function registerUser(formData: FormData) {
     // Profile will be created automatically by the trigger
     // Verify it was created (with a small delay to allow trigger to run)
     await new Promise((resolve) => setTimeout(resolve, 500));
-    
+
     const { data: profile, error: profileCheckError } = await supabase
       .from('profiles')
       .select('id')

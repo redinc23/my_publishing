@@ -27,16 +27,21 @@ export default async function EditBookPage({ params }: { params: { id: string } 
       <Container>
         <div className="mb-6">
           <Button asChild variant="outline" size="sm">
-            <Link href="/admin/books"><ArrowLeft className="mr-2 h-4 w-4" />Back to Books</Link>
+            <Link href="/admin/books">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Books
+            </Link>
           </Button>
         </div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Edit Book</h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground">
             Editing &ldquo;{book.title}&rdquo; by {book.author?.pen_name || 'Unknown Author'}
           </p>
         </div>
-        <div className="max-w-2xl"><BookEditForm book={book} /></div>
+        <div className="max-w-2xl">
+          <BookEditForm book={book} />
+        </div>
       </Container>
     </Section>
   );

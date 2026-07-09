@@ -1,4 +1,3 @@
-
 # LitStream Phase 2 Configuration Template
 
 **Instructions**: Fill out this template with your actual values, then use the "REPLACEMENT GUIDE" section at the bottom to systematically update all your documentation files.
@@ -6,6 +5,7 @@
 ## 🏢 **Team & Ownership Information**
 
 ### Primary Team Members
+
 ```
 ENGINEERING_LEAD_NAME = "John Smith"
 ENGINEERING_BACKUP_NAME = "Jane Doe"
@@ -31,6 +31,7 @@ PRODUCT_CONTACT_PATH = "Slack: @emma.thompson, Email: emma@company.com"
 ## 🌐 **Environment & Infrastructure**
 
 ### GCP Configuration
+
 ```
 GCP_PROJECT_ID = "litstream-prod-12345"
 GCP_REGION = "us-central1"
@@ -39,12 +40,14 @@ AR_REPO = "web-images"
 ```
 
 ### Domain & Service Configuration
+
 ```
 CUSTOM_DOMAIN = "app.litstream.com"
 SERVICE_NAME = "litstream-web"
 ```
 
 ### Sample Content (for testing)
+
 ```
 SAMPLE_BOOK_SLUG = "the-great-gatsby"
 SAMPLE_AUTHOR_SLUG = "f-scott-fitzgerald"
@@ -52,6 +55,7 @@ SAMPLE_CATEGORY_SLUG = "classic-literature"
 ```
 
 ### External Services
+
 ```
 SENTRY_PROJECT = "litstream-frontend"
 SENTRY_ORG = "your-org"
@@ -60,6 +64,7 @@ SENTRY_ORG = "your-org"
 ## 📋 **Milestone Ownership Assignment**
 
 ### Milestone Owners (who will execute each milestone)
+
 ```
 M0_OWNER = "John Smith"
 M1_OWNER = "Alex Chen"
@@ -73,6 +78,7 @@ M7B_OWNER = "DevOps Team"
 ```
 
 ### P0 Test Owners (who will validate each test)
+
 ```
 P01_OWNER = "Alex Chen"
 P02_OWNER = "John Smith"
@@ -88,6 +94,7 @@ P09_OWNER = "Mike Johnson"
 ## 🔗 **Evidence & Entry IDs**
 
 ### Milestone Evidence Entry IDs
+
 ```
 M0_ENTRY = "M0-001"
 M1_ENTRY = "M1-001"
@@ -101,6 +108,7 @@ M7B_ENTRY = "M7B-001"
 ```
 
 ### P0 Evidence Entry IDs
+
 ```
 P01_ENTRY = "P01-001"
 P02_ENTRY = "P02-001"
@@ -116,6 +124,7 @@ P09_ENTRY = "P09-001"
 ## 📅 **Execution Placeholders** (Fill during execution)
 
 ### Build & Deployment IDs
+
 ```
 RELEASE_SHA = "abc1234"
 KNOWN_GOOD_REVISION = "litstream-web-00001-abc"
@@ -123,6 +132,7 @@ BUILD_ID = "12345678-1234-1234-1234-123456789012"
 ```
 
 ### Evidence Links (Update as you execute)
+
 ```
 M0_EVIDENCE = "https://console.cloud.google.com/logs/query?project=PROJECT_ID"
 M1_EVIDENCE = "https://github.com/yourorg/litstream/commit/COMMIT_SHA"
@@ -146,12 +156,14 @@ P09_EVIDENCE = "Monitoring and alerting verification"
 ```
 
 ### Status Placeholders
+
 ```
 PASS_OR_FAIL = "PASS"
 STATUS = "COMPLETE"
 ```
 
 ### Incident & Issue Tracking
+
 ```
 ISSUE_ID = "INC-001"
 SEVERITY = "SEV2"
@@ -160,6 +172,7 @@ ETA_UTC = "2024-01-15T18:00:00Z"
 ```
 
 ### Timestamps (Update during execution)
+
 ```
 TIMESTAMP_UTC = "2024-01-15T12:00:00Z"
 SIGNOFF_DATE_UTC = "2024-01-15T16:00:00Z"
@@ -172,6 +185,7 @@ SIGNOFF_DATE_UTC = "2024-01-15T16:00:00Z"
 After filling out the template above, use these find/replace operations across ALL your documentation files:
 
 ### 1. Team & Ownership Replacements
+
 ```bash
 # In files: 11-handoff-master-checklist.md, 12-ownership-raci.md, 14-evidence-and-signoff-log.md
 
@@ -197,6 +211,7 @@ REQUIRED_PRODUCT_CONTACT_PATH → [Your PRODUCT_CONTACT_PATH]
 ```
 
 ### 2. Infrastructure Replacements
+
 ```bash
 # In files: 05-milestone-implementation-plan.md, 06-acceptance-and-test-protocol.md, 07-operational-runbook.md
 
@@ -210,6 +225,7 @@ REQUIRED_SAMPLE_CATEGORY_SLUG → [Your SAMPLE_CATEGORY_SLUG]
 ```
 
 ### 3. Milestone Owner Replacements
+
 ```bash
 # In files: 11-handoff-master-checklist.md, 14-evidence-and-signoff-log.md
 
@@ -225,6 +241,7 @@ REQUIRED_M7B_OWNER → [Your M7B_OWNER]
 ```
 
 ### 4. P0 Test Owner Replacements
+
 ```bash
 # In files: 11-handoff-master-checklist.md, 14-evidence-and-signoff-log.md
 
@@ -240,6 +257,7 @@ REQUIRED_P09_OWNER → [Your P09_OWNER]
 ```
 
 ### 5. Evidence Entry ID Replacements
+
 ```bash
 # In files: 14-evidence-and-signoff-log.md
 
@@ -249,6 +267,7 @@ REQUIRED_M1_ENTRY → [Your M1_ENTRY]
 ```
 
 ### 6. Risk Owner Replacements
+
 ```bash
 # In file: 08-risk-and-troubleshooting.md
 
@@ -264,9 +283,11 @@ REQUIRED_ENGINEERING_OWNER → [Your ENGINEERING_LEAD_NAME]
 After filling out this template, you can use these commands to quickly update your files:
 
 ### Option 1: Manual Find/Replace
+
 Use your text editor's find/replace function across all `.md` files in your documentation directory.
 
 ### Option 2: Command Line (Linux/Mac)
+
 ```bash
 # Example for one replacement across all files
 find . -name "*.md" -type f -exec sed -i 's/REQUIRED_ENGINEERING_LEAD_NAME/John Smith/g' {} \;
@@ -275,6 +296,7 @@ find . -name "*.md" -type f -exec sed -i 's/REQUIRED_ENGINEERING_LEAD_NAME/John 
 ```
 
 ### Option 3: Script-Based Replacement
+
 Create a script that reads this template and performs all replacements automatically.
 
 ---

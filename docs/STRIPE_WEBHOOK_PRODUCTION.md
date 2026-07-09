@@ -12,8 +12,8 @@ After Cloud Run is live with a public URL or custom domain:
 
 ## 2. Store secret
 
-| Target | Where |
-|--------|--------|
+| Target                | Where                                        |
+| --------------------- | -------------------------------------------- |
 | Cloud Run (canonical) | GCP Secret Manager → `stripe-webhook-secret` |
 
 ```bash

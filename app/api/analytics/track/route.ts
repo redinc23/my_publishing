@@ -14,17 +14,17 @@ import type { TrackEventResponse, AnalyticsEvent } from '@/types/analytics';
  */
 function getDeviceType(userAgent: string | null): 'desktop' | 'mobile' | 'tablet' {
   if (!userAgent) return 'desktop';
-  
+
   const ua = userAgent.toLowerCase();
-  
+
   if (/tablet|ipad|playbook|silk/i.test(ua)) {
     return 'tablet';
   }
-  
+
   if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(ua)) {
     return 'mobile';
   }
-  
+
   return 'desktop';
 }
 
@@ -33,7 +33,7 @@ function getDeviceType(userAgent: string | null): 'desktop' | 'mobile' | 'tablet
  */
 function getReferrerDomain(referrer: string | null): string | null {
   if (!referrer) return null;
-  
+
   try {
     const url = new URL(referrer);
     return url.hostname;
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             ? 'Rate limiter unavailable. Please try again shortly.'
             : 'Rate limit exceeded. Please slow down.',
       } satisfies TrackEventResponse,
-      { 
+      {
         status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
         headers: rateLimitHeaders,
       }
@@ -103,7 +103,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const supabase = await createClient();
 
     // Get optional user ID from session
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const userId = user?.id;
 
     // Extract request metadata
@@ -187,7 +189,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         success: true,
         event_id: insertedEvent.id,
       } satisfies TrackEventResponse,
-      { 
+      {
         status: 200,
         headers: rateLimitHeaders,
       }

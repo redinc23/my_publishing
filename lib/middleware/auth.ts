@@ -1,4 +1,3 @@
-
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -112,7 +111,7 @@ export async function requireAdmin() {
  */
 export async function isAdmin(): Promise<boolean> {
   const profile = await getUserProfile();
-  return (profile?.role === 'admin') || false;
+  return profile?.role === 'admin' || false;
 }
 
 /**

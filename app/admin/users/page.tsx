@@ -15,11 +15,11 @@ export default async function AdminUsersPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-3xl font-bold mb-8">Users Management</h1>
+        <h1 className="mb-8 text-3xl font-bold">Users Management</h1>
 
         <div className="space-y-4">
           {users && users.length > 0 ? (
-            <div className="border border-border rounded-lg overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-border">
               <table className="w-full">
                 <thead className="bg-muted">
                   <tr>
@@ -36,7 +36,7 @@ export default async function AdminUsersPage() {
                       <td className="px-4 py-3">{user.email}</td>
                       <td className="px-4 py-3">{user.full_name || 'N/A'}</td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-1 rounded text-xs bg-primary/20 text-primary">
+                        <span className="rounded bg-primary/20 px-2 py-1 text-xs text-primary">
                           {user.role}
                         </span>
                       </td>

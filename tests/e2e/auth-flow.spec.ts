@@ -106,7 +106,10 @@ test.describe('Register page', () => {
     await expect(page.getByLabel(/full name/i)).toHaveAttribute('autocomplete', 'name');
     await expect(page.getByLabel(/^email/i)).toHaveAttribute('autocomplete', 'email');
     await expect(page.getByLabel(/^password$/i)).toHaveAttribute('autocomplete', 'new-password');
-    await expect(page.getByLabel(/confirm password/i)).toHaveAttribute('autocomplete', 'new-password');
+    await expect(page.getByLabel(/confirm password/i)).toHaveAttribute(
+      'autocomplete',
+      'new-password'
+    );
   });
 
   test('shows validation error for mismatched passwords', async ({ page }) => {

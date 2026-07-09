@@ -6,11 +6,8 @@ export interface ChartDataPoint {
   label?: string;
 }
 
-export function formatChartData(
-  stats: BookStats[],
-  metric: keyof BookStats
-): ChartDataPoint[] {
-  return stats.map(stat => ({
+export function formatChartData(stats: BookStats[], metric: keyof BookStats): ChartDataPoint[] {
+  return stats.map((stat) => ({
     date: stat.date,
     value: stat[metric] as number,
     label: new Date(stat.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -22,11 +19,11 @@ export function aggregateByPeriod(
   period: 'day' | 'week' | 'month'
 ): ChartDataPoint[] {
   const grouped = new Map<string, number[]>();
-  
-  data.forEach(point => {
+
+  data.forEach((point) => {
     const date = new Date(point.date);
     let key: string;
-    
+
     if (period === 'week') {
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
@@ -36,13 +33,13 @@ export function aggregateByPeriod(
     } else {
       key = point.date;
     }
-    
+
     if (!grouped.has(key)) {
       grouped.set(key, []);
     }
     grouped.get(key)!.push(point.value);
   });
-  
+
   return Array.from(grouped.entries()).map(([date, values]) => ({
     date,
     value: values.reduce((sum, val) => sum + val, 0) / values.length,
@@ -57,10 +54,10 @@ export function generateTimeSeries(
 ): string[] {
   const dates: string[] = [];
   const current = new Date(startDate);
-  
+
   while (current <= endDate) {
     dates.push(current.toISOString().split('T')[0]);
-    
+
     if (period === 'day') {
       current.setDate(current.getDate() + 1);
     } else if (period === 'week') {
@@ -69,6 +66,6 @@ export function generateTimeSeries(
       current.setMonth(current.getMonth() + 1);
     }
   }
-  
+
   return dates;
 }

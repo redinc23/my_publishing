@@ -5,13 +5,12 @@ import type { DateRange } from '@/types/analytics';
 import type { BookStats, HeatmapData, GeographyData, LiveReader } from '@/types/analytics';
 import { getCache, setCache } from '@/lib/services/cache-service';
 
-export async function getBookAnalytics(
-  bookId: string,
-  dateRange: DateRange
-): Promise<BookStats[]> {
+export async function getBookAnalytics(bookId: string, dateRange: DateRange): Promise<BookStats[]> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
@@ -55,12 +54,14 @@ export async function getBookAnalytics(
 export async function getEngagementHeatmap(bookId: string): Promise<HeatmapData[]> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
     const { data, error } = await supabase.rpc('get_engagement_heatmap', {
-      p_book_id: bookId
+      p_book_id: bookId,
     });
 
     if (error) throw error;
@@ -78,14 +79,16 @@ export async function getGeographyData(
 ): Promise<GeographyData[]> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
     const { data, error } = await supabase.rpc('get_geography_data', {
       p_book_id: bookId,
       p_start_date: dateRange.from?.toISOString().split('T')[0],
-      p_end_date: dateRange.to?.toISOString().split('T')[0]
+      p_end_date: dateRange.to?.toISOString().split('T')[0],
     });
 
     if (error) throw error;
@@ -109,10 +112,12 @@ export async function getLiveReaders(bookId: string): Promise<{
 
     const { data, error } = await supabase
       .from('analytics_sessions')
-      .select(`
+      .select(
+        `
         *,
         user:users(name, email, avatar_url)
-      `)
+      `
+      )
       .eq('book_id', bookId)
       .eq('is_active', true)
       .gte('last_activity_at', fifteenMinutesAgo.toISOString())

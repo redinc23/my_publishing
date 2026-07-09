@@ -26,14 +26,14 @@ export default async function RecommendationsPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Recommended for You</h1>
+        <h1 className="mb-8 text-4xl font-bold">Recommended for You</h1>
         <Suspense fallback={<LoadingSpinner />}>
           {books.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="py-12 text-center">
               <p className="text-secondary">No recommendations available.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
               {books.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}

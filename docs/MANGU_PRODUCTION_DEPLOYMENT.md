@@ -1,6 +1,6 @@
 # 🚀 MANGU: The Final Countdown
 
-> *"Failure is not an option. We are go for launch."*
+> _"Failure is not an option. We are go for launch."_
 
 > This is the **Master Flight Manual** for the deployment of the MANGU production environment. It covers infrastructure provisioning, automated deployment, observability, and emergency protocols.
 
@@ -61,13 +61,13 @@ graph TD
 
 You must provision the `.env.production` file. These keys are the ignition codes.
 
-| **Code** | **Clearance** | **Source** |
-| --- | --- | --- |
-| `SUPABASE_SERVICE_ROLE_KEY` | **TOP SECRET** | Supabase > Settings > API |
-| `STRIPE_SECRET_KEY` | **TOP SECRET** | Stripe > Developers > Keys |
-| `STRIPE_WEBHOOK_SECRET` | **TOP SECRET** | Stripe > Webhooks |
-| `OPENAI_API_KEY` | **CONFIDENTIAL** | OpenAI Platform |
-| `NEXT_PUBLIC_...` | **PUBLIC** | Supabase / Domain |
+| **Code**                    | **Clearance**    | **Source**                 |
+| --------------------------- | ---------------- | -------------------------- |
+| `SUPABASE_SERVICE_ROLE_KEY` | **TOP SECRET**   | Supabase > Settings > API  |
+| `STRIPE_SECRET_KEY`         | **TOP SECRET**   | Stripe > Developers > Keys |
+| `STRIPE_WEBHOOK_SECRET`     | **TOP SECRET**   | Stripe > Webhooks          |
+| `OPENAI_API_KEY`            | **CONFIDENTIAL** | OpenAI Platform            |
+| `NEXT_PUBLIC_...`           | **PUBLIC**       | Supabase / Domain          |
 
 **Action:** Create `.env.production` locally. **DO NOT COMMIT THIS FILE.**
 
@@ -161,7 +161,7 @@ If the new version crashes immediately:
 2. Identify the previous Green revision (e.g., `publishing-house-web-00004-xez`).
 3. Click **"Manage Traffic"**.
 4. Route **100%** of traffic to the previous revision.
-5. *Time to mitigate: < 30 seconds.*
+5. _Time to mitigate: < 30 seconds._
 
 ### **Scenario B: Data Corruption**
 
@@ -181,4 +181,4 @@ Once verified stable:
 - [ ] **Public:** Publish Release Notes.
 - [ ] **Social:** Tweet / LinkedIn post with launch graphics.
 
-> *"This is one small step for code, one giant leap for MANGU."*
+> _"This is one small step for code, one giant leap for MANGU."_

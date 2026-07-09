@@ -5,6 +5,7 @@ This document tracks the completion status of the prioritized platform fixes.
 ## ✅ Completed Items
 
 ### Phase 1: Environment & Build Setup
+
 - ✅ Created comprehensive `.env.local.example` with all required variables
 - ✅ Created environment validation utility (`lib/utils/env-validation.ts`)
 - ✅ Created validation script (`scripts/validate-env.ts`)
@@ -13,6 +14,7 @@ This document tracks the completion status of the prioritized platform fixes.
 - ✅ Verified build succeeds (with expected env var warnings)
 
 ### Phase 2: Database Setup
+
 - ✅ Created migration runner script (`scripts/run-migrations.ts`)
 - ✅ Documented migration order (`docs/MIGRATIONS.md`)
 - ✅ Enhanced health check with migration status checking
@@ -20,29 +22,35 @@ This document tracks the completion status of the prioritized platform fixes.
 - ✅ Seed script can now create test profiles automatically
 
 ### Phase 3: Authentication Flow
+
 - ✅ Created profile auto-creation trigger migration (`20260121000000_profile_trigger.sql`)
 - ✅ Updated register action to use metadata for trigger
 - ✅ Profile creation now works automatically on signup
 
 ### Phase 4: Data Display & Basic Functionality
+
 - ✅ Created mock data system (`lib/utils/mock-data.ts`)
 - ✅ Updated homepage to use mock data as fallback
 - ✅ Mock data provides fallback when database is empty
 
 ### Phase 5: Payment Integration
+
 - ✅ Created Stripe configuration validation (`lib/stripe/validate-config.ts`)
 - ✅ Added Stripe validation to health check endpoint
 - ✅ Created webhook testing documentation (`docs/WEBHOOK_TESTING.md`)
 
 ### Phase 6: Security & Authorization
+
 - ✅ Created RLS verification script (`scripts/verify-rls.ts`)
 - ✅ Admin route protection already implemented (verified in code)
 
 ### Phase 8: Testing & Validation
+
 - ✅ Created admin health dashboard (`app/admin/health/page.tsx`)
 - ✅ Fixed and improved E2E tests (`tests/e2e/purchase-flow.spec.ts`)
 
 ### Phase 12: Near-Term Fix Sprint (C1–C10) — agent sweep 2026-07-11
+
 - ✅ **C1** `/admin/books/new` route verified present (`app/admin/books/new/page.tsx` + `BookCreateForm.tsx`)
 - ✅ **C2** Created `/authors` index page (`app/(consumer)/authors/page.tsx`) — nav links no longer 404
 - ✅ **C3** Duplicate `content_type` migrations verified idempotent; documented in `docs/MIGRATIONS.md`
@@ -57,6 +65,7 @@ This document tracks the completion status of the prioritized platform fixes.
 ## 📋 Remaining Items (Require Manual Testing)
 
 ### Phase 3: Authentication Flow
+
 - ⏳ **Auth Flow Testing** - Requires manual testing:
   - Test signup flow end-to-end
   - Verify email confirmation works
@@ -65,6 +74,7 @@ This document tracks the completion status of the prioritized platform fixes.
   - Add rate limiting to auth endpoints (code exists, needs testing)
 
 ### Phase 6: Security & Authorization
+
 - ⏳ **Admin Protection Test** - Requires manual testing:
   - Test unauthorized access attempts
   - Verify redirects work correctly
@@ -73,26 +83,30 @@ This document tracks the completion status of the prioritized platform fixes.
 ## 🎯 Next Steps
 
 1. **Set up environment variables**:
+
    ```bash
    cp .env.local.example .env.local
    # Fill in your actual values
    ```
 
 2. **Run migrations**:
+
    ```bash
    # Option 1: Use Supabase SQL Editor (recommended)
    # Copy and paste migrations in order from docs/MIGRATIONS.md
-   
+
    # Option 2: Use migration runner (requires direct DB access)
    npm run db:migrate
    ```
 
 3. **Seed database** (optional):
+
    ```bash
    npm run db:seed -- --create-profiles --minimal
    ```
 
 4. **Start development server**:
+
    ```bash
    npm run dev
    ```

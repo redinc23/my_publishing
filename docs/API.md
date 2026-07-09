@@ -15,11 +15,13 @@ Most endpoints require authentication via Supabase Auth. Include the session tok
 Get personalized book recommendations.
 
 **Query Parameters:**
+
 - `user_id` (optional): User ID for personalized recommendations
 - `limit` (optional, default: 10): Number of recommendations
 - `genre` (optional): Filter by genre
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -43,6 +45,7 @@ Get personalized book recommendations.
 Track engagement events.
 
 **Body:**
+
 ```json
 {
   "user_id": "uuid",
@@ -57,6 +60,7 @@ Track engagement events.
 Generate embedding for a book (admin only).
 
 **Body:**
+
 ```json
 {
   "book_id": "uuid"
@@ -68,6 +72,7 @@ Generate embedding for a book (admin only).
 Get similar books.
 
 **Query Parameters:**
+
 - `book_id`: Book ID to find similar books for
 - `limit` (optional, default: 6): Number of results
 
@@ -78,6 +83,7 @@ Get similar books.
 Create Stripe checkout session.
 
 **Body:**
+
 ```json
 {
   "book_id": "uuid",
@@ -86,6 +92,7 @@ Create Stripe checkout session.
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "cs_...",
@@ -98,6 +105,7 @@ Create Stripe checkout session.
 #### POST /api/webhook
 
 Stripe webhook endpoint. Handles:
+
 - `checkout.session.completed`
 - `payment_intent.succeeded`
 - `customer.subscription.updated`
@@ -109,6 +117,7 @@ Stripe webhook endpoint. Handles:
 Get current user session.
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -126,9 +135,11 @@ Get current user session.
 Upload file (manuscripts, covers, etc.).
 
 **Form Data:**
+
 - `file`: File to upload
 
 **Response:**
+
 ```json
 {
   "url": "https://..."
@@ -142,6 +153,7 @@ Upload file (manuscripts, covers, etc.).
 Health check endpoint.
 
 **Response:**
+
 ```json
 {
   "status": "ok",

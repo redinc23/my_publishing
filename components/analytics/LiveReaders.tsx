@@ -30,9 +30,9 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
     const unsubscribe = realtimeAnalytics.subscribe(bookId, (event) => {
       if (event.type === 'read') {
         // Update reader activity
-        setReaders(prev => {
+        setReaders((prev) => {
           const updated = [...prev];
-          const existingIndex = updated.findIndex(r => r.session_id === event.sessionId);
+          const existingIndex = updated.findIndex((r) => r.session_id === event.sessionId);
 
           if (existingIndex > -1) {
             // Update existing reader
@@ -41,7 +41,8 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
               last_activity_at: event.timestamp,
               time_in_session: Math.floor(
                 (new Date(event.timestamp).getTime() -
-                 new Date(updated[existingIndex].created_at).getTime()) / 60000
+                  new Date(updated[existingIndex].created_at).getTime()) /
+                  60000
               ),
               current_chapter: event.data.chapter_title,
               reading_progress: event.data.progress,
@@ -65,10 +66,10 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
 
           // Keep only active readers (last 15 minutes)
           const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-          return updated.filter(r => new Date(r.last_activity_at) > fifteenMinutesAgo);
+          return updated.filter((r) => new Date(r.last_activity_at) > fifteenMinutesAgo);
         });
 
-        setTotalReaders(prev => Math.max(prev, readers.length));
+        setTotalReaders((prev) => Math.max(prev, readers.length));
       }
     });
 
@@ -107,7 +108,7 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
                 <Skeleton className="h-8 w-8 rounded-full" />
                 <div className="flex-1">
                   <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24 mt-1" />
+                  <Skeleton className="mt-1 h-3 w-24" />
                 </div>
                 <Skeleton className="h-6 w-16" />
               </div>
@@ -124,11 +125,9 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Live Readers</CardTitle>
-            <CardDescription>
-              {totalReaders} readers currently active
-            </CardDescription>
+            <CardDescription>{totalReaders} readers currently active</CardDescription>
           </div>
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
             Live
           </Badge>
         </div>
@@ -137,16 +136,17 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
         {readers.length > 0 ? (
           <div className="space-y-3">
             {readers.slice(0, 5).map((reader) => (
-              <div key={reader.session_id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+              <div
+                key={reader.session_id}
+                className="flex items-center space-x-3 rounded-lg bg-muted/50 p-3"
+              >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={reader.user?.avatar_url} />
-                  <AvatarFallback>
-                    {reader.user?.name?.charAt(0) || 'R'}
-                  </AvatarFallback>
+                  <AvatarFallback>{reader.user?.name?.charAt(0) || 'R'}</AvatarFallback>
                 </Avatar>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
                     {reader.user?.name || 'Anonymous Reader'}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -170,16 +170,14 @@ export default function LiveReaders({ bookId }: LiveReadersProps) {
             ))}
 
             {readers.length > 5 && (
-              <p className="text-xs text-muted-foreground text-center pt-2">
+              <p className="pt-2 text-center text-xs text-muted-foreground">
                 And {readers.length - 5} more readers...
               </p>
             )}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <div className="text-muted-foreground">
-              No active readers at the moment
-            </div>
+          <div className="py-8 text-center">
+            <div className="text-muted-foreground">No active readers at the moment</div>
           </div>
         )}
       </CardContent>

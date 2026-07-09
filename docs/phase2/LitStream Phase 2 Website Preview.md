@@ -1,4 +1,5 @@
 # LitStream Phase 2 Website Preview
+
 ## Complete Page-by-Page Structure, Functions & Features
 
 Based on your Phase 2 documentation analysis, here's what your LitStream publishing platform will look like after implementation.
@@ -12,15 +13,16 @@ Based on your Phase 2 documentation analysis, here's what your LitStream publish
 **Frontend**: React + Vite + TypeScript + Tailwind CSS  
 **Hosting**: Firebase Hosting → Cloud Run (nginx static serving)  
 **Domain**: Custom HTTPS domain (e.g., `app.litstream.com`)  
-**Build Process**: Static site generation with prerendered routes  
+**Build Process**: Static site generation with prerendered routes
 
 ---
 
 ## 📖 **Core Content Model**
 
 Your platform manages three primary content types:
+
 - **Books** (with slugs like `/books/the-great-gatsby`)
-- **Authors** (with slugs like `/authors/f-scott-fitzgerald`) 
+- **Authors** (with slugs like `/authors/f-scott-fitzgerald`)
 - **Categories** (with slugs like `/categories/classic-literature`)
 
 ---
@@ -28,6 +30,7 @@ Your platform manages three primary content types:
 ## 🌐 **Complete Site Structure & Pages**
 
 ### **1. Homepage (`/`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🏠 LitStream - Publishing Platform      │
@@ -52,6 +55,7 @@ Your platform manages three primary content types:
 ```
 
 **Features:**
+
 - Responsive design with Tailwind CSS
 - Search across all content types
 - Featured content carousel/grid
@@ -61,6 +65,7 @@ Your platform manages three primary content types:
 ### **2. Books Section**
 
 #### **Books Listing Page (`/books`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 📚 All Books                            │
@@ -84,6 +89,7 @@ Your platform manages three primary content types:
 ```
 
 #### **Individual Book Page (`/books/[slug]`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 📖 Book Title                           │
@@ -115,6 +121,7 @@ Your platform manages three primary content types:
 ### **3. Authors Section**
 
 #### **Authors Listing Page (`/authors`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ ✍️ All Authors                           │
@@ -135,6 +142,7 @@ Your platform manages three primary content types:
 ```
 
 #### **Individual Author Page (`/authors/[slug]`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ ✍️ Author Name                           │
@@ -170,6 +178,7 @@ Your platform manages three primary content types:
 ### **4. Categories Section**
 
 #### **Categories Listing Page (`/categories`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🏷️ All Categories                        │
@@ -194,6 +203,7 @@ Your platform manages three primary content types:
 ```
 
 #### **Individual Category Page (`/categories/[slug]`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🏷️ Category Name                         │
@@ -229,6 +239,7 @@ Your platform manages three primary content types:
 ### **5. Search & Discovery**
 
 #### **Global Search (`/search?q=...`)**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🔍 Search Results for "query"            │
@@ -255,6 +266,7 @@ Your platform manages three primary content types:
 ### **6. Utility Pages**
 
 #### **Health Check (`/healthz`)**
+
 ```
 HTTP 200 OK
 Content-Type: text/plain
@@ -263,6 +275,7 @@ OK
 ```
 
 #### **Sitemap (`/sitemap.xml`)**
+
 - Auto-generated XML sitemap
 - Includes all books, authors, categories
 - Updated on each build
@@ -273,6 +286,7 @@ OK
 ## ⚙️ **Technical Features & Capabilities**
 
 ### **Performance Features**
+
 - **Static Site Generation**: All pages pre-rendered at build time
 - **Immutable Caching**: Hashed assets with `Cache-Control: immutable`
 - **CDN Delivery**: Firebase Hosting edge locations
@@ -280,6 +294,7 @@ OK
 - **Code Splitting**: Vite-based bundle optimization
 
 ### **Security Features**
+
 - **HTTPS Only**: Custom domain with TLS certificate
 - **Content Security Policy**: Blocks unauthorized API calls
 - **No Runtime Secrets**: All secrets removed from browser bundle
@@ -287,6 +302,7 @@ OK
 - **Non-root Container**: Runs as UID 1001
 
 ### **SEO & Discoverability**
+
 - **Meta Tags**: Dynamic title, description, Open Graph
 - **Structured Data**: JSON-LD for books, authors, categories
 - **XML Sitemap**: Auto-generated and updated
@@ -294,6 +310,7 @@ OK
 - **Fast Loading**: Optimized Core Web Vitals
 
 ### **Content Management**
+
 - **Sanity CMS Integration**: Headless content management
 - **Real-time Updates**: Webhook-triggered rebuilds
 - **Content Validation**: GROQ queries for data consistency
@@ -323,17 +340,20 @@ flowchart LR
 ## 📱 **Responsive Design**
 
 ### **Mobile View**
+
 - Hamburger navigation menu
 - Touch-friendly book/author cards
 - Optimized search interface
 - Swipeable content carousels
 
 ### **Tablet View**
+
 - Grid layouts with 2-3 columns
 - Sidebar navigation
 - Enhanced filtering options
 
 ### **Desktop View**
+
 - Full navigation bar
 - Multi-column layouts
 - Advanced search and filtering
@@ -344,18 +364,21 @@ flowchart LR
 ## 🎨 **Visual Design Elements**
 
 ### **Typography**
+
 - Clean, readable fonts
 - Proper heading hierarchy
 - Optimized line spacing
 - Accessible contrast ratios
 
 ### **Color Scheme**
+
 - Professional publishing theme
 - Consistent brand colors
 - Dark/light mode support (if implemented)
 - Accessible color combinations
 
 ### **Layout Components**
+
 - Card-based content display
 - Grid and list view options
 - Breadcrumb navigation
@@ -367,17 +390,20 @@ flowchart LR
 ## 🔍 **Search & Filtering Capabilities**
 
 ### **Search Features**
+
 - Full-text search across all content
 - Auto-complete suggestions
 - Search result highlighting
 - Advanced search operators
 
 ### **Filtering Options**
+
 - **Books**: By author, category, publication date, rating
 - **Authors**: By genre, nationality, time period
 - **Categories**: By type, popularity, book count
 
 ### **Sorting Options**
+
 - Alphabetical (A-Z, Z-A)
 - Publication date (newest/oldest)
 - Popularity/rating
@@ -388,18 +414,21 @@ flowchart LR
 ## 📊 **Analytics & Monitoring**
 
 ### **User Analytics**
+
 - Page views and user sessions
 - Popular content tracking
 - Search query analysis
 - User journey mapping
 
 ### **Performance Monitoring**
+
 - **Sentry**: Error tracking and performance monitoring
 - **Cloud Monitoring**: Uptime and health checks
 - **Core Web Vitals**: Loading, interactivity, visual stability
 - **Build Monitoring**: CI/CD pipeline health
 
 ### **Business Metrics**
+
 - Content engagement rates
 - Most popular books/authors
 - Category performance
@@ -410,18 +439,21 @@ flowchart LR
 ## 🚀 **Deployment & Operations**
 
 ### **Automated Deployment**
+
 - Git push to `main` triggers build
 - 16-step CI/CD pipeline
 - Automated testing and security scans
 - Zero-downtime deployments
 
 ### **Monitoring & Alerts**
+
 - Health check monitoring (`/healthz`)
 - Error rate and latency alerts
 - Budget and cost monitoring
 - Security incident detection
 
 ### **Rollback Capabilities**
+
 - One-command rollback to previous version
 - Automated health validation
 - Incident response procedures

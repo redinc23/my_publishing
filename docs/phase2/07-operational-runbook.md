@@ -15,11 +15,11 @@ Use canonical variables from `05-milestone-implementation-plan.md` when running 
 
 ## Incident Severity Matrix And SLAs
 
-| Severity | Definition | Initial Response SLA | Update Cadence | Typical Owner |
-|---|---|---|---|---|
-| Sev1 | Production unavailable or security compromise risk | 10 min | 15 min | On-call Operator + Platform + Security |
-| Sev2 | Major degradation with user impact | 20 min | 30 min | On-call Operator + Platform |
-| Sev3 | Partial degradation or internal blocking issue | 60 min | 2 hr | Platform Engineer |
+| Severity | Definition                                         | Initial Response SLA | Update Cadence | Typical Owner                          |
+| -------- | -------------------------------------------------- | -------------------- | -------------- | -------------------------------------- |
+| Sev1     | Production unavailable or security compromise risk | 10 min               | 15 min         | On-call Operator + Platform + Security |
+| Sev2     | Major degradation with user impact                 | 20 min               | 30 min         | On-call Operator + Platform            |
+| Sev3     | Partial degradation or internal blocking issue     | 60 min               | 2 hr           | Platform Engineer                      |
 
 ## Escalation Ladder
 
@@ -179,11 +179,13 @@ gcloud builds list --project="${PROJECT_ID}" --region="${REGION}" --limit=20
 Rotate the following secrets via Google Secret Manager. Rotate one secret at a time and verify stability before proceeding to the next.
 
 **Secrets managed:**
+
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `STRIPE_SECRET_KEY`
 - `RESEND_API_KEY`
 
 **Public environment variables (non-secret, but version-locked):**
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`

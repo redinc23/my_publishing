@@ -141,7 +141,9 @@ async function createTestProfiles(count: number): Promise<Array<{ id: string; us
 
       if (profileData) {
         profiles.push({ id: profileData.id, user_id: profileData.user_id });
-        console.log(`   ✓ Created user ${i}: ${email} (${i === 1 ? 'admin' : i <= 3 ? 'author' : 'reader'})`);
+        console.log(
+          `   ✓ Created user ${i}: ${email} (${i === 1 ? 'admin' : i <= 3 ? 'author' : 'reader'})`
+        );
       }
     } catch (error) {
       console.error(`   ✗ Error creating user ${i}:`, error);
@@ -425,9 +427,9 @@ async function seedDatabase() {
               is_featured: featured,
               status: 'published' as const,
               cover_url: `https://picsum.photos/seed/book${i + 6}/400/600`,
-              page_count: 250 + (i * 10),
-              word_count: 65000 + (i * 1000),
-              average_rating: 3.5 + (Math.random() * 1.5),
+              page_count: 250 + i * 10,
+              word_count: 65000 + i * 1000,
+              average_rating: 3.5 + Math.random() * 1.5,
               total_reads: Math.floor(Math.random() * 20000),
               total_reviews: Math.floor(Math.random() * 1000),
             };
@@ -491,13 +493,20 @@ async function seedDatabase() {
       }
     }
 
-    console.log(`\n✅ Generated ${successCount} embeddings${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+    console.log(
+      `\n✅ Generated ${successCount} embeddings${failCount > 0 ? ` (${failCount} failed)` : ''}`
+    );
   } else if (!options.skipEmbeddings) {
     console.log('\n⏭️  Skipping embeddings (OpenAI API key not configured)');
   }
 
   // 5. SEED READING PROGRESS (if not minimal)
-  if (!options.minimal && existingProfiles.length > 0 && insertedBooks && insertedBooks.length > 0) {
+  if (
+    !options.minimal &&
+    existingProfiles.length > 0 &&
+    insertedBooks &&
+    insertedBooks.length > 0
+  ) {
     console.log('\n📖 Seeding reading progress...');
     const readingProgress = [];
     const progressCount = Math.min(20, existingProfiles.length);
@@ -512,7 +521,9 @@ async function seedDatabase() {
       });
     }
 
-    const { error: progressError } = await supabase.from('reading_progress').insert(readingProgress);
+    const { error: progressError } = await supabase
+      .from('reading_progress')
+      .insert(readingProgress);
     if (progressError) {
       console.warn(`⚠️  Error inserting reading progress:`, progressError.message);
     } else {
@@ -558,7 +569,12 @@ async function seedDatabase() {
   }
 
   // 7. SEED ENGAGEMENT EVENTS (if not minimal)
-  if (!options.minimal && existingProfiles.length > 0 && insertedBooks && insertedBooks.length > 0) {
+  if (
+    !options.minimal &&
+    existingProfiles.length > 0 &&
+    insertedBooks &&
+    insertedBooks.length > 0
+  ) {
     console.log('\n📊 Seeding engagement events...');
     const events = [];
     for (let i = 0; i < 100; i++) {

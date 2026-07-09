@@ -91,10 +91,10 @@ export async function middleware(request: NextRequest) {
           getAll() {
             return request.cookies.getAll();
           },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
+          setAll(
+            cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
+          ) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
             response = NextResponse.next({
               request,
             });
@@ -178,7 +178,15 @@ export async function middleware(request: NextRequest) {
     return response;
   } catch (error) {
     // If middleware fails completely, allow public routes to proceed
-    const publicRoutes = ['/', '/books', '/genres', '/login', '/register', '/reset-password', '/api'];
+    const publicRoutes = [
+      '/',
+      '/books',
+      '/genres',
+      '/login',
+      '/register',
+      '/reset-password',
+      '/api',
+    ];
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
     if (isPublicRoute) {

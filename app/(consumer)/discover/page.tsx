@@ -8,8 +8,8 @@ export default function DiscoverPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Discover</h1>
-        <div className="grid md:grid-cols-2 gap-6">
+        <h1 className="mb-8 text-4xl font-bold">Discover</h1>
+        <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>AI Recommendations</CardTitle>

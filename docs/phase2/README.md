@@ -50,20 +50,20 @@ This package is the execution-grade documentation set for the Mangu Publishers N
 
 Primary source files are stored in `docs/phase2/_sources/` and consolidated into canonical docs above.
 
-| Source | Canonical Target |
-|---|---|
-| `litstream_phase2_sec00.md` | `01-executive-summary.md` |
-| `litstream_phase2_sec01.md` | `02-business-requirements.md` |
-| `litstream_phase2_sec02.md` | `03-functional-requirements.md` |
-| `litstream_phase2_sec03.md` | `04-architecture-decisions.md` |
-| `litstream_phase2_sec04.md` | `05-milestone-implementation-plan.md` |
-| `litstream_phase2_sec05.md` | `06-acceptance-and-test-protocol.md` |
-| `litstream_phase2_sec06.md` | `07-operational-runbook.md` |
-| `litstream_phase2_sec07.md` | `08-risk-and-troubleshooting.md` |
-| `litstream_phase2_sec08.md` | `09-appendices.md` |
-| `litstream_phase2.agent.final.md` | Cross-cutting normalization and gap fill |
-| `litstream_phase2.agent.outline.md` | Section structure validation |
-| `plan.md` | Original planning workflow lineage |
+| Source                              | Canonical Target                         |
+| ----------------------------------- | ---------------------------------------- |
+| `litstream_phase2_sec00.md`         | `01-executive-summary.md`                |
+| `litstream_phase2_sec01.md`         | `02-business-requirements.md`            |
+| `litstream_phase2_sec02.md`         | `03-functional-requirements.md`          |
+| `litstream_phase2_sec03.md`         | `04-architecture-decisions.md`           |
+| `litstream_phase2_sec04.md`         | `05-milestone-implementation-plan.md`    |
+| `litstream_phase2_sec05.md`         | `06-acceptance-and-test-protocol.md`     |
+| `litstream_phase2_sec06.md`         | `07-operational-runbook.md`              |
+| `litstream_phase2_sec07.md`         | `08-risk-and-troubleshooting.md`         |
+| `litstream_phase2_sec08.md`         | `09-appendices.md`                       |
+| `litstream_phase2.agent.final.md`   | Cross-cutting normalization and gap fill |
+| `litstream_phase2.agent.outline.md` | Section structure validation             |
+| `plan.md`                           | Original planning workflow lineage       |
 
 ```mermaid
 flowchart TD

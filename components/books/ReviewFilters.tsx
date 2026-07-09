@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Filter, X } from 'lucide-react';
 
 interface ReviewFiltersProps {
@@ -18,13 +24,13 @@ export function ReviewFilters({
   onSortChange,
   filterSpoilers = true,
   onFilterSpoilersChange,
-  className
+  className,
 }: ReviewFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
 
   return (
     <div className={className}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Select value={sortBy} onValueChange={onSortChange}>
             <SelectTrigger className="w-48">
@@ -39,21 +45,17 @@ export function ReviewFilters({
           </Select>
 
           {onFilterSpoilersChange && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
+              <Filter className="mr-2 h-4 w-4" />
               Filters
-              {showFilters && <X className="w-4 h-4 ml-2" />}
+              {showFilters && <X className="ml-2 h-4 w-4" />}
             </Button>
           )}
         </div>
       </div>
 
       {showFilters && onFilterSpoilersChange && (
-        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4">
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"

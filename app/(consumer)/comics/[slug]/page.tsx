@@ -35,7 +35,11 @@ async function getSimilarComics(excludeId: string) {
   return data || [];
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
   const comic = await getComic(params.slug);
   if (!comic) return { title: 'Comic Not Found - MANGU' };
   return {
@@ -53,28 +57,44 @@ export default async function ComicDetailPage({ params }: { params: { slug: stri
     <div>
       <Section className="bg-muted">
         <Container>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="relative aspect-[2/3] max-w-sm mx-auto">
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="relative mx-auto aspect-[2/3] max-w-sm">
               {comic.cover_url && (
-                <Image src={comic.cover_url} alt={comic.title} fill className="object-cover rounded-lg" priority />
+                <Image
+                  src={comic.cover_url}
+                  alt={comic.title}
+                  fill
+                  className="rounded-lg object-cover"
+                  priority
+                />
               )}
             </div>
             <div>
-              <h1 className="text-4xl font-bold mb-4">{comic.title}</h1>
-              <p className="text-xl text-muted-foreground mb-4">
-                by <Link href={`/authors/${comic.author.id}`} className="hover:text-primary">
+              <h1 className="mb-4 text-4xl font-bold">{comic.title}</h1>
+              <p className="mb-4 text-xl text-muted-foreground">
+                by{' '}
+                <Link href={`/authors/${comic.author.id}`} className="hover:text-primary">
                   {comic.author.profile?.full_name || comic.author.pen_name || 'Unknown Author'}
                 </Link>
               </p>
-              <p className="text-lg mb-6">{comic.description}</p>
-              <div className="flex gap-4 mb-6">
-                <Button asChild size="lg"><Link href={`/reading/${comic.id}`}>Read Now</Link></Button>
-                <Button asChild variant="outline" size="lg"><Link href={`/checkout?book_id=${comic.id}`}>Purchase</Link></Button>
+              <p className="mb-6 text-lg">{comic.description}</p>
+              <div className="mb-6 flex gap-4">
+                <Button asChild size="lg">
+                  <Link href={`/reading/${comic.id}`}>Read Now</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href={`/checkout?book_id=${comic.id}`}>Purchase</Link>
+                </Button>
               </div>
               <div className="text-2xl font-bold">
                 {comic.discount_price ? (
-                  <><span className="text-muted-foreground line-through mr-2">${comic.price}</span><span className="text-primary">${comic.discount_price}</span></>
-                ) : (<span>${comic.price}</span>)}
+                  <>
+                    <span className="mr-2 text-muted-foreground line-through">${comic.price}</span>
+                    <span className="text-primary">${comic.discount_price}</span>
+                  </>
+                ) : (
+                  <span>${comic.price}</span>
+                )}
               </div>
             </div>
           </div>
@@ -90,12 +110,18 @@ export default async function ComicDetailPage({ params }: { params: { slug: stri
             </TabsList>
             <TabsContent value="overview" className="mt-6">
               <div>
-                <h3 className="text-2xl font-bold mb-4">About this comic</h3>
-                <p className="text-lg text-muted-foreground whitespace-pre-line">{comic.description}</p>
+                <h3 className="mb-4 text-2xl font-bold">About this comic</h3>
+                <p className="whitespace-pre-line text-lg text-muted-foreground">
+                  {comic.description}
+                </p>
               </div>
             </TabsContent>
             <TabsContent value="audio" className="mt-6">
-              {comic.content?.audio_url ? <AudioPlayer src={comic.content.audio_url} title="Audio Sample" /> : <p className="text-muted-foreground">No audio sample available.</p>}
+              {comic.content?.audio_url ? (
+                <AudioPlayer src={comic.content.audio_url} title="Audio Sample" />
+              ) : (
+                <p className="text-muted-foreground">No audio sample available.</p>
+              )}
             </TabsContent>
             <TabsContent value="reviews" className="mt-6">
               <p className="text-muted-foreground">Reviews coming soon.</p>
@@ -106,9 +132,11 @@ export default async function ComicDetailPage({ params }: { params: { slug: stri
       {similarComics.length > 0 && (
         <Section className="bg-muted">
           <Container>
-            <h2 className="text-3xl font-bold mb-8">Similar Comics</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-              {similarComics.map((b) => (<BookCard key={b.id} book={b} />))}
+            <h2 className="mb-8 text-3xl font-bold">Similar Comics</h2>
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
+              {similarComics.map((b) => (
+                <BookCard key={b.id} book={b} />
+              ))}
             </div>
           </Container>
         </Section>

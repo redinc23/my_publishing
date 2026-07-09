@@ -1,11 +1,11 @@
 # Blocker Pipeline — Launch Status
 
-| Metric | Value |
-|--------|-------|
-| P0 Resolved | **7 / 7** |
-| P1 Resolved | **6 / 6** |
-| Launch readiness | **~96%** |
-| Tracking branch | `chore/import-blockers-pipeline` |
+| Metric           | Value                            |
+| ---------------- | -------------------------------- |
+| P0 Resolved      | **7 / 7**                        |
+| P1 Resolved      | **6 / 6**                        |
+| Launch readiness | **~96%**                         |
+| Tracking branch  | `chore/import-blockers-pipeline` |
 
 ## P0 PRs (merged into chore/import-blockers-pipeline)
 
@@ -29,7 +29,7 @@
 
 - Real `.env.local` + GCP Secret Manager sync (fill in real values)
 - Supabase migrations on production project (apply migration scripts)
-- Stripe prod webhook endpoint (create in Stripe dashboard, copy whsec_)
+- Stripe prod webhook endpoint (create in Stripe dashboard, copy whsec\_)
 - Browser QA per OPERATOR_QA_LOG (manual smoke test after deploy)
 - Custom domain DNS + SSL certificate (Cloud Run domain mapping)
 

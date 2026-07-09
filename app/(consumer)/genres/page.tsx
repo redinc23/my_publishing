@@ -6,10 +6,7 @@ import { Grid } from '@/components/layout/Grid';
 
 async function getGenres() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('books')
-    .select('genre')
-    .eq('status', 'published');
+  const { data } = await supabase.from('books').select('genre').eq('status', 'published');
 
   const genreCounts: Record<string, number> = {};
   data?.forEach((book) => {
@@ -27,7 +24,7 @@ export default async function GenresPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Browse by Genre</h1>
+        <h1 className="mb-8 text-4xl font-bold">Browse by Genre</h1>
         <Grid cols={4}>
           {genres.map(({ genre, count }) => (
             <GenreCard key={genre} genre={genre} bookCount={count} />

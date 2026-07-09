@@ -26,8 +26,10 @@ test.describe('Purchase Flow', () => {
 
   test('search functionality works', async ({ page }) => {
     await page.goto('/books');
-    const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
-    
+    const searchInput = page
+      .locator('input[type="search"], input[placeholder*="search" i]')
+      .first();
+
     if (await searchInput.isVisible()) {
       await searchInput.fill('test');
       await searchInput.press('Enter');
@@ -39,7 +41,7 @@ test.describe('Purchase Flow', () => {
   test('health endpoint returns valid response', async ({ request }) => {
     const response = await request.get('/api/health');
     expect(response.ok()).toBeTruthy();
-    
+
     const data = await response.json();
     expect(data).toHaveProperty('status');
     // Without ?ready=1 the endpoint is a lightweight startup probe ('ok');

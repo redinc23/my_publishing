@@ -9,6 +9,7 @@ This document clearly outlines which features are ready for immediate AWS Amplif
 All features listed below are **fully implemented, tested, and ready for production use**.
 
 #### 1. User Authentication & Management ✅
+
 - User registration with email/password
 - User login and logout
 - Password reset functionality
@@ -18,9 +19,11 @@ All features listed below are **fully implemented, tested, and ready for product
 - Protected routes
 
 **Required Services:**
+
 - Supabase (authentication)
 
 #### 2. Book Catalog & Discovery ✅
+
 - Browse all published books
 - Search books by title, author, or keywords
 - Filter by categories and genres
@@ -30,9 +33,11 @@ All features listed below are **fully implemented, tested, and ready for product
 - Responsive grid layout
 
 **Required Services:**
+
 - Supabase (database)
 
 #### 3. Reading Interface ✅
+
 - Read purchased books online
 - Progress tracking (page/chapter)
 - Bookmark support
@@ -41,9 +46,11 @@ All features listed below are **fully implemented, tested, and ready for product
 - Resume reading from last position
 
 **Required Services:**
+
 - Supabase (database, storage)
 
 #### 4. Payment Processing ✅
+
 - Stripe checkout integration
 - Secure payment processing
 - Test and live payment modes
@@ -52,10 +59,12 @@ All features listed below are **fully implemented, tested, and ready for product
 - Purchase tracking
 
 **Required Services:**
+
 - Stripe (payments)
 - Supabase (database)
 
 #### 5. Author Portal ✅
+
 - Manuscript submission
 - Manuscript management
 - Author dashboard
@@ -64,9 +73,11 @@ All features listed below are **fully implemented, tested, and ready for product
 - Upload manuscript files
 
 **Required Services:**
+
 - Supabase (database, storage)
 
 #### 6. Admin Dashboard ✅
+
 - Admin authentication
 - Content management
 - User management (basic)
@@ -75,9 +86,11 @@ All features listed below are **fully implemented, tested, and ready for product
 - System health monitoring
 
 **Required Services:**
+
 - Supabase (database)
 
 #### 7. Security & Performance ✅
+
 - Row Level Security (RLS) policies
 - Secure API endpoints
 - HTTPS enforcement
@@ -88,6 +101,7 @@ All features listed below are **fully implemented, tested, and ready for product
 - Static generation where applicable
 
 #### 8. Responsive Design ✅
+
 - Mobile-first design
 - Tablet optimization
 - Desktop layouts
@@ -112,6 +126,7 @@ NODE_ENV=production
 ### Phase 1 Database Requirements
 
 All migrations from `supabase/migrations/` must be applied:
+
 1. Initial schema
 2. Books and content tables
 3. Analytics events
@@ -135,15 +150,18 @@ See `docs/MIGRATIONS.md` for detailed instructions.
 These features are **partially implemented or require additional services** that can be added in future phases.
 
 #### 1. AI-Powered Recommendations 🔜
+
 **Status:** Code implemented, requires API key
 
 **What it does:**
+
 - Personalized book recommendations
 - Content-based filtering using embeddings
 - Similar book suggestions
 - "Resonance Engine" AI matching
 
 **To Enable:**
+
 1. Get OpenAI API key from https://platform.openai.com
 2. Add `OPENAI_API_KEY` to environment variables
 3. Redeploy application
@@ -153,9 +171,11 @@ These features are **partially implemented or require additional services** that
 **Additional Cost:** OpenAI API usage (pay-as-you-go)
 
 #### 2. Email Notifications 🔜
+
 **Status:** Code implemented, requires API key
 
 **What it does:**
+
 - Welcome emails for new users
 - Purchase confirmation emails
 - Password reset emails
@@ -163,6 +183,7 @@ These features are **partially implemented or require additional services** that
 - Author notification emails
 
 **To Enable:**
+
 1. Create Resend account at https://resend.com
 2. Add `RESEND_API_KEY` to environment variables
 3. Redeploy application
@@ -172,9 +193,11 @@ These features are **partially implemented or require additional services** that
 **Additional Cost:** Resend pricing (free tier available)
 
 #### 3. Audiobook Support 🔜
+
 **Status:** Planned, not yet implemented
 
 **What it needs:**
+
 - Audio file upload and storage
 - Audio player component
 - Streaming infrastructure
@@ -185,9 +208,11 @@ These features are **partially implemented or require additional services** that
 **Additional Infrastructure:** CDN for audio streaming
 
 #### 4. User Reviews & Ratings ⏳
+
 **Status:** Database schema ready, UI not implemented
 
 **What it needs:**
+
 - Review submission UI
 - Rating system UI
 - Moderation tools
@@ -197,9 +222,11 @@ These features are **partially implemented or require additional services** that
 **Estimated Development Time:** 1-2 weeks
 
 #### 5. Social Features ⏳
+
 **Status:** Planned, not yet implemented
 
 **What it includes:**
+
 - Share books on social media
 - User book lists
 - Reading challenges
@@ -210,9 +237,11 @@ These features are **partially implemented or require additional services** that
 **Additional Services:** Social media APIs
 
 #### 6. Partner Portal (ARC Program) ⏳
+
 **Status:** Partially implemented
 
 **What it needs:**
+
 - Advanced request management
 - Automated approval workflows
 - ARC distribution tracking
@@ -222,9 +251,11 @@ These features are **partially implemented or require additional services** that
 **Estimated Development Time:** 2 weeks
 
 #### 7. Advanced Analytics 🔜
+
 **Status:** Basic analytics ready, advanced features planned
 
 **Future Analytics:**
+
 - Real-time dashboards
 - Custom reports
 - Revenue forecasting
@@ -235,9 +266,11 @@ These features are **partially implemented or require additional services** that
 **Estimated Development Time:** 2-3 weeks
 
 #### 8. Mobile Apps 📱
+
 **Status:** Planned for future
 
 **What it includes:**
+
 - Native iOS app
 - Native Android app
 - Offline reading
@@ -264,20 +297,21 @@ SOCIAL_AUTH_FACEBOOK_APP_ID=...      # Social login
 
 ## 📊 Feature Comparison Table
 
-| Feature | Phase 1 (Now) | Phase 2 (Future) |
-|---------|---------------|------------------|
-| User Authentication | ✅ Full | ➕ Social login |
-| Book Browsing | ✅ Full | ➕ Advanced filters |
-| Book Reading | ✅ Full | ➕ Audiobooks |
-| Payments | ✅ Full | ➕ Subscriptions |
-| Author Portal | ✅ Full | ➕ Analytics |
-| AI Recommendations | ⚙️ Add API key | ➕ Enhanced models |
-| Email Notifications | ⚙️ Add API key | ➕ Templates |
-| Reviews & Ratings | ❌ Not yet | ✨ Coming |
-| Social Features | ❌ Not yet | ✨ Coming |
-| Mobile Apps | ❌ Not yet | ✨ Coming |
+| Feature             | Phase 1 (Now)  | Phase 2 (Future)    |
+| ------------------- | -------------- | ------------------- |
+| User Authentication | ✅ Full        | ➕ Social login     |
+| Book Browsing       | ✅ Full        | ➕ Advanced filters |
+| Book Reading        | ✅ Full        | ➕ Audiobooks       |
+| Payments            | ✅ Full        | ➕ Subscriptions    |
+| Author Portal       | ✅ Full        | ➕ Analytics        |
+| AI Recommendations  | ⚙️ Add API key | ➕ Enhanced models  |
+| Email Notifications | ⚙️ Add API key | ➕ Templates        |
+| Reviews & Ratings   | ❌ Not yet     | ✨ Coming           |
+| Social Features     | ❌ Not yet     | ✨ Coming           |
+| Mobile Apps         | ❌ Not yet     | ✨ Coming           |
 
 **Legend:**
+
 - ✅ Fully implemented and ready
 - ⚙️ Implemented, needs API key/service
 - ➕ Enhanced version planned
@@ -289,24 +323,28 @@ SOCIAL_AUTH_FACEBOOK_APP_ID=...      # Social login
 ## 🎯 Deployment Strategy
 
 ### Immediate Launch (Phase 1)
+
 **Deploy with:** Core features only
 **Timeline:** Ready now (1 day setup)
 **Services needed:** Supabase + Stripe
 **Cost:** ~$25-50/month
 
 ### Phase 2A (Quick Wins)
+
 **Add:** AI recommendations + Email notifications
 **Timeline:** Add within 1-2 weeks after launch
 **Additional services:** OpenAI + Resend
 **Additional cost:** ~$20-30/month
 
 ### Phase 2B (Enhanced Features)
+
 **Add:** Reviews, ratings, social features
 **Timeline:** 2-4 weeks development
 **No new services required**
 **No additional cost**
 
 ### Phase 3+ (Future)
+
 **Add:** Audiobooks, mobile apps, advanced analytics
 **Timeline:** 2-6 months development
 **Additional infrastructure required**
@@ -317,24 +355,28 @@ SOCIAL_AUTH_FACEBOOK_APP_ID=...      # Social login
 ## ✅ Recommended Launch Approach
 
 ### Week 1: Immediate Launch
+
 1. Deploy Phase 1 to AWS Amplify
 2. Test all core features
 3. Gather user feedback
 4. Monitor system performance
 
 ### Week 2-3: Add Quick Wins
+
 1. Add OpenAI API key (AI recommendations)
 2. Add Resend API key (email notifications)
 3. Test new features
 4. Monitor usage and costs
 
 ### Month 2: Enhanced Features
+
 1. Implement reviews and ratings
 2. Add social sharing
 3. Enhance author portal
 4. Improve analytics
 
 ### Month 3+: Major Features
+
 1. Plan audiobook implementation
 2. Consider mobile app development
 3. Evaluate user feedback
@@ -345,6 +387,7 @@ SOCIAL_AUTH_FACEBOOK_APP_ID=...      # Social login
 ## 🎉 Ready for Launch!
 
 **Phase 1 includes everything needed for a successful launch:**
+
 - Complete user management ✅
 - Full book catalog and discovery ✅
 - Reading interface ✅
