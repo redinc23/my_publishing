@@ -2,6 +2,31 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 2 — Local Validation Gate (agent-run, 2026-07-09)
+
+**Environment:** Node v20.20.2, npm v10.8.2, Next.js 14.2.35, sandbox (GCP Cloud Run target)
+
+| Sub-stage | Result |
+|-----------|--------|
+| `[PASS] 2.0.a` — Node version | v20.20.2 satisfies `.nvmrc` / `engines >= 20`. |
+| `[PASS] 2.0.b` — npm ci clean install from package-lock.json; Node v20.20.2. | No lockfile drift; 1021 packages installed; 17 audit vulns all in `next@14.2.35` chain, deferred (same as previous run). |
+| `[PASS] 2.0.c` — Stale `.next` cache removed (`rm -rf .next`). | |
+| `[PASS] 2.0.d` — `.env.local` created from `.env.local.example` shape; confirmed git-ignored (`git check-ignore -v .env.local`). Placeholder values: real Supabase project URL, dummy JWT-shaped anon + service-role keys, `pk_test_`/`sk_test_` dummy Stripe keys, `STRIPE_WEBHOOK_SECRET` blank (Phase 5), `NEXT_PUBLIC_SITE_URL=https://mangu-publishers.com`, Upstash dummy URL + token. Real secrets remain operator-local. | |
+| `[PASS] 2.0.e` — `npm run validate-env` exited 0 (placeholder-shaped env; real secrets remain operator-local). | One expected warning: "Stripe webhook secret missing" because Stripe keys are present but `STRIPE_WEBHOOK_SECRET` is blank per Phase 5 checklist. No errors; validator correctly marks Stripe webhook as optional/warning-only. |
+| `[PASS] 2.1.a` — type-check passed. | `tsc --noEmit` exited 0, zero errors. |
+| `[PASS] 2.1.b` — lint passed. | `next lint` — no ESLint warnings or errors. |
+| `[PASS] 2.1.c` — unit tests passed (6 suites, 25 tests). | All 25 tests pass across 6 suites. Two expected console.warn lines from `lib/rate-limit.ts` (Redis not set in test env — benign). |
+| `[PASS] 2.1.d` — next build succeeded. | 53 pages generated (static + dynamic); `next build` exited 0. Two webpack Edge Runtime warnings for `@supabase/ssr` and `@upstash/redis` (pre-existing, known, not blocking). Secret audit: no `sk_test_`/`sk_live_`/`whsec_` patterns in `.next` output. |
+| `[PASS] 2.1.e` — `bash scripts/launch-readiness.sh` passed. | npm ci → type-check → lint → 25/25 unit tests → 15 migration files → build → lockfile @upstash check → secret audit — all PASS. No gcloud gates in this script; no SKIPPED items required. |
+
+**Fixes applied this run:** None required. All sub-stages passed on first attempt.
+
+**Notes:**
+- `STRIPE_WEBHOOK_SECRET` left blank intentionally — Phase 5 populates this per checklist.
+- `npm audit` 17 vulnerabilities (10 high) in `next@14.2.35` chain — same as 2026-07-08 entry; fix requires Next 16 (breaking), deferred to engineering.
+- `verify-rls` not run per task constraints (Phase 3, known false positive flagged in checklist).
+- No gcloud/Supabase/Stripe network operations attempted per task constraints (Phases 3–5).
+
 ## Automated (agent-run, 2026-07-08)
 
 | Check | Command / URL | Result |
