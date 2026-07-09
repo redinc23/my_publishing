@@ -66,6 +66,13 @@ jobs:
                 r.conclusion === 'success' || r.conclusion === 'skipped' || r.conclusion === 'neutral'
               );
 
+              // Require the 'CI' workflow check to be present and successful
+              const ciCheck = relevant.find(r => r.name === 'CI');
+              if (!ciCheck || ciCheck.conclusion !== 'success') {
+                core.warning(`PR #${pr.number}: Required CI check not present or not successful — not merging`);
+                continue;
+              }
+
               if (!allDone) {
                 core.info(`PR #${pr.number}: CI still running, skipping`);
                 continue;

@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
@@ -27,26 +27,8 @@ jobs:
           node-version-file: '.nvmrc'
           cache: npm
       - run: npm ci
+      - run: npm run validate-env
       - run: npm run type-check
       - run: npm run lint
       - run: npm test
       - run: npm run build
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    # Optional secondary host — canonical production is Cloud Run (see docs/CANONICAL_PRODUCTION.md)
-    # Gate on the repository variable (secrets.* is invalid in job-level if:).
-    if: github.ref == 'refs/heads/main' && vars.VERCEL_PROJECT_ID != ''
-    env:
-      HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v20
-        if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
-        continue-on-error: true
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
