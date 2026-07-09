@@ -7,14 +7,14 @@ import { Container } from '@/components/layout/Container';
 export function CTA() {
   return (
     <section
-      className="py-24 relative overflow-hidden"
+      className="relative overflow-hidden py-24"
       style={{
         background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 40%, #0f3460 100%)',
       }}
     >
       {/* Radial glow */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="pointer-events-none absolute inset-0"
         style={{
           background:
             'radial-gradient(circle at 70% 50%, rgba(255,215,0,0.06) 0%, transparent 50%), radial-gradient(circle at 20% 50%, rgba(138,43,226,0.06) 0%, transparent 50%)',
@@ -22,11 +22,11 @@ export function CTA() {
       />
 
       <Container className="relative z-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-sm font-medium tracking-widest uppercase text-white/50 mb-4">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="mb-4 text-sm font-medium uppercase tracking-widest text-white/50">
             Get Started Today
           </p>
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-white">
+          <h2 className="mb-6 text-4xl font-bold text-white sm:text-5xl">
             Ready to Begin Your{' '}
             <span
               style={{
@@ -39,11 +39,11 @@ export function CTA() {
               Story?
             </span>
           </h2>
-          <p className="text-lg text-white/70 mb-10 leading-relaxed">
-            Join thousands of authors and readers on the MANGU platform.
-            Start publishing your books today or discover your next great read.
+          <p className="mb-10 text-lg leading-relaxed text-white/70">
+            Join thousands of authors and readers on the MANGU platform. Start publishing your books
+            today or discover your next great read.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Button
               asChild
               size="lg"
@@ -59,7 +59,7 @@ export function CTA() {
               asChild
               variant="outline"
               size="lg"
-              className="rounded-full px-8 py-6 text-base font-semibold border-white/30 bg-white/5 text-white hover:bg-white/10 hover:text-white transition-all duration-300 hover:-translate-y-1"
+              className="rounded-full border-white/30 bg-white/5 px-8 py-6 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-white/10 hover:text-white"
             >
               <Link href="/author/submit">
                 <PenTool className="mr-2 h-5 w-5" />

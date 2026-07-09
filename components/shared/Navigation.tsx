@@ -26,17 +26,15 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname();
 
-  const isLibraryActive = libraryItems.some((item) =>
-    pathname?.startsWith(item.href)
-  );
+  const isLibraryActive = libraryItems.some((item) => pathname?.startsWith(item.href));
 
   return (
-    <nav className="hidden md:flex items-center gap-6">
+    <nav className="hidden items-center gap-6 md:flex">
       {/* Library Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            'group inline-flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary outline-none',
+            'group inline-flex items-center gap-1 text-sm font-medium outline-none transition-colors hover:text-primary',
             isLibraryActive ? 'text-primary' : 'text-foreground'
           )}
         >
@@ -50,10 +48,7 @@ export function Navigation() {
               <DropdownMenuItem key={item.href} asChild>
                 <Link
                   href={item.href}
-                  className={cn(
-                    'cursor-pointer',
-                    isActive ? 'text-primary' : 'text-foreground'
-                  )}
+                  className={cn('cursor-pointer', isActive ? 'text-primary' : 'text-foreground')}
                 >
                   {item.label}
                 </Link>

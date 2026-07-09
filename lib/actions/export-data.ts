@@ -7,12 +7,12 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { 
-  BookIdSchema, 
-  DateRangeSchema, 
+import {
+  BookIdSchema,
+  DateRangeSchema,
   ExportFormatSchema,
   validateSafe,
-  getFirstError 
+  getFirstError,
 } from '@/lib/validations/schemas';
 import type { ExportResult, ExportDateRange } from '@/types/export';
 
@@ -26,9 +26,12 @@ export async function exportAnalyticsData(
 ): Promise<ExportResult> {
   try {
     const supabase = await createClient();
-    
+
     // Auth check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Unauthorized - please sign in' };
     }
@@ -110,13 +113,15 @@ export async function exportAnalyticsData(
       mimeType = 'application/json';
     } else if (validFormat === 'csv') {
       const headers = ['id', 'book_id', 'event_type', 'user_id', 'session_id', 'created_at'];
-      const rows = events?.map(e => headers.map(h => e[h as keyof typeof e] ?? '').join(',')) || [];
+      const rows =
+        events?.map((e) => headers.map((h) => e[h as keyof typeof e] ?? '').join(',')) || [];
       output = [headers.join(','), ...rows].join('\n');
       mimeType = 'text/csv';
     } else {
       // Excel would need a library like xlsx - return CSV for now
       const headers = ['id', 'book_id', 'event_type', 'user_id', 'session_id', 'created_at'];
-      const rows = events?.map(e => headers.map(h => e[h as keyof typeof e] ?? '').join(',')) || [];
+      const rows =
+        events?.map((e) => headers.map((h) => e[h as keyof typeof e] ?? '').join(',')) || [];
       output = [headers.join(','), ...rows].join('\n');
       mimeType = 'text/csv';
     }
@@ -145,8 +150,11 @@ export async function exportRevenueData(
 ): Promise<ExportResult> {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Unauthorized' };
     }
@@ -165,7 +173,8 @@ export async function exportRevenueData(
     // Build query - get orders for user's books
     let query = supabase
       .from('orders')
-      .select(`
+      .select(
+        `
         id,
         book_id,
         amount,
@@ -173,7 +182,8 @@ export async function exportRevenueData(
         status,
         created_at,
         books!inner(title, author_id)
-      `)
+      `
+      )
       .eq('books.author_id', user.id)
       .eq('status', 'completed')
       .order('created_at', { ascending: false });
@@ -211,15 +221,18 @@ export async function exportRevenueData(
       output = JSON.stringify(orders, null, 2);
     } else {
       const headers = ['id', 'book_id', 'book_title', 'amount', 'currency', 'status', 'created_at'];
-      const rows = orders?.map(o => [
-        o.id,
-        o.book_id,
-        (o.books as any)?.title || '',
-        o.amount,
-        o.currency,
-        o.status,
-        o.created_at
-      ].join(',')) || [];
+      const rows =
+        orders?.map((o) =>
+          [
+            o.id,
+            o.book_id,
+            (o.books as any)?.title || '',
+            o.amount,
+            o.currency,
+            o.status,
+            o.created_at,
+          ].join(',')
+        ) || [];
       output = [headers.join(','), ...rows].join('\n');
     }
 
@@ -239,14 +252,14 @@ export async function exportRevenueData(
 /**
  * Export reader data
  */
-export async function exportReaderData(
-  bookId: unknown,
-  dateRange: unknown
-): Promise<ExportResult> {
+export async function exportReaderData(bookId: unknown, dateRange: unknown): Promise<ExportResult> {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Unauthorized' };
     }
@@ -288,11 +301,14 @@ export async function exportReaderData(
     }
 
     // Aggregate by user
-    const readerMap = new Map<string, { user_id: string; books: Set<string>; first_seen: string; last_seen: string }>();
-    
-    events?.forEach(event => {
+    const readerMap = new Map<
+      string,
+      { user_id: string; books: Set<string>; first_seen: string; last_seen: string }
+    >();
+
+    events?.forEach((event) => {
       if (!event.user_id) return;
-      
+
       const existing = readerMap.get(event.user_id);
       if (existing) {
         existing.books.add(event.book_id);
@@ -308,7 +324,7 @@ export async function exportReaderData(
       }
     });
 
-    const readers = Array.from(readerMap.values()).map(r => ({
+    const readers = Array.from(readerMap.values()).map((r) => ({
       user_id: r.user_id,
       books_read: r.books.size,
       first_seen: r.first_seen,

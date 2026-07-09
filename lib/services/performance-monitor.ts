@@ -14,10 +14,10 @@ class PerformanceMonitor {
 
   start(component: string): () => void {
     const startTime = performance.now();
-    
+
     return () => {
       const loadTime = performance.now() - startTime;
-      
+
       const metric: PerformanceMetric = {
         component,
         loadTime,
@@ -26,7 +26,7 @@ class PerformanceMonitor {
       };
 
       this.metrics.push(metric);
-      
+
       if (this.metrics.length > this.MAX_METRICS) {
         this.metrics.shift();
       }
@@ -38,24 +38,25 @@ class PerformanceMonitor {
   }
 
   setDataSize(component: string, size: number) {
-    const metric = this.metrics.find(m => m.component === component);
+    const metric = this.metrics.find((m) => m.component === component);
     if (metric) {
       metric.dataSize = size;
     }
   }
 
   getReport() {
-    const components = [...new Set(this.metrics.map(m => m.component))];
-    
-    return components.map(component => {
-      const componentMetrics = this.metrics.filter(m => m.component === component);
-      const avgLoadTime = componentMetrics.reduce((sum, m) => sum + m.loadTime, 0) / componentMetrics.length;
-      
+    const components = [...new Set(this.metrics.map((m) => m.component))];
+
+    return components.map((component) => {
+      const componentMetrics = this.metrics.filter((m) => m.component === component);
+      const avgLoadTime =
+        componentMetrics.reduce((sum, m) => sum + m.loadTime, 0) / componentMetrics.length;
+
       return {
         component,
         averageLoadTime: avgLoadTime,
         totalLoads: componentMetrics.length,
-        slowLoads: componentMetrics.filter(m => m.loadTime > this.SLOW_THRESHOLD).length,
+        slowLoads: componentMetrics.filter((m) => m.loadTime > this.SLOW_THRESHOLD).length,
       };
     });
   }

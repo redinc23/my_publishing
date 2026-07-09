@@ -35,7 +35,11 @@ async function getSimilarPapers(excludeId: string) {
   return data || [];
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
   const paper = await getPaper(params.slug);
   if (!paper) return { title: 'Paper Not Found - MANGU' };
   return {
@@ -53,28 +57,44 @@ export default async function PaperDetailPage({ params }: { params: { slug: stri
     <div>
       <Section className="bg-muted">
         <Container>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="relative aspect-[2/3] max-w-sm mx-auto">
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="relative mx-auto aspect-[2/3] max-w-sm">
               {paper.cover_url && (
-                <Image src={paper.cover_url} alt={paper.title} fill className="object-cover rounded-lg" priority />
+                <Image
+                  src={paper.cover_url}
+                  alt={paper.title}
+                  fill
+                  className="rounded-lg object-cover"
+                  priority
+                />
               )}
             </div>
             <div>
-              <h1 className="text-4xl font-bold mb-4">{paper.title}</h1>
-              <p className="text-xl text-muted-foreground mb-4">
-                by <Link href={`/authors/${paper.author.id}`} className="hover:text-primary">
+              <h1 className="mb-4 text-4xl font-bold">{paper.title}</h1>
+              <p className="mb-4 text-xl text-muted-foreground">
+                by{' '}
+                <Link href={`/authors/${paper.author.id}`} className="hover:text-primary">
                   {paper.author.profile?.full_name || paper.author.pen_name || 'Unknown Author'}
                 </Link>
               </p>
-              <p className="text-lg mb-6">{paper.description}</p>
-              <div className="flex gap-4 mb-6">
-                <Button asChild size="lg"><Link href={`/reading/${paper.id}`}>Read Now</Link></Button>
-                <Button asChild variant="outline" size="lg"><Link href={`/checkout?book_id=${paper.id}`}>Purchase</Link></Button>
+              <p className="mb-6 text-lg">{paper.description}</p>
+              <div className="mb-6 flex gap-4">
+                <Button asChild size="lg">
+                  <Link href={`/reading/${paper.id}`}>Read Now</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href={`/checkout?book_id=${paper.id}`}>Purchase</Link>
+                </Button>
               </div>
               <div className="text-2xl font-bold">
                 {paper.discount_price ? (
-                  <><span className="text-muted-foreground line-through mr-2">${paper.price}</span><span className="text-primary">${paper.discount_price}</span></>
-                ) : (<span>${paper.price}</span>)}
+                  <>
+                    <span className="mr-2 text-muted-foreground line-through">${paper.price}</span>
+                    <span className="text-primary">${paper.discount_price}</span>
+                  </>
+                ) : (
+                  <span>${paper.price}</span>
+                )}
               </div>
             </div>
           </div>
@@ -90,12 +110,18 @@ export default async function PaperDetailPage({ params }: { params: { slug: stri
             </TabsList>
             <TabsContent value="overview" className="mt-6">
               <div>
-                <h3 className="text-2xl font-bold mb-4">About this paper</h3>
-                <p className="text-lg text-muted-foreground whitespace-pre-line">{paper.description}</p>
+                <h3 className="mb-4 text-2xl font-bold">About this paper</h3>
+                <p className="whitespace-pre-line text-lg text-muted-foreground">
+                  {paper.description}
+                </p>
               </div>
             </TabsContent>
             <TabsContent value="audio" className="mt-6">
-              {paper.content?.audio_url ? <AudioPlayer src={paper.content.audio_url} title="Audio Sample" /> : <p className="text-muted-foreground">No audio sample available.</p>}
+              {paper.content?.audio_url ? (
+                <AudioPlayer src={paper.content.audio_url} title="Audio Sample" />
+              ) : (
+                <p className="text-muted-foreground">No audio sample available.</p>
+              )}
             </TabsContent>
             <TabsContent value="reviews" className="mt-6">
               <p className="text-muted-foreground">Reviews coming soon.</p>
@@ -106,9 +132,11 @@ export default async function PaperDetailPage({ params }: { params: { slug: stri
       {similarPapers.length > 0 && (
         <Section className="bg-muted">
           <Container>
-            <h2 className="text-3xl font-bold mb-8">Similar Papers</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-              {similarPapers.map((b) => (<BookCard key={b.id} book={b} />))}
+            <h2 className="mb-8 text-3xl font-bold">Similar Papers</h2>
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
+              {similarPapers.map((b) => (
+                <BookCard key={b.id} book={b} />
+              ))}
             </div>
           </Container>
         </Section>

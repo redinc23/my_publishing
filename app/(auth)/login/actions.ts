@@ -14,7 +14,7 @@ export async function signIn(formData: FormData) {
   const headersList = await headers();
   const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
   const identifier = getAuthIdentifier(ip, email);
-  
+
   if (!authRateLimit(identifier)) {
     return { error: 'Too many login attempts. Please try again in 15 minutes.' };
   }

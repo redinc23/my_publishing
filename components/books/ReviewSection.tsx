@@ -8,13 +8,7 @@ import { ReviewFilters } from './ReviewFilters';
 import { ReviewStats } from './ReviewStats';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  MessageSquare,
-  BarChart3,
-  TrendingUp,
-  Filter,
-  PlusCircle
-} from 'lucide-react';
+import { MessageSquare, BarChart3, TrendingUp, Filter, PlusCircle } from 'lucide-react';
 interface ReviewSectionProps {
   bookId: string;
   initialReviews: any[];
@@ -32,13 +26,13 @@ export function ReviewSection({
   totalReviews,
   ratingDistribution,
   userReview,
-  isAuthenticated = false
+  isAuthenticated = false,
 }: ReviewSectionProps) {
   const [reviews, setReviews] = useState(initialReviews);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'highest' | 'lowest'>('helpful');
   const [filterSpoilers, setFilterSpoilers] = useState(true);
-  
+
   const hasUserReviewed = !!userReview;
 
   const handleReviewSubmit = () => {
@@ -48,17 +42,15 @@ export function ReviewSection({
   };
 
   const renderEmptyState = () => (
-    <div className="text-center py-12">
-      <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-        No Reviews Yet
-      </h3>
-      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+    <div className="py-12 text-center">
+      <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+      <h3 className="mb-2 text-lg font-semibold text-gray-900">No Reviews Yet</h3>
+      <p className="mx-auto mb-6 max-w-md text-gray-600">
         Be the first to share your thoughts about this book!
       </p>
       {isAuthenticated && !hasUserReviewed && (
         <Button onClick={() => setShowReviewForm(true)}>
-          <PlusCircle className="w-4 h-4 mr-2" />
+          <PlusCircle className="mr-2 h-4 w-4" />
           Write First Review
         </Button>
       )}
@@ -67,20 +59,16 @@ export function ReviewSection({
 
   const renderReviewStats = () => (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Reviews</h2>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setFilterSpoilers(!filterSpoilers)}
-          >
-            <Filter className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={() => setFilterSpoilers(!filterSpoilers)}>
+            <Filter className="mr-2 h-4 w-4" />
             {filterSpoilers ? 'Show Spoilers' : 'Hide Spoilers'}
           </Button>
           {isAuthenticated && (
             <Button
-              variant={hasUserReviewed ? "outline" : "default"}
+              variant={hasUserReviewed ? 'outline' : 'default'}
               size="sm"
               onClick={() => setShowReviewForm(true)}
             >
@@ -89,7 +77,7 @@ export function ReviewSection({
           )}
         </div>
       </div>
-      
+
       <ReviewStats
         averageRating={averageRating}
         totalReviews={totalReviews}
@@ -105,15 +93,15 @@ export function ReviewSection({
       <Tabs defaultValue="reviews" className="mb-8">
         <TabsList className="mb-6">
           <TabsTrigger value="reviews" className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="h-4 w-4" />
             All Reviews ({totalReviews})
           </TabsTrigger>
           <TabsTrigger value="helpful" className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
+            <TrendingUp className="h-4 w-4" />
             Most Helpful
           </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
+            <BarChart3 className="h-4 w-4" />
             Statistics
           </TabsTrigger>
         </TabsList>
@@ -125,7 +113,7 @@ export function ReviewSection({
             filterSpoilers={filterSpoilers}
             onFilterSpoilersChange={setFilterSpoilers}
           />
-          
+
           {showReviewForm && (
             <div className="mb-6">
               <ReviewForm
@@ -148,9 +136,9 @@ export function ReviewSection({
                   book={{ id: bookId, title: '', cover_url: '' }}
                 />
               ))}
-              
+
               {reviews.length < totalReviews && (
-                <div className="text-center pt-6">
+                <div className="pt-6 text-center">
                   <Button variant="outline" size="lg">
                     Load More Reviews
                   </Button>
@@ -161,11 +149,9 @@ export function ReviewSection({
         </TabsContent>
 
         <TabsContent value="helpful">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">
-              Most Helpful Reviews
-            </h3>
-            <p className="text-blue-700 mb-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+            <h3 className="mb-2 text-lg font-semibold text-blue-900">Most Helpful Reviews</h3>
+            <p className="mb-4 text-blue-700">
               These reviews have been voted most helpful by the community.
             </p>
             {/* Add helpful reviews list */}
@@ -173,13 +159,13 @@ export function ReviewSection({
         </TabsContent>
 
         <TabsContent value="stats">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h4 className="font-semibold mb-3">Rating Distribution</h4>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="rounded-lg bg-gray-50 p-6">
+              <h4 className="mb-3 font-semibold">Rating Distribution</h4>
               {/* Add rating distribution chart */}
             </div>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h4 className="font-semibold mb-3">Review Trends</h4>
+            <div className="rounded-lg bg-gray-50 p-6">
+              <h4 className="mb-3 font-semibold">Review Trends</h4>
               {/* Add review timeline chart */}
             </div>
           </div>

@@ -13,9 +13,7 @@ export default async function AdminDashboard() {
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('books').select('*', { count: 'exact', head: true }),
-    supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true }),
+    supabase.from('orders').select('*', { count: 'exact', head: true }),
     supabase
       .from('engagement_events')
       .select('*, book:books(title)')
@@ -27,7 +25,7 @@ export default async function AdminDashboard() {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Total Users</CardTitle>
@@ -66,7 +64,7 @@ export default async function AdminDashboard() {
               {recentActivity.map((activity: any) => (
                 <div
                   key={activity.id}
-                  className="flex items-center justify-between p-2 border-b border-border"
+                  className="flex items-center justify-between border-b border-border p-2"
                 >
                   <div>
                     <p className="font-medium">{activity.event_type}</p>

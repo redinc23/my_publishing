@@ -16,7 +16,8 @@ const features = [
   {
     icon: Zap,
     title: 'AI Recommendations',
-    description: 'Discover books tailored to your reading preferences with AI-powered recommendations.',
+    description:
+      'Discover books tailored to your reading preferences with AI-powered recommendations.',
   },
   {
     icon: Shield,
@@ -37,31 +38,33 @@ const features = [
 
 export function Features() {
   return (
-    <section className="py-24 bg-background">
+    <section className="bg-background py-24">
       <Container>
-        <div className="text-center mb-16">
-          <p className="text-sm font-medium tracking-widest uppercase text-primary mb-3">
+        <div className="mb-16 text-center">
+          <p className="mb-3 text-sm font-medium uppercase tracking-widest text-primary">
             What We Offer
           </p>
-          <h2 className="text-4xl font-bold mb-4">Why Choose MANGU?</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <h2 className="mb-4 text-4xl font-bold">Why Choose MANGU?</h2>
+          <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
             Everything you need to publish, discover, and enjoy books in one platform.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className="group p-6 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="group rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
               >
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4 group-hover:bg-primary/20 transition-colors duration-300">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 transition-colors duration-300 group-hover:bg-primary/20">
                   <Icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="mb-2 text-lg font-semibold">{feature.title}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
             );
           })}

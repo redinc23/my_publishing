@@ -5,11 +5,7 @@ import { requireAdmin } from '@/lib/middleware/auth';
 import { redirect } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/Sidebar';
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   try {
     // This will redirect to login if not authenticated, or to home if not admin
     const { user, profile } = await requireAdmin();

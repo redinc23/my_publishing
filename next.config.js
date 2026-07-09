@@ -21,7 +21,7 @@ const ContentSecurityPolicy = [
   // API calls go to Supabase (REST + Realtime WS) and Stripe.
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://q.stripe.com",
   // Stripe embeds iframes for secure card input.
-  "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
+  'frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com',
   "font-src 'self'",
   // Disallow plugins and object embeds entirely.
   "object-src 'none'",
@@ -32,7 +32,7 @@ const ContentSecurityPolicy = [
   // Prevent this page from being embedded in a foreign frame (replaces X-Frame-Options).
   "frame-ancestors 'none'",
   // Block mixed content.
-  "upgrade-insecure-requests",
+  'upgrade-insecure-requests',
 ].join('; ');
 
 const nextConfig = {
@@ -55,8 +55,7 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Permissions-Policy',
-            value:
-              'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
           // Prevent popups from retaining opener access (protects OAuth flows).
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },

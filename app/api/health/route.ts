@@ -1,12 +1,12 @@
 /**
  * Health Check API
  * Production health and readiness endpoints
- * 
+ *
  * This endpoint validates:
  * - Environment variables are configured
  * - Supabase database connection (requires 'profiles' table from migrations)
  * - Supabase auth service availability
- * 
+ *
  * Migration Order (apply in this sequence):
  * 1. 20260116000000_initial_schema.sql - Creates profiles table and core schema
  * 2. 20260117000000_analytics_events.sql - Analytics tracking
@@ -100,25 +100,27 @@ function getSupabaseEnvShape(): Record<string, unknown> {
 
 function checkEnvironment(): CheckResult {
   const validation = validateEnvironment();
-  
+
   if (!validation.valid) {
     return {
       status: 'fail',
       message: `Missing required environment variables: ${validation.missing.join(', ')}. See .env.local.example for setup instructions.`,
     };
   }
-  
+
   if (validation.warnings.length > 0) {
     return {
       status: 'warn',
       message: `Environment warnings: ${validation.warnings.join('; ')}`,
     };
   }
-  
+
   return { status: 'pass' };
 }
 
-async function checkDatabase(supabase: Awaited<ReturnType<typeof createClient>>): Promise<CheckResult> {
+async function checkDatabase(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<CheckResult> {
   const start = Date.now();
   try {
     debugLog({
@@ -130,7 +132,7 @@ async function checkDatabase(supabase: Awaited<ReturnType<typeof createClient>>)
     });
     const { error } = await supabase.from('profiles').select('id').limit(1);
     const latency = Date.now() - start;
-    
+
     if (error) {
       debugLog({
         runId: 'pre-fix',
@@ -150,19 +152,21 @@ async function checkDatabase(supabase: Awaited<ReturnType<typeof createClient>>)
         return {
           status: 'fail',
           latency_ms: latency,
-          message: 'Database migrations not applied. The "profiles" table is missing. Run migrations in order (see migration comments in this file).',
+          message:
+            'Database migrations not applied. The "profiles" table is missing. Run migrations in order (see migration comments in this file).',
         };
       }
       if (error.message.includes('permission denied')) {
         return {
           status: 'fail',
           latency_ms: latency,
-          message: 'Database permissions issue. Check Row Level Security (RLS) policies and service role key configuration.',
+          message:
+            'Database permissions issue. Check Row Level Security (RLS) policies and service role key configuration.',
         };
       }
       return { status: 'fail', latency_ms: latency, message: error.message };
     }
-    
+
     debugLog({
       runId: 'pre-fix',
       hypothesisId: 'H4',
@@ -181,16 +185,17 @@ async function checkDatabase(supabase: Awaited<ReturnType<typeof createClient>>)
       message: 'Supabase profiles readiness query threw',
       data: { latency, errorMessage, envShape: getSupabaseEnvShape() },
     });
-    
+
     // Check for common connection errors
     if (errorMessage.includes('fetch failed') || errorMessage.includes('ECONNREFUSED')) {
       return {
         status: 'fail',
         latency_ms: latency,
-        message: 'Cannot connect to Supabase. Check NEXT_PUBLIC_SUPABASE_URL and network connectivity.',
+        message:
+          'Cannot connect to Supabase. Check NEXT_PUBLIC_SUPABASE_URL and network connectivity.',
       };
     }
-    
+
     return { status: 'fail', latency_ms: latency, message: errorMessage };
   }
 }
@@ -200,7 +205,7 @@ async function checkAuth(supabase: Awaited<ReturnType<typeof createClient>>): Pr
   try {
     const { error } = await supabase.auth.getSession();
     const latency = Date.now() - start;
-    
+
     if (error) {
       // Provide helpful error messages
       if (error.message.includes('Invalid API key')) {
@@ -212,12 +217,12 @@ async function checkAuth(supabase: Awaited<ReturnType<typeof createClient>>): Pr
       }
       return { status: 'fail', latency_ms: latency, message: error.message };
     }
-    
+
     return { status: latency > 500 ? 'warn' : 'pass', latency_ms: latency };
   } catch (error) {
     const latency = Date.now() - start;
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
+
     if (errorMessage.includes('fetch failed') || errorMessage.includes('ECONNREFUSED')) {
       return {
         status: 'fail',
@@ -225,7 +230,7 @@ async function checkAuth(supabase: Awaited<ReturnType<typeof createClient>>): Pr
         message: 'Cannot connect to Supabase Auth service. Check NEXT_PUBLIC_SUPABASE_URL.',
       };
     }
-    
+
     return { status: 'fail', latency_ms: latency, message: errorMessage };
   }
 }
@@ -285,27 +290,21 @@ async function checkStripe(): Promise<CheckResult> {
   };
 }
 
-async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>>): Promise<CheckResult> {
+async function checkMigrations(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<CheckResult> {
   const start = Date.now();
-  
+
   // Key tables that should exist after migrations
-  const requiredTables = [
-    'profiles',
-    'books',
-    'authors',
-  ];
-  
+  const requiredTables = ['profiles', 'books', 'authors'];
+
   // Optional tables (may not exist if some migrations haven't run)
-  const optionalTables = [
-    'orders',
-    'analytics_events',
-    'reading_sessions',
-  ];
-  
+  const optionalTables = ['orders', 'analytics_events', 'reading_sessions'];
+
   try {
     const missingRequired: string[] = [];
     const missingOptional: string[] = [];
-    
+
     // Check required tables
     const requiredChecks = await Promise.all(
       requiredTables.map(async (table) => {
@@ -321,7 +320,7 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
         missingRequired.push(table);
       }
     }
-    
+
     // Check optional tables
     const optionalChecks = await Promise.all(
       optionalTables.map(async (table) => {
@@ -335,9 +334,9 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
         missingOptional.push(table);
       }
     }
-    
+
     const latency = Date.now() - start;
-    
+
     if (requiredErrors.length > 0 && missingRequired.length === 0) {
       return {
         status: 'fail',
@@ -355,7 +354,7 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
         message: `Missing required tables: ${missingRequired.join(', ')}. Run database migrations. See docs/MIGRATIONS.md for instructions.`,
       };
     }
-    
+
     if (missingOptional.length > 0) {
       return {
         status: 'warn',
@@ -363,12 +362,16 @@ async function checkMigrations(supabase: Awaited<ReturnType<typeof createClient>
         message: `Some optional tables are missing: ${missingOptional.join(', ')}. Consider running additional migrations.`,
       };
     }
-    
+
     return { status: 'pass', latency_ms: latency };
   } catch (error) {
     const latency = Date.now() - start;
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return { status: 'warn', latency_ms: latency, message: `Could not verify migrations: ${errorMessage}` };
+    return {
+      status: 'warn',
+      latency_ms: latency,
+      message: `Could not verify migrations: ${errorMessage}`,
+    };
   }
 }
 
@@ -405,9 +408,13 @@ export async function GET(request: Request): Promise<NextResponse> {
     hypothesisId: 'H3',
     location: 'app/api/health/route.ts:GET:env-check',
     message: 'Environment validation completed',
-    data: { envStatus: envCheck.status, envMessage: envCheck.message, envShape: getSupabaseEnvShape() },
+    data: {
+      envStatus: envCheck.status,
+      envMessage: envCheck.message,
+      envShape: getSupabaseEnvShape(),
+    },
   });
-  
+
   // If environment is not configured, return early with helpful message
   if (envCheck.status === 'fail') {
     const health: HealthStatus = {
@@ -426,7 +433,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     };
     return NextResponse.json(health, { status: 503 });
   }
-  
+
   // Proceed with connection checks
   let supabase;
   try {
@@ -444,13 +451,16 @@ export async function GET(request: Request): Promise<NextResponse> {
         environment: envCheck,
         database: { status: 'fail', message: `Failed to create Supabase client: ${errorMessage}` },
         auth: { status: 'fail', message: `Failed to create Supabase client: ${errorMessage}` },
-        migrations: { status: 'fail', message: `Failed to create Supabase client: ${errorMessage}` },
+        migrations: {
+          status: 'fail',
+          message: `Failed to create Supabase client: ${errorMessage}`,
+        },
         stripe: { status: 'warn', message: 'Skipped - Supabase connection failed' },
       },
     };
     return NextResponse.json(health, { status: 503 });
   }
-  
+
   const [dbCheck, authCheck, migrationsCheck, stripeCheck] = await Promise.all([
     checkDatabase(supabase),
     checkAuth(supabase),
@@ -482,12 +492,10 @@ export async function GET(request: Request): Promise<NextResponse> {
     authCheck.status === 'pass' &&
     migrationsCheck.status === 'pass' &&
     stripeCheck.status === 'pass';
-  
+
   // envCheck.status cannot be 'fail' here because we return early if it fails
   const anyFailing =
-    (dbCheck.status === 'fail') ||
-    (authCheck.status === 'fail') ||
-    (migrationsCheck.status === 'fail');
+    dbCheck.status === 'fail' || authCheck.status === 'fail' || migrationsCheck.status === 'fail';
 
   const health: HealthStatus = {
     status: anyFailing ? 'unhealthy' : allPassing ? 'healthy' : 'degraded',
@@ -496,9 +504,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     timestamp: new Date().toISOString(),
     uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
     version: process.env.npm_package_version || '1.0.0',
-    checks: { 
-      environment: envCheck, 
-      database: dbCheck, 
+    checks: {
+      environment: envCheck,
+      database: dbCheck,
       auth: authCheck,
       migrations: migrationsCheck,
       stripe: stripeCheck,

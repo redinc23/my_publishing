@@ -75,9 +75,7 @@ export function BookUploadForm({ onSuccess, onCancel }: BookUploadFormProps) {
             placeholder="Enter book title"
             className="mt-1"
           />
-          {errors.title && (
-            <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>
-          )}
+          {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
         </div>
 
         <div>

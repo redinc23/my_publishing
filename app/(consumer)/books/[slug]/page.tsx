@@ -33,17 +33,21 @@ async function getSimilarBooks(genre: string | undefined, excludeId: string) {
     .eq('status', 'published')
     .eq('content_type', 'book')
     .neq('id', excludeId);
-  
+
   if (genre) {
     query = query.eq('genre', genre);
   }
-  
+
   const { data } = await query.limit(6);
 
   return data || [];
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
   const book = await getBook(params.slug);
 
   if (!book) {
@@ -54,7 +58,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   return {
     title: `${book.title} - MANGU`,
-    description: book.description || `Read ${book.title} by ${book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}`,
+    description:
+      book.description ||
+      `Read ${book.title} by ${book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}`,
   };
 }
 
@@ -72,27 +78,27 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
       {/* Hero Section */}
       <Section className="bg-muted">
         <Container>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="relative aspect-[2/3] max-w-sm mx-auto">
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="relative mx-auto aspect-[2/3] max-w-sm">
               {book.cover_url && (
                 <Image
                   src={book.cover_url}
                   alt={book.title}
                   fill
-                  className="object-cover rounded-lg"
+                  className="rounded-lg object-cover"
                   priority
                 />
               )}
             </div>
             <div>
-              <h1 className="text-4xl font-bold mb-4">{book.title}</h1>
-              <p className="text-xl text-secondary mb-4">
+              <h1 className="mb-4 text-4xl font-bold">{book.title}</h1>
+              <p className="mb-4 text-xl text-secondary">
                 by{' '}
                 <Link href={`/authors/${book.author.id}`} className="hover:text-primary">
                   {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
                 </Link>
               </p>
-              <div className="flex items-center gap-4 mb-6">
+              <div className="mb-6 flex items-center gap-4">
                 {book.average_rating && (
                   <>
                     <div className="flex items-center gap-1">
@@ -104,8 +110,8 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
                 )}
                 <span className="text-secondary">{book.total_reads || 0} reads</span>
               </div>
-              <p className="text-lg mb-6">{book.description}</p>
-              <div className="flex gap-4 mb-6">
+              <p className="mb-6 text-lg">{book.description}</p>
+              <div className="mb-6 flex gap-4">
                 <Button asChild size="lg">
                   <Link href={`/reading/${book.id}`}>Start Reading</Link>
                 </Button>
@@ -120,36 +126,52 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
                 book.barnes_noble_url ||
                 book.google_play_books_url) && (
                 <div className="mb-6">
-                  <p className="text-sm font-medium text-secondary mb-2">Also available at</p>
+                  <p className="mb-2 text-sm font-medium text-secondary">Also available at</p>
                   <div className="flex flex-wrap gap-3">
                     {book.amazon_url && (
                       <Button asChild variant="outline" size="sm">
-                        <a href={book.amazon_url} target="_blank" rel="noopener noreferrer">Buy on Amazon</a>
+                        <a href={book.amazon_url} target="_blank" rel="noopener noreferrer">
+                          Buy on Amazon
+                        </a>
                       </Button>
                     )}
                     {book.kindle_url && (
                       <Button asChild variant="outline" size="sm">
-                        <a href={book.kindle_url} target="_blank" rel="noopener noreferrer">Buy on Kindle</a>
+                        <a href={book.kindle_url} target="_blank" rel="noopener noreferrer">
+                          Buy on Kindle
+                        </a>
                       </Button>
                     )}
                     {book.apple_books_url && (
                       <Button asChild variant="outline" size="sm">
-                        <a href={book.apple_books_url} target="_blank" rel="noopener noreferrer">Apple Books</a>
+                        <a href={book.apple_books_url} target="_blank" rel="noopener noreferrer">
+                          Apple Books
+                        </a>
                       </Button>
                     )}
                     {book.audible_url && (
                       <Button asChild variant="outline" size="sm">
-                        <a href={book.audible_url} target="_blank" rel="noopener noreferrer">Audible</a>
+                        <a href={book.audible_url} target="_blank" rel="noopener noreferrer">
+                          Audible
+                        </a>
                       </Button>
                     )}
                     {book.barnes_noble_url && (
                       <Button asChild variant="outline" size="sm">
-                        <a href={book.barnes_noble_url} target="_blank" rel="noopener noreferrer">Barnes &amp; Noble</a>
+                        <a href={book.barnes_noble_url} target="_blank" rel="noopener noreferrer">
+                          Barnes &amp; Noble
+                        </a>
                       </Button>
                     )}
                     {book.google_play_books_url && (
                       <Button asChild variant="outline" size="sm">
-                        <a href={book.google_play_books_url} target="_blank" rel="noopener noreferrer">Google Play Books</a>
+                        <a
+                          href={book.google_play_books_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Google Play Books
+                        </a>
                       </Button>
                     )}
                   </div>
@@ -158,7 +180,7 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               <div className="text-2xl font-bold">
                 {book.discount_price ? (
                   <>
-                    <span className="text-secondary line-through mr-2">${book.price}</span>
+                    <span className="mr-2 text-secondary line-through">${book.price}</span>
                     <span className="text-primary">${book.discount_price}</span>
                   </>
                 ) : (
@@ -180,14 +202,14 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="mt-6">
-                {(book as BookFull).trailer_vimeo_id && (
-                  <div className="mb-8">
-                    <VimeoPlayer videoId={(book as BookFull).trailer_vimeo_id!} />
-                  </div>
-                )}
+              {(book as BookFull).trailer_vimeo_id && (
+                <div className="mb-8">
+                  <VimeoPlayer videoId={(book as BookFull).trailer_vimeo_id!} />
+                </div>
+              )}
               <div>
-                <h3 className="text-2xl font-bold mb-4">About this book</h3>
-                <p className="text-lg text-secondary whitespace-pre-line">{book.description}</p>
+                <h3 className="mb-4 text-2xl font-bold">About this book</h3>
+                <p className="whitespace-pre-line text-lg text-secondary">{book.description}</p>
               </div>
             </TabsContent>
             <TabsContent value="audio" className="mt-6">
@@ -208,8 +230,8 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
       {similarBooks.length > 0 && (
         <Section className="bg-muted">
           <Container>
-            <h2 className="text-3xl font-bold mb-8">Similar Books</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            <h2 className="mb-8 text-3xl font-bold">Similar Books</h2>
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
               {similarBooks.map((similarBook) => (
                 <BookCard key={similarBook.id} book={similarBook} />
               ))}

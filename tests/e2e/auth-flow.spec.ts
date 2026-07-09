@@ -72,10 +72,7 @@ test.describe('Login page', () => {
 
   test('displays error for invalid credentials', async ({ page }) => {
     // Only run against a configured Supabase instance; skip otherwise.
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!process.env.NEXT_PUBLIC_SUPABASE_URL, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
@@ -109,7 +106,10 @@ test.describe('Register page', () => {
     await expect(page.getByLabel(/full name/i)).toHaveAttribute('autocomplete', 'name');
     await expect(page.getByLabel(/^email/i)).toHaveAttribute('autocomplete', 'email');
     await expect(page.getByLabel(/^password$/i)).toHaveAttribute('autocomplete', 'new-password');
-    await expect(page.getByLabel(/confirm password/i)).toHaveAttribute('autocomplete', 'new-password');
+    await expect(page.getByLabel(/confirm password/i)).toHaveAttribute(
+      'autocomplete',
+      'new-password'
+    );
   });
 
   test('shows validation error for mismatched passwords', async ({ page }) => {
@@ -122,10 +122,7 @@ test.describe('Register page', () => {
   });
 
   test('shows duplicate email error', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!process.env.NEXT_PUBLIC_SUPABASE_URL, 'Supabase not configured');
 
     // Use the known test admin email to trigger the "already registered" path.
     await page.getByLabel(/full name/i).fill('Test User');
@@ -162,10 +159,7 @@ test.describe('Reset password page', () => {
   });
 
   test('shows success message after valid submission', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!process.env.NEXT_PUBLIC_SUPABASE_URL, 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();

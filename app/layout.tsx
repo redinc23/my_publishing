@@ -32,16 +32,12 @@ export const viewport: Viewport = {
   themeColor: '#0a0a0a',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body>
         <Providers>
-          <div className="min-h-screen flex flex-col">
+          <div className="flex min-h-screen flex-col">
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />

@@ -21,7 +21,6 @@ const emailVerificationLimiter = rateLimit({
   uniqueTokenPerInterval: 500,
 });
 
-
 /**
  * Rate limit for authentication actions (login, register, password reset)
  * Limits: 5 attempts per 15 minutes per IP/email

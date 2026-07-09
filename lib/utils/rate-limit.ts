@@ -48,9 +48,7 @@ export function rateLimit(options: RateLimitOptions) {
     check: (limit: number, token: string): boolean => {
       const now = Date.now();
       const timestamps = tokenCache.get(token) || [];
-      const validTimestamps = timestamps.filter(
-        (ts) => now - ts < options.interval
-      );
+      const validTimestamps = timestamps.filter((ts) => now - ts < options.interval);
 
       if (validTimestamps.length >= limit) {
         return false;
@@ -70,9 +68,7 @@ export function rateLimit(options: RateLimitOptions) {
     checkWithInfo: (limit: number, token: string): RateLimitResult => {
       const now = Date.now();
       const timestamps = tokenCache.get(token) || [];
-      const validTimestamps = timestamps.filter(
-        (ts) => now - ts < options.interval
-      );
+      const validTimestamps = timestamps.filter((ts) => now - ts < options.interval);
 
       const oldestTimestamp = validTimestamps[0] || now;
       const resetIn = Math.max(0, options.interval - (now - oldestTimestamp));
@@ -203,10 +199,7 @@ export function createRateLimitHeaders(result: RateLimitResult): HeadersInit {
 /**
  * Rate limit middleware helper for API routes
  */
-export function withRateLimit(
-  limiter: ReturnType<typeof rateLimit>,
-  limit: number
-) {
+export function withRateLimit(limiter: ReturnType<typeof rateLimit>, limit: number) {
   return async function checkRateLimit(request: Request): Promise<{
     allowed: boolean;
     response?: Response;
@@ -264,9 +257,9 @@ export class SlidingWindowRateLimiter {
   check(token: string): RateLimitResult {
     const now = Date.now();
     const currentWindow = Math.floor(now / this.windowSize);
-    
+
     let windows = this.windows.get(token) || [];
-    
+
     // Remove old windows
     windows = windows.filter(
       (w) => currentWindow - Math.floor(w.timestamp / this.windowSize) < this.maxWindows

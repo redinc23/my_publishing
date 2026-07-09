@@ -54,7 +54,9 @@ export function validateStripeConfig(): StripeValidationResult {
     const publishableIsTest = publishableKey.startsWith('pk_test_');
     const secretIsTest = secretKey.startsWith('sk_test_');
     if (publishableIsTest !== secretIsTest) {
-      errors.push('Stripe key mismatch: publishable and secret keys must both be test or both be live');
+      errors.push(
+        'Stripe key mismatch: publishable and secret keys must both be test or both be live'
+      );
     }
   }
 

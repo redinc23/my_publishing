@@ -7,7 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { submitManuscript } from './actions';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
@@ -85,13 +91,13 @@ export function SubmitManuscriptForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {error && (
-        <div className="rounded-md bg-red-500/10 border border-red-500 p-3 text-sm text-red-500">
+        <div className="rounded-md border border-red-500 bg-red-500/10 p-3 text-sm text-red-500">
           {error}
         </div>
       )}
 
       <div>
-        <label htmlFor="title" className="block text-sm font-medium mb-2">
+        <label htmlFor="title" className="mb-2 block text-sm font-medium">
           Title <span className="text-red-500">*</span>
         </label>
         <Input id="title" {...register('title')} disabled={isLoading} />
@@ -99,14 +105,14 @@ export function SubmitManuscriptForm() {
       </div>
 
       <div>
-        <label htmlFor="workingTitle" className="block text-sm font-medium mb-2">
+        <label htmlFor="workingTitle" className="mb-2 block text-sm font-medium">
           Working Title
         </label>
         <Input id="workingTitle" {...register('workingTitle')} disabled={isLoading} />
       </div>
 
       <div>
-        <label htmlFor="genre" className="block text-sm font-medium mb-2">
+        <label htmlFor="genre" className="mb-2 block text-sm font-medium">
           Genre <span className="text-red-500">*</span>
         </label>
         <Select value={genre} onValueChange={(value) => setValue('genre', value)}>
@@ -125,7 +131,7 @@ export function SubmitManuscriptForm() {
       </div>
 
       <div>
-        <label htmlFor="synopsis" className="block text-sm font-medium mb-2">
+        <label htmlFor="synopsis" className="mb-2 block text-sm font-medium">
           Synopsis (max 1000 characters)
         </label>
         <textarea
@@ -134,13 +140,11 @@ export function SubmitManuscriptForm() {
           className="flex min-h-[120px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isLoading}
         />
-        {errors.synopsis && (
-          <p className="mt-1 text-sm text-red-500">{errors.synopsis.message}</p>
-        )}
+        {errors.synopsis && <p className="mt-1 text-sm text-red-500">{errors.synopsis.message}</p>}
       </div>
 
       <div>
-        <label htmlFor="wordCount" className="block text-sm font-medium mb-2">
+        <label htmlFor="wordCount" className="mb-2 block text-sm font-medium">
           Word Count
         </label>
         <Input
@@ -155,7 +159,7 @@ export function SubmitManuscriptForm() {
       </div>
 
       <div>
-        <label htmlFor="targetAudience" className="block text-sm font-medium mb-2">
+        <label htmlFor="targetAudience" className="mb-2 block text-sm font-medium">
           Target Audience
         </label>
         <Input id="targetAudience" {...register('targetAudience')} disabled={isLoading} />
