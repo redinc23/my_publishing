@@ -1,0 +1,7 @@
+# Legacy GCP Cloud Build trigger stub.
+# Production deploys via Vercel; disable this trigger in GCP when no longer needed.
+steps:
+  - name: 'ubuntu'
+    script: |
+      echo "Skipping Cloud Run deploy; production deploys via Vercel."
+timeout: 60s
