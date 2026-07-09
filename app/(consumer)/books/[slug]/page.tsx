@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getMockBookBySlug, shouldUseMocks } from '@/lib/utils/mock-data';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,10 @@ import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
 
 async function getBook(slug: string): Promise<BookFull | null> {
+  if (shouldUseMocks()) {
+    return getMockBookBySlug(slug) as BookFull | null;
+  }
+
   const supabase = await createClient();
   const { data } = await supabase
     .from('books')
@@ -26,6 +31,10 @@ async function getBook(slug: string): Promise<BookFull | null> {
 }
 
 async function getSimilarBooks(genre: string | undefined, excludeId: string) {
+  if (shouldUseMocks()) {
+    return [];
+  }
+
   const supabase = await createClient();
   let query = supabase
     .from('books')

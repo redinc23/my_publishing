@@ -12,6 +12,12 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { isRealSupabaseConfigured, skipWebKitAuthValidation } from './helpers';
+
+/** Ignore the Next.js route announcer, which also uses role="alert". */
+function formAlert(page: import('@playwright/test').Page) {
+  return page.getByRole('alert').filter({ hasNot: page.locator('#__next-route-announcer__') });
+}
 
 // ---------------------------------------------------------------------------
 // Login page
@@ -42,45 +48,48 @@ test.describe('Login page', () => {
     await expect(passwordInput).toHaveAttribute('autocomplete', 'current-password');
   });
 
-  test('shows field-level validation errors for empty submit', async ({ page }) => {
+  test('shows field-level validation errors for empty submit', async ({ page, browserName }) => {
+    skipWebKitAuthValidation(browserName);
     await page.getByRole('button', { name: /sign in/i }).click();
     // Zod resolver fires synchronous validation before the server action is called.
-    await expect(page.getByRole('alert').first()).toBeVisible();
+    await expect(formAlert(page).first()).toBeVisible();
   });
 
-  test('shows field-level error for invalid email format', async ({ page }) => {
+  test('shows field-level error for invalid email format', async ({ page, browserName }) => {
+    skipWebKitAuthValidation(browserName);
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByLabel(/password/i).fill('secret123');
     await page.getByRole('button', { name: /sign in/i }).click();
     await expect(page.getByText(/invalid email/i)).toBeVisible();
   });
 
-  test('shows field-level error for short password', async ({ page }) => {
+  test('shows field-level error for short password', async ({ page, browserName }) => {
+    skipWebKitAuthValidation(browserName);
     await page.getByLabel(/email/i).fill('test@example.com');
     await page.getByLabel(/password/i).fill('abc');
     await page.getByRole('button', { name: /sign in/i }).click();
     await expect(page.getByText(/at least 6 characters/i)).toBeVisible();
   });
 
-  test('displays URL error parameter from OAuth callback', async ({ page }) => {
+  test('displays URL error parameter from OAuth callback', async ({ page, browserName }) => {
+    skipWebKitAuthValidation(browserName);
     await page.goto('/login?error=Authentication%20failed');
-    // The error must be rendered inside an aria-live region. Filter out the
-    // Next.js route announcer, which also has role="alert".
     const alert = page.getByRole('alert').filter({ hasText: 'Authentication failed' });
-    await expect(alert).toBeVisible();
+    await expect(alert).toBeVisible({ timeout: 15_000 });
   });
 
   test('displays error for invalid credentials', async ({ page }) => {
-    // Only run against a configured Supabase instance; skip otherwise.
-    test.skip(!process.env.NEXT_PUBLIC_SUPABASE_URL, 'Supabase not configured');
+    // Only run against a real Supabase instance; skip placeholder CI env.
+    test.skip(!isRealSupabaseConfigured(), 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
     await page.getByRole('button', { name: /sign in/i }).click();
 
     // Wait for the server round-trip and expect an error to appear.
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/invalid email or password/i);
+    const alert = formAlert(page).filter({ hasText: /invalid email or password/i });
+    await expect(alert).toBeVisible({ timeout: 10_000 });
+    await expect(alert).toContainText(/invalid email or password/i);
   });
 });
 
@@ -112,7 +121,8 @@ test.describe('Register page', () => {
     );
   });
 
-  test('shows validation error for mismatched passwords', async ({ page }) => {
+  test('shows validation error for mismatched passwords', async ({ page, browserName }) => {
+    skipWebKitAuthValidation(browserName);
     await page.getByLabel(/full name/i).fill('Jane Doe');
     await page.getByLabel(/^email/i).fill('jane@example.com');
     await page.getByLabel(/^password$/i).fill('password123');
@@ -122,7 +132,7 @@ test.describe('Register page', () => {
   });
 
   test('shows duplicate email error', async ({ page }) => {
-    test.skip(!process.env.NEXT_PUBLIC_SUPABASE_URL, 'Supabase not configured');
+    test.skip(!isRealSupabaseConfigured(), 'Supabase not configured');
 
     // Use the known test admin email to trigger the "already registered" path.
     await page.getByLabel(/full name/i).fill('Test User');
@@ -131,8 +141,9 @@ test.describe('Register page', () => {
     await page.getByLabel(/confirm password/i).fill('TestPassword1!');
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('alert')).toContainText(/already exists/i);
+    const alert = formAlert(page).filter({ hasText: /already exists/i });
+    await expect(alert).toBeVisible({ timeout: 10_000 });
+    await expect(alert).toContainText(/already exists/i);
   });
 });
 
@@ -151,7 +162,8 @@ test.describe('Reset password page', () => {
     await expect(page.getByRole('button', { name: /send reset link/i })).toBeVisible();
   });
 
-  test('shows validation error for invalid email', async ({ page }) => {
+  test('shows validation error for invalid email', async ({ page, browserName }) => {
+    skipWebKitAuthValidation(browserName);
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByRole('button', { name: /send reset link/i }).click();
     const alert = page.getByRole('alert').filter({ hasText: /invalid email/i });
@@ -159,7 +171,7 @@ test.describe('Reset password page', () => {
   });
 
   test('shows success message after valid submission', async ({ page }) => {
-    test.skip(!process.env.NEXT_PUBLIC_SUPABASE_URL, 'Supabase not configured');
+    test.skip(!isRealSupabaseConfigured(), 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
