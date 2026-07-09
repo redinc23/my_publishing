@@ -1,3 +1,10 @@
+# Copilot Setup Steps
+#
+# Bootstrap environment for GitHub Copilot coding agent sessions.
+# Project instructions: AGENTS.md (repo root)
+# Custom agents: .github/agents/*.agent.md
+# Operator guide: docs/COPILOT_CLI.md
+
 name: "Copilot Setup Steps"
 
 on:
@@ -24,6 +31,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Verify Copilot agent profiles
+        run: |
+          set -euo pipefail
+          echo "Listing .github/agents/*.agent.md"
+          ls -1 .github/agents/*.agent.md
+          test -f AGENTS.md
+          echo "AGENTS.md present"
+          for required in explore task code-review research plan my-agent; do
+            test -f ".github/agents/${required}.agent.md"
+            echo "OK: ${required}.agent.md"
+          done
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

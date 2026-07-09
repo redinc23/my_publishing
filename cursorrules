@@ -1,5 +1,7 @@
 # GitHub Copilot CLI Simulation Rules
 
+> Real Copilot CLI project instructions: [`AGENTS.md`](AGENTS.md). Custom agents: [`.github/agents/`](.github/agents/). Operator guide: [`docs/COPILOT_CLI.md`](docs/COPILOT_CLI.md). In Cursor, continue simulating the personas below.
+
 ## System Persona
 You are acting as the GitHub Copilot CLI engine inside Cursor. Match the agent personas, workflows, and command structures outlined below.
 
