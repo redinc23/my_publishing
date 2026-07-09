@@ -43,6 +43,25 @@ steps:
       - -c
       - |
         set -euo pipefail
+        # Load NEXT_PUBLIC_* from Secret Manager when trigger substitutions are unset.
+        load_secret_if_empty() {
+          local env_name="$1"
+          local secret_name="$2"
+          local current="${!env_name:-}"
+          if [ -n "$${current}" ]; then
+            return
+          fi
+          if val="$(gcloud secrets versions access latest --secret="$${secret_name}" --project="$PROJECT_ID" 2>/dev/null || true)"; then
+            if [ -n "$${val}" ]; then
+              export "$${env_name}=$${val}"
+              echo "Loaded $${env_name} from Secret Manager ($${secret_name})"
+            fi
+          fi
+        }
+        load_secret_if_empty NEXT_PUBLIC_SUPABASE_URL next-public-supabase-url
+        load_secret_if_empty NEXT_PUBLIC_SUPABASE_ANON_KEY next-public-supabase-anon-key
+        load_secret_if_empty NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY next-public-stripe-publishable-key
+        load_secret_if_empty NEXT_PUBLIC_SITE_URL next-public-site-url
         # Fail closed: never bake placeholder NEXT_PUBLIC_* into a deployable image.
         # Production submits must pass real substitutions via ./scripts/gcloud-build-submit.sh
         # (or a Cloud Build trigger with the same _NEXT_PUBLIC_* values).
