@@ -43,6 +43,12 @@ steps:
       - -c
       - |
         set -euo pipefail
+        # When trigger substitutions are unset, fall back to CI-style mock build env.
+        export USE_MOCKS="${USE_MOCKS:-true}"
+        export NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://placeholder.supabase.co}"
+        export NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUyNjQwMDAsImV4cCI6MTk2MDg0MDAwMH0.placeholder}"
+        export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}"
+        export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-https://placeholder.example.com}"
         npm run build
 
   # PERF-PHASE2-8 — CI perf budget check: fail if main JS bundle exceeds 250kB gzipped
