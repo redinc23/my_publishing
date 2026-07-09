@@ -43,6 +43,23 @@ steps:
       - -c
       - |
         set -euo pipefail
+        # Fail closed: never bake placeholder NEXT_PUBLIC_* into a deployable image.
+        # Production submits must pass real substitutions via ./scripts/gcloud-build-submit.sh
+        # (or a Cloud Build trigger with the same _NEXT_PUBLIC_* values).
+        # Do NOT add silent placeholder fallbacks here — that would ship mock URLs to Cloud Run.
+        require_pub() {
+          local name="$1"
+          local val="$2"
+          if [ -z "$${val}" ] || [[ "$${val}" == *placeholder* ]] || [[ "$${val}" == *example.com* ]]; then
+            echo "ERROR: $${name} is empty or placeholder (got: '$${val}')."
+            echo "Submit with: ./scripts/gcloud-build-submit.sh (loads .env.local substitutions)."
+            exit 1
+          fi
+        }
+        require_pub NEXT_PUBLIC_SUPABASE_URL "$${NEXT_PUBLIC_SUPABASE_URL}"
+        require_pub NEXT_PUBLIC_SUPABASE_ANON_KEY "$${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+        require_pub NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "$${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}"
+        require_pub NEXT_PUBLIC_SITE_URL "$${NEXT_PUBLIC_SITE_URL}"
         npm run build
 
   # PERF-PHASE2-8 — CI perf budget check: fail if main JS bundle exceeds 250kB gzipped

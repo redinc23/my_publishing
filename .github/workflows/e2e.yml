@@ -33,6 +33,13 @@ jobs:
         run: npm run test:e2e
         env:
           USE_MOCKS: true
+          # Same CI-shaped placeholders as copilot-setup-steps / local mock gate.
+          # Without these, next start fails env validation and the webServer never boots.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUyNjQwMDAsImV4cCI6MTk2MDg0MDAwMH0.placeholder
+          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY0NTI2NDAwMCwiZXhwIjoxOTYwODQwMDAwfQ.placeholder
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
           
       - uses: actions/upload-artifact@v4
         if: always()

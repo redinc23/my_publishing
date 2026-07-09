@@ -31,7 +31,8 @@ jobs:
           node-version: 20
 
       - name: Install deps
-        run: npm i @actions/core @actions/github
+        # Pin to CJS-compatible releases; unpinned @actions/core@2+ is ESM-only and breaks require() in bug-to-issue.js
+        run: npm i @actions/core@1.11.1 @actions/github@6.0.0
 
       - name: Run bug-to-issue
         env:

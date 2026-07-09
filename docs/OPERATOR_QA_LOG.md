@@ -2,6 +2,43 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 3 + PR #136 review + Phase 4 gate (agent-run, 2026-07-09)
+
+**Supabase project:** `mangu-publishers` / `tkzvikozrcynhwsqtkqp`
+
+| Sub-stage | Result |
+|-----------|--------|
+| `[PASS] 3 / 0.3.c` — public base table count | `SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'` → **36** (exact match). No migration bundle needed. Did not re-run `verify-rls` (known false positive on orders/reading_progress). |
+| `[REVIEW] PR #136` — `fix(ci): resolve deploy, bug-to-issue, and Cloud Build failures` | **Partial accept.** Safe: pin `@actions/core@1.11.1` in `bug-to-issue.yml`; gate optional Vercel deploy on `vars.VERCEL_PROJECT_ID` + `continue-on-error`. **Reject as-is:** `cloudbuild.yaml` silent placeholder/`USE_MOCKS` fallbacks — would bake mock `NEXT_PUBLIC_*` into Docker/Cloud Run if a trigger omits substitutions. Superseded by fail-closed check + `./scripts/gcloud-build-submit.sh` path. |
+| `[BLOCKED] 4.1` — GCP auth | Cloud agent has **no** `gcloud` credentials. Phase 4 requires interactive `gcloud auth login` as **`renee@mangu-publishers.com`** (not `books@`) on project `delta-wonder-488420-i3`. |
+| `[OBS]` — Current public surface | `www.mangu-publishers.com` responds via **Vercel** (`server: Vercel`). `/api/live` fresh (2026-07-09). `/api/health?ready=1` → `degraded` / Stripe **warn** ("Stripe not configured"). Apex `mangu-publishers.com` TLS SAN mismatch from this environment; redirects to `www`. Canonical target remains **Cloud Run** per `docs/CANONICAL_PRODUCTION.md`. |
+| `[HOLD]` — Dependabot #125–#134 | Hold until after launch (preserves validated dependency state). |
+
+**Code landed this run (branch `cursor/phase4-pr136-review-7a40`):**
+- Take PR #136 safe CI workflow fixes (`bug-to-issue.yml`, `ci.yml`).
+- Harden `cloudbuild.yaml` `next-build` to **fail closed** if `_NEXT_PUBLIC_*` substitutions are empty/placeholder (no silent mocks).
+- Grant script: add Upstash secrets to optional accessor list (Phase 4.3 historical failure).
+- `e2e.yml`: add CI mock env so Playwright webServer can boot (fixes PR #136 Playwright red).
+
+**Operator next (Phase 4 — Copilot Pro / local machine with `renee@`):**
+```bash
+gcloud auth login   # must be renee@mangu-publishers.com
+gcloud config set project delta-wonder-488420-i3
+# ensure .env.local has real secrets (not Phase 2 placeholders)
+./scripts/sync-gcp-secrets-from-env.sh
+./scripts/grant-cloudrun-secret-access.sh
+gcloud secrets list
+# verify accessor on upstash-redis-rest-url + upstash-redis-rest-token
+./scripts/gcloud-build-submit.sh
+./scripts/verify-gcp-production.sh
+curl -sS https://www.mangu-publishers.com/api/live
+curl -sS "https://www.mangu-publishers.com/api/health?ready=1"
+# record KNOWN_GOOD_REVISION from:
+gcloud run services describe mangu-publishers --region us-central1 --format='value(status.latestReadyRevisionName)'
+```
+
+Do **not** merge PR #136’s `cloudbuild.yaml` placeholder fallbacks. Prefer this branch (or cherry-pick its safe workflow hunks only).
+
 ## Phase 2 — Local Validation Gate (agent-run, 2026-07-09)
 
 **Environment:** Node v20.20.2, npm v10.8.2, Next.js 14.2.35, sandbox (GCP Cloud Run target)
