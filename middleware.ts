@@ -3,6 +3,19 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
 
+function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  if (!url || !key) return false;
+  return !/placeholder/i.test(url) && !/placeholder/i.test(key);
+}
+
+const PROTECTED_ROUTE_PREFIXES = ['/reading', '/library', '/author', '/partner', '/admin'];
+
+function isProtectedRoute(pathname: string): boolean {
+  return PROTECTED_ROUTE_PREFIXES.some((route) => pathname.startsWith(route));
+}
+
 /** Reject a request per rate-limit result: 429 when limited, 503 when the limiter is unavailable (fail-closed). */
 function rateLimitRejection(result: { reason: string; headers: Record<string, string> }) {
   if (result.reason === 'unavailable') {
@@ -50,9 +63,17 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Check for required environment variables
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.error('Missing Supabase environment variables. Check .env.local.example for setup instructions.');
+  // Without real Supabase credentials, skip session checks but still gate protected routes.
+  if (!isSupabaseConfigured()) {
+    if (isProtectedRoute(pathname)) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    });
   }
 
   let response = NextResponse.next({

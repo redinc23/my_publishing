@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { hasRealSupabase } from './helpers';
 
 test.describe('Purchase Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -11,6 +12,8 @@ test.describe('Purchase Flow', () => {
   });
 
   test('book detail page loads', async ({ page }) => {
+    test.skip(!hasRealSupabase(), 'Supabase not configured');
+
     // Try to navigate to a book page (will use mock data if database is empty)
     await page.goto('/books/the-memory-keeper');
     await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });

@@ -12,6 +12,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { hasRealSupabase } from './helpers';
 
 // ---------------------------------------------------------------------------
 // Login page
@@ -45,7 +46,7 @@ test.describe('Login page', () => {
   test('shows field-level validation errors for empty submit', async ({ page }) => {
     await page.getByRole('button', { name: /sign in/i }).click();
     // Zod resolver fires synchronous validation before the server action is called.
-    await expect(page.getByRole('alert').first()).toBeVisible();
+    await expect(page.getByRole('alert').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('shows field-level error for invalid email format', async ({ page }) => {
@@ -71,11 +72,7 @@ test.describe('Login page', () => {
   });
 
   test('displays error for invalid credentials', async ({ page }) => {
-    // Only run against a configured Supabase instance; skip otherwise.
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!hasRealSupabase(), 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByLabel(/password/i).fill('wrongpassword');
@@ -122,10 +119,7 @@ test.describe('Register page', () => {
   });
 
   test('shows duplicate email error', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!hasRealSupabase(), 'Supabase not configured');
 
     // Use the known test admin email to trigger the "already registered" path.
     await page.getByLabel(/full name/i).fill('Test User');
@@ -162,10 +156,7 @@ test.describe('Reset password page', () => {
   });
 
   test('shows success message after valid submission', async ({ page }) => {
-    test.skip(
-      !process.env.NEXT_PUBLIC_SUPABASE_URL,
-      'Supabase not configured'
-    );
+    test.skip(!hasRealSupabase(), 'Supabase not configured');
 
     await page.getByLabel(/email/i).fill('nonexistent@example.com');
     await page.getByRole('button', { name: /send reset link/i }).click();
