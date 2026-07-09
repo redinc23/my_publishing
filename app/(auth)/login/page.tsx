@@ -1,4 +1,3 @@
-
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { LoginForm } from './LoginForm';
@@ -13,7 +12,7 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <Link href="/" className="text-3xl font-bold text-primary mb-2 block">
+        <Link href="/" className="mb-2 block text-3xl font-bold text-primary">
           MANGU
         </Link>
         <CardTitle className="text-2xl">Welcome back</CardTitle>

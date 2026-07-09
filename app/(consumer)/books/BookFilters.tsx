@@ -2,7 +2,13 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -45,7 +51,7 @@ export function BookFilters() {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row">
       <Input
         placeholder="Search books..."
         defaultValue={searchParams?.get('q') || ''}

@@ -43,7 +43,7 @@ function StatusIcon({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }
   if (status === 'warn') {
     return <AlertCircle className="h-5 w-5 text-yellow-500" />;
   }
-  return <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />;
+  return <Loader2 className="h-5 w-5 animate-spin text-gray-400" />;
 }
 
 function StatusBadge({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }) {
@@ -66,11 +66,11 @@ export default async function HealthDashboardPage() {
   return (
     <Container className="py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">System Health Dashboard</h1>
+        <h1 className="mb-2 text-4xl font-bold">System Health Dashboard</h1>
         <p className="text-muted-foreground">
           Monitor the health and status of all system components
         </p>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="mt-2 text-sm text-muted-foreground">
           Last updated: {new Date(health.timestamp).toLocaleString()}
         </p>
       </div>

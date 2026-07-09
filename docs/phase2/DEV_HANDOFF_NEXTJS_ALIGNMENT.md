@@ -2,7 +2,7 @@
 
 Welcome to the `mangu-publishers` Phase 2 production rollout.
 
-The documentation you are looking at in `docs/phase2/` establishes a rigorous production launch framework (CI gates, RACI ownership, rollback discipline, and evidence logs). 
+The documentation you are looking at in `docs/phase2/` establishes a rigorous production launch framework (CI gates, RACI ownership, rollback discipline, and evidence logs).
 
 However, there is a technical divergence between the current state of these documents and the actual codebase.
 
@@ -12,7 +12,7 @@ However, there is a technical divergence between the current state of these docu
 - **The Catch:** The technical details inside these markdown files were originally written for a fictional Vite/React static site served by Nginx on port 8080 (fetching content from Sanity at build time).
 - **The Reality:** The actual application in this repository is `mangu-publishers` (formerly `mangu-platform`), which is a **Next.js 14 app** (Node.js runtime, port 3000, `output: 'standalone'`) using Supabase, Stripe, and Resend.
 
-Your immediate task is to keep the rigorous *framework* but swap out the *technical details* to match the Next.js runtime.
+Your immediate task is to keep the rigorous _framework_ but swap out the _technical details_ to match the Next.js runtime.
 
 ## 2. The Next.js Runtime Shift
 
@@ -27,6 +27,7 @@ When updating the docs and pipelines, apply these technical shifts:
 ## 3. Environment & Secrets Intake
 
 Before executing any commands, the environment variables used in the markdown templates must be filled.
+
 - Refer to `docs/phase2/_intake/FIELDS_TO_GATHER.md`.
 - Copy `docs/phase2/_intake/environment.example.sh` to `environment.local.sh` (which is gitignored) and fill in the real values.
 - These values automatically populate the `cloudbuild.yaml` and `gcloud` command templates throughout `05`, `06`, and `07`.

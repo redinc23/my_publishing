@@ -2,7 +2,7 @@ name: npm Audit
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Mondays 9am UTC
+    - cron: '0 9 * * 1' # Mondays 9am UTC
   workflow_dispatch:
   push:
     branches: [main]

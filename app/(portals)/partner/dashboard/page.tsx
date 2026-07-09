@@ -7,8 +7,8 @@ export default function PartnerDashboardPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Partner Dashboard</h1>
-        <div className="text-center py-12">
+        <h1 className="mb-8 text-4xl font-bold">Partner Dashboard</h1>
+        <div className="py-12 text-center">
           <p className="text-secondary">Partner dashboard coming soon!</p>
         </div>
       </Container>

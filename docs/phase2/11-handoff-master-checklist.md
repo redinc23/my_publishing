@@ -12,70 +12,70 @@ Use this checklist to determine if Phase 2 is handoff-ready. A handoff is comple
 
 ## Section A: Documentation Completeness
 
-| Check | Required | Evidence Link |
-|---|---|---|
-| `README.md` routes plan/execute/handoff/operate paths | Yes | |
-| `05-milestone-implementation-plan.md` has command and rollback blocks | Yes | |
-| `06-acceptance-and-test-protocol.md` has executable P0 templates | Yes | |
-| `07-operational-runbook.md` has escalation and SLAs | Yes | |
-| `08-risk-and-troubleshooting.md` has active risk owner mapping | Yes | |
-| `10-agent-execution-playbook.md` has checkpoint protocol | Yes | |
+| Check                                                                 | Required | Evidence Link |
+| --------------------------------------------------------------------- | -------- | ------------- |
+| `README.md` routes plan/execute/handoff/operate paths                 | Yes      |               |
+| `05-milestone-implementation-plan.md` has command and rollback blocks | Yes      |               |
+| `06-acceptance-and-test-protocol.md` has executable P0 templates      | Yes      |               |
+| `07-operational-runbook.md` has escalation and SLAs                   | Yes      |               |
+| `08-risk-and-troubleshooting.md` has active risk owner mapping        | Yes      |               |
+| `10-agent-execution-playbook.md` has checkpoint protocol              | Yes      |               |
 
 ## Section B: Milestone Completion
 
-| Milestone | Owner | Status | Evidence Link |
-|---|---|---|---|
-| M0 Pre-Flight Setup | PENDING *(Primary accountable — align with `12` milestone RACI)* | TODO | PENDING *(URL)* |
-| M1 Local Security Hardening | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
-| M2 Build Pipeline Scripts | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
-| M3 Runtime Container | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
-| M4 GCP Foundation | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
-| M5 Cloud Build End-to-End | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
-| M6 Firebase Hosting + Domain | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
-| M7a Pre-Cutover Guardrails | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
-| M7b Post-Cutover Stabilization | PENDING *(Primary accountable)* | TODO | PENDING *(URL)* |
+| Milestone                      | Owner                                                            | Status | Evidence Link   |
+| ------------------------------ | ---------------------------------------------------------------- | ------ | --------------- |
+| M0 Pre-Flight Setup            | PENDING _(Primary accountable — align with `12` milestone RACI)_ | TODO   | PENDING _(URL)_ |
+| M1 Local Security Hardening    | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
+| M2 Build Pipeline Scripts      | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
+| M3 Runtime Container           | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
+| M4 GCP Foundation              | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
+| M5 Cloud Build End-to-End      | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
+| M6 Firebase Hosting + Domain   | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
+| M7a Pre-Cutover Guardrails     | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
+| M7b Post-Cutover Stabilization | PENDING _(Primary accountable)_                                  | TODO   | PENDING _(URL)_ |
 
 ## Section C: P0 Acceptance Readiness
 
-| P0 ID | Pass/Fail | Owner | Evidence Link |
-|---|---|---|---|
-| P0-1 Secret Leakage | PENDING | PENDING *(Owner — align with `12` P0 RACI)* | PENDING *(URL)* |
-| P0-2 Build Before Docker | PENDING | PENDING | PENDING *(URL)* |
-| P0-3 Deep-Link Routing | PENDING | PENDING | PENDING *(URL)* |
-| P0-4 Security Headers | PENDING | PENDING | PENDING *(URL)* |
-| P0-5 Health Checks | PENDING | PENDING | PENDING *(URL)* |
-| P0-6 Cloud Run Config | PENDING | PENDING | PENDING *(URL)* |
-| P0-7 CI Security Gates | PENDING | PENDING | PENDING *(URL)* |
-| P0-8 Content Rebuild Automation | PENDING | PENDING | PENDING *(URL)* |
-| P0-9 Observability + Cost Controls | PENDING | PENDING | PENDING *(URL)* |
+| P0 ID                              | Pass/Fail | Owner                                       | Evidence Link   |
+| ---------------------------------- | --------- | ------------------------------------------- | --------------- |
+| P0-1 Secret Leakage                | PENDING   | PENDING _(Owner — align with `12` P0 RACI)_ | PENDING _(URL)_ |
+| P0-2 Build Before Docker           | PENDING   | PENDING                                     | PENDING _(URL)_ |
+| P0-3 Deep-Link Routing             | PENDING   | PENDING                                     | PENDING _(URL)_ |
+| P0-4 Security Headers              | PENDING   | PENDING                                     | PENDING _(URL)_ |
+| P0-5 Health Checks                 | PENDING   | PENDING                                     | PENDING _(URL)_ |
+| P0-6 Cloud Run Config              | PENDING   | PENDING                                     | PENDING _(URL)_ |
+| P0-7 CI Security Gates             | PENDING   | PENDING                                     | PENDING _(URL)_ |
+| P0-8 Content Rebuild Automation    | PENDING   | PENDING                                     | PENDING _(URL)_ |
+| P0-9 Observability + Cost Controls | PENDING   | PENDING                                     | PENDING _(URL)_ |
 
 ## Section D: Cutover Readiness
 
-| Check | Required | Status | Evidence Link |
-|---|---|---|---|
-| T-24h checklist complete | Yes | PENDING | PENDING *(URL)* |
-| T-2h checklist complete | Yes | PENDING | PENDING *(URL)* |
-| T-30m checklist complete | Yes | PENDING | PENDING *(URL)* |
-| Rollback owner on-call and reachable | Yes | PENDING | PENDING *(URL)* |
-| Rollback prerecord fields complete per `07-operational-runbook.md` | Yes | PENDING | PENDING *(URL)* |
-| Communications templates pre-filled | Yes | PENDING | PENDING *(URL)* |
+| Check                                                              | Required | Status  | Evidence Link   |
+| ------------------------------------------------------------------ | -------- | ------- | --------------- |
+| T-24h checklist complete                                           | Yes      | PENDING | PENDING _(URL)_ |
+| T-2h checklist complete                                            | Yes      | PENDING | PENDING _(URL)_ |
+| T-30m checklist complete                                           | Yes      | PENDING | PENDING _(URL)_ |
+| Rollback owner on-call and reachable                               | Yes      | PENDING | PENDING _(URL)_ |
+| Rollback prerecord fields complete per `07-operational-runbook.md` | Yes      | PENDING | PENDING _(URL)_ |
+| Communications templates pre-filled                                | Yes      | PENDING | PENDING _(URL)_ |
 
 ## Section E: Ownership And Escalation
 
-| Check | Required | Status | Evidence Link |
-|---|---|---|---|
-| RACI populated in `12-ownership-raci.md` | Yes | PENDING | PENDING *(URL)* |
-| Incident severity matrix acknowledged | Yes | PENDING | PENDING *(URL)* |
-| Escalation contacts verified and tested | Yes | PENDING | PENDING *(URL)* |
+| Check                                    | Required | Status  | Evidence Link   |
+| ---------------------------------------- | -------- | ------- | --------------- |
+| RACI populated in `12-ownership-raci.md` | Yes      | PENDING | PENDING _(URL)_ |
+| Incident severity matrix acknowledged    | Yes      | PENDING | PENDING _(URL)_ |
+| Escalation contacts verified and tested  | Yes      | PENDING | PENDING _(URL)_ |
 
 ## Section F: Formal Signoff
 
-| Role | Name | Decision | Date | Notes |
-|---|---|---|---|---|
-| Engineering Lead | PENDING *(must match `12` Primary)* | GO / NO-GO | PENDING *(UTC)* | |
-| Platform Lead | PENDING *(must match `12` Primary)* | GO / NO-GO | PENDING *(UTC)* | |
-| Security Lead | PENDING *(must match `12` Primary)* | GO / NO-GO | PENDING *(UTC)* | |
-| Product/Business Owner | PENDING *(must match `12` Primary)* | GO / NO-GO | PENDING *(UTC)* | |
+| Role                   | Name                                | Decision   | Date            | Notes |
+| ---------------------- | ----------------------------------- | ---------- | --------------- | ----- |
+| Engineering Lead       | PENDING _(must match `12` Primary)_ | GO / NO-GO | PENDING _(UTC)_ |       |
+| Platform Lead          | PENDING _(must match `12` Primary)_ | GO / NO-GO | PENDING _(UTC)_ |       |
+| Security Lead          | PENDING _(must match `12` Primary)_ | GO / NO-GO | PENDING _(UTC)_ |       |
+| Product/Business Owner | PENDING _(must match `12` Primary)_ | GO / NO-GO | PENDING _(UTC)_ |       |
 
 ## Final Decision
 

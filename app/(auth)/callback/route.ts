@@ -20,7 +20,10 @@ export async function GET(request: NextRequest) {
   // Validate code parameter
   if (!code) {
     return NextResponse.redirect(
-      new URL('/login?error=' + encodeURIComponent('Missing authentication code'), requestUrl.origin)
+      new URL(
+        '/login?error=' + encodeURIComponent('Missing authentication code'),
+        requestUrl.origin
+      )
     );
   }
 

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient();
-  
+
   // Get all published books
   const { data: books } = await supabase
     .from('books')

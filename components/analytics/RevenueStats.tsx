@@ -16,7 +16,10 @@ interface RevenueStatsProps {
 }
 
 export function RevenueStats({ bookId, dateRange }: RevenueStatsProps) {
-  const [revenue, setRevenue] = useState<{ total: number; sales: BookSale[] }>({ total: 0, sales: [] });
+  const [revenue, setRevenue] = useState<{ total: number; sales: BookSale[] }>({
+    total: 0,
+    sales: [],
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export function RevenueStats({ bookId, dateRange }: RevenueStatsProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <div className="flex items-center justify-between rounded-lg bg-muted p-4">
             <div>
               <div className="text-sm text-muted-foreground">Total Revenue</div>
               <div className="text-3xl font-bold">{formatCurrency(revenue.total * 100)}</div>

@@ -5,18 +5,15 @@ import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // PERF-PHASE2-4 — Dynamic import: heavy client dashboard loaded as island
-const AnalyticsDashboard = dynamic(
-  () => import('@/components/analytics/AnalyticsDashboard'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="space-y-6">
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    ),
-  }
-);
+const AnalyticsDashboard = dynamic(() => import('@/components/analytics/AnalyticsDashboard'), {
+  ssr: false,
+  loading: () => (
+    <div className="space-y-6">
+      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-96 w-full" />
+    </div>
+  ),
+});
 
 interface AnalyticsPageProps {
   params: {
@@ -26,7 +23,9 @@ interface AnalyticsPageProps {
 
 export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect('/login');

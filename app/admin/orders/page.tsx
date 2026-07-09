@@ -15,11 +15,11 @@ export default async function AdminOrdersPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-3xl font-bold mb-8">Orders Management</h1>
+        <h1 className="mb-8 text-3xl font-bold">Orders Management</h1>
 
         <div className="space-y-4">
           {orders && orders.length > 0 ? (
-            <div className="border border-border rounded-lg overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-border">
               <table className="w-full">
                 <thead className="bg-muted">
                   <tr>
@@ -38,7 +38,7 @@ export default async function AdminOrdersPage() {
                       <td className="px-4 py-3">${order.total_amount}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`px-2 py-1 rounded text-xs ${
+                          className={`rounded px-2 py-1 text-xs ${
                             order.status === 'completed'
                               ? 'bg-green-500/20 text-green-500'
                               : 'bg-yellow-500/20 text-yellow-500'

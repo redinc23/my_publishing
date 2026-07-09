@@ -159,8 +159,7 @@ export function validateEnvironment(): EnvValidationResult {
 
   for (const config of envConfigs) {
     const value = process.env[config.name];
-    const isRequired =
-      config.required || (config.requiredUnlessMocks === true && !mocksEnabled);
+    const isRequired = config.required || (config.requiredUnlessMocks === true && !mocksEnabled);
 
     if (isRequired && !value) {
       missing.push(config.name);
@@ -239,7 +238,9 @@ export function isDevelopment(): boolean {
  * Check if mock mode is enabled
  */
 export function useMocks(): boolean {
-  return process.env.USE_MOCKS === 'true' || (isDevelopment() && !process.env.NEXT_PUBLIC_SUPABASE_URL);
+  return (
+    process.env.USE_MOCKS === 'true' || (isDevelopment() && !process.env.NEXT_PUBLIC_SUPABASE_URL)
+  );
 }
 
 /**

@@ -15,10 +15,7 @@ export function calculateViralCoefficient(
   const ratingWeight = 0.1;
 
   const coefficient =
-    shares * shareWeight +
-    purchases * purchaseWeight +
-    reads * readWeight +
-    ratings * ratingWeight;
+    shares * shareWeight + purchases * purchaseWeight + reads * readWeight + ratings * ratingWeight;
 
   return Math.min(coefficient / 100, 1); // Normalize to 0-1
 }

@@ -1,14 +1,14 @@
-const fs = require("fs");
-const path = require("path");
-const crypto = require("crypto");
-const core = require("@actions/core");
-const github = require("@actions/github");
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const core = require('@actions/core');
+const github = require('@actions/github');
 
-const STATE_PATH = path.join(process.cwd(), ".github", "bug-to-issue-state.json");
+const STATE_PATH = path.join(process.cwd(), '.github', 'bug-to-issue-state.json');
 
 function readJsonSafe(p, fallback) {
   try {
-    return JSON.parse(fs.readFileSync(p, "utf8"));
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
   } catch {
     return fallback;
   }
@@ -16,43 +16,46 @@ function readJsonSafe(p, fallback) {
 
 function writeJson(p, data) {
   fs.mkdirSync(path.dirname(p), { recursive: true });
-  fs.writeFileSync(p, JSON.stringify(data, null, 2) + "\n", "utf8");
+  fs.writeFileSync(p, JSON.stringify(data, null, 2) + '\n', 'utf8');
 }
 
 function sha1(s) {
-  return crypto.createHash("sha1").update(s).digest("hex");
+  return crypto.createHash('sha1').update(s).digest('hex');
 }
 
 function normalizeSignature({ workflowName, jobName, stepName, topLine }) {
   // Keep it stable so repeated failures map to the same issue.
   const raw = [
-    `workflow:${workflowName || "unknown"}`,
-    `job:${jobName || "unknown"}`,
-    `step:${stepName || "unknown"}`,
-    `top:${(topLine || "unknown").slice(0, 160)}`
-  ].join("|");
+    `workflow:${workflowName || 'unknown'}`,
+    `job:${jobName || 'unknown'}`,
+    `step:${stepName || 'unknown'}`,
+    `top:${(topLine || 'unknown').slice(0, 160)}`,
+  ].join('|');
   return sha1(raw);
 }
 
 function formatIssueTitle({ workflowName, jobName, stepName }) {
   const parts = [workflowName, jobName, stepName].filter(Boolean);
-  return `CI failing continuously: ${parts.join(" / ")}`.slice(0, 240);
+  return `CI failing continuously: ${parts.join(' / ')}`.slice(0, 240);
 }
 
 function pickTopErrorLine(logText) {
   // Heuristic: find a line that looks like an error.
-  const lines = logText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const lines = logText
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   const patterns = [
     /(^|\b)(error|failed|exception|traceback|fatal)\b/i,
-    /\b(assert|expect|cannot|unable|undefined)\b/i
+    /\b(assert|expect|cannot|unable|undefined)\b/i,
   ];
 
   for (const re of patterns) {
-    const hit = lines.find(l => re.test(l));
+    const hit = lines.find((l) => re.test(l));
     if (hit) return hit;
   }
-  return lines[0] || "Unknown error";
+  return lines[0] || 'Unknown error';
 }
 
 async function main() {
@@ -67,11 +70,11 @@ async function main() {
   const headBranch = process.env.RUN_HEAD_BRANCH;
   const headSha = process.env.RUN_HEAD_SHA;
 
-  const thresholdFails = Math.max(1, Number(process.env.THRESHOLD_FAILS || "3") || 3);
-  const closeAfterSuccesses = Math.max(1, Number(process.env.CLOSE_AFTER_SUCCESSES || "2") || 2);
+  const thresholdFails = Math.max(1, Number(process.env.THRESHOLD_FAILS || '3') || 3);
+  const closeAfterSuccesses = Math.max(1, Number(process.env.CLOSE_AFTER_SUCCESSES || '2') || 2);
 
   if (!token || !owner || !repo || !runId) {
-    throw new Error("Missing required env vars (GITHUB_TOKEN/OWNER/REPO/RUN_ID).");
+    throw new Error('Missing required env vars (GITHUB_TOKEN/OWNER/REPO/RUN_ID).');
   }
 
   const octokit = github.getOctokit(token);
@@ -79,7 +82,7 @@ async function main() {
   // Load state
   const state = readJsonSafe(STATE_PATH, {
     version: 1,
-    items: {} // signature -> { consecutiveFails, consecutiveSuccesses, issueNumber, lastSeenRunId, lastSeenAt }
+    items: {}, // signature -> { consecutiveFails, consecutiveSuccesses, issueNumber, lastSeenRunId, lastSeenAt }
   });
 
   // Fetch jobs for this run
@@ -87,7 +90,7 @@ async function main() {
     owner,
     repo,
     run_id: runId,
-    per_page: 100
+    per_page: 100,
   });
 
   const jobs = jobsResp.data.jobs || [];
@@ -108,7 +111,7 @@ async function main() {
         owner,
         repo,
         issue_number: existing,
-        body
+        body,
       });
       return existing;
     }
@@ -120,7 +123,7 @@ async function main() {
       repo,
       title,
       body,
-      labels
+      labels,
     });
 
     return created.data.number;
@@ -131,13 +134,13 @@ async function main() {
       owner,
       repo,
       issue_number: issueNumber,
-      body: commentBody
+      body: commentBody,
     });
     await octokit.rest.issues.update({
       owner,
       repo,
       issue_number: issueNumber,
-      state: "closed"
+      state: 'closed',
     });
   }
 
@@ -146,41 +149,41 @@ async function main() {
 
   for (const job of jobs) {
     // Determine job conclusion
-    const jobConclusion = job.conclusion || "unknown";
+    const jobConclusion = job.conclusion || 'unknown';
 
-    if (jobConclusion !== "failure") continue;
+    if (jobConclusion !== 'failure') continue;
 
     // Download job logs (this endpoint returns a redirect to a zip; octokit handles it via request)
     // Easiest: use the "downloadJobLogsForWorkflowRun" API is not per job, so we use job logs URL:
     // There is an API: GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs
-    let logText = "";
+    let logText = '';
     try {
-      const logs = await octokit.request("GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs", {
+      const logs = await octokit.request('GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs', {
         owner,
         repo,
         job_id: job.id,
-        headers: { accept: "application/vnd.github+json" }
+        headers: { accept: 'application/vnd.github+json' },
       });
 
       // logs.data is a Buffer/ArrayBuffer-like; coerce to string.
       // Often it's a zip archive; GitHub returns plain text for small logs sometimes, but usually it's zip.
       // We'll handle zip by best-effort: if it looks binary, just use a fallback line.
-      if (typeof logs.data === "string") {
+      if (typeof logs.data === 'string') {
         logText = logs.data;
       } else if (Buffer.isBuffer(logs.data)) {
-        const asString = logs.data.toString("utf8");
+        const asString = logs.data.toString('utf8');
         // crude check for zip header "PK"
-        if (asString.startsWith("PK")) {
-          logText = "";
+        if (asString.startsWith('PK')) {
+          logText = '';
         } else {
           logText = asString;
         }
       } else {
         try {
-          logText = Buffer.from(logs.data).toString("utf8");
-          if (logText.startsWith("PK")) logText = "";
+          logText = Buffer.from(logs.data).toString('utf8');
+          if (logText.startsWith('PK')) logText = '';
         } catch {
-          logText = "";
+          logText = '';
         }
       }
     } catch (e) {
@@ -188,14 +191,16 @@ async function main() {
     }
 
     // Pick failing step name if available
-    const failedStep = (job.steps || []).find(s => s.conclusion === "failure");
-    const stepName = failedStep?.name || "unknown-step";
-    const topLine = logText ? pickTopErrorLine(logText) : "Job logs unavailable (zip/binary or fetch failed)";
+    const failedStep = (job.steps || []).find((s) => s.conclusion === 'failure');
+    const stepName = failedStep?.name || 'unknown-step';
+    const topLine = logText
+      ? pickTopErrorLine(logText)
+      : 'Job logs unavailable (zip/binary or fetch failed)';
 
     const meta = {
       workflowName: runName,
       jobName: job.name,
-      stepName
+      stepName,
     };
 
     const sig = normalizeSignature({ ...meta, topLine });
@@ -208,7 +213,7 @@ async function main() {
       issueNumber: null,
       lastSeenRunId: null,
       lastSeenAt: null,
-      meta
+      meta,
     };
 
     prev.consecutiveFails += 1;
@@ -225,7 +230,7 @@ async function main() {
 
     // Create/update issue only once we cross threshold
     if (prev.consecutiveFails >= thresholdFails) {
-      const labels = ["ci", "bug", "auto-created"];
+      const labels = ['ci', 'bug', 'auto-created'];
       const body = [
         `Automated report: **continuous CI failure** detected.`,
         ``,
@@ -238,12 +243,12 @@ async function main() {
         `- Consecutive fails: **${prev.consecutiveFails}**`,
         ``,
         `Top error signal:`,
-        "```",
+        '```',
         topLine,
-        "```",
+        '```',
         ``,
-        `If this is flaky, consider quarantining the test or adding retries with backoff.`
-      ].join("\n");
+        `If this is flaky, consider quarantining the test or adding retries with backoff.`,
+      ].join('\n');
 
       const issueNumber = await ensureIssueForSignature(sig, meta, body, labels);
       prev.issueNumber = issueNumber;
@@ -252,7 +257,7 @@ async function main() {
   }
 
   // Handle success path: if the overall run concluded success, mark tracked items as success and close if stable.
-  if (conclusion === "success") {
+  if (conclusion === 'success') {
     for (const [sig, item] of Object.entries(state.items)) {
       // Only touch ones related to this workflow name (avoids closing other automations)
       const sameWorkflow = item?.meta?.workflowName === runName;
@@ -271,8 +276,8 @@ async function main() {
           const comment = [
             `✅ CI is green again for **${item.consecutiveSuccesses}** consecutive runs.`,
             `Auto-closing this issue.`,
-            `Latest run: ${runUrl}`
-          ].join("\n");
+            `Latest run: ${runUrl}`,
+          ].join('\n');
 
           try {
             await closeIssue(item.issueNumber, comment);

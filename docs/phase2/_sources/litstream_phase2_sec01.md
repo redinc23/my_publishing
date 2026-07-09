@@ -42,15 +42,15 @@ Establish production observability and cost governance. **Sentry** tracks errors
 
 #### 1.3.1 Feature Table: Seven Milestones
 
-| Milestone | Name | Deliverables | Exit Criteria |
-|---|---|---|---|
-| M1 | Local Security Hardening | Token rename (`VITE_` prefix removal); `scripts/_lib/node-env.ts` (Zod validation, required token); `scripts/_lib/sanity-node-client.ts` (`useCdn: false`, `perspective: "published"`); `.gitignore` and `.dockerignore`; `audit:secrets` script | `audit:secrets` exits 0; grep for token in `dist/assets/` returns empty; `node-env.ts` throws on missing token |
-| M2 | Build Pipeline Scripts | Five npm scripts (`build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap`); content snapshot with `contentHash`, `buildCommit`, `sanityDataset`; route generator; prerenderer (Playwright Chromium); sitemap generator; smoke test script | `dist/` contains `index.html`, hashed assets, prerendered HTML shells, `sitemap.xml`; snapshot has all three provenance fields |
-| M3 | Runtime Container | `Dockerfile` (`nginx:1.27-alpine`, UID 1001, hard-fail without `dist/`); `nginx.conf.template` (CSP, `/healthz`, immutable cache, SPA fallback, `.map` 404) | `docker build` succeeds; fails without `dist/`; `/healthz` returns 200; CSP excludes `api.sanity.io`; container runs as UID 1001 |
-| M4 | GCP Foundation | Artifact Registry `web-images` with cleanup policy; Secret Manager secret `sanity-api-read-token`; Cloud Build SA `cloudbuild-mangu-publishers`; GCS cache bucket; Developer Connect GitHub link; Cloud Build trigger on `^main$` | All `gcloud describe` commands succeed; push to `main` starts Cloud Build |
-| M5 | Cloud Build End-to-End | `cloudbuild.yaml` with 16 steps; vulnerability scan gate; `--memory=512Mi --no-default-url` deploy flags | Full pipeline green; Cloud Run URL returns 200; no token in logs; image tagged with `SHORT_SHA` and `latest` |
-| M6 | Firebase Hosting | `firebase.json` (rewrite all routes to Cloud Run, `pinTag: true`); `public-placeholder/`; custom domain with TLS; CDN edge caching | `https://www.yourdomain.com/` loads over HTTPS; deep links return 200; security headers present |
-| M7 | Production Guardrails | Sentry release tracking with hidden source maps; Sanity webhook validator (HMAC + replay protection); Cloud Monitoring uptime check and alert policies; billing budget alerts at 50/75/90%; Artifact Registry cleanup; Cloud Run tag pruning (`KEEP=50`); Portable Text renderer; Formspree contact form | Sentry shows events tagged with SHA; webhook triggers build within ~60s; monitoring green; budget alerts active |
+| Milestone | Name                     | Deliverables                                                                                                                                                                                                                                                                                             | Exit Criteria                                                                                                                    |
+| --------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| M1        | Local Security Hardening | Token rename (`VITE_` prefix removal); `scripts/_lib/node-env.ts` (Zod validation, required token); `scripts/_lib/sanity-node-client.ts` (`useCdn: false`, `perspective: "published"`); `.gitignore` and `.dockerignore`; `audit:secrets` script                                                         | `audit:secrets` exits 0; grep for token in `dist/assets/` returns empty; `node-env.ts` throws on missing token                   |
+| M2        | Build Pipeline Scripts   | Five npm scripts (`build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap`); content snapshot with `contentHash`, `buildCommit`, `sanityDataset`; route generator; prerenderer (Playwright Chromium); sitemap generator; smoke test script                                      | `dist/` contains `index.html`, hashed assets, prerendered HTML shells, `sitemap.xml`; snapshot has all three provenance fields   |
+| M3        | Runtime Container        | `Dockerfile` (`nginx:1.27-alpine`, UID 1001, hard-fail without `dist/`); `nginx.conf.template` (CSP, `/healthz`, immutable cache, SPA fallback, `.map` 404)                                                                                                                                              | `docker build` succeeds; fails without `dist/`; `/healthz` returns 200; CSP excludes `api.sanity.io`; container runs as UID 1001 |
+| M4        | GCP Foundation           | Artifact Registry `web-images` with cleanup policy; Secret Manager secret `sanity-api-read-token`; Cloud Build SA `cloudbuild-mangu-publishers`; GCS cache bucket; Developer Connect GitHub link; Cloud Build trigger on `^main$`                                                                        | All `gcloud describe` commands succeed; push to `main` starts Cloud Build                                                        |
+| M5        | Cloud Build End-to-End   | `cloudbuild.yaml` with 16 steps; vulnerability scan gate; `--memory=512Mi --no-default-url` deploy flags                                                                                                                                                                                                 | Full pipeline green; Cloud Run URL returns 200; no token in logs; image tagged with `SHORT_SHA` and `latest`                     |
+| M6        | Firebase Hosting         | `firebase.json` (rewrite all routes to Cloud Run, `pinTag: true`); `public-placeholder/`; custom domain with TLS; CDN edge caching                                                                                                                                                                       | `https://www.yourdomain.com/` loads over HTTPS; deep links return 200; security headers present                                  |
+| M7        | Production Guardrails    | Sentry release tracking with hidden source maps; Sanity webhook validator (HMAC + replay protection); Cloud Monitoring uptime check and alert policies; billing budget alerts at 50/75/90%; Artifact Registry cleanup; Cloud Run tag pruning (`KEEP=50`); Portable Text renderer; Formspree contact form | Sentry shows events tagged with SHA; webhook triggers build within ~60s; monitoring green; budget alerts active                  |
 
 #### 1.3.2 Build Pipeline Producing Complete dist/
 
@@ -90,16 +90,16 @@ The Artifact Registry cleanup policy retains 15 most recent tagged images and de
 
 The following features are explicitly excluded from Phase 2. These exclusions are non-negotiable scope boundaries; any request to implement them during Phase 2 must be deferred to Phase 3 or later.
 
-| # | Excluded Feature | Rationale | Deferral Target |
-|---|---|---|---|
-| 1 | Authentication / user accounts | No authenticated visitor experience required for public content site | Phase 3 |
-| 2 | Search functionality | No search index, API, or UI component; prerendered HTML is crawlable by external search engines | Phase 3 |
-| 3 | Comments, ratings, user-generated content | Platform is strictly publisher-to-consumer with no visitor input channels | Phase 3 or later |
-| 4 | Email subscriptions / newsletters | Formspree contact form (M7) is unidirectional messaging only; no subscriber management | Phase 3 or later |
-| 5 | Mobile native applications | No iOS or Android app development | Future phase |
-| 6 | Analytics dashboards | Basic GCP Cloud Monitoring metrics only; no custom analytics UI | Phase 3 |
-| 7 | A/B testing | No experiment framework or traffic splitting for feature comparison | Future phase |
-| 8 | Internationalization | Language field in Sanity schema only; no multi-locale routing or content translation | Phase 3 |
+| #   | Excluded Feature                          | Rationale                                                                                       | Deferral Target  |
+| --- | ----------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- |
+| 1   | Authentication / user accounts            | No authenticated visitor experience required for public content site                            | Phase 3          |
+| 2   | Search functionality                      | No search index, API, or UI component; prerendered HTML is crawlable by external search engines | Phase 3          |
+| 3   | Comments, ratings, user-generated content | Platform is strictly publisher-to-consumer with no visitor input channels                       | Phase 3 or later |
+| 4   | Email subscriptions / newsletters         | Formspree contact form (M7) is unidirectional messaging only; no subscriber management          | Phase 3 or later |
+| 5   | Mobile native applications                | No iOS or Android app development                                                               | Future phase     |
+| 6   | Analytics dashboards                      | Basic GCP Cloud Monitoring metrics only; no custom analytics UI                                 | Phase 3          |
+| 7   | A/B testing                               | No experiment framework or traffic splitting for feature comparison                             | Future phase     |
+| 8   | Internationalization                      | Language field in Sanity schema only; no multi-locale routing or content translation            | Phase 3          |
 
 ### 1.5 Success Metrics (Definition of Done)
 
@@ -107,22 +107,22 @@ The following features are explicitly excluded from Phase 2. These exclusions ar
 
 Phase 2 is complete when all 14 acceptance criteria below are satisfied. Each criterion maps to a P0 test ID from the Verification Protocol (Section 4 of the Implementation Package).
 
-| # | Acceptance Criterion | P0 Test ID | Verification Method |
-|---|---|---|---|
-| 1 | Push to `main` triggers Cloud Build within 60s; build runs green | P0-4 | `gcloud builds list` shows SUCCESS within 60s of push; all 16 steps pass |
-| 2 | `https://www.yourdomain.com/` loads over HTTPS | P0-5 | `curl -sI` returns `HTTP/2 200` |
-| 3 | `/healthz` returns HTTP 200 | P0-3 | `curl` to `/healthz` returns `200 ok` |
-| 4 | Deep links load correctly with no server 404 | P0-5, P0-7 | `curl` to deep link returns 200; SPA fallback serves `index.html` |
-| 5 | `grep -R SANITY_API_READ_TOKEN dist/assets/` returns empty | P0-1 | Direct grep scan produces empty output |
-| 6 | Cloud Run runtime contains no `SANITY_API_READ_TOKEN` | P0-1 | `gcloud run services describe` shows no secret in env |
-| 7 | Hashed assets return `Cache-Control: public, max-age=31536000, immutable` | P0-7 | `curl -sI` on `/assets/*.js` or `/assets/*.css` returns correct header |
-| 8 | Source map URLs return HTTP 404 | P0-7 | `curl` to any `.map` URL returns 404 |
-| 9 | CSP `connect-src` excludes `*.api.sanity.io` | P0-3 | Response headers show CSP without `api.sanity.io` in `connect-src` |
-| 10 | Container runs as non-root (UID 1001) | P0-7 | `docker exec <container> id` returns `uid=1001` |
-| 11 | Sanity content publish triggers rebuild within ~60s | WEBHOOK | Publish in Sanity; verify Cloud Build starts within 60s |
-| 12 | Sentry receives errors tagged with git SHA as release | — | Sentry dashboard shows `release = SHORT_SHA` |
-| 13 | Cloud Monitoring uptime check on `/healthz` is green | — | Console shows green checkmark |
-| 14 | Billing budget alerts at 50%, 75%, 90% | — | Billing Console shows budget with three thresholds |
+| #   | Acceptance Criterion                                                      | P0 Test ID | Verification Method                                                      |
+| --- | ------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------ |
+| 1   | Push to `main` triggers Cloud Build within 60s; build runs green          | P0-4       | `gcloud builds list` shows SUCCESS within 60s of push; all 16 steps pass |
+| 2   | `https://www.yourdomain.com/` loads over HTTPS                            | P0-5       | `curl -sI` returns `HTTP/2 200`                                          |
+| 3   | `/healthz` returns HTTP 200                                               | P0-3       | `curl` to `/healthz` returns `200 ok`                                    |
+| 4   | Deep links load correctly with no server 404                              | P0-5, P0-7 | `curl` to deep link returns 200; SPA fallback serves `index.html`        |
+| 5   | `grep -R SANITY_API_READ_TOKEN dist/assets/` returns empty                | P0-1       | Direct grep scan produces empty output                                   |
+| 6   | Cloud Run runtime contains no `SANITY_API_READ_TOKEN`                     | P0-1       | `gcloud run services describe` shows no secret in env                    |
+| 7   | Hashed assets return `Cache-Control: public, max-age=31536000, immutable` | P0-7       | `curl -sI` on `/assets/*.js` or `/assets/*.css` returns correct header   |
+| 8   | Source map URLs return HTTP 404                                           | P0-7       | `curl` to any `.map` URL returns 404                                     |
+| 9   | CSP `connect-src` excludes `*.api.sanity.io`                              | P0-3       | Response headers show CSP without `api.sanity.io` in `connect-src`       |
+| 10  | Container runs as non-root (UID 1001)                                     | P0-7       | `docker exec <container> id` returns `uid=1001`                          |
+| 11  | Sanity content publish triggers rebuild within ~60s                       | WEBHOOK    | Publish in Sanity; verify Cloud Build starts within 60s                  |
+| 12  | Sentry receives errors tagged with git SHA as release                     | —          | Sentry dashboard shows `release = SHORT_SHA`                             |
+| 13  | Cloud Monitoring uptime check on `/healthz` is green                      | —          | Console shows green checkmark                                            |
+| 14  | Billing budget alerts at 50%, 75%, 90%                                    | —          | Billing Console shows budget with three thresholds                       |
 
 #### 1.5.2 CI/CD Trigger and End-to-End Build Success
 

@@ -48,17 +48,17 @@ export default async function AuthorPage({ params }: { params: { id: string } })
     <div>
       <Section className="bg-muted">
         <Container>
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
             <Avatar className="h-20 w-20">
               <AvatarImage src={avatarUrl} alt={displayName} />
               <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-4xl font-bold mb-2">{displayName}</h1>
-              <p className="text-secondary max-w-2xl">
+              <h1 className="mb-2 text-4xl font-bold">{displayName}</h1>
+              <p className="max-w-2xl text-secondary">
                 {author.bio || 'This author has not shared a bio yet.'}
               </p>
-              <div className="flex flex-wrap gap-4 text-sm text-secondary mt-4">
+              <div className="mt-4 flex flex-wrap gap-4 text-sm text-secondary">
                 <span>{author.total_books} published books</span>
                 {author.is_verified && <span className="text-primary">Verified author</span>}
               </div>
@@ -69,11 +69,11 @@ export default async function AuthorPage({ params }: { params: { id: string } })
 
       <Section>
         <Container>
-          <h2 className="text-3xl font-bold mb-6">Published Books</h2>
+          <h2 className="mb-6 text-3xl font-bold">Published Books</h2>
           {books.length === 0 ? (
             <p className="text-secondary">No published books yet.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
               {books.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}

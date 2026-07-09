@@ -6,7 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { updateBookAdmin } from '@/lib/actions/books';
 
 interface BookEditFormProps {
@@ -101,21 +107,119 @@ export function BookEditForm({ book }: BookEditFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <div><Label htmlFor="title">Title *</Label><Input id="title" name="title" value={formData.title} onChange={handleChange} required className="mt-1" /></div>
-        <div><Label htmlFor="subtitle">Subtitle</Label><Input id="subtitle" name="subtitle" value={formData.subtitle} onChange={handleChange} className="mt-1" /></div>
-        <div><Label htmlFor="slug">Slug *</Label><Input id="slug" name="slug" value={formData.slug} onChange={handleChange} required className="mt-1" /></div>
-        <div><Label htmlFor="description">Description</Label><Textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={6} className="mt-1" /></div>
-        <div className="grid grid-cols-2 gap-4">
-          <div><Label htmlFor="price">Price ($)</Label><Input id="price" name="price" type="number" step="0.01" min="0" value={formData.price} onChange={handleChange} className="mt-1" /></div>
-          <div><Label htmlFor="isbn">ISBN</Label><Input id="isbn" name="isbn" value={formData.isbn} onChange={handleChange} className="mt-1" /></div>
+        <div>
+          <Label htmlFor="title">Title *</Label>
+          <Input
+            id="title"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className="mt-1"
+          />
         </div>
-        <div><Label htmlFor="genre">Genre</Label><Input id="genre" name="genre" value={formData.genre} onChange={handleChange} className="mt-1" /></div>
-        <div className="grid grid-cols-2 gap-4">
-          <div><Label htmlFor="page_count">Page Count</Label><Input id="page_count" name="page_count" type="number" min="0" value={formData.page_count} onChange={handleChange} className="mt-1" /></div>
-          <div><Label htmlFor="word_count">Word Count</Label><Input id="word_count" name="word_count" type="number" min="0" value={formData.word_count} onChange={handleChange} className="mt-1" /></div>
+        <div>
+          <Label htmlFor="subtitle">Subtitle</Label>
+          <Input
+            id="subtitle"
+            name="subtitle"
+            value={formData.subtitle}
+            onChange={handleChange}
+            className="mt-1"
+          />
         </div>
-        <div><Label htmlFor="status">Status</Label>
-          <select id="status" name="status" value={formData.status} onChange={handleChange} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <div>
+          <Label htmlFor="slug">Slug *</Label>
+          <Input
+            id="slug"
+            name="slug"
+            value={formData.slug}
+            onChange={handleChange}
+            required
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={6}
+            className="mt-1"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="price">Price ($)</Label>
+            <Input
+              id="price"
+              name="price"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="isbn">ISBN</Label>
+            <Input
+              id="isbn"
+              name="isbn"
+              value={formData.isbn}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="genre">Genre</Label>
+          <Input
+            id="genre"
+            name="genre"
+            value={formData.genre}
+            onChange={handleChange}
+            className="mt-1"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="page_count">Page Count</Label>
+            <Input
+              id="page_count"
+              name="page_count"
+              type="number"
+              min="0"
+              value={formData.page_count}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="word_count">Word Count</Label>
+            <Input
+              id="word_count"
+              name="word_count"
+              type="number"
+              min="0"
+              value={formData.word_count}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="status">Status</Label>
+          <select
+            id="status"
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <option value="draft">Draft</option>
             <option value="published">Published</option>
             <option value="archived">Archived</option>
@@ -142,22 +246,100 @@ export function BookEditForm({ book }: BookEditFormProps) {
             </SelectContent>
           </Select>
         </div>
-        <div className="pt-6 border-t border-border">
-          <h3 className="text-lg font-semibold mb-2">External Retailer URLs</h3>
-          <p className="text-sm text-muted-foreground mb-4">Add links to external retailers where this book is available. Leave blank to hide a button.</p>
+        <div className="border-t border-border pt-6">
+          <h3 className="mb-2 text-lg font-semibold">External Retailer URLs</h3>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Add links to external retailers where this book is available. Leave blank to hide a
+            button.
+          </p>
           <div className="space-y-3">
-            <div><Label htmlFor="amazon_url">Amazon URL</Label><Input id="amazon_url" name="amazon_url" type="url" value={formData.amazon_url} onChange={handleChange} placeholder="https://amazon.com/..." className="mt-1" /></div>
-            <div><Label htmlFor="kindle_url">Kindle URL</Label><Input id="kindle_url" name="kindle_url" type="url" value={formData.kindle_url} onChange={handleChange} placeholder="https://amazon.com/kindle/..." className="mt-1" /></div>
-            <div><Label htmlFor="apple_books_url">Apple Books URL</Label><Input id="apple_books_url" name="apple_books_url" type="url" value={formData.apple_books_url} onChange={handleChange} placeholder="https://books.apple.com/..." className="mt-1" /></div>
-            <div><Label htmlFor="audible_url">Audible URL</Label><Input id="audible_url" name="audible_url" type="url" value={formData.audible_url} onChange={handleChange} placeholder="https://audible.com/..." className="mt-1" /></div>
-            <div><Label htmlFor="barnes_noble_url">Barnes &amp; Noble URL</Label><Input id="barnes_noble_url" name="barnes_noble_url" type="url" value={formData.barnes_noble_url} onChange={handleChange} placeholder="https://barnesandnoble.com/..." className="mt-1" /></div>
-            <div><Label htmlFor="google_play_books_url">Google Play Books URL</Label><Input id="google_play_books_url" name="google_play_books_url" type="url" value={formData.google_play_books_url} onChange={handleChange} placeholder="https://play.google.com/store/books/..." className="mt-1" /></div>
+            <div>
+              <Label htmlFor="amazon_url">Amazon URL</Label>
+              <Input
+                id="amazon_url"
+                name="amazon_url"
+                type="url"
+                value={formData.amazon_url}
+                onChange={handleChange}
+                placeholder="https://amazon.com/..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="kindle_url">Kindle URL</Label>
+              <Input
+                id="kindle_url"
+                name="kindle_url"
+                type="url"
+                value={formData.kindle_url}
+                onChange={handleChange}
+                placeholder="https://amazon.com/kindle/..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="apple_books_url">Apple Books URL</Label>
+              <Input
+                id="apple_books_url"
+                name="apple_books_url"
+                type="url"
+                value={formData.apple_books_url}
+                onChange={handleChange}
+                placeholder="https://books.apple.com/..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="audible_url">Audible URL</Label>
+              <Input
+                id="audible_url"
+                name="audible_url"
+                type="url"
+                value={formData.audible_url}
+                onChange={handleChange}
+                placeholder="https://audible.com/..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="barnes_noble_url">Barnes &amp; Noble URL</Label>
+              <Input
+                id="barnes_noble_url"
+                name="barnes_noble_url"
+                type="url"
+                value={formData.barnes_noble_url}
+                onChange={handleChange}
+                placeholder="https://barnesandnoble.com/..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="google_play_books_url">Google Play Books URL</Label>
+              <Input
+                id="google_play_books_url"
+                name="google_play_books_url"
+                type="url"
+                value={formData.google_play_books_url}
+                onChange={handleChange}
+                placeholder="https://play.google.com/store/books/..."
+                className="mt-1"
+              />
+            </div>
           </div>
         </div>
       </div>
       <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="outline" onClick={() => router.push('/admin/books')} disabled={submitting}>Cancel</Button>
-        <Button type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save Changes'}</Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push('/admin/books')}
+          disabled={submitting}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={submitting}>
+          {submitting ? 'Saving...' : 'Save Changes'}
+        </Button>
       </div>
     </form>
   );

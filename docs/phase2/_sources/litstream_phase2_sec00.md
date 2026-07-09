@@ -10,15 +10,15 @@ The goal of Phase 2 is singular: a real user must be able to type the domain int
 
 Phase 2 is organized into seven sequential milestones (M1 through M7), summarized below. Launch occurs at the completion of M6; M7 provides post-launch production hardening.
 
-| Milestone | Goal | Key Deliverable |
-|---|---|---|
-| M1 — Local Security Hardening | Eliminate secret exposure risk before any infrastructure work begins | Renamed token (`SANITY_API_READ_TOKEN`), Zod validation, `.gitignore`, `.dockerignore`, secret audit script |
-| M2 — Build Pipeline Scripts | Five npm scripts that transform Sanity content into a complete `dist/` directory | `build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap` plus combined `build` and smoke tests |
-| M3 — Runtime Container | Hardened container that serves only pre-built static files | `Dockerfile` (`nginx:1.27-alpine`), `nginx.conf.template`, non-root execution (UID 1001), hard-fail on missing `dist/` |
-| M4 — GCP Foundation | All Google Cloud resources provisioned with correct IAM bindings | Artifact Registry, Secret Manager, Cloud Build service account, Developer Connect (GitHub), build trigger |
-| M5 — Cloud Build End-to-End | Push to `main` triggers automated build and Cloud Run deployment | `cloudbuild.yaml` (16-step pipeline including vulnerability scan, `--memory=512Mi`, `--no-default-url`) |
-| M6 — Firebase Hosting & Custom Domain | Public site live on custom domain over HTTPS with CDN | `firebase.json` rewrite to Cloud Run, DNS configuration, TLS provisioning, SPA routing |
-| M7 — Production Guardrails | Observability, auto-rebuild on content changes, cost controls | Sentry release tracking, Sanity webhook validator, Cloud Monitoring uptime checks, billing alerts, tag pruning |
+| Milestone                             | Goal                                                                             | Key Deliverable                                                                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| M1 — Local Security Hardening         | Eliminate secret exposure risk before any infrastructure work begins             | Renamed token (`SANITY_API_READ_TOKEN`), Zod validation, `.gitignore`, `.dockerignore`, secret audit script             |
+| M2 — Build Pipeline Scripts           | Five npm scripts that transform Sanity content into a complete `dist/` directory | `build:content`, `build:routes`, `build:vite`, `build:prerender`, `build:sitemap` plus combined `build` and smoke tests |
+| M3 — Runtime Container                | Hardened container that serves only pre-built static files                       | `Dockerfile` (`nginx:1.27-alpine`), `nginx.conf.template`, non-root execution (UID 1001), hard-fail on missing `dist/`  |
+| M4 — GCP Foundation                   | All Google Cloud resources provisioned with correct IAM bindings                 | Artifact Registry, Secret Manager, Cloud Build service account, Developer Connect (GitHub), build trigger               |
+| M5 — Cloud Build End-to-End           | Push to `main` triggers automated build and Cloud Run deployment                 | `cloudbuild.yaml` (16-step pipeline including vulnerability scan, `--memory=512Mi`, `--no-default-url`)                 |
+| M6 — Firebase Hosting & Custom Domain | Public site live on custom domain over HTTPS with CDN                            | `firebase.json` rewrite to Cloud Run, DNS configuration, TLS provisioning, SPA routing                                  |
+| M7 — Production Guardrails            | Observability, auto-rebuild on content changes, cost controls                    | Sentry release tracking, Sanity webhook validator, Cloud Monitoring uptime checks, billing alerts, tag pruning          |
 
 The milestones form a strict dependency chain. M2 requires M1's `node-env.ts` module. M3 requires M2's `dist/` output. M4 has no dependency on M2 or M3 and may be provisioned in parallel with local build work. M5 requires all four prior milestones to be complete. M6 and M7 depend on M5.
 

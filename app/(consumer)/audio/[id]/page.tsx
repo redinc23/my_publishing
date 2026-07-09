@@ -32,27 +32,27 @@ export default async function AudiobookPage({ params }: { params: { id: string }
   return (
     <Section>
       <Container>
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-8 grid gap-8 md:grid-cols-2">
             {book.cover_url && (
               <div className="relative aspect-[2/3]">
                 <Image
                   src={book.cover_url}
                   alt={book.title}
                   fill
-                  className="object-cover rounded-lg"
+                  className="rounded-lg object-cover"
                 />
               </div>
             )}
             <div>
-              <h1 className="text-4xl font-bold mb-4">{book.title}</h1>
-              <p className="text-xl text-secondary mb-6">
+              <h1 className="mb-4 text-4xl font-bold">{book.title}</h1>
+              <p className="mb-6 text-xl text-secondary">
                 by {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
               </p>
-              <p className="text-lg mb-6">{book.description}</p>
+              <p className="mb-6 text-lg">{book.description}</p>
             </div>
           </div>
-          <div className="bg-muted p-6 rounded-lg">
+          <div className="rounded-lg bg-muted p-6">
             <AudioPlayer src={book.content.audio_url} title={book.title} />
           </div>
         </div>

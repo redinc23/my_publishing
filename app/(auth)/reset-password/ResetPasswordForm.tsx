@@ -57,9 +57,10 @@ export function ResetPasswordForm() {
       <div
         role="status"
         aria-live="polite"
-        className="rounded-md bg-green-500/10 border border-green-500 p-4 text-sm text-green-500"
+        className="rounded-md border border-green-500 bg-green-500/10 p-4 text-sm text-green-500"
       >
-        Check your email for a password reset link. If you don&apos;t see it, check your spam folder.
+        Check your email for a password reset link. If you don&apos;t see it, check your spam
+        folder.
       </div>
     );
   }
@@ -77,14 +78,14 @@ export function ResetPasswordForm() {
           <div
             id={errorId}
             role="alert"
-            className="rounded-md bg-red-500/10 border border-red-500 p-3 text-sm text-red-500"
+            className="rounded-md border border-red-500 bg-red-500/10 p-3 text-sm text-red-500"
           >
             {error}
           </div>
         )}
       </div>
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-2">
+        <label htmlFor="email" className="mb-2 block text-sm font-medium">
           Email
         </label>
         <Input
@@ -103,12 +104,7 @@ export function ResetPasswordForm() {
           </p>
         )}
       </div>
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isLoading}
-        aria-busy={isLoading}
-      >
+      <Button type="submit" className="w-full" disabled={isLoading} aria-busy={isLoading}>
         {isLoading ? <LoadingSpinner size="sm" /> : 'Send reset link'}
       </Button>
     </form>

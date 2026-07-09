@@ -31,7 +31,7 @@ export default async function SubmitManuscriptPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Submit Manuscript</h1>
+        <h1 className="mb-8 text-4xl font-bold">Submit Manuscript</h1>
         <div className="max-w-2xl">
           <SubmitManuscriptForm />
         </div>

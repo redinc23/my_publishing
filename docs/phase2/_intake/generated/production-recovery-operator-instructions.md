@@ -36,11 +36,12 @@ Optional: push local secrets to GCP before verify:
 ./scripts/bootstrap-operator-access.sh --sync-secrets
 ```
 
-If output shows **ALL CHECKS PASSED**, tell the agent: *bootstrap passed — go verify production*.
+If output shows **ALL CHECKS PASSED**, tell the agent: _bootstrap passed — go verify production_.
 
 ---
 
 Environment this document targets:
+
 - GCP project: `delta-wonder-488420-i3`
 - Cloud Run service: `mangu-publishers`
 - Region: `us-central1`
@@ -136,6 +137,7 @@ npm run type-check
 ```
 
 Success indicator:
+
 - working tree status understood
 - `npm ci`, lint, and type-check all exit 0.
 
@@ -149,6 +151,7 @@ PROJECT_ID=delta-wonder-488420-i3 REGION=us-central1 SERVICE_NAME=mangu-publishe
 ```
 
 Success indicator:
+
 - required secrets reported as `OK`:
   - `supabase-service-role-key`
   - `stripe-secret-key`
@@ -183,6 +186,7 @@ gcloud builds submit \
 ```
 
 Success indicator:
+
 - Cloud Build finishes with `SUCCESS`
 - deploy step updates Cloud Run service `mangu-publishers`
 - verify step returns service YAML without errors.
@@ -197,6 +201,7 @@ gcloud run services describe mangu-publishers \
 ```
 
 Success indicator:
+
 - `latestReadyRevisionName` populated
 - condition status is `True`
 - URL present.
@@ -213,6 +218,7 @@ curl -i https://mangu-publishers.com/api/health
 ```
 
 Success indicator:
+
 - all four HTTP calls return `200` or expected healthy JSON payload.
 
 ### Step 8 - Post-deploy confidence checks [NON-BLOCKING]

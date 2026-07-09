@@ -17,12 +17,12 @@ export function Pagination({
   totalPages,
   basePath = '',
   queryParams = {},
-  className
+  className,
 }: PaginationProps) {
   const buildUrl = (page: number) => {
     const params = new URLSearchParams({
       page: page.toString(),
-      ...queryParams
+      ...queryParams,
     });
     return `${basePath}?${params.toString()}`;
   };
@@ -69,12 +69,7 @@ export function Pagination({
       aria-label="Pagination"
     >
       {/* Previous button */}
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={currentPage === 1}
-        asChild={currentPage > 1}
-      >
+      <Button variant="outline" size="sm" disabled={currentPage === 1} asChild={currentPage > 1}>
         {currentPage > 1 ? (
           <a href={buildUrl(currentPage - 1)} aria-label="Previous page">
             <ChevronLeft className="h-4 w-4" />
@@ -93,10 +88,7 @@ export function Pagination({
         {pages.map((page, index) => {
           if (page === 'ellipsis') {
             return (
-              <span
-                key={`ellipsis-${index}`}
-                className="flex h-8 w-8 items-center justify-center"
-              >
+              <span key={`ellipsis-${index}`} className="flex h-8 w-8 items-center justify-center">
                 <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
               </span>
             );

@@ -13,7 +13,13 @@ export function Hero({ children, className, background = 'dark' }: HeroProps) {
   };
 
   return (
-    <div className={cn('relative min-h-[60vh] flex items-center', backgroundClasses[background], className)}>
+    <div
+      className={cn(
+        'relative flex min-h-[60vh] items-center',
+        backgroundClasses[background],
+        className
+      )}
+    >
       {children}
     </div>
   );

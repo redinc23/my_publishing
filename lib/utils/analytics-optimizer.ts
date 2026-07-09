@@ -26,7 +26,7 @@ export class AnalyticsOptimizer {
 
     // Apply debouncing
     if (debounce > 0) {
-      await new Promise(resolve => setTimeout(resolve, debounce));
+      await new Promise((resolve) => setTimeout(resolve, debounce));
     }
 
     // Execute fetch
@@ -80,10 +80,12 @@ export class AnalyticsOptimizer {
     for (let i = 0; i < requests.length; i += batchSize) {
       const batch = requests.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map(fn => fn().catch(error => {
-          console.error('Batch request failed:', error);
-          return null as T;
-        }))
+        batch.map((fn) =>
+          fn().catch((error) => {
+            console.error('Batch request failed:', error);
+            return null as T;
+          })
+        )
       );
       results.push(...batchResults.filter(Boolean));
     }

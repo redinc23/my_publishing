@@ -51,9 +51,9 @@ Migrations **must be applied in this exact order** due to dependencies between t
    - **Dependencies**: `profiles`, `books`
 
 9. **20260118000000_critical_fixes.sql**
-    - Applies bug fixes
-    - Updates constraints and indexes
-    - **Dependencies**: All previous migrations
+   - Applies bug fixes
+   - Updates constraints and indexes
+   - **Dependencies**: All previous migrations
 
 10. **20260120000006_performance_optimizations.sql**
     - Adds performance indexes

@@ -74,12 +74,12 @@ export function ReviewForm({ bookId, existingReview, onClose }: ReviewFormProps)
   };
 
   return (
-    <div className="bg-white border rounded-lg p-6">
+    <div className="rounded-lg border bg-white p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">
+        <h3 className="mb-2 text-lg font-semibold">
           {existingReview ? 'Edit Your Review' : 'Write a Review'}
         </h3>
-        <p className="text-gray-600 text-sm">
+        <p className="text-sm text-gray-600">
           Share your thoughts about this book with other readers
         </p>
       </div>
@@ -87,22 +87,18 @@ export function ReviewForm({ bookId, existingReview, onClose }: ReviewFormProps)
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Rating */}
         <div>
-          <label className="block text-sm font-medium mb-2">
-            Rating *
-          </label>
+          <label className="mb-2 block text-sm font-medium">Rating *</label>
           <StarRating
             rating={rating}
             onRatingChange={(newRating) => setValue('rating', newRating)}
             interactive
           />
-          {errors.rating && (
-            <p className="text-red-500 text-sm mt-1">{errors.rating.message}</p>
-          )}
+          {errors.rating && <p className="mt-1 text-sm text-red-500">{errors.rating.message}</p>}
         </div>
 
         {/* Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-2">
+          <label htmlFor="title" className="mb-2 block text-sm font-medium">
             Review Title (Optional)
           </label>
           <Input
@@ -111,14 +107,12 @@ export function ReviewForm({ bookId, existingReview, onClose }: ReviewFormProps)
             placeholder="Summarize your review..."
             maxLength={100}
           />
-          {errors.title && (
-            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-          )}
+          {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
         </div>
 
         {/* Content */}
         <div>
-          <label htmlFor="content" className="block text-sm font-medium mb-2">
+          <label htmlFor="content" className="mb-2 block text-sm font-medium">
             Your Review *
           </label>
           <Textarea
@@ -128,13 +122,9 @@ export function ReviewForm({ bookId, existingReview, onClose }: ReviewFormProps)
             rows={6}
             maxLength={5000}
           />
-          <div className="flex justify-between mt-1">
-            {errors.content && (
-              <p className="text-red-500 text-sm">{errors.content.message}</p>
-            )}
-            <p className="text-gray-500 text-sm ml-auto">
-              {watch('content')?.length || 0}/5000
-            </p>
+          <div className="mt-1 flex justify-between">
+            {errors.content && <p className="text-sm text-red-500">{errors.content.message}</p>}
+            <p className="ml-auto text-sm text-gray-500">{watch('content')?.length || 0}/5000</p>
           </div>
         </div>
 
@@ -145,26 +135,18 @@ export function ReviewForm({ bookId, existingReview, onClose }: ReviewFormProps)
             checked={isSpoiler}
             onCheckedChange={(checked: boolean) => setValue('is_spoiler', checked)}
           />
-          <label
-            htmlFor="is_spoiler"
-            className="text-sm text-gray-700 cursor-pointer"
-          >
+          <label htmlFor="is_spoiler" className="cursor-pointer text-sm text-gray-700">
             This review contains spoilers
           </label>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+        <div className="flex gap-3 border-t pt-4">
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : (existingReview ? 'Update Review' : 'Post Review')}
+            {isSubmitting ? 'Submitting...' : existingReview ? 'Update Review' : 'Post Review'}
           </Button>
         </div>
       </form>

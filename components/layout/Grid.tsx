@@ -16,9 +16,5 @@ export function Grid({ children, cols = 3, className }: GridProps) {
     6: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
   };
 
-  return (
-    <div className={cn('grid gap-6', gridCols[cols], className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('grid gap-6', gridCols[cols], className)}>{children}</div>;
 }

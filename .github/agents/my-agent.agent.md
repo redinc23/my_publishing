@@ -4,6 +4,7 @@ This file lists tasks you can hand to a GitHub AI agent for this repository.
 Pick the items that match your current needs and the agent's permissions.
 
 ## Quick Start (low risk)
+
 1. Fix obvious typos in docs and comments.
 2. Update README badges and metadata.
 3. Normalize formatting with Prettier/ESLint.
@@ -16,6 +17,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Add/refresh screenshots in docs.
 
 ## Code Quality & Maintenance
+
 1. Run linters and auto-fix issues.
 2. Convert string concatenation to template strings.
 3. Break up functions that are too long.
@@ -33,6 +35,7 @@ Pick the items that match your current needs and the agent's permissions.
 15. Add input validation where missing.
 
 ## Bug Hunting
+
 1. Scan for console.log/print left in production.
 2. Find potential null/undefined access paths.
 3. Check for unclosed resources/streams.
@@ -45,6 +48,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Verify error paths return proper HTTP codes.
 
 ## Documentation
+
 1. Update README with latest features.
 2. Generate or refresh API docs.
 3. Document environment variables.
@@ -57,6 +61,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Create onboarding checklist for new devs.
 
 ## Automation & CI/CD
+
 1. Add CI job for lint + tests.
 2. Fail CI on formatting drift.
 3. Auto-label PRs based on files changed.
@@ -69,6 +74,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Add smoke tests for deploys.
 
 ## Testing
+
 1. Generate unit tests for uncovered modules.
 2. Add integration tests for key flows.
 3. Create fixtures for complex test data.
@@ -81,6 +87,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Run coverage and report gaps.
 
 ## Performance
+
 1. Identify hot code paths and optimize.
 2. Find N+1 query patterns.
 3. Add caching for expensive reads.
@@ -93,6 +100,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Optimize asset loading strategy.
 
 ## Security
+
 1. Scan for exposed secrets/keys.
 2. Validate input sanitization.
 3. Check for XSS vulnerabilities.
@@ -105,6 +113,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Review encryption usage for sensitive data.
 
 ## Dependency Management
+
 1. Audit for known vulnerabilities.
 2. Update outdated dependencies.
 3. Remove unused dependencies.
@@ -117,6 +126,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Replace deprecated packages.
 
 ## Repository Management
+
 1. Add/refresh CODEOWNERS.
 2. Add issue and PR templates.
 3. Update CONTRIBUTING.md.
@@ -129,6 +139,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Archive or remove old docs.
 
 ## Frontend Specific
+
 1. Check for missing alt text in images.
 2. Validate accessibility (aria labels).
 3. Verify responsive breakpoints.
@@ -141,6 +152,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Validate form error handling.
 
 ## Backend / API Specific
+
 1. Validate OpenAPI/Swagger specs.
 2. Ensure consistent HTTP status codes.
 3. Validate request/response schemas.
@@ -153,6 +165,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Add request correlation IDs.
 
 ## Data & Analytics
+
 1. Validate migrations apply cleanly.
 2. Check for missing indexes on hot queries.
 3. Verify data constraints and defaults.
@@ -165,6 +178,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Add materialized views where needed.
 
 ## Observability
+
 1. Add structured logging.
 2. Improve error reporting context.
 3. Add tracing spans for critical flows.
@@ -177,6 +191,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Add health check endpoints.
 
 ## Cleanup & Housekeeping
+
 1. Remove stale feature flags.
 2. Delete old experiment branches.
 3. Remove leftover build artifacts.
@@ -189,6 +204,7 @@ Pick the items that match your current needs and the agent's permissions.
 10. Simplify build scripts.
 
 ## Suggested Task Bundles
+
 - **PR hygiene**: lint + format + tests + doc touchups.
 - **Security sweep**: secret scan + dependency audit + auth review.
 - **Performance sprint**: bundle analysis + query optimization + caching.
