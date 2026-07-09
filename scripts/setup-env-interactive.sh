@@ -328,5 +328,5 @@ echo "Wrote: ${ENV_FILE}"
 [[ -f "${ENV_FILE}.bak" ]] && echo "Backup: ${ENV_FILE}.bak"
 echo
 echo "Next steps:"
-echo "  ./scripts/bootstrap-operator-access.sh"
-echo "  ./scripts/bootstrap-operator-access.sh --sync-secrets   # optional: push to GCP"
+echo "  1. Set these variables in Vercel project environment settings"
+echo "  2. Redeploy your Vercel project"
