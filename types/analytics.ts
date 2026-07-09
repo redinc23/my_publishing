@@ -3,11 +3,11 @@
  * Comprehensive type definitions for analytics tracking and reporting
  */
 
-export type AnalyticsEventType = 
-  | 'view' 
-  | 'read' 
-  | 'purchase' 
-  | 'download' 
+export type AnalyticsEventType =
+  | 'view'
+  | 'read'
+  | 'purchase'
+  | 'download'
   | 'share'
   | 'bookmark'
   | 'review'
@@ -246,21 +246,21 @@ export interface AnalyticsSession {
   book_id: string;
   user_id?: string;
   device_id?: string;
-  
+
   started_at: string;
   last_activity_at: string;
   ended_at?: string;
-  
+
   total_events: number;
   total_duration: number;
   pages_viewed: number;
   chapters_read: number[];
   max_progress: number;
-  
+
   device_type?: DeviceType;
   country_code?: string;
   city?: string;
-  
+
   is_active: boolean;
   created_at: string;
 }

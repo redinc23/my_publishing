@@ -2,22 +2,22 @@
 name: Full project hardening plan
 status: archived-superseded
 superseded_by: mangu_publishers_master_ricef.md
-overview: "ARCHIVED SNAPSHOT (May 2026). Merged into Master RICEF. Retained for file-level audit detail. Use mangu_publishers_master_ricef.md + operator_walkthrough_supplement.md for current execution."
+overview: 'ARCHIVED SNAPSHOT (May 2026). Merged into Master RICEF. Retained for file-level audit detail. Use mangu_publishers_master_ricef.md + operator_walkthrough_supplement.md for current execution.'
 todos:
   - id: delete-save
     content: Delete environment.local.sh.save from disk (contains real GCP Project ID)
     status: completed
   - id: pr1-docker
-    content: "PR1: Uncomment COPY public in Dockerfile; verify via Cloud Build"
+    content: 'PR1: Uncomment COPY public in Dockerfile; verify via Cloud Build'
     status: completed
   - id: pr2-rename
-    content: "PR2: grep sweep mangu-platform -> mangu-publishers; regen lockfile; update .env example headers"
+    content: 'PR2: grep sweep mangu-platform -> mangu-publishers; regen lockfile; update .env example headers'
     status: completed
   - id: pr3-hygiene
-    content: "PR3: Add *.save to .gitignore; land ENV_SETUP_WALKTHROUGH + README warning; scrub real IDs"
+    content: 'PR3: Add *.save to .gitignore; land ENV_SETUP_WALKTHROUGH + README warning; scrub real IDs'
     status: completed
   - id: pr4-ci-node20
-    content: "PR4: ci.yml Node 20 + checkout/setup-node v4; engines.node; next.config images cleanup; vercel.json env removal"
+    content: 'PR4: ci.yml Node 20 + checkout/setup-node v4; engines.node; next.config images cleanup; vercel.json env removal'
     status: completed
   - id: backlog-issues
     content: File 12 GitHub issues for backlog items (health probes, rollback tags, secret scanning, webhook secret, etc.)
@@ -26,7 +26,7 @@ todos:
     content: Triage 30 open PRs -- close stale drafts, prune 25 merged remote branches
     status: completed
   - id: month-followup
-    content: "This month: health probes, migration automation, secret scanning expansion, canonical prod decision"
+    content: 'This month: health probes, migration automation, secret scanning expansion, canonical prod decision'
     status: completed
 isProject: false
 ---
@@ -55,13 +55,13 @@ isProject: false
 
 ## 2. Local Build Health (all passing)
 
-| Check | Command | Result |
-|---|---|---|
-| Type-check | `npm run type-check` | PASS |
-| Lint | `npm run lint` | PASS (0 warnings) |
-| Unit tests | `npm test` | PASS (3 suites, 12/12 tests) |
-| Build | `npm run build` | PASS (standalone output) |
-| Middleware | compiled | 70.3 kB |
+| Check      | Command              | Result                       |
+| ---------- | -------------------- | ---------------------------- |
+| Type-check | `npm run type-check` | PASS                         |
+| Lint       | `npm run lint`       | PASS (0 warnings)            |
+| Unit tests | `npm test`           | PASS (3 suites, 12/12 tests) |
+| Build      | `npm run build`      | PASS (standalone output)     |
+| Middleware | compiled             | 70.3 kB                      |
 
 **Local toolchain:** Node 24.10.0, npm 11.6.0, gcloud 567.0.0. Docker is **not installed** locally -- Docker verification must happen in Cloud Build or on another machine.
 
@@ -99,7 +99,7 @@ isProject: false
 - [.env.local](.env.local) -- Present, has 8 keys set (Supabase, Stripe, site URL). **Not committed** (correctly gitignored).
 - [.env.local.example](.env.local.example) -- Present. Well-documented with Phase 1/Phase 2 markers. Still says "MANGU Platform" in header.
 - [.env.production.example](.env.production.example) -- Present. Template for GCP Cloud Run production. Still says "MANGU Platform" in header.
-- [docs/phase2/_intake/environment.example.sh](docs/phase2/_intake/environment.example.sh) -- Present. Phase 2 intake template.
+- [docs/phase2/\_intake/environment.example.sh](docs/phase2/_intake/environment.example.sh) -- Present. Phase 2 intake template.
 - `docs/phase2/_intake/environment.local.sh` -- Present, gitignored via `docs/phase2/_intake/.gitignore`.
 - `docs/phase2/_intake/environment.local.sh.save` -- **SECURITY RISK.** Untracked but contains **real GCP Project ID**. Must delete immediately.
 
@@ -107,7 +107,7 @@ isProject: false
 
 - [.gitignore](.gitignore) already covers `*.swp`, `*~`, `.DS_Store`, and `docs/phase2/_intake/environment.local.sh`.
 - **Missing:** `*.save` pattern. Editor crash recovery files can sneak in.
-- [docs/phase2/_intake/.gitignore](docs/phase2/_intake/.gitignore) covers `environment.local.sh`, `worksheet-export.*`, `*.pdf` but **not `*.save`**.
+- [docs/phase2/\_intake/.gitignore](docs/phase2/_intake/.gitignore) covers `environment.local.sh`, `worksheet-export.*`, `*.pdf` but **not `*.save`**.
 
 ### Root scripts (shell)
 
@@ -186,15 +186,15 @@ From `20260116` to `20260122` covering: initial schema, analytics, storage polic
 
 ## 5. CI/CD Pipeline Drift (the critical inconsistency)
 
-| Environment | Node | Actions | Deploy Target |
-|---|---|---|---|
-| Dockerfile | 20-alpine | N/A | Cloud Run |
-| cloudbuild.yaml | 20 | N/A | Cloud Run |
-| ci.yml (test) | **18** | **@v3** | -- |
-| ci.yml (deploy) | -- | **@v3** | Vercel |
-| admin-setup.yml | -- | @v4 (20) | -- |
-| bug-to-issue.yml | -- | @v4 (20) | -- |
-| Local machine | **24.10.0** | N/A | -- |
+| Environment      | Node        | Actions  | Deploy Target |
+| ---------------- | ----------- | -------- | ------------- |
+| Dockerfile       | 20-alpine   | N/A      | Cloud Run     |
+| cloudbuild.yaml  | 20          | N/A      | Cloud Run     |
+| ci.yml (test)    | **18**      | **@v3**  | --            |
+| ci.yml (deploy)  | --          | **@v3**  | Vercel        |
+| admin-setup.yml  | --          | @v4 (20) | --            |
+| bug-to-issue.yml | --          | @v4 (20) | --            |
+| Local machine    | **24.10.0** | N/A      | --            |
 
 **Risk:** Tests pass on Node 18 in CI but the production container runs Node 20. Native addon or API differences (e.g., `fetch`, `crypto.subtle`) could cause prod-only failures that CI never catches.
 
@@ -237,49 +237,49 @@ From `20260116` to `20260122` covering: initial schema, analytics, storage polic
 
 ## 7a. Environment Variable Matrix
 
-| Env var | Type | .env.local | Dockerfile ARG | cloudbuild --set-env/secrets | vercel.json | ci.yml | Code consumption |
-|---|---|---|---|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Public | Yes | Yes | Yes (env) | Yes (@) | Secret | Supabase clients, middleware, health, scripts |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Yes | Yes | Yes (env) | Yes (@) | Secret | Clients, middleware, health, validation |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Public | Yes | Yes | Yes (env) | **No** | **No** | Stripe client, health, validation |
-| `NEXT_PUBLIC_SITE_URL` | Public | Yes | Yes | Yes (env) | **No** | **No** | Sitemap, robots, emails, checkout, Stripe redirects |
-| `SUPABASE_SERVICE_ROLE_KEY` | Secret | Yes | No | Yes (secret) | No | Secret | Admin client, migrations, seed |
-| `STRIPE_SECRET_KEY` | Secret | Yes | No | Yes (secret) | No | **No** | Server Stripe, payouts, health |
-| `STRIPE_WEBHOOK_SECRET` | Secret | Yes | No | **No (gap!)** | No | No | Webhook route, validation |
-| `OPENAI_API_KEY` | Secret | No | No | **No (gap!)** | No | No | Resonance embeddings, seed |
-| `RESEND_API_KEY` | Secret | No | No | Yes (secret) | No | No | Email send |
-| `USE_MOCKS` | Config | No | No | No | No | `true` | Env validation |
-| `NODE_ENV` | Config | Yes | Set in runner | No | No | No | Error boundary, standard |
+| Env var                              | Type   | .env.local | Dockerfile ARG | cloudbuild --set-env/secrets | vercel.json | ci.yml | Code consumption                                    |
+| ------------------------------------ | ------ | ---------- | -------------- | ---------------------------- | ----------- | ------ | --------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Public | Yes        | Yes            | Yes (env)                    | Yes (@)     | Secret | Supabase clients, middleware, health, scripts       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Public | Yes        | Yes            | Yes (env)                    | Yes (@)     | Secret | Clients, middleware, health, validation             |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Public | Yes        | Yes            | Yes (env)                    | **No**      | **No** | Stripe client, health, validation                   |
+| `NEXT_PUBLIC_SITE_URL`               | Public | Yes        | Yes            | Yes (env)                    | **No**      | **No** | Sitemap, robots, emails, checkout, Stripe redirects |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Secret | Yes        | No             | Yes (secret)                 | No          | Secret | Admin client, migrations, seed                      |
+| `STRIPE_SECRET_KEY`                  | Secret | Yes        | No             | Yes (secret)                 | No          | **No** | Server Stripe, payouts, health                      |
+| `STRIPE_WEBHOOK_SECRET`              | Secret | Yes        | No             | **No (gap!)**                | No          | No     | Webhook route, validation                           |
+| `OPENAI_API_KEY`                     | Secret | No         | No             | **No (gap!)**                | No          | No     | Resonance embeddings, seed                          |
+| `RESEND_API_KEY`                     | Secret | No         | No             | Yes (secret)                 | No          | No     | Email send                                          |
+| `USE_MOCKS`                          | Config | No         | No             | No                           | No          | `true` | Env validation                                      |
+| `NODE_ENV`                           | Config | Yes        | Set in runner  | No                           | No          | No     | Error boundary, standard                            |
 
 ---
 
 ## 8. What Is Missing or Incomplete
 
-| Item | Priority | Details |
-|---|---|---|
-| Cloud Run health probes | P1 | Health route exists but `--startup-probe` / `--liveness-probe` not in deploy command |
-| Automated DB migrations | P1 | No `supabase db push` in any pipeline; manual only |
-| `engines.node` in package.json | P1 | No version pinning for contributors or CI |
-| Secret scanning (comprehensive) | P2 | Only checks `.next/static` for Stripe patterns; misses server dir and other secret types |
-| Docker image tagging | P2 | Only `:SHORT_SHA`; no rollback-friendly `:main` or `:latest` tag |
-| E2E tests in CI | P2 | Playwright config + 1 spec exist but not invoked in ci.yml |
-| Canonical prod decision | P2 | Both Vercel and Cloud Run deploy to production -- no documented source of truth |
-| Test coverage | P2 | 3 suites / 12 tests for 113 source modules |
-| Pre-commit hooks | P3 | No husky/lint-staged; `*.save` files can sneak in |
-| Branch cleanup | P3 | 25 merged remote branches never deleted |
-| PR triage | P3 | 30 open PRs, most 4+ months old, 19 are DRAFT |
-| `OPENAI_API_KEY` in pipeline | P3 | Resonance endpoints exist but key not injected in either deploy |
-| `STRIPE_WEBHOOK_SECRET` in Cloud Run deploy | **P1** | Not in `--set-secrets` in cloudbuild.yaml -- webhook signature verification will fail silently |
-| `OPENAI_API_KEY` in Cloud Run deploy | P2 | Resonance endpoints exist but key not in `--set-secrets` |
-| Jest / jest-environment-jsdom version skew | P2 | `jest@^29.7.0` vs `jest-environment-jsdom@^30.2.0` -- major version mismatch |
-| Duplicate ErrorBoundary components | P3 | `components/common/ErrorBoundary.tsx` and `components/shared/ErrorBoundary.tsx` |
-| Migration doc drift | P2 | README omits 2 migrations; docs reference nonexistent `create_books_table.sql` |
-| `validate-env` not in build/CI | P2 | Only runs on `npm run dev`, not on `npm run build` or in CI pipeline |
-| Admin health page info exposure | P3 | Shows partial secret previews to anyone with admin role |
-| Hardcoded fallback URLs | P3 | `https://mangu.com`, `mailto:support@mangu.com`, `localhost:3000` fallbacks in prod code |
-| `.env.local.example` / `.env.production.example` headers | P3 | Still say "MANGU Platform" |
-| Legacy files | P3 | `amplify.yml`, `AMPLIFY_READY.md`, `COMPLETE_FILE_LIST.md`, `nexus_analysis/`, `pages/` dir |
-| CI missing Stripe/site URL for build | P2 | `ci.yml` does not pass `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SITE_URL` -- build inlines empty strings |
+| Item                                                     | Priority | Details                                                                                                              |
+| -------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| Cloud Run health probes                                  | P1       | Health route exists but `--startup-probe` / `--liveness-probe` not in deploy command                                 |
+| Automated DB migrations                                  | P1       | No `supabase db push` in any pipeline; manual only                                                                   |
+| `engines.node` in package.json                           | P1       | No version pinning for contributors or CI                                                                            |
+| Secret scanning (comprehensive)                          | P2       | Only checks `.next/static` for Stripe patterns; misses server dir and other secret types                             |
+| Docker image tagging                                     | P2       | Only `:SHORT_SHA`; no rollback-friendly `:main` or `:latest` tag                                                     |
+| E2E tests in CI                                          | P2       | Playwright config + 1 spec exist but not invoked in ci.yml                                                           |
+| Canonical prod decision                                  | P2       | Both Vercel and Cloud Run deploy to production -- no documented source of truth                                      |
+| Test coverage                                            | P2       | 3 suites / 12 tests for 113 source modules                                                                           |
+| Pre-commit hooks                                         | P3       | No husky/lint-staged; `*.save` files can sneak in                                                                    |
+| Branch cleanup                                           | P3       | 25 merged remote branches never deleted                                                                              |
+| PR triage                                                | P3       | 30 open PRs, most 4+ months old, 19 are DRAFT                                                                        |
+| `OPENAI_API_KEY` in pipeline                             | P3       | Resonance endpoints exist but key not injected in either deploy                                                      |
+| `STRIPE_WEBHOOK_SECRET` in Cloud Run deploy              | **P1**   | Not in `--set-secrets` in cloudbuild.yaml -- webhook signature verification will fail silently                       |
+| `OPENAI_API_KEY` in Cloud Run deploy                     | P2       | Resonance endpoints exist but key not in `--set-secrets`                                                             |
+| Jest / jest-environment-jsdom version skew               | P2       | `jest@^29.7.0` vs `jest-environment-jsdom@^30.2.0` -- major version mismatch                                         |
+| Duplicate ErrorBoundary components                       | P3       | `components/common/ErrorBoundary.tsx` and `components/shared/ErrorBoundary.tsx`                                      |
+| Migration doc drift                                      | P2       | README omits 2 migrations; docs reference nonexistent `create_books_table.sql`                                       |
+| `validate-env` not in build/CI                           | P2       | Only runs on `npm run dev`, not on `npm run build` or in CI pipeline                                                 |
+| Admin health page info exposure                          | P3       | Shows partial secret previews to anyone with admin role                                                              |
+| Hardcoded fallback URLs                                  | P3       | `https://mangu.com`, `mailto:support@mangu.com`, `localhost:3000` fallbacks in prod code                             |
+| `.env.local.example` / `.env.production.example` headers | P3       | Still say "MANGU Platform"                                                                                           |
+| Legacy files                                             | P3       | `amplify.yml`, `AMPLIFY_READY.md`, `COMPLETE_FILE_LIST.md`, `nexus_analysis/`, `pages/` dir                          |
+| CI missing Stripe/site URL for build                     | P2       | `ci.yml` does not pass `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SITE_URL` -- build inlines empty strings |
 
 ---
 
@@ -306,7 +306,7 @@ From `20260116` to `20260122` covering: initial schema, analytics, storage polic
 ### PR3 -- Intake docs + .save hygiene
 
 - **Branch:** `docs/env-setup-walkthrough`
-- **Files:** [.gitignore](.gitignore), [docs/phase2/_intake/README.md](docs/phase2/_intake/README.md), `docs/phase2/_intake/ENV_SETUP_WALKTHROUGH.md` (new)
+- **Files:** [.gitignore](.gitignore), [docs/phase2/\_intake/README.md](docs/phase2/_intake/README.md), `docs/phase2/_intake/ENV_SETUP_WALKTHROUGH.md` (new)
 - **Pre-branch:** Delete `environment.local.sh.save` from disk immediately
 - **Gitignore change:** Add `*.save` (only -- `*.swp`, `*~`, `.DS_Store` already present)
 - **Scrub check:** Verify `ENV_SETUP_WALKTHROUGH.md` has zero real identifiers (grep for `delta-wonder`, real Supabase URLs, etc.)
@@ -349,7 +349,7 @@ From `20260116` to `20260122` covering: initial schema, analytics, storage polic
 
 ## 11. GitHub Hygiene
 
-- **30 open PRs** -- 19 DRAFT, oldest from January 2026 (~4 months). Most from automated agents (copilot/*, codex/*, cursor/*). Recommend closing stale drafts that are superseded by `main` changes.
+- **30 open PRs** -- 19 DRAFT, oldest from January 2026 (~4 months). Most from automated agents (copilot/_, codex/_, cursor/\*). Recommend closing stale drafts that are superseded by `main` changes.
 - **25 merged remote branches** never deleted. Run `git remote prune origin` then delete stale remote branches.
 - **0 open issues** -- All tracking is informal. The 8 backlog items above should become GitHub issues.
 
@@ -358,6 +358,7 @@ From `20260116` to `20260122` covering: initial schema, analytics, storage polic
 ## 12. Execution Checklist
 
 **Today (PR1-3, independent, any order):**
+
 - [ ] Delete `environment.local.sh.save` from disk
 - [ ] PR1: Restore Docker COPY public -- branch, edit, verify (Cloud Build), commit, push, merge
 - [ ] PR2: Rename sweep -- branch, grep, edit, regen lockfile, verify, commit, push, merge
@@ -365,12 +366,14 @@ From `20260116` to `20260122` covering: initial schema, analytics, storage polic
 - [ ] After all three merged: confirm Cloud Build green, confirm Cloud Run revision live
 
 **This week:**
+
 - [ ] PR4: Node 20 + @v4 + engines + next.config + vercel.json cleanup
 - [ ] File 8 backlog issues on GitHub with owners and priority labels
 - [ ] Triage 30 open PRs (close stale drafts)
 - [ ] Prune 25 merged remote branches
 
 **This month:**
+
 - [ ] Health probes + rollback tags (P1 backlog)
 - [ ] Add `STRIPE_WEBHOOK_SECRET` (and optionally `OPENAI_API_KEY`) to `cloudbuild.yaml --set-secrets`
 - [ ] Supabase migration automation or documented manual process

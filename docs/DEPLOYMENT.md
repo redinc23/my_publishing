@@ -59,6 +59,7 @@ NODE_ENV=production
 ### Verify RLS Policies
 
 Test that Row Level Security is working:
+
 - Users can only see their own data
 - Published books are publicly visible
 - Authors can only manage their own manuscripts
@@ -89,6 +90,7 @@ vercel --prod
 ### Configure Environment Variables
 
 Add all required environment variables in Vercel dashboard:
+
 - Settings → Environment Variables
 - Add each variable for Production, Preview, and Development
 
@@ -168,21 +170,25 @@ npm test
 ### Common Issues
 
 **Build Fails**
+
 - Check environment variables are set
 - Verify all dependencies are in package.json
 - Check for TypeScript errors
 
 **Database Connection Issues**
+
 - Verify Supabase URL and keys
 - Check RLS policies aren't blocking queries
 - Verify network connectivity
 
 **Stripe Webhook Not Working**
+
 - Verify webhook URL is correct
 - Check webhook secret matches
 - Review Stripe webhook logs
 
 **Email Not Sending**
+
 - Verify Resend API key
 - Check email templates render correctly
 - Review Resend dashboard for errors
@@ -190,6 +196,7 @@ npm test
 ## Support
 
 For issues, check:
+
 - [Documentation](./DEVELOPMENT.md)
 - [API Reference](./API.md)
 - GitHub Issues

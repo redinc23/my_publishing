@@ -1,4 +1,3 @@
-
 import { getFeaturedBooks } from '../../lib/supabase/queries';
 import { createClient } from '../../lib/supabase/admin';
 import { unstable_cache } from 'next/cache';
@@ -30,8 +29,8 @@ describe('getFeaturedBooks Optimization', () => {
     order: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     then: jest.fn().mockImplementation((callback) => {
-        // Mock resolved value
-        return Promise.resolve({ data: [{ id: 1, title: 'Test Book' }], error: null }).then(callback);
+      // Mock resolved value
+      return Promise.resolve({ data: [{ id: 1, title: 'Test Book' }], error: null }).then(callback);
     }),
   };
 
@@ -53,9 +52,11 @@ describe('getFeaturedBooks Optimization', () => {
     // Verify the cache key and tags
     const cacheCall = (unstable_cache as jest.Mock).mock.calls[0];
     expect(cacheCall[1]).toContain('featured-books');
-    expect(cacheCall[2]).toEqual(expect.objectContaining({
-      tags: ['featured-books'],
-    }));
+    expect(cacheCall[2]).toEqual(
+      expect.objectContaining({
+        tags: ['featured-books'],
+      })
+    );
   });
 
   it('should create admin client inside the cached function', async () => {

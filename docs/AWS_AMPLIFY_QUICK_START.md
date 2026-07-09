@@ -55,7 +55,7 @@ NODE_ENV=production
 
 **Note:** For `STRIPE_WEBHOOK_SECRET`, you can set a temporary value and update it after deployment.
 
-### Step 5: Deploy! 
+### Step 5: Deploy!
 
 Click **"Save and deploy"** - Your app will be live in 5-10 minutes! 🎉
 
@@ -77,6 +77,7 @@ Once deployed, set up the webhook:
 ### 2. Verify Everything Works
 
 Visit your app:
+
 - Homepage should load ✅
 - `/api/health` should return `{"status":"healthy"}` ✅
 - Test user signup/login ✅
@@ -85,6 +86,7 @@ Visit your app:
 ## What's Included in Phase 1
 
 ✅ **Ready to use immediately:**
+
 - User authentication and profiles
 - Book browsing and search
 - Reading interface
@@ -96,6 +98,7 @@ Visit your app:
 ## What's Coming in Phase 2
 
 🔜 **Future enhancements:**
+
 - AI recommendations (requires OpenAI API)
 - Email notifications (requires Resend)
 - Audiobook support
@@ -104,15 +107,18 @@ Visit your app:
 ## Troubleshooting
 
 ### Build Fails
+
 - Check all environment variables are set
 - Review build logs in Amplify Console
 
 ### Can't Connect to Database
+
 - Verify Supabase URL and keys
 - Check if migrations are applied
 - Visit `/api/health` to see detailed error
 
 ### Payments Don't Work
+
 - Ensure Stripe keys are correct
 - Use test keys for testing
 - Configure webhook after deployment

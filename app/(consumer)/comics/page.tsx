@@ -14,7 +14,7 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Browse Comic Books</h1>
+        <h1 className="mb-8 text-4xl font-bold">Browse Comic Books</h1>
         <BookFilters />
         <Suspense fallback={<BooksSkeleton />}>
           <BookListStream

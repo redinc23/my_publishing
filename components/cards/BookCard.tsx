@@ -27,10 +27,10 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
           )}
         </div>
         <div className="mt-2">
-          <h3 className="line-clamp-1 font-semibold group-hover:text-primary transition-colors">
+          <h3 className="line-clamp-1 font-semibold transition-colors group-hover:text-primary">
             {book.title}
           </h3>
-          <p className="text-sm text-secondary line-clamp-1">
+          <p className="line-clamp-1 text-sm text-secondary">
             {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
           </p>
         </div>
@@ -52,14 +52,14 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             />
           )}
           {book.is_featured && (
-            <Badge className="absolute top-2 right-2 bg-primary">Featured</Badge>
+            <Badge className="absolute right-2 top-2 bg-primary">Featured</Badge>
           )}
         </div>
         <CardContent className="p-4">
-          <h3 className="line-clamp-1 font-semibold mb-1 group-hover:text-primary transition-colors">
+          <h3 className="mb-1 line-clamp-1 font-semibold transition-colors group-hover:text-primary">
             {book.title}
           </h3>
-          <p className="text-sm text-secondary line-clamp-1 mb-2">
+          <p className="mb-2 line-clamp-1 text-sm text-secondary">
             {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
           </p>
           <div className="flex items-center justify-between">
@@ -74,7 +74,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             <div className="text-sm font-semibold">
               {book.discount_price ? (
                 <>
-                  <span className="text-secondary line-through mr-2">${book.price}</span>
+                  <span className="mr-2 text-secondary line-through">${book.price}</span>
                   <span className="text-primary">${book.discount_price}</span>
                 </>
               ) : (

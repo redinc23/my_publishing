@@ -57,9 +57,7 @@ export function CreateBookForm({ onSuccess, onCancel }: CreateBookFormProps) {
             placeholder="Enter book title"
             className="mt-1"
           />
-          {errors.title && (
-            <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>
-          )}
+          {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
         </div>
 
         <div>
@@ -91,12 +89,7 @@ export function CreateBookForm({ onSuccess, onCancel }: CreateBookFormProps) {
 
         <div>
           <Label htmlFor="language">Language</Label>
-          <Input
-            id="language"
-            {...register('language')}
-            placeholder="en"
-            className="mt-1"
-          />
+          <Input id="language" {...register('language')} placeholder="en" className="mt-1" />
           {errors.language && (
             <p className="mt-1 text-sm text-red-500">{errors.language.message}</p>
           )}

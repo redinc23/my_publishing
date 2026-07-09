@@ -41,11 +41,11 @@ The cycle from Sanity publish to live deployment completes in approximately 3 to
 
 The Sanity CMS defines three document types — **book**, **author**, and **category** — forming a directed acyclic graph in which books reference authors and categories. The build pipeline resolves these references at snapshot time, producing denormalized JSON consumed by the frontend without additional API calls.
 
-| Document Type | Purpose | Key Fields | Validation | Relationships |
-|---------------|---------|------------|------------|---------------|
-| **book** | Published books in the catalog | title, slug, author, description, coverImage, publishedAt, featured, category, body, isbn, pageCount, language | title: required, max 200 chars; slug: required; author: required reference; description: required, max 500 chars; coverImage: required; isbn: ISBN-10/13 regex; pageCount: integer 1-5000 | author -> author (required); category -> category (optional) |
-| **author** | Book authors | name, slug, bio, photo, email, website, social | name: required, max 100; slug: required; email: email format | Referenced by book documents |
-| **category** | Book genres/categories | name, slug, description, color | name: required, max 50; slug: required; description: max 300 chars | Referenced by book documents |
+| Document Type | Purpose                        | Key Fields                                                                                                     | Validation                                                                                                                                                                                | Relationships                                                |
+| ------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **book**      | Published books in the catalog | title, slug, author, description, coverImage, publishedAt, featured, category, body, isbn, pageCount, language | title: required, max 200 chars; slug: required; author: required reference; description: required, max 500 chars; coverImage: required; isbn: ISBN-10/13 regex; pageCount: integer 1-5000 | author -> author (required); category -> category (optional) |
+| **author**    | Book authors                   | name, slug, bio, photo, email, website, social                                                                 | name: required, max 100; slug: required; email: email format                                                                                                                              | Referenced by book documents                                 |
+| **category**  | Book genres/categories         | name, slug, description, color                                                                                 | name: required, max 50; slug: required; description: max 300 chars                                                                                                                        | Referenced by book documents                                 |
 
 #### 2.2.2 Book Schema
 
@@ -85,13 +85,13 @@ Images are served from `cdn.sanity.io` with the format: `https://cdn.sanity.io/i
 
 The pipeline consists of five ordered steps chained with `&&` for fail-fast behavior.
 
-| Step | Script | Input | Output | Dependencies |
-|------|--------|-------|--------|--------------|
-| 1 — Content Snapshot | `npm run build:content` | Sanity CMS via authenticated API | `src/generated/contentSnapshot.json` | `SANITY_API_READ_TOKEN`; `scripts/_lib/node-env.ts`; `scripts/_lib/sanity-node-client.ts` |
-| 2 — Route Generation | `npm run build:routes` | `contentSnapshot.json` | `.cache/routes.json` | Static routes (`/`, `/about`, `/contact`) + dynamic routes from content |
-| 3 — Vite Build | `npm run build:vite` | React source, `contentSnapshot.json` | `dist/index.html`, hashed `dist/assets/*.{js,css}` | VITE_* env vars |
-| 4 — Prerender | `npm run build:prerender` | `dist/index.html`, `.cache/routes.json` | `dist/{route}/index.html` for every route | Playwright Chromium; local server on port 4173 |
-| 5 — Sitemap | `npm run build:sitemap` | `.cache/routes.json`, `VITE_SITE_URL` | `dist/sitemap.xml` | Route manifest; site URL |
+| Step                 | Script                    | Input                                   | Output                                             | Dependencies                                                                              |
+| -------------------- | ------------------------- | --------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1 — Content Snapshot | `npm run build:content`   | Sanity CMS via authenticated API        | `src/generated/contentSnapshot.json`               | `SANITY_API_READ_TOKEN`; `scripts/_lib/node-env.ts`; `scripts/_lib/sanity-node-client.ts` |
+| 2 — Route Generation | `npm run build:routes`    | `contentSnapshot.json`                  | `.cache/routes.json`                               | Static routes (`/`, `/about`, `/contact`) + dynamic routes from content                   |
+| 3 — Vite Build       | `npm run build:vite`      | React source, `contentSnapshot.json`    | `dist/index.html`, hashed `dist/assets/*.{js,css}` | VITE\_\* env vars                                                                         |
+| 4 — Prerender        | `npm run build:prerender` | `dist/index.html`, `.cache/routes.json` | `dist/{route}/index.html` for every route          | Playwright Chromium; local server on port 4173                                            |
+| 5 — Sitemap          | `npm run build:sitemap`   | `.cache/routes.json`, `VITE_SITE_URL`   | `dist/sitemap.xml`                                 | Route manifest; site URL                                                                  |
 
 #### 2.3.2 Step 1 — build:content
 
@@ -127,20 +127,20 @@ The `&&` operator provides fail-fast behavior: any non-zero exit aborts the pipe
 
 ### 2.4 Security Functional Requirements
 
-#### 2.4.1 VITE_ Prefix Rule and Variable Classification
+#### 2.4.1 VITE\_ Prefix Rule and Variable Classification
 
 Vite inlines all `VITE_*` environment variables into the client JavaScript bundle at compile time via `import.meta.env.VITE_*`. This design enables public configuration in browser code, but creates a critical security boundary: any secret assigned a `VITE_` prefix is exposed to every visitor, visible in DevTools and stored permanently in the JS bundle.
 
-| Variable | VITE_ Prefix | Source | Used By | Classification |
-|----------|-------------|--------|---------|---------------|
-| `VITE_SANITY_PROJECT_ID` | Yes | `.env.local` / Cloud Build | Client JS, build scripts | **Public** — visible in CDN URLs |
-| `VITE_SANITY_DATASET` | Yes | `.env.local` / Cloud Build | Client JS, build scripts | **Public** — non-sensitive name |
-| `VITE_SANITY_API_VERSION` | Yes | `.env.local` / Cloud Build | Client JS, build scripts | **Public** — version string |
-| `VITE_SITE_URL` | Yes | `.env.local` / Cloud Build | Sitemap, SEO meta | **Public** — canonical domain |
-| `VITE_APP_VERSION` | Yes | Cloud Build (`SHORT_SHA`) | Client JS, Sentry release | **Public** — git SHA |
-| `SANITY_API_READ_TOKEN` | **No** | Secret Manager only | `build-content-snapshot.ts` | **Secret** — NEVER use VITE_ prefix |
-| `SENTRY_AUTH_TOKEN` | **No** | Secret Manager (optional) | Sentry Vite plugin | **Secret** — source map upload only |
-| `PORT` | **No** | Cloud Run (auto-set) | nginx runtime | **Non-secret** — auto-set to 8080 |
+| Variable                  | VITE\_ Prefix | Source                     | Used By                     | Classification                       |
+| ------------------------- | ------------- | -------------------------- | --------------------------- | ------------------------------------ |
+| `VITE_SANITY_PROJECT_ID`  | Yes           | `.env.local` / Cloud Build | Client JS, build scripts    | **Public** — visible in CDN URLs     |
+| `VITE_SANITY_DATASET`     | Yes           | `.env.local` / Cloud Build | Client JS, build scripts    | **Public** — non-sensitive name      |
+| `VITE_SANITY_API_VERSION` | Yes           | `.env.local` / Cloud Build | Client JS, build scripts    | **Public** — version string          |
+| `VITE_SITE_URL`           | Yes           | `.env.local` / Cloud Build | Sitemap, SEO meta           | **Public** — canonical domain        |
+| `VITE_APP_VERSION`        | Yes           | Cloud Build (`SHORT_SHA`)  | Client JS, Sentry release   | **Public** — git SHA                 |
+| `SANITY_API_READ_TOKEN`   | **No**        | Secret Manager only        | `build-content-snapshot.ts` | **Secret** — NEVER use VITE\_ prefix |
+| `SENTRY_AUTH_TOKEN`       | **No**        | Secret Manager (optional)  | Sentry Vite plugin          | **Secret** — source map upload only  |
+| `PORT`                    | **No**        | Cloud Run (auto-set)       | nginx runtime               | **Non-secret** — auto-set to 8080    |
 
 #### 2.4.2 SANITY_API_READ_TOKEN Validation
 
@@ -168,14 +168,14 @@ In Cloud Build, this runs as **step 9** (`audit-secrets`), between the build pha
 
 The `cloudbuild.yaml` specifies `options.logging: CLOUD_LOGGING_ONLY`, preventing build logs from reaching the legacy GCS log bucket. Combined with `secretEnv` scoping, this ensures `SANITY_API_READ_TOKEN` never appears in persistent log storage.
 
-| Requirement | Implementation | Verification |
-|-------------|---------------|--------------|
-| No secret uses VITE_ prefix | `SANITY_API_READ_TOKEN` has no prefix; old name renamed across codebase | `grep -rn "VITE_SANITY_API_READ_TOKEN" src/` returns empty |
-| Token required | Zod `z.string().min(1)` on `SANITY_API_READ_TOKEN` | Build crashes with exit 1 if missing |
-| Token scoped to one step | `secretEnv` only on Cloud Build step 4 | `grep "secretEnv" cloudbuild.yaml` shows single occurrence |
-| Audit catches leaks | `audit:secrets` runs as Cloud Build step 9 | Pipeline fails if token string found in `dist/assets/` |
-| Files excluded | `.gitignore` and `.dockerignore` cover all generated files and secrets | Git and Docker contexts are clean |
-| Logs protected | `CLOUD_LOGGING_ONLY` in build options | No legacy GCS log bucket writes |
+| Requirement                  | Implementation                                                          | Verification                                               |
+| ---------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
+| No secret uses VITE\_ prefix | `SANITY_API_READ_TOKEN` has no prefix; old name renamed across codebase | `grep -rn "VITE_SANITY_API_READ_TOKEN" src/` returns empty |
+| Token required               | Zod `z.string().min(1)` on `SANITY_API_READ_TOKEN`                      | Build crashes with exit 1 if missing                       |
+| Token scoped to one step     | `secretEnv` only on Cloud Build step 4                                  | `grep "secretEnv" cloudbuild.yaml` shows single occurrence |
+| Audit catches leaks          | `audit:secrets` runs as Cloud Build step 9                              | Pipeline fails if token string found in `dist/assets/`     |
+| Files excluded               | `.gitignore` and `.dockerignore` cover all generated files and secrets  | Git and Docker contexts are clean                          |
+| Logs protected               | `CLOUD_LOGGING_ONLY` in build options                                   | No legacy GCS log bucket writes                            |
 
 ---
 
@@ -215,10 +215,12 @@ The `firebase.json` uses `public: "public-placeholder"` (an empty directory). Fi
 {
   "hosting": {
     "public": "public-placeholder",
-    "rewrites": [{
-      "source": "**",
-      "run": { "serviceId": "mangu-publishers", "region": "us-central1", "pinTag": true }
-    }]
+    "rewrites": [
+      {
+        "source": "**",
+        "run": { "serviceId": "mangu-publishers", "region": "us-central1", "pinTag": true }
+      }
+    ]
   }
 }
 ```
@@ -267,24 +269,24 @@ The pipeline triggers on pushes to `^main$` via **Developer Connect GitHub integ
 
 The `cloudbuild.yaml` defines a 16-step sequential pipeline with fail-fast behavior. Steps 1-10 are the **build phase**; steps 11-16 are the **deploy phase**.
 
-| Step | ID | Name | Purpose | Image |
-|------|-----|------|---------|-------|
-| 1 | restore-npm-cache | Restore cache | Pull npm cache from GCS | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 2 | install | Install deps | `npm ci` with cache dir | `node:20` |
-| 3 | production-audit | npm audit | Non-blocking audit output | `node:20` |
-| 4 | content-snapshot | Content fetch | Fetch Sanity content via secret token | `node:20` |
-| 5 | generate-routes | Route gen | Read snapshot; write `.cache/routes.json` | `node:20` |
-| 6 | vite-build | Vite build | Bundle React; inject `VITE_APP_VERSION=${SHORT_SHA}` | `node:20` |
-| 7 | prerender | Prerender | Playwright visits routes; write HTML shells | `mcr.microsoft.com/playwright:v1.43.0-jammy` |
-| 8 | sitemap | Sitemap | Generate `dist/sitemap.xml` | `node:20` |
-| 9 | audit-secrets | Secret audit | `grep dist/assets/` for token; fail if found | `node:20` |
-| 10 | smoke-test | Smoke test | Verify all routes have prerendered HTML | `node:20` |
-| 11 | docker-build | Docker build | Build nginx container with SHA+latest tags | `gcr.io/cloud-builders/docker` |
-| 12 | docker-push | Docker push | Push both tags to Artifact Registry | `gcr.io/cloud-builders/docker` |
-| 13 | enforce-vulnerability-policy | CVE scan | Scan image; block on HIGH/CRITICAL | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 14 | deploy-run | Deploy | Deploy SHA-tagged image to Cloud Run | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 15 | prune-tags | Tag prune | Remove old Cloud Run tags; keep 50 | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
-| 16 | save-npm-cache | Save cache | Upload npm cache to GCS | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| Step | ID                           | Name          | Purpose                                              | Image                                           |
+| ---- | ---------------------------- | ------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| 1    | restore-npm-cache            | Restore cache | Pull npm cache from GCS                              | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 2    | install                      | Install deps  | `npm ci` with cache dir                              | `node:20`                                       |
+| 3    | production-audit             | npm audit     | Non-blocking audit output                            | `node:20`                                       |
+| 4    | content-snapshot             | Content fetch | Fetch Sanity content via secret token                | `node:20`                                       |
+| 5    | generate-routes              | Route gen     | Read snapshot; write `.cache/routes.json`            | `node:20`                                       |
+| 6    | vite-build                   | Vite build    | Bundle React; inject `VITE_APP_VERSION=${SHORT_SHA}` | `node:20`                                       |
+| 7    | prerender                    | Prerender     | Playwright visits routes; write HTML shells          | `mcr.microsoft.com/playwright:v1.43.0-jammy`    |
+| 8    | sitemap                      | Sitemap       | Generate `dist/sitemap.xml`                          | `node:20`                                       |
+| 9    | audit-secrets                | Secret audit  | `grep dist/assets/` for token; fail if found         | `node:20`                                       |
+| 10   | smoke-test                   | Smoke test    | Verify all routes have prerendered HTML              | `node:20`                                       |
+| 11   | docker-build                 | Docker build  | Build nginx container with SHA+latest tags           | `gcr.io/cloud-builders/docker`                  |
+| 12   | docker-push                  | Docker push   | Push both tags to Artifact Registry                  | `gcr.io/cloud-builders/docker`                  |
+| 13   | enforce-vulnerability-policy | CVE scan      | Scan image; block on HIGH/CRITICAL                   | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 14   | deploy-run                   | Deploy        | Deploy SHA-tagged image to Cloud Run                 | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 15   | prune-tags                   | Tag prune     | Remove old Cloud Run tags; keep 50                   | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
+| 16   | save-npm-cache               | Save cache    | Upload npm cache to GCS                              | `gcr.io/google.com/cloudsdktool/cloud-sdk:slim` |
 
 #### 2.7.3 Vulnerability Scan Gate
 

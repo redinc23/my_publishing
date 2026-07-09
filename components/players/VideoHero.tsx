@@ -27,7 +27,7 @@ export function VideoHero({ vimeoId, fallbackImage, title }: VideoHeroProps) {
       )}
       {title && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-5xl font-bold text-center px-4">{title}</h1>
+          <h1 className="px-4 text-center text-5xl font-bold">{title}</h1>
         </div>
       )}
     </div>

@@ -1,0 +1,10 @@
+# HTML assets misnamed as .js — not valid JavaScript for Prettier
+public/homepage/enhancements.js
+public/homepage/v_a_1.html
+
+# Build artifacts
+.next
+node_modules
+coverage
+playwright-report
+test-results

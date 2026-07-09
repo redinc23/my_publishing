@@ -6,7 +6,9 @@ import type { Book, ReadingProgress } from '@/types';
 
 export default async function ReadingPage({ params }: { params: { bookId: string } }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect('/login');
@@ -28,9 +30,6 @@ export default async function ReadingPage({ params }: { params: { bookId: string
   }
 
   return (
-    <ReadingClient
-      book={book as Book}
-      initialProgress={(progress as ReadingProgress) || null}
-    />
+    <ReadingClient book={book as Book} initialProgress={(progress as ReadingProgress) || null} />
   );
 }

@@ -17,7 +17,7 @@ export default async function AdminBooksPage() {
   return (
     <Section>
       <Container>
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Books Management</h1>
           <Button asChild>
             <Link href="/admin/books/new">Add New Book</Link>
@@ -26,7 +26,7 @@ export default async function AdminBooksPage() {
 
         <div className="space-y-4">
           {books && books.length > 0 ? (
-            <div className="border border-border rounded-lg overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-border">
               <table className="w-full">
                 <thead className="bg-muted">
                   <tr>
@@ -44,7 +44,7 @@ export default async function AdminBooksPage() {
                       <td className="px-4 py-3">{book.author?.pen_name || 'N/A'}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`px-2 py-1 rounded text-xs ${
+                          className={`rounded px-2 py-1 text-xs ${
                             book.status === 'published'
                               ? 'bg-green-500/20 text-green-500'
                               : 'bg-gray-500/20 text-gray-500'

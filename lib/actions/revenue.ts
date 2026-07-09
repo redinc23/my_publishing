@@ -10,7 +10,9 @@ export async function getBookRevenue(
 ): Promise<{ total: number; sales: BookSale[] }> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
@@ -57,7 +59,9 @@ export async function getBookRevenue(
 export async function getBookPricing(bookId: string): Promise<BookPricing | null> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
@@ -82,7 +86,9 @@ export async function updateBookPricing(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
@@ -97,13 +103,11 @@ export async function updateBookPricing(
       throw new Error('Unauthorized');
     }
 
-    const { error } = await supabase
-      .from('book_pricing')
-      .upsert({
-        book_id: bookId,
-        ...pricing,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from('book_pricing').upsert({
+      book_id: bookId,
+      ...pricing,
+      updated_at: new Date().toISOString(),
+    });
 
     if (error) throw error;
 

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { isSupabaseConfigured } from './helpers';
 
 test.describe('Purchase Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -11,9 +12,11 @@ test.describe('Purchase Flow', () => {
   });
 
   test('book detail page loads', async ({ page }) => {
-    // Try to navigate to a book page (will use mock data if database is empty)
+    test.skip(!isSupabaseConfigured(), 'Supabase not configured');
+
+    // Requires a published book in the configured Supabase project.
     await page.goto('/books/the-memory-keeper');
-    await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1')).toBeVisible({ timeout: 10_000 });
   });
 
   test('books listing page loads', async ({ page }) => {
@@ -23,8 +26,10 @@ test.describe('Purchase Flow', () => {
 
   test('search functionality works', async ({ page }) => {
     await page.goto('/books');
-    const searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
-    
+    const searchInput = page
+      .locator('input[type="search"], input[placeholder*="search" i]')
+      .first();
+
     if (await searchInput.isVisible()) {
       await searchInput.fill('test');
       await searchInput.press('Enter');
@@ -36,7 +41,7 @@ test.describe('Purchase Flow', () => {
   test('health endpoint returns valid response', async ({ request }) => {
     const response = await request.get('/api/health');
     expect(response.ok()).toBeTruthy();
-    
+
     const data = await response.json();
     expect(data).toHaveProperty('status');
     // Without ?ready=1 the endpoint is a lightweight startup probe ('ok');

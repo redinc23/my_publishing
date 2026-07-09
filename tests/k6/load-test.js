@@ -6,14 +6,14 @@ export const options = {
   // A reasonable load pattern: ramp up to 50 users, hold, and ramp down
   stages: [
     { duration: '30s', target: 20 }, // Ramp up to 20 virtual users over 30 seconds
-    { duration: '1m', target: 50 },  // Ramp up to 50 virtual users over the next 1 minute
-    { duration: '1m', target: 50 },  // Hold at 50 virtual users for 1 minute
-    { duration: '30s', target: 0 },  // Ramp down to 0 users over 30 seconds
+    { duration: '1m', target: 50 }, // Ramp up to 50 virtual users over the next 1 minute
+    { duration: '1m', target: 50 }, // Hold at 50 virtual users for 1 minute
+    { duration: '30s', target: 0 }, // Ramp down to 0 users over 30 seconds
   ],
   // Define thresholds for performance (e.g. 95% of requests should be below 500ms)
   thresholds: {
-    http_req_duration: ['p(95)<500'], 
-    http_req_failed: ['rate<0.01'],   // Error rate should be less than 1%
+    http_req_duration: ['p(95)<500'],
+    http_req_failed: ['rate<0.01'], // Error rate should be less than 1%
   },
 };
 
@@ -43,7 +43,7 @@ export default function () {
   // E.g., a simple health check or querying a public resource
   const apiRes = http.get(`${BASE_URL}/api/books`);
   check(apiRes, {
-    // If the route doesn't exist, we accept 404 just for demonstration, 
+    // If the route doesn't exist, we accept 404 just for demonstration,
     // but in a real test you'd want 200. Change this URL to an active endpoint!
     'API route responds quickly': (r) => r.status === 200 || r.status === 404,
   });

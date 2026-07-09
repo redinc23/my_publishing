@@ -5,11 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { 
-  apiRateLimit, 
-  getClientIdentifier,
-  createRateLimitHeaders 
-} from '@/lib/utils/rate-limit';
+import { apiRateLimit, getClientIdentifier, createRateLimitHeaders } from '@/lib/utils/rate-limit';
 import { RecommendRequestSchema, validateSafe, getFirstError } from '@/lib/validations/schemas';
 import type { BookWithStats, ApiResponse } from '@/types';
 
@@ -37,7 +33,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         success: false,
         error: 'Rate limit exceeded. Please try again later.',
       } satisfies ApiResponse,
-      { 
+      {
         status: 429,
         headers: rateLimitHeaders,
       }
@@ -80,14 +76,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Get current user if not specified
     let targetUserId = user_id;
     if (!targetUserId) {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       targetUserId = user?.id;
     }
 
     // Build recommendation query
     let query = supabase
       .from('books')
-      .select(`
+      .select(
+        `
         *,
         author:profiles!books_author_id_fkey(
           id,
@@ -99,7 +98,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           total_purchases,
           total_revenue
         )
-      `)
+      `
+      )
       .eq('status', 'published')
       .eq('visibility', 'public')
       .order('created_at', { ascending: false })
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         .eq('status', 'completed');
 
       if (purchasedBooks && purchasedBooks.length > 0) {
-        const purchasedIds = purchasedBooks.map(p => p.book_id);
+        const purchasedIds = purchasedBooks.map((p) => p.book_id);
         query = query.not('id', 'in', `(${purchasedIds.join(',')})`);
       }
     }
@@ -164,11 +164,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         (Date.now() - new Date(book.created_at).getTime()) / (1000 * 60 * 60 * 24)
       );
       const recencyBonus = Math.max(0, 30 - recencyDays) * 5;
-      
-      const score = 
-        (book.stats?.views || 0) + 
-        ((book.stats?.purchases || 0) * 10) + 
-        recencyBonus;
+
+      const score = (book.stats?.views || 0) + (book.stats?.purchases || 0) * 10 + recencyBonus;
 
       return { ...book, _score: score };
     });
@@ -193,7 +190,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         success: true,
         data: result,
       } satisfies ApiResponse<RecommendationResult>,
-      { 
+      {
         status: 200,
         headers: rateLimitHeaders,
       }
@@ -215,7 +212,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
-  
+
   const body = {
     limit: parseInt(searchParams.get('limit') || '10'),
     genre: searchParams.get('genre') || undefined,

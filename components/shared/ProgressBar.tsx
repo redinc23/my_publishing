@@ -12,7 +12,7 @@ export function ProgressBar({ value, className, showLabel = false }: ProgressBar
   return (
     <div className={cn('w-full', className)}>
       {showLabel && (
-        <div className="flex justify-between text-sm mb-1">
+        <div className="mb-1 flex justify-between text-sm">
           <span>Progress</span>
           <span>{Math.round(clampedValue)}%</span>
         </div>

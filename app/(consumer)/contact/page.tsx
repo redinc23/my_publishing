@@ -5,8 +5,8 @@ export default function ContactPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-4">Contact</h1>
-        <p className="text-secondary max-w-2xl">
+        <h1 className="mb-4 text-4xl font-bold">Contact</h1>
+        <p className="max-w-2xl text-secondary">
           Have a question or need support? Email us at{' '}
           <a className="text-primary hover:underline" href="mailto:support@mangu.com">
             support@mangu.com

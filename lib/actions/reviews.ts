@@ -6,18 +6,18 @@ import { revalidatePath } from 'next/cache';
 export async function voteOnReview(reviewId: string, helpful: boolean) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     throw new Error('You must be logged in to vote');
   }
 
-  const { error } = await supabase
-    .from('review_votes')
-    .upsert({
-      review_id: reviewId,
-      user_id: user.id,
-      is_helpful: helpful,
-    });
+  const { error } = await supabase.from('review_votes').upsert({
+    review_id: reviewId,
+    user_id: user.id,
+    is_helpful: helpful,
+  });
 
   if (error) {
     throw new Error('Failed to submit vote');
@@ -30,7 +30,9 @@ export async function voteOnReview(reviewId: string, helpful: boolean) {
 export async function reportReview(reviewId: string) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     throw new Error('You must be logged in to report reviews');
   }
@@ -51,7 +53,9 @@ export async function createReview(reviewData: {
 }) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     throw new Error('You must be logged in to write reviews');
   }
@@ -81,17 +85,15 @@ export async function createReview(reviewData: {
     if (error) throw error;
   } else {
     // Create new review
-    const { error } = await supabase
-      .from('reviews')
-      .insert({
-        user_id: user.id,
-        book_id: reviewData.book_id,
-        rating: reviewData.rating,
-        title: reviewData.title,
-        content: reviewData.content,
-        is_spoiler: reviewData.is_spoiler,
-        is_public: reviewData.is_public,
-      });
+    const { error } = await supabase.from('reviews').insert({
+      user_id: user.id,
+      book_id: reviewData.book_id,
+      rating: reviewData.rating,
+      title: reviewData.title,
+      content: reviewData.content,
+      is_spoiler: reviewData.is_spoiler,
+      is_public: reviewData.is_public,
+    });
 
     if (error) throw error;
   }
@@ -103,7 +105,9 @@ export async function createReview(reviewData: {
 export async function deleteReview(reviewId: string) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     throw new Error('You must be logged in to delete reviews');
   }
@@ -119,10 +123,7 @@ export async function deleteReview(reviewId: string) {
     throw new Error('You can only delete your own reviews');
   }
 
-  const { error } = await supabase
-    .from('reviews')
-    .delete()
-    .eq('id', reviewId);
+  const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
 
   if (error) {
     throw new Error('Failed to delete review');

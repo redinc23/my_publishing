@@ -14,37 +14,37 @@ export interface Book {
   description?: string;
   author_id: string;
   author_name: string;
-  
+
   isbn?: string;
   language: string;
   page_count?: number;
   word_count?: number;
-  
+
   status: BookStatus;
   published_at?: string;
-  
+
   cover_url?: string;
   epub_url?: string;
   manuscript_url?: string;
-  
+
   view_count: number;
   download_count: number;
   average_rating: number;
   review_count: number;
-  
+
   // Metadata
   metadata?: BookMetadata;
   tags?: string[];
   categories?: string[];
-  
+
   // SEO
   slug: string;
   seo_title?: string;
   seo_description?: string;
-  
+
   // Soft delete
   deleted_at?: string;
-  
+
   created_at: string;
   updated_at: string;
 }
@@ -115,13 +115,15 @@ export const CreateBookSchema = z.object({
   isbn: ISBNSchema.optional(),
   categories: z.array(z.string()).max(10).optional(),
   tags: z.array(z.string()).max(20).optional(),
-  metadata: z.object({
-    chapters: z.number().int().positive().optional(),
-    reading_time_minutes: z.number().int().positive().optional(),
-    maturity_rating: z.enum(['G', 'PG', 'PG-13', 'R', 'NC-17']).optional(),
-    content_warnings: z.array(z.string()).optional(),
-    accessibility_features: z.array(z.string()).optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      chapters: z.number().int().positive().optional(),
+      reading_time_minutes: z.number().int().positive().optional(),
+      maturity_rating: z.enum(['G', 'PG', 'PG-13', 'R', 'NC-17']).optional(),
+      content_warnings: z.array(z.string()).optional(),
+      accessibility_features: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 export const UpdateBookSchema = CreateBookSchema.partial().extend({
@@ -131,7 +133,10 @@ export const UpdateBookSchema = CreateBookSchema.partial().extend({
   manuscript_url: z.string().url().optional(),
   page_count: z.number().int().positive().optional(),
   word_count: z.number().int().positive().optional(),
-  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .optional(),
   seo_title: z.string().max(60).optional(),
   seo_description: z.string().max(160).optional(),
 });

@@ -16,6 +16,7 @@ Before deploying to AWS Amplify, ensure you have:
 4. **GitHub Repository** connected to AWS Amplify
 
 ### Optional Services (for full functionality)
+
 - OpenAI API key (for AI recommendations)
 - Resend account (for emails)
 
@@ -42,10 +43,11 @@ Before deploying to AWS Amplify, ensure you have:
      - Security headers
 
 4. **Add Environment Variables**
-   
+
    Add the following environment variables in the Amplify Console:
-   
+
    **Required Variables:**
+
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -56,8 +58,9 @@ Before deploying to AWS Amplify, ensure you have:
    NEXT_PUBLIC_SITE_URL=https://your-amplify-domain.amplifyapp.com
    NODE_ENV=production
    ```
-   
+
    **Optional Variables (for Phase 2):**
+
    ```
    OPENAI_API_KEY=sk-proj-...
    RESEND_API_KEY=re_...
@@ -71,21 +74,25 @@ Before deploying to AWS Amplify, ensure you have:
 ### Option B: Deploy via Amplify CLI
 
 1. **Install Amplify CLI**
+
    ```bash
    npm install -g @aws-amplify/cli
    ```
 
 2. **Configure AWS credentials**
+
    ```bash
    amplify configure
    ```
 
 3. **Initialize Amplify**
+
    ```bash
    amplify init
    ```
 
 4. **Add hosting**
+
    ```bash
    amplify add hosting
    # Select: Amazon CloudFront and S3
@@ -106,9 +113,9 @@ Before deploying to AWS Amplify, ensure you have:
    - Note your project URL and keys
 
 2. **Run Migrations**
-   
+
    Apply migrations in the Supabase SQL Editor in this order:
-   
+
    1. `supabase/migrations/20260116000000_initial_schema.sql`
    2. `supabase/migrations/20260116000000_create_books_table.sql`
    3. `supabase/migrations/20260117000000_analytics_events.sql`
@@ -186,6 +193,7 @@ Before deploying to AWS Amplify, ensure you have:
 ### Health Check Endpoint
 
 Visit `https://your-app.amplifyapp.com/api/health` to verify:
+
 - Database connection
 - Authentication service
 - Environment variables
@@ -215,6 +223,7 @@ Visit `https://your-app.amplifyapp.com/api/health` to verify:
 AWS Amplify automatically deploys when you push to your connected branch:
 
 1. **Make Changes**
+
    ```bash
    git add .
    git commit -m "Your changes"
@@ -241,6 +250,7 @@ AWS Amplify automatically deploys when you push to your connected branch:
 ### Rollback via Git
 
 1. Revert to previous commit:
+
    ```bash
    git revert HEAD
    git push origin main
@@ -271,15 +281,18 @@ Deploy different branches to different environments:
 ### Build Fails
 
 **Check build logs:**
+
 - Amplify Console → Build history → View logs
 - Look for error messages
 
 **Common issues:**
+
 - Missing environment variables
 - TypeScript errors
 - Dependency installation failures
 
 **Solutions:**
+
 ```bash
 # Test build locally
 npm run build
@@ -293,10 +306,12 @@ npm run type-check
 ### Database Connection Issues
 
 **Symptoms:**
+
 - `/api/health` returns errors
 - Authentication doesn't work
 
 **Solutions:**
+
 - Verify Supabase URL and keys in environment variables
 - Check Supabase project is active
 - Verify network access (Amplify can connect to Supabase)
@@ -304,10 +319,12 @@ npm run type-check
 ### Stripe Webhook Issues
 
 **Symptoms:**
+
 - Payments complete but orders not created
 - Webhook events not received
 
 **Solutions:**
+
 - Verify webhook URL is correct
 - Check webhook signing secret matches
 - Review Stripe webhook logs for delivery failures
@@ -316,6 +333,7 @@ npm run type-check
 ### Performance Issues
 
 **Solutions:**
+
 - Enable Amplify CDN caching
 - Review CloudWatch metrics
 - Optimize database queries
@@ -333,6 +351,7 @@ npm run type-check
 The following features are included in the immediate launch:
 
 ✅ **Core Features (Ready):**
+
 - User authentication and profiles
 - Book browsing and search
 - Book detail pages
@@ -347,6 +366,7 @@ The following features are included in the immediate launch:
 The following features can be added in future phases:
 
 🔜 **Future Features:**
+
 - AI-powered recommendations (requires OpenAI API)
 - Email notifications (requires Resend)
 - Audiobook support
@@ -359,6 +379,7 @@ The following features can be added in future phases:
 ## Support
 
 For deployment issues:
+
 1. Check the troubleshooting section above
 2. Review AWS Amplify build logs
 3. Verify all environment variables are set correctly

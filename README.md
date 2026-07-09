@@ -21,10 +21,10 @@ Vercel and AWS Amplify configs are retained for compatibility and testing, but p
 
 ## Future Features (Phase 2+)
 
-- 🤖 AI-powered recommendations (Resonance Engine) - *Requires OpenAI API*
-- 🎧 Audiobook support - *Coming soon*
-- 📧 Email notifications - *Requires Resend*
-- ⭐ User reviews and ratings - *Coming soon*
+- 🤖 AI-powered recommendations (Resonance Engine) - _Requires OpenAI API_
+- 🎧 Audiobook support - _Coming soon_
+- 📧 Email notifications - _Requires Resend_
+- ⭐ User reviews and ratings - _Coming soon_
 
 ## Tech Stack
 
@@ -37,16 +37,19 @@ Vercel and AWS Amplify configs are retained for compatibility and testing, but p
 ## Getting Started
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.local.example .env.local
 ```
 
 3. Configure your environment variables:
+
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
@@ -56,6 +59,7 @@ cp .env.local.example .env.local
 - `OPENAI_API_KEY` - Your OpenAI API key
 
 4. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -92,12 +96,14 @@ Migrations are located in `supabase/migrations/` and **must be applied in this e
 **To apply migrations:**
 
 **Option 1: Using Supabase Dashboard (Recommended for first-time setup)**
+
 1. Go to your Supabase project dashboard
 2. Navigate to SQL Editor
 3. Copy and paste each migration file's contents in order
 4. Run each migration sequentially
 
 **Option 2: Using Supabase CLI**
+
 ```bash
 # Install Supabase CLI if you haven't already
 npm install -g supabase
@@ -111,6 +117,7 @@ supabase db push
 
 **Verification:**
 After running migrations, verify the setup by checking:
+
 - `/api/health` endpoint should return `"status": "healthy"` with database check passing
 - The `profiles` table should exist (required for authentication)
 

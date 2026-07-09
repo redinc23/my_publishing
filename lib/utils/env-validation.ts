@@ -227,7 +227,9 @@ export function isDevelopment(): boolean {
  * Check if mock mode is enabled
  */
 export function useMocks(): boolean {
-  return process.env.USE_MOCKS === 'true' || (isDevelopment() && !process.env.NEXT_PUBLIC_SUPABASE_URL);
+  return (
+    process.env.USE_MOCKS === 'true' || (isDevelopment() && !process.env.NEXT_PUBLIC_SUPABASE_URL)
+  );
 }
 
 /**

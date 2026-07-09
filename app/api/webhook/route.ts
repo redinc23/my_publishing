@@ -8,11 +8,7 @@ import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { webhookRateLimit, getClientIdentifier } from '@/lib/utils/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
-import type { 
-  WebhookProcessingResult, 
-  CheckoutMetadata, 
-  OrderFromWebhook 
-} from '@/types/webhook';
+import type { WebhookProcessingResult, CheckoutMetadata, OrderFromWebhook } from '@/types/webhook';
 
 // Webhook secret for signature verification
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -183,7 +179,7 @@ async function handleCheckoutExpired(
   session: Stripe.Checkout.Session
 ): Promise<WebhookProcessingResult> {
   console.log('[Webhook] Checkout session expired:', session.id);
-  
+
   // Optionally track abandoned checkout
   return {
     success: true,
@@ -250,9 +246,7 @@ async function handleChargeRefunded(
 /**
  * Handle payment_intent.payment_failed event
  */
-async function handlePaymentFailed(
-  charge: Stripe.PaymentIntent
-): Promise<WebhookProcessingResult> {
+async function handlePaymentFailed(charge: Stripe.PaymentIntent): Promise<WebhookProcessingResult> {
   console.warn('[Webhook] Payment failed:', charge.id, charge.last_payment_error?.message);
 
   // Could trigger email notification here
@@ -274,18 +268,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Rate limiting
   const clientId = getClientIdentifier(request);
   if (!webhookSecret) {
-    return NextResponse.json(
-      { error: 'Webhook secret not configured' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
   }
 
   if (!webhookRateLimit.check(1000, clientId)) {
     console.warn('[Webhook] Rate limit exceeded for:', clientId);
-    return NextResponse.json(
-      { error: 'Rate limit exceeded' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
   // Get raw body for signature verification
@@ -294,10 +282,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!signature) {
     console.error('[Webhook] Missing stripe-signature header');
-    return NextResponse.json(
-      { error: 'Missing signature' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
   }
 
   // Verify signature
@@ -376,10 +361,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!result.success && result.should_retry) {
       // Return 500 to trigger Stripe retry
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -394,10 +376,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await markEventProcessed(supabase, event.id, errorMessage);
 
     // Return 500 to trigger retry for unexpected errors
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

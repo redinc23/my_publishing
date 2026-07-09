@@ -1,5 +1,5 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 let authLimiter: Ratelimit | null = null;
 let uploadLimiter: Ratelimit | null = null;
@@ -9,7 +9,9 @@ function getRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
-    console.warn('[rate-limit] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not set; skipping Redis rate limiter');
+    console.warn(
+      '[rate-limit] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not set; skipping Redis rate limiter'
+    );
     return null;
   }
   return new Redis({ url, token });
@@ -21,9 +23,9 @@ function getAuthLimiter(): Ratelimit | null {
     if (!redis) return null;
     authLimiter = new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(5, "1 m"),
+      limiter: Ratelimit.slidingWindow(5, '1 m'),
       analytics: true,
-      prefix: "ratelimit:auth",
+      prefix: 'ratelimit:auth',
     });
   }
   return authLimiter;
@@ -35,9 +37,9 @@ function getUploadLimiter(): Ratelimit | null {
     if (!redis) return null;
     uploadLimiter = new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(30, "1 m"),
+      limiter: Ratelimit.slidingWindow(30, '1 m'),
       analytics: true,
-      prefix: "ratelimit:upload",
+      prefix: 'ratelimit:upload',
     });
   }
   return uploadLimiter;
@@ -49,9 +51,9 @@ function getGeneralLimiter(): Ratelimit | null {
     if (!redis) return null;
     generalLimiter = new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(100, "1 m"),
+      limiter: Ratelimit.slidingWindow(100, '1 m'),
       analytics: true,
-      prefix: "ratelimit:general",
+      prefix: 'ratelimit:general',
     });
   }
   return generalLimiter;

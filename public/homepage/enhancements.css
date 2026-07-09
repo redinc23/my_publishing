@@ -4,7 +4,15 @@
 
 /* 1. Premium text effects */
 .premium-text {
-  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 20%, #ff6b6b 40%, #8a2be2 60%, #0073e6 80%, #4ecdc4 100%);
+  background: linear-gradient(
+    135deg,
+    #ffd700 0%,
+    #ff8c00 20%,
+    #ff6b6b 40%,
+    #8a2be2 60%,
+    #0073e6 80%,
+    #4ecdc4 100%
+  );
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
@@ -13,9 +21,15 @@
 }
 
 @keyframes textShine {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* 2. Text balancing for better readability */
@@ -109,7 +123,7 @@ img[loaded] {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
+
   .premium-text {
     animation: none;
   }

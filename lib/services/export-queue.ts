@@ -1,4 +1,3 @@
-
 import { createClient } from '@/lib/supabase/server';
 
 interface ExportJob {
@@ -178,7 +177,6 @@ export class ExportQueueService {
 
       // Send notification
       await this.sendNotification(job, fileUrl);
-
     } catch (error) {
       console.error(`Export job ${job.id} failed:`, error);
 
@@ -196,11 +194,7 @@ export class ExportQueueService {
   private async exportAnalytics(job: ExportJob): Promise<string> {
     // Implementation from export-data.ts
     const { exportAnalyticsData } = await import('@/lib/actions/export-data');
-    const result = await exportAnalyticsData(
-      job.bookId,
-      job.dateRange,
-      job.format
-    );
+    const result = await exportAnalyticsData(job.bookId, job.dateRange, job.format);
 
     if (!result.success || !result.data) {
       throw new Error(result.error || 'Export failed');
@@ -254,10 +248,14 @@ export class ExportQueueService {
 
   private getContentType(format: string): string {
     switch (format) {
-      case 'csv': return 'text/csv';
-      case 'json': return 'application/json';
-      case 'excel': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      default: return 'text/plain';
+      case 'csv':
+        return 'text/csv';
+      case 'json':
+        return 'application/json';
+      case 'excel':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      default:
+        return 'text/plain';
     }
   }
 
@@ -280,10 +278,7 @@ export class ExportQueueService {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     // Delete old jobs
-    await this.supabase
-      .from('export_jobs')
-      .delete()
-      .lt('created_at', thirtyDaysAgo.toISOString());
+    await this.supabase.from('export_jobs').delete().lt('created_at', thirtyDaysAgo.toISOString());
 
     // Cleanup storage (optional)
     // This would require listing files in storage bucket

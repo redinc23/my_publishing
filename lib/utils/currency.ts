@@ -1,4 +1,3 @@
-
 export type Currency = 'usd' | 'eur' | 'gbp' | 'cad' | 'aud';
 
 const currencySymbols: Record<Currency, string> = {
@@ -26,14 +25,14 @@ export function formatCurrency(amount: number, currency: Currency = 'usd'): stri
 export function formatCurrencyCompact(amount: number, currency: Currency = 'usd'): string {
   const dollars = amount / 100;
   const symbol = currencySymbols[currency];
-  
+
   if (dollars >= 1000000) {
     return `${symbol}${(dollars / 1000000).toFixed(1)}M`;
   }
   if (dollars >= 1000) {
     return `${symbol}${(dollars / 1000).toFixed(1)}K`;
   }
-  
+
   return formatCurrency(amount, currency);
 }
 

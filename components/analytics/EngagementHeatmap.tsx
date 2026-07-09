@@ -9,7 +9,7 @@ interface EngagementHeatmapProps {
 }
 
 export function EngagementHeatmap({ data }: EngagementHeatmapProps) {
-  const chartData = data.map(item => ({
+  const chartData = data.map((item) => ({
     chapter: `Ch ${item.chapter_number}`,
     engagement: item.avg_time_spent || 0,
     dropOff: item.drop_off_rate,
@@ -34,7 +34,7 @@ export function EngagementHeatmap({ data }: EngagementHeatmapProps) {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
             No engagement data available
           </div>
         )}

@@ -56,7 +56,7 @@ class NexusProjectAnalyzer:
 
         total_size = 0
         skip_dirs = {'__pycache__', '.git', 'node_modules', 'venv', '.venv', 'env', 'dist', 'build', '.next'}
-        
+
         for root, dirs, files in os.walk(self.project_path):
             dirs[:] = [d for d in dirs if d not in skip_dirs]
 
@@ -73,7 +73,7 @@ class NexusProjectAnalyzer:
                         rel_path = str(filepath.relative_to(self.project_path))
                         structure["empty_files"].append(rel_path)
                         self._log_issue(f"Empty file detected: {rel_path}", "high")
-                    
+
                     # Flag suspiciously large files
                     if size > 10 * 1024 * 1024:  # > 10MB
                         structure["large_files"].append({
@@ -99,7 +99,7 @@ class NexusProjectAnalyzer:
                 text=True,
                 timeout=5
             )
-            
+
             if result.returncode != 0:
                 return {"has_git": False}
 
@@ -111,7 +111,7 @@ class NexusProjectAnalyzer:
                 text=True,
                 timeout=5
             )
-            
+
             # Get branch
             branch_result = [subprocess.run](http://subprocess.run)(
                 ["git", "branch", "--show-current"],
@@ -122,7 +122,7 @@ class NexusProjectAnalyzer:
             )
 
             modified_files = [l for l in status_result.stdout.split('\n') if l.strip()]
-            
+
             return {
                 "has_git": True,
                 "current_branch": branch_result.stdout.strip(),
@@ -156,7 +156,7 @@ class NexusProjectAnalyzer:
         }
 
         found_files = {category: [] for category in core_patterns.keys()}
-        
+
         for category, patterns in core_patterns.items():
             for pattern in patterns:
                 matches = list(self.project_path.rglob(f"*{pattern}*"))
@@ -177,10 +177,10 @@ class NexusProjectAnalyzer:
             "prompt_4_frontend": self._check_prompt_4(),
             "prompt_5_deployment": self._check_prompt_5()
         }
-        
+
         completed = sum(1 for v in nexus_status.values() if v["status"] == "complete")
         total = len(nexus_status)
-        
+
         return {
             "prompts": nexus_status,
             "completion_rate": f"{completed}/{total}",
@@ -209,23 +209,23 @@ class NexusProjectAnalyzer:
             "routes/", "api/", "src/routes",
             "fastify", "express"
         ]
-        
+
         found = []
         for indicator in indicators:
             matches = list(self.project_path.rglob(f"*{indicator}*"))
             found.extend([str(m.relative_to(self.project_path)) for m in matches[:3]])
-        
+
         has_api = len(found) > 0
-        
+
         # Check for auth endpoints
         has_auth = False
         for pattern in ["auth.ts", "auth.js", "authentication"]:
             if list(self.project_path.rglob(f"*{pattern}*")):
                 has_auth = True
                 break
-        
+
         status = "complete" if (has_api and has_auth) else "partial" if has_api else "missing"
-        
+
         return {
             "status": status,
             "confidence": "high" if status == "complete" else "medium" if status == "partial" else "low",
@@ -239,11 +239,11 @@ class NexusProjectAnalyzer:
         """Check platform connectors"""
         indicators = ["BaseConnector", "TwitterConnector", "connector", "PlatformManager"]
         found = []
-        
+
         for indicator in indicators:
             matches = list(self.project_path.rglob(f"*{indicator}*"))
             found.extend([str(m.relative_to(self.project_path)) for m in matches[:2]])
-        
+
         exists = len(found) > 0
         return {
             "status": "complete" if exists else "missing",
@@ -255,15 +255,15 @@ class NexusProjectAnalyzer:
         """Check frontend completion"""
         indicators = ["app/", "pages/", "components/", "page.tsx", "layout.tsx"]
         found = []
-        
+
         for indicator in indicators:
             matches = list(self.project_path.rglob(f"*{indicator}*"))
             found.extend([str(m.relative_to(self.project_path)) for m in matches[:3]])
-        
+
         has_next_config = (self.project_path / "next.config.js").exists() or (self.project_path / "next.config.ts").exists()
-        
+
         status = "complete" if (len(found) > 5 and has_next_config) else "partial" if len(found) > 0 else "missing"
-        
+
         return {
             "status": status,
             "confidence": "medium",
@@ -279,10 +279,10 @@ class NexusProjectAnalyzer:
             self.project_path / ".github/workflows",
             self.project_path / "amplify.yml"
         ]
-        
+
         found = [str(p.relative_to(self.project_path)) for p in indicators if p.exists()]
         exists = len(found) > 0
-        
+
         return {
             "status": "complete" if exists else "missing",
             "confidence": "high" if exists else "low",
@@ -294,12 +294,12 @@ class NexusProjectAnalyzer:
         for prompt_name, details in nexus_status.items():
             if details.get("critical") and details["status"] != "complete":
                 return f"{prompt_name.upper()} - {', '.join(details.get('blocking', []))}"
-        
+
         # Find first incomplete
         for prompt_name, details in nexus_status.items():
             if details["status"] != "complete":
                 return prompt_name.upper()
-        
+
         return "NONE - All prompts complete!"
 
     def generate_dependency_map(self) -> Dict:
@@ -326,7 +326,7 @@ class NexusProjectAnalyzer:
         if requirements.exists():
             try:
                 with open(requirements, 'r', encoding='utf-8') as f:
-                    deps = [line.split('==')[0].split('>=')[0].strip() 
+                    deps = [line.split('==')[0].split('>=')[0].strip()
                            for line in f if line.strip() and not line.startswith('#')]
                     dep_map["python"]["dependencies"] = deps
                     dep_map["python"]["has_requirements"] = True
@@ -383,7 +383,7 @@ class NexusProjectAnalyzer:
         nexus = self.results["nexus_specific"]
         health = self.results["analysis"]["health_score"]["scores"]
         structure = self.results["analysis"]["structure"]
-        
+
         prompt = f"""# 🎯 NEXUS/CENTURIES PROJECT RECOVERY — CURSOR BATTLE PLAN
 
 **Generated:** {[datetime.now](http://datetime.now)().strftime('%Y-%m-%d %H:%M:%S')}
@@ -418,7 +418,7 @@ class NexusProjectAnalyzer:
 
 ### Dependencies
 """
-        
+
         deps = self.results["analysis"]["dependencies"]
         if deps['nodejs']['has_package_json']:
             prompt += f"**Node.js Packages:** {len(deps['nodejs']['dependencies'])} dependencies, {len(deps['nodejs']['devDependencies'])} dev dependencies\n"
@@ -442,7 +442,7 @@ class NexusProjectAnalyzer:
 
 # Create timestamped backup
 
-tar -czf "../nexus-backup-$(date +%Y%m%d_%H%M%S).tar.gz" . \
+tar -czf "../nexus-backup-$(date +%Y%m%d\_%H%M%S).tar.gz" . \
 
 --exclude='node_modules' \
 
@@ -461,7 +461,7 @@ git add -A
 
 git commit -m "Pre-recovery snapshot - $(date)"
 
-git tag "pre-recovery-$(date +%Y%m%d_%H%M%S)"
+git tag "pre-recovery-$(date +%Y%m%d\_%H%M%S)"
 
 ```
 
@@ -493,7 +493,7 @@ prompt += """
 
 # Run with DRY_RUN=false to actually delete
 
-if [[ "$DRY_RUN" == "true" ]]; then
+if [["$DRY_RUN" == "true"]]; then
 
 echo "[DRY-RUN] Would delete empty files above"
 
@@ -532,7 +532,7 @@ npm run build
 
         # Add specific instructions based on what's missing
         prompt_2_status = nexus['prompts']['prompt_2_api']['status']
-        
+
         if prompt_2_status != 'complete':
             prompt += """
 #### 🚨 BUILD PROMPT 2: API GATEWAY (Node.js/Fastify)
@@ -546,37 +546,37 @@ npm run build
 
 src/
 
-├── server.ts              // Main entry point
+├── server.ts // Main entry point
 
-├── app.ts                 // Fastify app setup
+├── app.ts // Fastify app setup
 
 ├── routes/
 
-│   ├── auth.ts           // POST /auth/register, /auth/login, /auth/refresh
+│ ├── auth.ts // POST /auth/register, /auth/login, /auth/refresh
 
-│   ├── feed.ts           // GET /feed/unified (with Redis caching)
+│ ├── feed.ts // GET /feed/unified (with Redis caching)
 
-│   ├── posts.ts          // CRUD for posts
+│ ├── posts.ts // CRUD for posts
 
-│   └── platforms.ts      // OAuth flows
+│ └── platforms.ts // OAuth flows
 
 ├── middleware/
 
-│   ├── auth.ts           // JWT verification
+│ ├── auth.ts // JWT verification
 
-│   ├── rateLimit.ts      // Rate limiting
+│ ├── rateLimit.ts // Rate limiting
 
-│   └── validation.ts     // Zod schemas
+│ └── validation.ts // Zod schemas
 
 ├── lib/
 
-│   ├── db.ts             // Neon Postgres client
+│ ├── db.ts // Neon Postgres client
 
-│   └── redis.ts          // Upstash Redis client
+│ └── redis.ts // Upstash Redis client
 
 └── types/
 
-└── index.ts          // TypeScript interfaces
+└── index.ts // TypeScript interfaces
 
 ```
 
@@ -707,16 +707,16 @@ GO! 🔥
         # Run all analyses
         print("📊 Analyzing structure...")
         self.results["analysis"]["structure"] = self.analyze_project_structure()
-        
+
         print("📦 Identifying core files...")
         self.results["analysis"]["core_files"] = self.identify_core_files()
-        
+
         print("🔗 Mapping dependencies...")
         self.results["analysis"]["dependencies"] = self.generate_dependency_map()
-        
+
         print("❤️  Calculating health score...")
         self.results["analysis"]["health_score"] = self.assess_health_score()
-        
+
         print("🎯 Analyzing NEXUS completion status...")
         self.results["nexus_specific"] = self.analyze_nexus_completion()
 
@@ -758,26 +758,26 @@ GO! 🔥
         nexus = self.results["nexus_specific"]
         health = self.results["analysis"]["health_score"]["scores"]
         structure = self.results["analysis"]["structure"]
-        
+
         with open(path, 'w', encoding='utf-8') as f:
             f.write("# NEXUS/CENTURIES PROJECT ANALYSIS\n\n")
             f.write(f"**Generated:** {[datetime.now](http://datetime.now)().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-            
+
             f.write("## HEALTH SCORE\n")
             for key, value in health.items():
                 indicator = "🟢" if value >= 70 else "🟡" if value >= 40 else "🔴"
                 f.write(f"- {indicator} **{key.replace('_', ' ').title()}:** {value}/100\n")
-            
+
             f.write(f"\n## PROJECT STATUS\n")
             f.write(f"- **Completion:** {nexus['completion_rate']} prompts ({nexus['completion_percentage']}%)\n")
             f.write(f"- **Critical Blocker:** {nexus['next_critical_step']}\n")
             f.write(f"- **Total Files:** {structure['file_count']}\n")
             f.write(f"- **Project Size:** {structure['total_size_mb']} MB\n")
-            
+
             if structure.get('empty_files'):
                 f.write(f"\n## ⚠️ ISSUES\n")
                 f.write(f"- **Empty files detected:** {len(structure['empty_files'])}\n")
-            
+
             f.write("\n## NEXT STEPS\n")
             f.write("1. Review CURSOR_[PROMPT.md](http://PROMPT.md)\n")
             f.write("2. Paste entire prompt into Cursor\n")
@@ -786,7 +786,7 @@ GO! 🔥
     def _write_cleanup_script(self, path: Path):
         """Write cleanup bash script"""
         empty_files = self.results["analysis"]["structure"].get("empty_files", [])
-        
+
         with open(path, 'w', encoding='utf-8') as f:
             f.write("#!/bin/bash\n")
             f.write("# NEXUS/CENTURIES Safe Cleanup Script\n")
@@ -795,14 +795,14 @@ GO! 🔥
             f.write("DRY_RUN=true  # Set to false to actually delete\n\n")
             f.write("echo '🧹 NEXUS/CENTURIES Cleanup Script'\n")
             f.write("echo '================================'\n\n")
-            
+
             if empty_files:
                 f.write(f"echo 'Found {len(empty_files)} empty files'\n\n")
                 f.write("EMPTY_FILES=(\n")
                 for file in empty_files:
                     f.write(f'    "{file}"\n')
                 f.write(")\n\n")
-                
+
                 f.write("for file in \"${EMPTY_FILES[@]}\"; do\n")
                 f.write("    if [[ \"$DRY_RUN\" == \"true\" ]]; then\n")
                 f.write("        echo \"[DRY-RUN] Would delete: $file\"\n")
@@ -811,11 +811,11 @@ GO! 🔥
                 f.write("        echo \"Deleted: $file\"\n")
                 f.write("    fi\n")
                 f.write("done\n\n")
-            
+
             f.write("echo ''\n")
             f.write("echo '✅ Cleanup complete'\n")
             f.write("echo 'Set DRY_RUN=false to execute deletions'\n")
-        
+
         # Make executable
         path.chmod(0o755)
 
@@ -824,36 +824,36 @@ GO! 🔥
         nexus = self.results["nexus_specific"]
         health = self.results["analysis"]["health_score"]["scores"]
         structure = self.results["analysis"]["structure"]
-        
+
         print("\n" + "=" * 70)
         print("📊 NEXUS/CENTURIES ANALYSIS SUMMARY")
         print("=" * 70)
-        
+
         print(f"\n🎯 COMPLETION: {nexus['completion_rate']} ({nexus['completion_percentage']}%)")
         print(f"❤️  HEALTH SCORE: {health['overall']}/100")
-        
+
         if health['overall'] >= 70:
             print("   Status: 🟢 Good - Continue building")
         elif health['overall'] >= 40:
             print("   Status: 🟡 Fair - Cleanup recommended")
         else:
             print("   Status: 🔴 Poor - Significant work needed")
-        
+
         print(f"\n📂 PROJECT SIZE: {structure['total_size_mb']} MB ({structure['file_count']} files)")
-        
+
         if structure['git_status']['has_git']:
             print(f"🔀 GIT: Branch '{structure['git_status'].get('current_branch', 'unknown')}'")
             if structure['git_status'].get('uncommitted_changes'):
                 print("   ⚠️  Uncommitted changes detected")
-        
+
         print(f"\n🚨 CRITICAL BLOCKER: {nexus['next_critical_step']}")
-        
+
         issues = self.results["analysis"].get("issues", [])
         if issues:
             print(f"\n⚠️  ISSUES FOUND: {len(issues)}")
             for issue in issues[:3]:
                 print(f"   - [{issue['severity'].upper()}] {issue['description'][:60]}...")
-        
+
         print("\n" + "=" * 70)
         print("🎯 NEXT: Open nexus_analysis/CURSOR_[PROMPT.md](http://PROMPT.md)")
         print("=" * 70)
@@ -885,14 +885,14 @@ def main():
         # Run analysis
         analyzer = NexusProjectAnalyzer(args.path)
         [analyzer.run](http://analyzer.run)_full_analysis()
-        
+
         # Print summary
         analyzer.print_summary()
-        
+
         # Save results
         if not args.skip_save:
             [analyzer.save](http://analyzer.save)_results(args.output)
-            
+
             print("\n🚀 READY FOR CURSOR:")
             print(f"   1. Open '{args.output}/CURSOR_[PROMPT.md](http://PROMPT.md)'")
             print("   2. Copy the ENTIRE file")
@@ -900,9 +900,9 @@ def main():
             print("   4. Let Cursor execute the recovery plan")
             print("\n💡 The prompt is tailored to your NEXUS/Centuries project")
             print("   with forensic data from your actual codebase.")
-        
+
         return 0
-    
+
     except KeyboardInterrupt:
         print("\n\n⚠️  Analysis interrupted by user")
         return 1

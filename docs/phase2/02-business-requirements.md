@@ -53,37 +53,37 @@ Business architecture intent:
 
 ## Milestone-Level Business Deliverables
 
-| Milestone | Business Deliverable |
-|---|---|
-| M1 | Secret exposure risk materially reduced before infra rollout |
-| M2 | Repeatable build process that transforms Supabase data and Next.js source into deployable `.next/standalone/` output |
-| M3 | Runtime artifact that can be promoted with minimal security surface |
-| M4 | Cloud foundation ready for controlled CI/CD |
-| M5 | End-to-end automated deployment from git push |
-| M6 | Public launch path complete with domain and TLS |
-| M7a | Pre-cutover observability, alerting, and budget guardrails |
-| M7b | Post-cutover stabilization and webhook-driven operations validated |
+| Milestone | Business Deliverable                                                                                                 |
+| --------- | -------------------------------------------------------------------------------------------------------------------- |
+| M1        | Secret exposure risk materially reduced before infra rollout                                                         |
+| M2        | Repeatable build process that transforms Supabase data and Next.js source into deployable `.next/standalone/` output |
+| M3        | Runtime artifact that can be promoted with minimal security surface                                                  |
+| M4        | Cloud foundation ready for controlled CI/CD                                                                          |
+| M5        | End-to-end automated deployment from git push                                                                        |
+| M6        | Public launch path complete with domain and TLS                                                                      |
+| M7a       | Pre-cutover observability, alerting, and budget guardrails                                                           |
+| M7b       | Post-cutover stabilization and webhook-driven operations validated                                                   |
 
 ## Definition Of Done (Acceptance Criteria Map)
 
 Phase 2 is complete when **all rows** below are satisfied. `Canonical P0` refers to [`06-acceptance-and-test-protocol.md`](06-acceptance-and-test-protocol.md). Legacy source docs (`_sources/litstream_phase2.agent.final.md`) used different P0 numbering; see `change-log-and-decisions.md` Decision 5.
 
-| # | Acceptance criterion | Canonical P0 | Verification method (summary) |
-|---:|---|---|---|
-| 1 | Push to `main` triggers Cloud Build; pipeline completes green | P0-7 | `gcloud builds triggers` + build history; all canonical steps pass |
-| 2 | Production site loads over HTTPS | P0-5, P0-6 | `curl -sI` to `${CUSTOM_DOMAIN}` returns success |
-| 3 | `/api/health` returns HTTP 200 | P0-5 | `curl` to `/api/health` returns `200` |
-| 4 | Deep links load without server-side 404 | P0-3 | `curl` deep routes + SPA fallback behavior |
-| 5 | No server secret strings under `.next/standalone/` | P0-1 | `rg` over full `.next/standalone/` |
-| 6 | Cloud Run runtime YAML shows no server secret env vars (uses `--set-secrets`) | P0-1 | `gcloud run services describe` |
-| 7 | Next.js static assets have appropriate `Cache-Control` headers | P0-4 | `curl -sI` on static asset URLs |
-| 8 | Source maps and build artifacts are not publicly exposed | P0-4 | `curl -sI` on `.map` URLs + build output review |
-| 9 | CSP blocks unauthorized API access | P0-4 | response headers |
-| 10 | Container runs as non-root UID 1001 | P0-2, P0-6 | image inspect + Cloud Run revision spec |
-| 11 | Supabase/webhook triggers rebuild within SLO | P0-8 | event timestamp vs build start (see `06`) |
-| 12 | Sentry receives events/releases tagged with git SHA | P0-9 | Sentry UI/API evidence |
-| 13 | Cloud Monitoring uptime check on `/api/health` green | P0-9 | Monitoring console |
-| 14 | Billing budget alerts at 50%, 75%, 90% | P0-9 | Billing budgets console |
+|   # | Acceptance criterion                                                          | Canonical P0 | Verification method (summary)                                      |
+| --: | ----------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------ |
+|   1 | Push to `main` triggers Cloud Build; pipeline completes green                 | P0-7         | `gcloud builds triggers` + build history; all canonical steps pass |
+|   2 | Production site loads over HTTPS                                              | P0-5, P0-6   | `curl -sI` to `${CUSTOM_DOMAIN}` returns success                   |
+|   3 | `/api/health` returns HTTP 200                                                | P0-5         | `curl` to `/api/health` returns `200`                              |
+|   4 | Deep links load without server-side 404                                       | P0-3         | `curl` deep routes + SPA fallback behavior                         |
+|   5 | No server secret strings under `.next/standalone/`                            | P0-1         | `rg` over full `.next/standalone/`                                 |
+|   6 | Cloud Run runtime YAML shows no server secret env vars (uses `--set-secrets`) | P0-1         | `gcloud run services describe`                                     |
+|   7 | Next.js static assets have appropriate `Cache-Control` headers                | P0-4         | `curl -sI` on static asset URLs                                    |
+|   8 | Source maps and build artifacts are not publicly exposed                      | P0-4         | `curl -sI` on `.map` URLs + build output review                    |
+|   9 | CSP blocks unauthorized API access                                            | P0-4         | response headers                                                   |
+|  10 | Container runs as non-root UID 1001                                           | P0-2, P0-6   | image inspect + Cloud Run revision spec                            |
+|  11 | Supabase/webhook triggers rebuild within SLO                                  | P0-8         | event timestamp vs build start (see `06`)                          |
+|  12 | Sentry receives events/releases tagged with git SHA                           | P0-9         | Sentry UI/API evidence                                             |
+|  13 | Cloud Monitoring uptime check on `/api/health` green                          | P0-9         | Monitoring console                                                 |
+|  14 | Billing budget alerts at 50%, 75%, 90%                                        | P0-9         | Billing budgets console                                            |
 
 ## Acceptance From Business Perspective
 

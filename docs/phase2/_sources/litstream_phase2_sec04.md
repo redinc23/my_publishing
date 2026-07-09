@@ -37,14 +37,14 @@ Both commands must return without error. The billing command must show `billingE
 
 The following tools must be installed and functional on the local development workstation:
 
-| Tool | Version / Spec | Installation Command | Verification |
-|------|---------------|---------------------|------------|
-| Node.js | 20.x (LTS) | `nvm install 20 && nvm use 20` | `node --version` |
-| tsx | latest (global) | `npm install -g tsx` | `tsx --version` |
-| firebase-tools | latest (global) | `npm install -g firebase-tools` | `firebase --version` |
-| gcloud CLI | latest | Google Cloud SDK installer | `gcloud version` |
-| Docker Desktop | 4.x or later | docker.com/products/docker-desktop | `docker --version` |
-| jq | 1.6 or later | `brew install jq` (macOS) or `apt install jq` (Linux) | `jq --version` |
+| Tool           | Version / Spec  | Installation Command                                  | Verification         |
+| -------------- | --------------- | ----------------------------------------------------- | -------------------- |
+| Node.js        | 20.x (LTS)      | `nvm install 20 && nvm use 20`                        | `node --version`     |
+| tsx            | latest (global) | `npm install -g tsx`                                  | `tsx --version`      |
+| firebase-tools | latest (global) | `npm install -g firebase-tools`                       | `firebase --version` |
+| gcloud CLI     | latest          | Google Cloud SDK installer                            | `gcloud version`     |
+| Docker Desktop | 4.x or later    | docker.com/products/docker-desktop                    | `docker --version`   |
+| jq             | 1.6 or later    | `brew install jq` (macOS) or `apt install jq` (Linux) | `jq --version`       |
 
 **Authentication requirements.** After installing the gcloud CLI, authenticate with both user credentials and application default credentials:
 
@@ -89,16 +89,16 @@ The audit output establishes a baseline. It identifies every file that requires 
 
 Download all eight code and configuration files from the shared Drive folder into a local `_drive_files/` directory outside the repository. These files are authored externally and are copied into the repository at specific milestones.
 
-| File | Milestone Used | Purpose |
-|------|---------------|---------|
-| `cloudbuild.yaml` | M5 | 16-step Cloud Build pipeline definition |
-| `Dockerfile` | M3 | nginx container build specification |
-| `nginx.conf.template` | M3 | nginx runtime configuration with CSP and SPA fallback |
-| `firebase.json` | M6 | Firebase Hosting rewrite configuration |
-| `artifact-cleanup-policy.json` | M4, M7 | Artifact Registry lifecycle policy |
-| `node-env.ts` | M1 | Zod-based environment validation (build-time only) |
-| `sanity-node-client.ts` | M1 | Build-time Sanity client with `useCdn: false` |
-| `prune-cloud-run-tags.sh` | M7 | Cloud Run traffic tag pruning script |
+| File                           | Milestone Used | Purpose                                               |
+| ------------------------------ | -------------- | ----------------------------------------------------- |
+| `cloudbuild.yaml`              | M5             | 16-step Cloud Build pipeline definition               |
+| `Dockerfile`                   | M3             | nginx container build specification                   |
+| `nginx.conf.template`          | M3             | nginx runtime configuration with CSP and SPA fallback |
+| `firebase.json`                | M6             | Firebase Hosting rewrite configuration                |
+| `artifact-cleanup-policy.json` | M4, M7         | Artifact Registry lifecycle policy                    |
+| `node-env.ts`                  | M1             | Zod-based environment validation (build-time only)    |
+| `sanity-node-client.ts`        | M1             | Build-time Sanity client with `useCdn: false`         |
+| `prune-cloud-run-tags.sh`      | M7             | Cloud Run traffic tag pruning script                  |
 
 Store `_drive_files/` in the home or projects directory — not inside the repository. This prevents accidental commits of configuration files that belong at specific paths within the repo.
 
@@ -110,15 +110,15 @@ Store `_drive_files/` in the home or projects directory — not inside the repos
 
 Milestone 1 addresses the most critical security vulnerability in the Phase 1 codebase: the Sanity read token is prefixed with `VITE_`, which causes Vite to inline the value into client-side JavaScript at build time. The fix renames the variable, introduces Zod-based validation, establishes defensive ignore files, and adds an automated audit script that runs on every build.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 1.1 | Rename `VITE_SANITY_API_READ_TOKEN` → `SANITY_API_READ_TOKEN` | `find . -type f -exec sed -i 's/VITE_SANITY_API_READ_TOKEN/SANITY_API_READ_TOKEN/g' {} +` | `grep -rn "VITE_SANITY_API_READ_TOKEN" .` returns empty |
-| 1.2 | Create `scripts/_lib/` directory | `mkdir -p scripts/_lib` | `ls -la scripts/_lib/` succeeds |
-| 1.3 | Copy `node-env.ts` from Drive | `cp _drive_files/node-env.ts scripts/_lib/node-env.ts` | Zod validation throws on missing token |
-| 1.4 | Copy `sanity-node-client.ts` from Drive | `cp _drive_files/sanity-node-client.ts scripts/_lib/sanity-node-client.ts` | Imports from `node-env.ts`; `useCdn: false`, `perspective: "published"` |
-| 1.5 | Add `.gitignore` entries | Append 3 lines to `.gitignore` | `grep` checks confirm all entries present |
-| 1.6 | Create `.dockerignore` | `cat > .dockerignore << 'EOF'` (heredoc with 11 lines) | `cat .dockerignore` shows correct content |
-| 1.7 | Add `audit:secrets` npm script | Add to `package.json` scripts block | `npm run audit:secrets` exits 0 |
+| #   | Task                                                          | Operation                                                                                 | Verification                                                            |
+| --- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1.1 | Rename `VITE_SANITY_API_READ_TOKEN` → `SANITY_API_READ_TOKEN` | `find . -type f -exec sed -i 's/VITE_SANITY_API_READ_TOKEN/SANITY_API_READ_TOKEN/g' {} +` | `grep -rn "VITE_SANITY_API_READ_TOKEN" .` returns empty                 |
+| 1.2 | Create `scripts/_lib/` directory                              | `mkdir -p scripts/_lib`                                                                   | `ls -la scripts/_lib/` succeeds                                         |
+| 1.3 | Copy `node-env.ts` from Drive                                 | `cp _drive_files/node-env.ts scripts/_lib/node-env.ts`                                    | Zod validation throws on missing token                                  |
+| 1.4 | Copy `sanity-node-client.ts` from Drive                       | `cp _drive_files/sanity-node-client.ts scripts/_lib/sanity-node-client.ts`                | Imports from `node-env.ts`; `useCdn: false`, `perspective: "published"` |
+| 1.5 | Add `.gitignore` entries                                      | Append 3 lines to `.gitignore`                                                            | `grep` checks confirm all entries present                               |
+| 1.6 | Create `.dockerignore`                                        | `cat > .dockerignore << 'EOF'` (heredoc with 11 lines)                                    | `cat .dockerignore` shows correct content                               |
+| 1.7 | Add `audit:secrets` npm script                                | Add to `package.json` scripts block                                                       | `npm run audit:secrets` exits 0                                         |
 
 #### 4.2.1 Variable Rename Across All Files
 
@@ -224,16 +224,16 @@ Commit at this point with message `feat: milestone 1 - local security hardening`
 
 Milestone 2 establishes the entire build-time content pipeline. The pipeline is designed to run identically in local development and in Cloud Build (M5). Each script reads the output of the previous step, creating a linear dependency chain: content snapshot → route list → Vite build → prerender → sitemap.
 
-| # | Task | Script File | npm Script | Output |
-|---|------|-------------|------------|--------|
-| 2.1 | Update `package.json` scripts block | — | 8 entries in `"scripts"` | Pipeline definition |
-| 2.2 | Create `build-content-snapshot.ts` | `scripts/build-content-snapshot.ts` | `build:content` | `src/generated/contentSnapshot.json` |
-| 2.3 | Create `generate-routes.ts` | `scripts/generate-routes.ts` | `build:routes` | `.cache/routes.json` |
-| 2.4 | Create `prerender.ts` | `scripts/prerender.ts` | `build:prerender` | `dist/{route}/index.html` |
-| 2.5 | Create `generate-sitemap.ts` | `scripts/generate-sitemap.ts` | `build:sitemap` | `dist/sitemap.xml` |
-| 2.6 | Create `check-routes.ts` | `scripts/smoke/check-routes.ts` | `smoke:check-routes` | Console pass/fail |
-| 2.7 | Create `.env.local` | `.env.local` | — | Local environment config |
-| 2.8 | Run full pipeline | — | `npm run build` | Complete `dist/` directory |
+| #   | Task                                | Script File                         | npm Script               | Output                               |
+| --- | ----------------------------------- | ----------------------------------- | ------------------------ | ------------------------------------ |
+| 2.1 | Update `package.json` scripts block | —                                   | 8 entries in `"scripts"` | Pipeline definition                  |
+| 2.2 | Create `build-content-snapshot.ts`  | `scripts/build-content-snapshot.ts` | `build:content`          | `src/generated/contentSnapshot.json` |
+| 2.3 | Create `generate-routes.ts`         | `scripts/generate-routes.ts`        | `build:routes`           | `.cache/routes.json`                 |
+| 2.4 | Create `prerender.ts`               | `scripts/prerender.ts`              | `build:prerender`        | `dist/{route}/index.html`            |
+| 2.5 | Create `generate-sitemap.ts`        | `scripts/generate-sitemap.ts`       | `build:sitemap`          | `dist/sitemap.xml`                   |
+| 2.6 | Create `check-routes.ts`            | `scripts/smoke/check-routes.ts`     | `smoke:check-routes`     | Console pass/fail                    |
+| 2.7 | Create `.env.local`                 | `.env.local`                        | —                        | Local environment config             |
+| 2.8 | Run full pipeline                   | —                                   | `npm run build`          | Complete `dist/` directory           |
 
 #### 4.3.1 `package.json` Scripts Block
 
@@ -267,12 +267,12 @@ This script fetches all published content from Sanity and writes a snapshot JSON
 
 The script imports `sanityNodeClient` from `scripts/_lib/sanity-node-client.ts` and fetches books and authors using GROQ queries. The snapshot object contains:
 
-| Field | Source | Purpose |
-|-------|--------|---------|
-| `buildCommit` | `process.env.VITE_APP_VERSION` or `"local"` | Traceability: identifies which commit produced the build |
-| `sanityDataset` | `env.VITE_SANITY_DATASET` | Identifies which Sanity dataset was the content source |
-| `generatedAt` | `new Date().toISOString()` | Timestamp for cache invalidation decisions |
-| `contentHash` | SHA-256 of the serialized snapshot JSON | Cache-busting key for downstream consumers |
+| Field           | Source                                      | Purpose                                                  |
+| --------------- | ------------------------------------------- | -------------------------------------------------------- |
+| `buildCommit`   | `process.env.VITE_APP_VERSION` or `"local"` | Traceability: identifies which commit produced the build |
+| `sanityDataset` | `env.VITE_SANITY_DATASET`                   | Identifies which Sanity dataset was the content source   |
+| `generatedAt`   | `new Date().toISOString()`                  | Timestamp for cache invalidation decisions               |
+| `contentHash`   | SHA-256 of the serialized snapshot JSON     | Cache-busting key for downstream consumers               |
 
 The `contentHash` is computed as the hex digest of `SHA256(JSON.stringify(snapshot))`. This hash changes whenever any content field changes, providing a reliable signal for cache invalidation and build comparison.
 
@@ -349,18 +349,18 @@ Milestone 2 is complete when all of the following are verified:
 
 Milestone 3 introduces the production runtime artifact: a Docker image based on `nginx:1.27-alpine` that runs as a non-root user and serves the contents of `dist/` over port 8080. The container contains no Node.js runtime, no build tools, and no secrets.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 3.1 | Copy `Dockerfile` from Drive | `cp _drive_files/Dockerfile .` | `ls Dockerfile` succeeds |
-| 3.2 | Copy `nginx.conf.template` from Drive | `cp _drive_files/nginx.conf.template .` | `ls nginx.conf.template` succeeds |
-| 3.3 | Build image with `dist/` present | `docker build -t mangu-publishers-test .` | Build succeeds |
-| 3.4 | Verify hard-fail without `dist/` | `mv dist dist-backup && docker build -t mangu-publishers-fail .` | Build fails with missing-file error |
-| 3.5 | Run container locally | `docker run -d -p 8080:8080 --name mangu-publishers-local mangu-publishers-test` | Container starts, `docker ps` shows it |
-| 3.6 | Verify health check | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/healthz` | Returns `200` |
-| 3.7 | Verify CSP excludes Sanity API | `curl -sI http://localhost:8080/ \| grep -i "content-security-policy"` | Does NOT contain `api.sanity.io` |
-| 3.8 | Verify asset cache headers | `curl -sI http://localhost:8080/assets/{hashed-file}` | `Cache-Control: public, max-age=31536000, immutable` |
-| 3.9 | Verify source map 404 | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/assets/index.js.map` | Returns `404` |
-| 3.10 | Verify non-root user | `docker exec mangu-publishers-local id` | Shows `uid=1001` |
+| #    | Task                                  | Operation                                                                          | Verification                                         |
+| ---- | ------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 3.1  | Copy `Dockerfile` from Drive          | `cp _drive_files/Dockerfile .`                                                     | `ls Dockerfile` succeeds                             |
+| 3.2  | Copy `nginx.conf.template` from Drive | `cp _drive_files/nginx.conf.template .`                                            | `ls nginx.conf.template` succeeds                    |
+| 3.3  | Build image with `dist/` present      | `docker build -t mangu-publishers-test .`                                          | Build succeeds                                       |
+| 3.4  | Verify hard-fail without `dist/`      | `mv dist dist-backup && docker build -t mangu-publishers-fail .`                   | Build fails with missing-file error                  |
+| 3.5  | Run container locally                 | `docker run -d -p 8080:8080 --name mangu-publishers-local mangu-publishers-test`   | Container starts, `docker ps` shows it               |
+| 3.6  | Verify health check                   | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/healthz`             | Returns `200`                                        |
+| 3.7  | Verify CSP excludes Sanity API        | `curl -sI http://localhost:8080/ \| grep -i "content-security-policy"`             | Does NOT contain `api.sanity.io`                     |
+| 3.8  | Verify asset cache headers            | `curl -sI http://localhost:8080/assets/{hashed-file}`                              | `Cache-Control: public, max-age=31536000, immutable` |
+| 3.9  | Verify source map 404                 | `curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/assets/index.js.map` | Returns `404`                                        |
+| 3.10 | Verify non-root user                  | `docker exec mangu-publishers-local id`                                            | Shows `uid=1001`                                     |
 
 #### 4.4.1 Dockerfile Specification
 
@@ -429,16 +429,16 @@ Milestone 3 is complete when all runtime verification checks pass. The container
 
 Milestone 4 is the infrastructure provisioning phase. It has no dependency on local code changes (M1–M3) and may be executed in parallel with them to reduce overall wall-clock time. All commands are run via the `gcloud` CLI with an authenticated user who has Project Owner or equivalent permissions.
 
-| # | Task | gcloud Command(s) | Verification |
-|---|------|-------------------|-------------|
-| 4.1 | Set environment variables | `export` block (8 variables) | All variables non-empty in `env` |
-| 4.2 | Enable 10 GCP APIs | `gcloud services enable` (10 APIs) | `gcloud services list --enabled` shows all 10 |
-| 4.3 | Create Artifact Registry | `gcloud artifacts repositories create` + cleanup policy | `gcloud artifacts repositories describe` succeeds |
-| 4.4 | Create Secret Manager secret | `gcloud secrets create sanity-api-read-token` | `gcloud secrets versions access latest` returns token |
-| 4.5 | Create Cloud Build service account | `gcloud iam service-accounts create` + 5 role grants + secret binding | `gcloud iam service-accounts describe` succeeds |
-| 4.6 | Create cache bucket | `gcloud storage buckets create` + IAM binding | `gcloud storage buckets describe` succeeds |
-| 4.7 | Developer Connect GitHub link | `gcloud developer-connect connections create` + `git-repository-links create` | OAuth flow completes; link shows in console |
-| 4.8 | Cloud Build trigger | `gcloud builds triggers create developer-connect` | `gcloud builds triggers describe mangu-publishers-main` succeeds |
+| #   | Task                               | gcloud Command(s)                                                             | Verification                                                     |
+| --- | ---------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 4.1 | Set environment variables          | `export` block (8 variables)                                                  | All variables non-empty in `env`                                 |
+| 4.2 | Enable 10 GCP APIs                 | `gcloud services enable` (10 APIs)                                            | `gcloud services list --enabled` shows all 10                    |
+| 4.3 | Create Artifact Registry           | `gcloud artifacts repositories create` + cleanup policy                       | `gcloud artifacts repositories describe` succeeds                |
+| 4.4 | Create Secret Manager secret       | `gcloud secrets create sanity-api-read-token`                                 | `gcloud secrets versions access latest` returns token            |
+| 4.5 | Create Cloud Build service account | `gcloud iam service-accounts create` + 5 role grants + secret binding         | `gcloud iam service-accounts describe` succeeds                  |
+| 4.6 | Create cache bucket                | `gcloud storage buckets create` + IAM binding                                 | `gcloud storage buckets describe` succeeds                       |
+| 4.7 | Developer Connect GitHub link      | `gcloud developer-connect connections create` + `git-repository-links create` | OAuth flow completes; link shows in console                      |
+| 4.8 | Cloud Build trigger                | `gcloud builds triggers create developer-connect`                             | `gcloud builds triggers describe mangu-publishers-main` succeeds |
 
 #### 4.5.1 Environment Variables
 
@@ -621,15 +621,15 @@ Milestone 4 is complete when all resources are verifiable via `gcloud describe` 
 
 Milestone 5 is the integration point where all prior milestones converge. The `cloudbuild.yaml` file from the Drive folder defines a 16-step pipeline that executes the same build scripts verified locally in M2, packages the output in the container verified in M3, and deploys it using the infrastructure provisioned in M4.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 5.1 | Copy `cloudbuild.yaml` from Drive | `cp _drive_files/cloudbuild.yaml .` | File present at repo root |
-| 5.2 | Pre-flight checks on `cloudbuild.yaml` | 6 grep-based verifications | All checks match expected values |
-| 5.3 | Commit and push to `main` | `git add && git commit && git push` | Build triggers within 60 seconds |
-| 5.4 | Monitor 16-step pipeline | `gcloud builds log <BUILD_ID>` | All 16 steps complete (green) |
-| 5.5 | Verify deployed service | `gcloud run services describe` + `curl` | Memory 512Mi, port 8080, URL returns 200 |
-| 5.6 | Verify no secret leakage | `gcloud logging read` query | No results for token name in logs |
-| 5.7 | Verify image tags in AR | `gcloud artifacts docker images list` | Both `SHORT_SHA` and `latest` tags present |
+| #   | Task                                   | Operation                               | Verification                               |
+| --- | -------------------------------------- | --------------------------------------- | ------------------------------------------ |
+| 5.1 | Copy `cloudbuild.yaml` from Drive      | `cp _drive_files/cloudbuild.yaml .`     | File present at repo root                  |
+| 5.2 | Pre-flight checks on `cloudbuild.yaml` | 6 grep-based verifications              | All checks match expected values           |
+| 5.3 | Commit and push to `main`              | `git add && git commit && git push`     | Build triggers within 60 seconds           |
+| 5.4 | Monitor 16-step pipeline               | `gcloud builds log <BUILD_ID>`          | All 16 steps complete (green)              |
+| 5.5 | Verify deployed service                | `gcloud run services describe` + `curl` | Memory 512Mi, port 8080, URL returns 200   |
+| 5.6 | Verify no secret leakage               | `gcloud logging read` query             | No results for token name in logs          |
+| 5.7 | Verify image tags in AR                | `gcloud artifacts docker images list`   | Both `SHORT_SHA` and `latest` tags present |
 
 #### 4.6.1 `cloudbuild.yaml` Pre-flight Checks
 
@@ -661,24 +661,24 @@ Each grep must match the expected value. A failure at any check indicates that t
 
 The Cloud Build pipeline executes the following steps in order:
 
-| Step | ID | Purpose | Key Details |
-|------|-----|---------|-------------|
-| 1 | `restore-npm-cache` | Restore npm cache from GCS bucket | `gsutil cp` from `${_CACHE_BUCKET}` |
-| 2 | `install` | Install Node.js dependencies | `npm ci` with cache at `/workspace/.npm` |
-| 3 | `production-audit` | Run `npm audit` (non-blocking) | `--audit-level=high`, `|| true` |
-| 4 | `content-snapshot` | Fetch Sanity content | **Only step with `secretEnv: [SANITY_API_READ_TOKEN]`** |
-| 5 | `generate-routes` | Build `.cache/routes.json` from snapshot | `npm run build:routes` |
-| 6 | `vite-build` | Vite production build | Sets `VITE_APP_VERSION=${SHORT_SHA}` |
-| 7 | `prerender` | Playwright Chromium renders all routes | Uses pinned `mcr.microsoft.com/playwright:v1.43.0-jammy` |
-| 8 | `sitemap` | Generate `dist/sitemap.xml` | `npm run build:sitemap` |
-| 9 | `audit-secrets` | Verify no secrets in `dist/assets/` | Exits 1 if `SANITY_API_READ_TOKEN` found in bundle |
-| 10 | `smoke-test` | Verify all routes have `index.html` | `npm run smoke:check-routes` |
-| 11 | `docker-build` | Build nginx container from `dist/` | Tags with both `SHORT_SHA` and `latest` |
-| 12 | `docker-push` | Push image to Artifact Registry | `--all-tags` pushes both tags |
-| 13 | `enforce-vulnerability-policy` | CVE scan blocks on HIGH/CRITICAL | Exits 1 if CRITICAL or HIGH findings detected |
-| 14 | `deploy-run` | Deploy to Cloud Run | `--memory=512Mi --no-default-url --execution-environment=gen2` |
-| 15 | `prune-tags` | Remove old Cloud Run traffic tags | Calls `scripts/ops/prune-cloud-run-tags.sh` |
-| 16 | `save-npm-cache` | Save npm cache to GCS bucket | `gsutil cp` to `${_CACHE_BUCKET}` |
+| Step | ID                             | Purpose                                  | Key Details                                                    |
+| ---- | ------------------------------ | ---------------------------------------- | -------------------------------------------------------------- | --- | ----- |
+| 1    | `restore-npm-cache`            | Restore npm cache from GCS bucket        | `gsutil cp` from `${_CACHE_BUCKET}`                            |
+| 2    | `install`                      | Install Node.js dependencies             | `npm ci` with cache at `/workspace/.npm`                       |
+| 3    | `production-audit`             | Run `npm audit` (non-blocking)           | `--audit-level=high`, `                                        |     | true` |
+| 4    | `content-snapshot`             | Fetch Sanity content                     | **Only step with `secretEnv: [SANITY_API_READ_TOKEN]`**        |
+| 5    | `generate-routes`              | Build `.cache/routes.json` from snapshot | `npm run build:routes`                                         |
+| 6    | `vite-build`                   | Vite production build                    | Sets `VITE_APP_VERSION=${SHORT_SHA}`                           |
+| 7    | `prerender`                    | Playwright Chromium renders all routes   | Uses pinned `mcr.microsoft.com/playwright:v1.43.0-jammy`       |
+| 8    | `sitemap`                      | Generate `dist/sitemap.xml`              | `npm run build:sitemap`                                        |
+| 9    | `audit-secrets`                | Verify no secrets in `dist/assets/`      | Exits 1 if `SANITY_API_READ_TOKEN` found in bundle             |
+| 10   | `smoke-test`                   | Verify all routes have `index.html`      | `npm run smoke:check-routes`                                   |
+| 11   | `docker-build`                 | Build nginx container from `dist/`       | Tags with both `SHORT_SHA` and `latest`                        |
+| 12   | `docker-push`                  | Push image to Artifact Registry          | `--all-tags` pushes both tags                                  |
+| 13   | `enforce-vulnerability-policy` | CVE scan blocks on HIGH/CRITICAL         | Exits 1 if CRITICAL or HIGH findings detected                  |
+| 14   | `deploy-run`                   | Deploy to Cloud Run                      | `--memory=512Mi --no-default-url --execution-environment=gen2` |
+| 15   | `prune-tags`                   | Remove old Cloud Run traffic tags        | Calls `scripts/ops/prune-cloud-run-tags.sh`                    |
+| 16   | `save-npm-cache`               | Save npm cache to GCS bucket             | `gsutil cp` to `${_CACHE_BUCKET}`                              |
 
 Steps 1–10 constitute the **build phase**: they produce `dist/` and verify its integrity. Steps 11–14 constitute the **deploy phase**: they containerize, scan, and deploy. Steps 15–16 are **cleanup phase**: they maintain resource hygiene and cache state.
 
@@ -730,14 +730,14 @@ Milestone 5 is complete when:
 
 Milestone 6 is the launch milestone. When this milestone is complete, the site is publicly accessible on a custom domain over HTTPS. Firebase Hosting provides the edge network, TLS certificate provisioning, and rewrite rules that route all traffic to the Cloud Run service deployed in M5.
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 6.1 | Create `public-placeholder/` | `mkdir -p public-placeholder && touch public-placeholder/.gitkeep` | Directory exists, tracked by git |
-| 6.2 | Copy `firebase.json` from Drive | `cp _drive_files/firebase.json .` | `public: "public-placeholder"`, rewrite to `mangu-publishers` with `pinTag: true` |
-| 6.3 | Initialize Firebase Hosting | `firebase init hosting` | Select existing project, `public-placeholder`, SPA yes, no GitHub auto-deploys |
-| 6.4 | Deploy Firebase Hosting | `firebase deploy --only hosting` | Default Firebase URL serves the site |
-| 6.5 | Add custom domain | Firebase Console → Hosting → Add custom domain | DNS records added at registrar |
-| 6.6 | Verify launch | 7 verification checks (HTTPS, deep links, headers, cache, SPA) | All checks pass |
+| #   | Task                            | Operation                                                          | Verification                                                                      |
+| --- | ------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| 6.1 | Create `public-placeholder/`    | `mkdir -p public-placeholder && touch public-placeholder/.gitkeep` | Directory exists, tracked by git                                                  |
+| 6.2 | Copy `firebase.json` from Drive | `cp _drive_files/firebase.json .`                                  | `public: "public-placeholder"`, rewrite to `mangu-publishers` with `pinTag: true` |
+| 6.3 | Initialize Firebase Hosting     | `firebase init hosting`                                            | Select existing project, `public-placeholder`, SPA yes, no GitHub auto-deploys    |
+| 6.4 | Deploy Firebase Hosting         | `firebase deploy --only hosting`                                   | Default Firebase URL serves the site                                              |
+| 6.5 | Add custom domain               | Firebase Console → Hosting → Add custom domain                     | DNS records added at registrar                                                    |
+| 6.6 | Verify launch                   | 7 verification checks (HTTPS, deep links, headers, cache, SPA)     | All checks pass                                                                   |
 
 #### 4.7.1 `public-placeholder/` Directory
 
@@ -838,17 +838,17 @@ Milestone 6 — and the launch — is complete when the site loads on the custom
 
 Milestone 7 implements the production hardening that makes the site maintainable after launch. The work items are independent and may be executed in any order. They fall into five categories: error tracking (Sentry), content-driven rebuilds (webhook validator), monitoring and alerting, cost controls, and code quality (Portable Text renderer + Formspree).
 
-| # | Task | Operation | Verification |
-|---|------|-----------|-------------|
-| 7.1 | Sentry release tracking | `npm install --save-dev @sentry/vite-plugin @sentry/react`; update `vite.config.ts`; add `SENTRY_AUTH_TOKEN` to Secret Manager | Sentry dashboard shows events tagged with SHA |
-| 7.2 | Sanity webhook validator | Deploy Cloud Run Function with HMAC verification + replay protection | Publish in Sanity triggers build within 60s; unsigned request returns 401 |
-| 7.3 | Cloud Monitoring uptime check | `gcloud monitoring uptime create mangu-publishers-healthz` | Green check on `/healthz` in Monitoring Console |
-| 7.4 | Alert policies | Create 4 policies: 5xx rate, p99 latency, memory, instance count | Policies show as active in Alerting Console |
-| 7.5 | Billing budget alerts | Cloud Console → Billing → Budgets & alerts | Notifications at 50%, 75%, 90% |
-| 7.6 | Artifact Registry cleanup | Verify policy from M4.3 | `gcloud artifacts repositories describe` shows policy |
-| 7.7 | Cloud Run tag pruning | Copy `prune-cloud-run-tags.sh`; run or schedule | Excess tags removed; most recent 50 retained |
-| 7.8 | Portable Text renderer | `npm install @portabletext/react`; create `PortableTextRenderer.tsx` | Renders Sanity rich text correctly |
-| 7.9 | Replace Netlify Forms | Sign up for Formspree; update contact form POST endpoint | Form submissions arrive at configured destination |
+| #   | Task                          | Operation                                                                                                                      | Verification                                                              |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| 7.1 | Sentry release tracking       | `npm install --save-dev @sentry/vite-plugin @sentry/react`; update `vite.config.ts`; add `SENTRY_AUTH_TOKEN` to Secret Manager | Sentry dashboard shows events tagged with SHA                             |
+| 7.2 | Sanity webhook validator      | Deploy Cloud Run Function with HMAC verification + replay protection                                                           | Publish in Sanity triggers build within 60s; unsigned request returns 401 |
+| 7.3 | Cloud Monitoring uptime check | `gcloud monitoring uptime create mangu-publishers-healthz`                                                                     | Green check on `/healthz` in Monitoring Console                           |
+| 7.4 | Alert policies                | Create 4 policies: 5xx rate, p99 latency, memory, instance count                                                               | Policies show as active in Alerting Console                               |
+| 7.5 | Billing budget alerts         | Cloud Console → Billing → Budgets & alerts                                                                                     | Notifications at 50%, 75%, 90%                                            |
+| 7.6 | Artifact Registry cleanup     | Verify policy from M4.3                                                                                                        | `gcloud artifacts repositories describe` shows policy                     |
+| 7.7 | Cloud Run tag pruning         | Copy `prune-cloud-run-tags.sh`; run or schedule                                                                                | Excess tags removed; most recent 50 retained                              |
+| 7.8 | Portable Text renderer        | `npm install @portabletext/react`; create `PortableTextRenderer.tsx`                                                           | Renders Sanity rich text correctly                                        |
+| 7.9 | Replace Netlify Forms         | Sign up for Formspree; update contact form POST endpoint                                                                       | Form submissions arrive at configured destination                         |
 
 #### 4.8.1 Sentry Release Tracking and Hidden Source Maps
 
@@ -861,20 +861,20 @@ npm install --save-dev @sentry/vite-plugin @sentry/react
 Update `vite.config.ts` to include the `sentryVitePlugin`:
 
 ```typescript
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
   build: { sourcemap: true },
   plugins: [
     // ... existing plugins
     sentryVitePlugin({
-      org: "your-sentry-org",
-      project: "mangu-publishers",
+      org: 'your-sentry-org',
+      project: 'mangu-publishers',
       authToken: process.env.SENTRY_AUTH_TOKEN,
       sourcemaps: {
-        assets: "./dist/**",
-        ignore: ["./node_modules/**"],
-        filesToDeleteAfterUpload: "./dist/**/*.map",
+        assets: './dist/**',
+        ignore: ['./node_modules/**'],
+        filesToDeleteAfterUpload: './dist/**/*.map',
       },
     }),
   ],
@@ -935,12 +935,12 @@ Verify in the Cloud Monitoring Console → Uptime checks that the check shows gr
 
 Create four alert policies in Cloud Monitoring:
 
-| Alert | Condition | Threshold | Rationale |
-|-------|-----------|-----------|-----------|
-| 5xx error rate | `metric.type=run.googleapis.com/request_count` with response class 5xx | > 5% over 5 minutes | Detects server errors affecting users |
-| p99 latency | `metric.type=run.googleapis.com/request_latencies` | > 2000ms over 10 minutes | Detects performance degradation |
-| Memory utilization | `metric.type=run.googleapis.com/container/memory/utilizations` | > 85% over 10 minutes | Prevents OOM kills |
-| Instance count | `metric.type=run.googleapis.com/container/instance_count` | >= 8 over 5 minutes | Signals traffic spike or runaway process (maxScale=10) |
+| Alert              | Condition                                                              | Threshold                | Rationale                                              |
+| ------------------ | ---------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------ |
+| 5xx error rate     | `metric.type=run.googleapis.com/request_count` with response class 5xx | > 5% over 5 minutes      | Detects server errors affecting users                  |
+| p99 latency        | `metric.type=run.googleapis.com/request_latencies`                     | > 2000ms over 10 minutes | Detects performance degradation                        |
+| Memory utilization | `metric.type=run.googleapis.com/container/memory/utilizations`         | > 85% over 10 minutes    | Prevents OOM kills                                     |
+| Instance count     | `metric.type=run.googleapis.com/container/instance_count`              | >= 8 over 5 minutes      | Signals traffic spike or runaway process (maxScale=10) |
 
 #### 4.8.5 Billing Budget Alerts
 

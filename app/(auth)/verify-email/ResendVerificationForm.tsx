@@ -38,11 +38,7 @@ export function ResendVerificationForm({ email }: ResendVerificationFormProps) {
         {status === 'loading' ? 'Sending...' : 'Resend Verification Email'}
       </Button>
       {message && (
-        <p
-          className={`text-sm ${
-            status === 'success' ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
+        <p className={`text-sm ${status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
           {message}
         </p>
       )}

@@ -31,19 +31,10 @@ export type {
 export type { WebhookEvent } from './webhook';
 
 // Export stripe types explicitly
-export type {
-  StripeWebhookEvent,
-  CheckoutSessionRequest,
-  CheckoutSessionResponse,
-} from './stripe';
+export type { StripeWebhookEvent, CheckoutSessionRequest, CheckoutSessionResponse } from './stripe';
 
 // Export books types with explicit names to avoid conflicts (only non-conflicting types)
-export type {
-  BookMetadata,
-  CreateBookInput,
-  UpdateBookInput,
-  BookSearchResult,
-} from './books';
+export type { BookMetadata, CreateBookInput, UpdateBookInput, BookSearchResult } from './books';
 
 // Re-export BookStats from analytics (more comprehensive)
 export type { BookStats as AnalyticsBookStats } from './analytics';
@@ -277,7 +268,7 @@ export interface UserFollow {
 /**
  * Notification types
  */
-export type NotificationType = 
+export type NotificationType =
   | 'new_follower'
   | 'new_purchase'
   | 'new_review'
@@ -333,7 +324,14 @@ export interface ReadingProgress {
 /**
  * Manuscript types
  */
-export type ManuscriptStatus = 'draft' | 'submitted' | 'under_review' | 'revisions_requested' | 'accepted' | 'rejected' | 'published';
+export type ManuscriptStatus =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'revisions_requested'
+  | 'accepted'
+  | 'rejected'
+  | 'published';
 
 export interface Manuscript {
   id: string;

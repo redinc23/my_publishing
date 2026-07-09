@@ -3,7 +3,12 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Edit, Trash2, MoreVertical, Flag } from 'lucide-react';
 import { deleteReview, reportReview } from '@/lib/actions/reviews';
 import { toast } from 'sonner';
@@ -55,21 +60,17 @@ export function ReviewActions({ review, isOwnReview = false }: ReviewActionsProp
         {isOwnReview ? (
           <>
             <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="mr-2 h-4 w-4" />
               Edit Review
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="text-red-600"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
+            <DropdownMenuItem onClick={handleDelete} disabled={isDeleting} className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
               {isDeleting ? 'Deleting...' : 'Delete Review'}
             </DropdownMenuItem>
           </>
         ) : (
           <DropdownMenuItem onClick={handleReport}>
-            <Flag className="h-4 w-4 mr-2" />
+            <Flag className="mr-2 h-4 w-4" />
             Report Review
           </DropdownMenuItem>
         )}

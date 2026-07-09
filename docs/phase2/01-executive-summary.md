@@ -14,16 +14,16 @@ Core model:
 
 ## Scope Definition (M1–M7b)
 
-| Milestone | Goal | Key Deliverable |
-|---|---|---|
-| M1 | Local security hardening | Server secret validation — ensure `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY` never leak to client |
-| M2 | Build pipeline scripts | Next.js build pipeline — `npm ci`, `npm run build` producing `.next/standalone/` |
-| M3 | Runtime container | Hardened Node.js container with Next.js standalone output, non-root UID 1001, `/api/health` endpoint |
-| M4 | GCP foundation | Artifact Registry, Secret Manager, IAM, Developer Connect, trigger foundation |
-| M5 | Cloud Build end-to-end | Push to `main` executes deterministic Cloud Build pipeline and deploy |
-| M6 | Firebase + domain | TLS-enabled custom domain, rewrite and deep-link correctness |
-| M7a | Pre-cutover guardrails | Monitoring, alerts, budgets validated before GO-LIVE |
-| M7b | Post-cutover stabilization | Webhook rebuilds, overnight review, steady-state handoff |
+| Milestone | Goal                       | Key Deliverable                                                                                                           |
+| --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| M1        | Local security hardening   | Server secret validation — ensure `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY` never leak to client |
+| M2        | Build pipeline scripts     | Next.js build pipeline — `npm ci`, `npm run build` producing `.next/standalone/`                                          |
+| M3        | Runtime container          | Hardened Node.js container with Next.js standalone output, non-root UID 1001, `/api/health` endpoint                      |
+| M4        | GCP foundation             | Artifact Registry, Secret Manager, IAM, Developer Connect, trigger foundation                                             |
+| M5        | Cloud Build end-to-end     | Push to `main` executes deterministic Cloud Build pipeline and deploy                                                     |
+| M6        | Firebase + domain          | TLS-enabled custom domain, rewrite and deep-link correctness                                                              |
+| M7a       | Pre-cutover guardrails     | Monitoring, alerts, budgets validated before GO-LIVE                                                                      |
+| M7b       | Post-cutover stabilization | Webhook rebuilds, overnight review, steady-state handoff                                                                  |
 
 ## Dependency Chain
 

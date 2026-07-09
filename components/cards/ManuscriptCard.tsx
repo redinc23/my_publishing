@@ -31,7 +31,7 @@ export function ManuscriptCard({ manuscript }: ManuscriptCardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-secondary mb-2 line-clamp-2">{manuscript.synopsis}</p>
+          <p className="mb-2 line-clamp-2 text-sm text-secondary">{manuscript.synopsis}</p>
           <div className="flex items-center gap-4 text-xs text-secondary">
             <span>{manuscript.genre}</span>
             {manuscript.word_count && <span>{manuscript.word_count.toLocaleString()} words</span>}
