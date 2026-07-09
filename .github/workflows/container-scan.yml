@@ -18,7 +18,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build image
-        run: docker build -t my_publishing:${{ github.sha }} .
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUyNjQwMDAsImV4cCI6MTk2MDg0MDAwMH0.placeholder \
+            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder \
+            --build-arg NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000 \
+            -t my_publishing:${{ github.sha }} .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:

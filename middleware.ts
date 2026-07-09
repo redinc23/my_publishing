@@ -3,6 +3,13 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
 
+function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  if (!url || !key) return false;
+  return !/placeholder/i.test(url) && !/placeholder/i.test(key);
+}
+
 /** Reject a request per rate-limit result: 429 when limited, 503 when the limiter is unavailable (fail-closed). */
 function rateLimitRejection(result: { reason: string; headers: Record<string, string> }) {
   if (result.reason === 'unavailable') {
@@ -51,8 +58,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check for required environment variables
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.error('Missing Supabase environment variables. Check .env.local.example for setup instructions.');
+  if (!isSupabaseConfigured()) {
+    console.error(
+      'Missing Supabase environment variables. Check .env.local.example for setup instructions.'
+    );
+    return NextResponse.next({ request: { headers: request.headers } });
   }
 
   let response = NextResponse.next({
@@ -70,10 +80,10 @@ export async function middleware(request: NextRequest) {
           getAll() {
             return request.cookies.getAll();
           },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
+          setAll(
+            cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>
+          ) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
             response = NextResponse.next({
               request,
             });
@@ -91,7 +101,7 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     // If auth fails due to config issues, allow public routes to proceed
-    if (userError && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    if (userError && !isSupabaseConfigured()) {
       return response;
     }
 
@@ -157,7 +167,15 @@ export async function middleware(request: NextRequest) {
     return response;
   } catch (error) {
     // If middleware fails completely, allow public routes to proceed
-    const publicRoutes = ['/', '/books', '/genres', '/login', '/register', '/reset-password', '/api'];
+    const publicRoutes = [
+      '/',
+      '/books',
+      '/genres',
+      '/login',
+      '/register',
+      '/reset-password',
+      '/api',
+    ];
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
     if (isPublicRoute) {

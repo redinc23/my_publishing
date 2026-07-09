@@ -1,0 +1,9 @@
+# Build artifacts
+.next
+node_modules
+coverage
+playwright-report
+test-results
+
+# Static homepage drafts (HTML content, not JS — breaks Prettier parser)
+public/homepage/enhancements.js
