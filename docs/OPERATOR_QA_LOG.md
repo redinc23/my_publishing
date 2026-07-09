@@ -2,6 +2,64 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 3 COMPLETE + Phase 4 BLOCKED (agent-run, 2026-07-09)
+
+**Supabase project:** `mangu-publishers` / `tkzvikozrcynhwsqtkqp`  
+**Stripe sandbox:** `acct_1TWSIxCoO0Rdefo0` (Mangu Publishers sandbox)
+
+### Phase 3 ledger
+
+| Sub-stage | Result |
+|-----------|--------|
+| `[PASS] 3.1` — Migration set | `bash scripts/verify-migrations.sh` → **15** non-empty SQL files in `supabase/migrations/`. |
+| `[PASS] 3.2` — Production schema | public base tables = **36**. Extensions: `vector`, `pg_trgm`, `unaccent`. Triggers: `on_auth_user_created`, `update_profiles_updated_at`. `books.content_type` present. Sentinel tables queryable (`profiles`, `analytics_events`, `webhook_events`, `reviews`). |
+| `[PASS] 3.3` — Storage buckets | `book-covers` public 5MB jpeg/png/webp/gif; `manuscripts` **private** 100MB pdf/doc/docx/txt; `published-epubs` public 50MB epub. Policies present for covers + admin ALL. |
+| `[PASS] 3.4` — RLS (anon SQL) | `SET LOCAL ROLE anon`: orders=0, book_content=0, profiles=0, reading_progress=0. RLS enabled on orders/reading_progress/book_content/profiles/books/webhook_events. Did **not** treat verify-rls script false positives as failures. |
+| `[PASS] 3.5` — Seed data | Inserted author `MANGU QA Author` + 2 published public books: `the-launch-gate`, `cloud-run-chronicles`. Anon sees both. `https://www.mangu-publishers.com/books` HTTP 200 shows both titles. |
+
+**Phase 3 EXIT: PASS** — proceed to Phase 4.
+
+### Phase 4 status
+
+| Sub-stage | Result |
+|-----------|--------|
+| `[BLOCKED] 4.1` | No interactive `gcloud` credentials in cloud agent. Required: `gcloud auth login` as **`renee@mangu-publishers.com`** (not `books@`) → project `delta-wonder-488420-i3`. |
+| `[PENDING] 4.2–4.5` | Blocked on 4.1. Scripts ready: `sync-gcp-secrets-from-env.sh`, `grant-cloudrun-secret-access.sh` (Upstash included), `gcloud-build-submit.sh`, `verify-gcp-production.sh`. |
+
+### Observations (not Phase 3 blockers)
+
+- `www.mangu-publishers.com` currently served by **Vercel** (`server: Vercel`). `/api/health?ready=1` → `degraded`, Stripe **warn** ("Stripe not configured"). Canonical prod remains **Cloud Run** (`docs/CANONICAL_PRODUCTION.md`).
+- PR #138 (fail-closed cloudbuild + e2e mock env + Upstash grant) **merged**. Do **not** merge PR #136/#139 placeholder/`NEXT_PHASE` soft-bake paths that fight fail-closed Cloud Build.
+- Hold dependabot #125–#134 until after launch.
+- Phase 5 (Stripe webhook) requires Phase 4 complete first per checklist. Stripe MCP sees sandbox account; webhook create needs `STRIPE_SECRET_KEY` in `.env.local` + `./scripts/create-stripe-webhook.sh` after Cloud Run is canonical.
+
+### Operator / Copilot Pro — run Phase 4 NOW
+
+```bash
+# On a machine with browser auth as renee@mangu-publishers.com
+gcloud auth login
+gcloud config set project delta-wonder-488420-i3
+gcloud auth list   # must show renee@ active
+
+# Real secrets in .env.local (not Phase 2 placeholders)
+./scripts/sync-gcp-secrets-from-env.sh
+./scripts/grant-cloudrun-secret-access.sh
+gcloud secrets list
+# Confirm secretAccessor on: supabase-service-role-key, stripe-secret-key,
+# stripe-webhook-secret, upstash-redis-rest-url, upstash-redis-rest-token
+
+./scripts/gcloud-build-submit.sh
+./scripts/verify-gcp-production.sh
+
+curl -sS https://www.mangu-publishers.com/api/live
+curl -sS "https://www.mangu-publishers.com/api/health?ready=1"
+gcloud run services describe mangu-publishers --region us-central1 \
+  --format='value(status.latestReadyRevisionName)'
+# Record KNOWN_GOOD_REVISION in this file, then Phase 5 Stripe webhook.
+```
+
+## Phase 3 + PR #136 review + Phase 4 gate (agent-run, 2026-07-09) — superseded by section above
+
 ## Phase 3 + PR #136 review + Phase 4 gate (agent-run, 2026-07-09)
 
 **Supabase project:** `mangu-publishers` / `tkzvikozrcynhwsqtkqp`
