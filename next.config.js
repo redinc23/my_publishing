@@ -15,8 +15,7 @@ const publicEnv = {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrenZpa296cmN5bmh3c3F0a3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MzU4MzYsImV4cCI6MjA5NDIxMTgzNn0.mf8wC6KEzkw9K2d_H9VzG9rzFPSPWpgQUL0b5kMruDI',
   NEXT_PUBLIC_SITE_URL:
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://mypublishing-redinc23s-projects.vercel.app',
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://mypublishing-redinc23s-projects.vercel.app',
 };
 
 // Build a Content-Security-Policy that covers all required third-party origins.

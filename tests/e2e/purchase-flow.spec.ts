@@ -18,7 +18,7 @@ test.describe('Purchase Flow', () => {
 
   test('books listing page loads', async ({ page }) => {
     await page.goto('/books');
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('search functionality works', async ({ page }) => {
