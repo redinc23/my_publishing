@@ -13,7 +13,7 @@ substitutions:
 
 steps:
   - id: npm-ci
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
@@ -22,7 +22,7 @@ steps:
         npm ci
 
   - id: lint-and-typecheck
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
@@ -32,7 +32,7 @@ steps:
         npm run type-check
 
   - id: next-build
-    name: node:20
+    name: node:22
     env:
       - NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY}
@@ -64,7 +64,7 @@ steps:
 
   # PERF-PHASE2-8 — CI perf budget check: fail if main JS bundle exceeds 250kB gzipped
   - id: perf-budget
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
@@ -83,7 +83,7 @@ steps:
         echo "All chunks under $${MAX_SIZE_KB}kB gzipped — PASS"
 
   - id: secret-audit
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
