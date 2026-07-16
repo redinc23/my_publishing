@@ -27,6 +27,7 @@ export function ResetPasswordForm() {
     formState: { errors },
   } = useForm<ResetFormData>({
     resolver: zodResolver(resetSchema),
+    mode: 'onSubmit',
   });
 
   const onSubmit = async (data: ResetFormData) => {
@@ -99,9 +100,14 @@ export function ResetPasswordForm() {
           disabled={isLoading}
         />
         {errors.email && (
-          <p id="email-error" role="alert" className="mt-1 text-sm text-red-500">
+          <div
+            id="email-error"
+            role="alert"
+            aria-live="polite"
+            className="mt-1 text-sm text-red-500"
+          >
             {errors.email.message}
-          </p>
+          </div>
         )}
       </div>
       <Button type="submit" className="w-full" disabled={isLoading} aria-busy={isLoading}>

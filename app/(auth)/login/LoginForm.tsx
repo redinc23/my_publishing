@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useId, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,20 +17,15 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const errorId = useId();
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+interface LoginFormProps {
+  initialError?: string;
+}
 
-  // Surface errors forwarded via URL (e.g. from OAuth callback failures).
-  useEffect(() => {
-    const urlError = searchParams?.get('error');
-    if (urlError) {
-      setError(decodeURIComponent(urlError));
-    }
-  }, [searchParams]);
+export function LoginForm({ initialError }: LoginFormProps) {
+  const router = useRouter();
+  const errorId = useId();
+  const [error, setError] = useState<string | null>(initialError ?? null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -38,6 +33,7 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onSubmit',
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -98,9 +94,14 @@ export function LoginForm() {
           disabled={isLoading}
         />
         {errors.email && (
-          <p id="email-error" role="alert" className="mt-1 text-sm text-red-500">
+          <div
+            id="email-error"
+            role="alert"
+            aria-live="polite"
+            className="mt-1 text-sm text-red-500"
+          >
             {errors.email.message}
-          </p>
+          </div>
         )}
       </div>
       <div>
@@ -118,9 +119,14 @@ export function LoginForm() {
           disabled={isLoading}
         />
         {errors.password && (
-          <p id="password-error" role="alert" className="mt-1 text-sm text-red-500">
+          <div
+            id="password-error"
+            role="alert"
+            aria-live="polite"
+            className="mt-1 text-sm text-red-500"
+          >
             {errors.password.message}
-          </p>
+          </div>
         )}
       </div>
       <Button type="submit" className="w-full" disabled={isLoading} aria-busy={isLoading}>

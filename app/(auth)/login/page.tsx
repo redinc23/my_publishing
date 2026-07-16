@@ -8,7 +8,9 @@ export const metadata: Metadata = {
   description: 'Sign in to your MANGU account',
 };
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams?: { error?: string } }) {
+  const initialError = searchParams?.error ? decodeURIComponent(searchParams.error) : undefined;
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
@@ -19,7 +21,7 @@ export default function LoginPage() {
         <CardDescription>Sign in to your account to continue</CardDescription>
       </CardHeader>
       <CardContent>
-        <LoginForm />
+        <LoginForm initialError={initialError} />
         <div className="mt-4 text-center text-sm">
           <Link href="/reset-password" className="text-primary hover:underline">
             Forgot password?

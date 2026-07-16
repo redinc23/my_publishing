@@ -36,6 +36,7 @@ export function RegisterForm() {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: 'onSubmit',
   });
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -97,9 +98,14 @@ export function RegisterForm() {
           disabled={isLoading}
         />
         {errors.fullName && (
-          <p id="fullName-error" role="alert" className="mt-1 text-sm text-red-500">
+          <div
+            id="fullName-error"
+            role="alert"
+            aria-live="polite"
+            className="mt-1 text-sm text-red-500"
+          >
             {errors.fullName.message}
-          </p>
+          </div>
         )}
       </div>
       <div>
@@ -117,9 +123,14 @@ export function RegisterForm() {
           disabled={isLoading}
         />
         {errors.email && (
-          <p id="email-error" role="alert" className="mt-1 text-sm text-red-500">
+          <div
+            id="email-error"
+            role="alert"
+            aria-live="polite"
+            className="mt-1 text-sm text-red-500"
+          >
             {errors.email.message}
-          </p>
+          </div>
         )}
       </div>
       <div>
@@ -137,9 +148,14 @@ export function RegisterForm() {
           disabled={isLoading}
         />
         {errors.password && (
-          <p id="password-error" role="alert" className="mt-1 text-sm text-red-500">
+          <div
+            id="password-error"
+            role="alert"
+            aria-live="polite"
+            className="mt-1 text-sm text-red-500"
+          >
             {errors.password.message}
-          </p>
+          </div>
         )}
       </div>
       <div>
@@ -157,9 +173,14 @@ export function RegisterForm() {
           disabled={isLoading}
         />
         {errors.confirmPassword && (
-          <p id="confirmPassword-error" role="alert" className="mt-1 text-sm text-red-500">
+          <div
+            id="confirmPassword-error"
+            role="alert"
+            aria-live="polite"
+            className="mt-1 text-sm text-red-500"
+          >
             {errors.confirmPassword.message}
-          </p>
+          </div>
         )}
       </div>
       <Button type="submit" className="w-full" disabled={isLoading} aria-busy={isLoading}>

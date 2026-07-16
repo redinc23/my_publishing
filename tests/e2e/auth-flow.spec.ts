@@ -58,7 +58,7 @@ test.describe('Login page', () => {
   test('shows field-level validation errors for empty submit', async ({ page }) => {
     await page.getByRole('button', { name: /sign in/i }).click();
     // Zod resolver fires synchronous validation before the server action is called.
-    await expect(page.getByRole('alert').first()).toBeVisible();
+    await expect(signInForm(page).getByRole('alert').first()).toBeVisible();
   });
 
   test('shows field-level error for invalid email format', async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe('Login page', () => {
       .getByLabel(/password/i)
       .fill('secret123');
     await page.getByRole('button', { name: /sign in/i }).click();
-    await expect(page.getByText(/invalid email/i)).toBeVisible();
+    await expect(signInForm(page).getByText(/invalid email/i)).toBeVisible();
   });
 
   test('shows field-level error for short password', async ({ page }) => {
@@ -76,14 +76,14 @@ test.describe('Login page', () => {
       .getByLabel(/password/i)
       .fill('abc');
     await page.getByRole('button', { name: /sign in/i }).click();
-    await expect(page.getByText(/at least 6 characters/i)).toBeVisible();
+    await expect(signInForm(page).getByText(/at least 6 characters/i)).toBeVisible();
   });
 
   test('displays URL error parameter from OAuth callback', async ({ page }) => {
     await page.goto('/login?error=Authentication%20failed');
     // The error must be rendered inside an aria-live region. Filter out the
     // Next.js route announcer, which also has role="alert".
-    const alert = page.getByRole('alert').filter({ hasText: 'Authentication failed' });
+    const alert = signInForm(page).getByRole('alert').filter({ hasText: 'Authentication failed' });
     await expect(alert).toBeVisible();
   });
 
@@ -143,7 +143,7 @@ test.describe('Register page', () => {
     await form.getByLabel(/^password$/i).fill('password123');
     await form.getByLabel(/confirm password/i).fill('different');
     await page.getByRole('button', { name: /create account/i }).click();
-    await expect(page.getByText(/passwords don't match/i)).toBeVisible();
+    await expect(form.getByText(/passwords don't match/i)).toBeVisible();
   });
 
   test('shows duplicate email error', async ({ page }) => {
@@ -182,9 +182,10 @@ test.describe('Reset password page', () => {
   });
 
   test('shows validation error for invalid email', async ({ page }) => {
-    await resetForm(page).getByLabel(/email/i).fill('not-an-email');
+    const form = resetForm(page);
+    await form.getByLabel(/email/i).fill('not-an-email');
     await page.getByRole('button', { name: /send reset link/i }).click();
-    const alert = page.getByRole('alert').filter({ hasText: /invalid email/i });
+    const alert = form.getByRole('alert').filter({ hasText: /invalid email/i });
     await expect(alert).toBeVisible();
   });
 

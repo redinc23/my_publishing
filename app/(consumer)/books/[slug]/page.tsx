@@ -11,8 +11,26 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
+import { getMockBookBySlug, shouldUseMocks } from '@/lib/utils/mock-data';
 
 async function getBook(slug: string): Promise<BookFull | null> {
+  if (shouldUseMocks()) {
+    const mockBook = getMockBookBySlug(slug);
+    if (!mockBook) {
+      return null;
+    }
+
+    return {
+      ...mockBook,
+      content_type: 'book',
+      author: {
+        id: mockBook.author.id,
+        pen_name: mockBook.author.pen_name,
+        profile: mockBook.author.profile,
+      },
+    } as BookFull;
+  }
+
   const supabase = await createClient();
   const { data } = await supabase
     .from('books')
