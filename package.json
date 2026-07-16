@@ -20,6 +20,7 @@
     "verify-rls": "tsx scripts/verify-rls.ts"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
     "@hookform/resolvers": "^3.3.4",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@radix-ui/react-avatar": "^1.1.11",
