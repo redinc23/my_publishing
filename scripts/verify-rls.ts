@@ -17,10 +17,16 @@ interface TestResult {
   error?: string;
 }
 
-// Validate environment
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+// Validate environment. The anon key is required because the RLS tests
+// exercise anonymous access paths.
+if (
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  !process.env.SUPABASE_SERVICE_ROLE_KEY
+) {
   console.error('❌ Missing required environment variables:');
   console.error('   - NEXT_PUBLIC_SUPABASE_URL');
+  console.error('   - NEXT_PUBLIC_SUPABASE_ANON_KEY');
   console.error('   - SUPABASE_SERVICE_ROLE_KEY');
   console.error('\nPlease set these in .env.local');
   process.exit(1);
@@ -33,7 +39,7 @@ const supabaseAdmin = createClient(
 
 const supabaseAnon = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 async function testRLS(): Promise<TestResult[]> {
