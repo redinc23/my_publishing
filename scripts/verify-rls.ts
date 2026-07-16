@@ -37,14 +37,42 @@ if (
   process.exit(1);
 }
 
+/**
+ * Fetch wrapper that retries transient connection failures with backoff and
+ * logs the undici cause chain (plain 'TypeError: fetch failed' hides the real
+ * error: DNS, connection reset, TLS, ...). GitHub-hosted runners drop
+ * connections to Supabase intermittently.
+ */
+const resilientFetch: typeof fetch = async (input, init) => {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      return await fetch(input, init);
+    } catch (error) {
+      lastError = error;
+      let cause = '';
+      let e: unknown = error;
+      while (e instanceof Error) {
+        cause += (cause ? ' <- ' : '') + `${e.name}: ${e.message}`;
+        e = e.cause;
+      }
+      console.warn(`   ⚠️  fetch attempt ${attempt}/4 failed: ${cause}`);
+      if (attempt < 4) await new Promise((r) => setTimeout(r, 1500 * attempt));
+    }
+  }
+  throw lastError;
+};
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { global: { fetch: resilientFetch } }
 );
 
 const supabaseAnon = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { global: { fetch: resilientFetch } }
 );
 
 /**
@@ -255,7 +283,35 @@ async function testRLS(): Promise<TestResult[]> {
   return results;
 }
 
+/**
+ * Fail fast with actionable diagnostics when the Supabase project is
+ * unreachable — 'TypeError: fetch failed' from undici hides the real cause
+ * (DNS, TLS, connection reset, ...) unless the cause chain is printed.
+ */
+async function preflight(): Promise<void> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  try {
+    const res = await fetch(`${url.replace(/\/+$/, '')}/rest/v1/`, {
+      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+    });
+    console.log(`🌐 Preflight: REST endpoint responded with HTTP ${res.status}\n`);
+  } catch (error) {
+    console.error('🌐 Preflight connectivity check failed. Cause chain:');
+    let e: unknown = error;
+    while (e instanceof Error) {
+      console.error(`   ${e.name}: ${e.message}`);
+      e = e.cause;
+    }
+    console.error(
+      '\nCheck that NEXT_PUBLIC_SUPABASE_URL points at an active Supabase project ' +
+        'and is reachable from this environment.\n'
+    );
+    process.exit(1);
+  }
+}
+
 async function main() {
+  await preflight();
   const results = await testRLS();
 
   console.log('\n📊 Test Results:\n');
