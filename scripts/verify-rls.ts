@@ -9,7 +9,12 @@
  *   tsx scripts/verify-rls.ts
  */
 
+import { setDefaultResultOrder } from 'node:dns';
 import { createClient } from '@supabase/supabase-js';
+
+// GitHub-hosted runners intermittently fail IPv6 connections to Supabase,
+// which undici reports as an opaque 'TypeError: fetch failed'.
+setDefaultResultOrder('ipv4first');
 
 interface TestResult {
   name: string;
