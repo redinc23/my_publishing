@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
-      return NextResponse.json({ error: 'limit must be an integer between 1 and 50' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'limit must be an integer between 1 and 50' },
+        { status: 400 }
+      );
     }
 
     const supabase = createPublicCatalogClient();
@@ -48,11 +51,13 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[Resonance Similar] Failed to load similar books:', error);
+      return NextResponse.json({ error: 'Failed to load similar books' }, { status: 500 });
     }
 
     return NextResponse.json({ data: similarBooks || [] });
   } catch (error) {
+    console.error('[Resonance Similar] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

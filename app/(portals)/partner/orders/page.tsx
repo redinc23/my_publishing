@@ -6,7 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { reorderPartnerOrder } from '@/lib/actions/partner';
-import { formatDate, formatMoney, getPartnerPortalData, titleCase } from '../_lib/partner-data';
+import {
+  clampPage,
+  formatDate,
+  formatMoney,
+  getPartnerPortalData,
+  PartnerDataUnavailableError,
+  titleCase,
+} from '../_lib/partner-data';
+import { PartnerUnavailable } from '../_lib/partner-unavailable';
 
 interface OrdersPageProps {
   searchParams?: { status?: string; sort?: string; page?: string };
@@ -15,7 +23,18 @@ interface OrdersPageProps {
 const PAGE_SIZE = 5;
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
-  const { partner, orders } = await getPartnerPortalData();
+  let portalData;
+  try {
+    portalData = await getPartnerPortalData();
+  } catch (error) {
+    const message =
+      error instanceof PartnerDataUnavailableError
+        ? error.message
+        : 'Partner portal data is temporarily unavailable.';
+    return <PartnerUnavailable message={message} />;
+  }
+
+  const { partner, orders } = portalData;
 
   if (!partner) {
     return (
@@ -30,7 +49,6 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
 
   const status = searchParams?.status ?? 'all';
   const sort = searchParams?.sort ?? 'newest';
-  const currentPage = Math.max(Number(searchParams?.page ?? '1') || 1, 1);
   const filteredOrders = orders
     .filter((order) => status === 'all' || order.status === status)
     .sort((a, b) => {
@@ -39,6 +57,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
     });
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const currentPage = clampPage(Number(searchParams?.page ?? '1') || 1, totalPages);
   const pagedOrders = filteredOrders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const paginationParams = {
     ...(status !== 'all' ? { status } : {}),
@@ -124,7 +143,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             ))}
             </div>
             <Pagination
-              currentPage={Math.min(currentPage, totalPages)}
+              currentPage={currentPage}
               totalPages={totalPages}
               basePath="/partner/orders"
               queryParams={paginationParams}

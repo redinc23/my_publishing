@@ -4,15 +4,27 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { updateUserRoleAction } from '../actions';
+import { AdminQueryError } from '../_lib/query-error';
 
 export default async function AdminUsersPage() {
   const supabase = createClient();
 
-  const { data: users } = await supabase
+  const { data: users, error } = await supabase
     .from('profiles')
     .select('id, email, full_name, role, subscription_tier, created_at')
     .order('created_at', { ascending: false })
     .limit(50);
+
+  if (error) {
+    console.error('[admin/users] query failed:', error);
+    return (
+      <Section>
+        <Container>
+          <AdminQueryError title="Users Management" />
+        </Container>
+      </Section>
+    );
+  }
 
   return (
     <Section>

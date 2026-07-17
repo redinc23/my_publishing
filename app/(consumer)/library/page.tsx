@@ -24,7 +24,7 @@ function normalizeBook(book: OrderItem['book']): BookWithAuthor | null {
   return Array.isArray(book) ? (book[0] ?? null) : book;
 }
 
-async function getLibraryItems() {
+async function getLibraryItems(): Promise<OrderWithItems[]> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -35,33 +35,63 @@ async function getLibraryItems() {
   }
 
   // Admin client so the nested author join resolves under RLS; safe because
-  // results are filtered to the authenticated user's own orders.
+  // results are filtered to the authenticated user's own completed orders.
   const adminClient = createPublicCatalogClient();
 
   // orders.user_id stores profiles.id (not the auth user id) — resolve it first.
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from('profiles')
     .select('id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
+
+  if (profileError) {
+    throw new Error(`Failed to load library profile: ${profileError.message}`);
+  }
 
   if (!profile) {
     return [];
   }
 
-  const { data } = await adminClient
+  const { data, error: ordersError } = await adminClient
     .from('orders')
     .select(
       `id, order_number, created_at, items:order_items(id, unit_price, book:books(${PUBLIC_BOOK_SELECT}))`
     )
     .eq('user_id', profile.id)
+    .eq('status', 'completed')
     .order('created_at', { ascending: false });
+
+  if (ordersError) {
+    throw new Error(`Failed to load library orders: ${ordersError.message}`);
+  }
 
   return (data as OrderWithItems[]) || [];
 }
 
 export default async function LibraryPage() {
-  const orders = await getLibraryItems();
+  let orders: OrderWithItems[];
+  try {
+    orders = await getLibraryItems();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to load your library.';
+    return (
+      <Section>
+        <Container>
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold">Your Library</h1>
+            <p className="mt-2 text-secondary">Access every book you&apos;ve purchased.</p>
+          </div>
+          <div className="py-16 text-center">
+            <p className="text-secondary" role="alert">
+              {message}
+            </p>
+          </div>
+        </Container>
+      </Section>
+    );
+  }
+
   const purchasedItems = orders.flatMap((order) =>
     (order.items || []).reduce<Array<OrderItem & { book: BookWithAuthor; order: OrderWithItems }>>(
       (acc, item) => {

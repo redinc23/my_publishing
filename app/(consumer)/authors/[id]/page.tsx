@@ -9,6 +9,7 @@ import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Author, BookWithAuthor, Profile } from '@/types';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 interface AuthorWithProfile extends Author {
   profile?: Profile;
@@ -40,12 +41,22 @@ export async function generateMetadata({
   }
 
   const displayName = author.profile?.full_name || author.pen_name;
+  const description =
+    author.bio ||
+    `Read books and learn more about ${displayName}, an author on MANGU Publishers.`;
+  const pageUrl = `${getSiteUrl()}/authors/${params.id}`;
 
   return {
     title: `${displayName} - Author`,
-    description:
-      author.bio ||
-      `Read books and learn more about ${displayName}, an author on MANGU Publishers.`,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title: `${displayName} - Author`,
+      description,
+      url: pageUrl,
+    },
   };
 }
 

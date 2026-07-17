@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Book, Manuscript } from '@/types';
 
+interface AnalyticsBook extends Book {
+  total_reads?: number;
+  average_rating?: number;
+}
+
 async function getAnalyticsData() {
   const supabase = await createClient();
   const {
@@ -39,7 +44,7 @@ async function getAnalyticsData() {
 
   return {
     author,
-    books: (books as Book[]) || [],
+    books: (books as AnalyticsBook[]) || [],
     manuscripts: (manuscripts as Manuscript[]) || [],
   };
 }

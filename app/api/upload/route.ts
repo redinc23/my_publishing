@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 
+const ALLOWED_FILE_TYPES = new Map([
+  ['application/pdf', 'pdf'],
+  ['application/msword', 'doc'],
+  ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'docx'],
+  ['text/plain', 'txt'],
+]);
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -20,9 +27,9 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid multipart form data' }, { status: 400 });
     }
-    const file = formData.get('file') as File;
+    const file = formData.get('file');
 
-    if (!file) {
+    if (!(file instanceof File) || file.size === 0) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
@@ -32,12 +39,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large' }, { status: 400 });
     }
 
-    const fileExt = file.name.split('.').pop();
+    const fileExt = ALLOWED_FILE_TYPES.get(file.type);
+    if (!fileExt) {
+      return NextResponse.json(
+        { error: 'Unsupported file type. Upload a PDF, Word document, or plain text file.' },
+        { status: 400 }
+      );
+    }
+
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
     const adminSupabase = createAdminClient();
     const { error } = await adminSupabase.storage.from('manuscripts').upload(fileName, file, {
       cacheControl: '3600',
+      contentType: file.type,
       upsert: false,
     });
 
@@ -52,6 +67,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {
+    console.error('[Upload] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

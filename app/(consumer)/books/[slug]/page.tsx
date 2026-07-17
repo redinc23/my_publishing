@@ -14,6 +14,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 async function getBook(slug: string): Promise<BookFull | null> {
   const supabase = createPublicCatalogClient();
@@ -133,11 +134,22 @@ export async function generateMetadata({
     };
   }
 
+  const description =
+    book.description ||
+    `Read ${book.title} by ${book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author'}`;
+  const pageUrl = `${getSiteUrl()}/books/${params.slug}`;
+
   return {
     title: `${book.title} - MANGU`,
-    description:
-      book.description ||
-      `Read ${book.title} by ${book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author'}`,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title: `${book.title} - MANGU`,
+      description,
+      url: pageUrl,
+    },
   };
 }
 

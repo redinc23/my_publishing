@@ -19,6 +19,7 @@ export function SearchBar() {
     <form onSubmit={handleSubmit} className="hidden md:block">
       <Input
         type="search"
+        aria-label="Search books"
         placeholder="Search books..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}

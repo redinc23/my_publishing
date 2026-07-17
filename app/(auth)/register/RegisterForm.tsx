@@ -27,7 +27,6 @@ export function RegisterForm() {
   const errorId = useId();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [needsVerification, setNeedsVerification] = useState(false);
 
   const {
     register,
@@ -52,10 +51,11 @@ export function RegisterForm() {
       if (result?.error) {
         setError(result.error);
         setIsLoading(false);
-      } else if (result?.needsVerification) {
+      } else if (result?.needsVerification && result.verificationEmail) {
         // No session yet — the user must confirm their email first.
-        setNeedsVerification(true);
-        setIsLoading(false);
+        window.location.assign(
+          `/verify-email?email=${encodeURIComponent(result.verificationEmail)}`
+        );
       } else {
         // Full-page navigation so the client-side Supabase session picks up
         // the auth cookies set by the server action.
@@ -66,24 +66,6 @@ export function RegisterForm() {
       setIsLoading(false);
     }
   };
-
-  if (needsVerification) {
-    return (
-      <div
-        role="status"
-        className="space-y-3 rounded-md border border-green-600 bg-green-500/10 p-4 text-sm"
-      >
-        <p className="font-medium text-green-500">Account created!</p>
-        <p>
-          We&apos;ve sent a verification link to your email. Please confirm your address, then sign
-          in.
-        </p>
-        <a href="/login" className="inline-block font-medium text-primary underline">
-          Go to sign in
-        </a>
-      </div>
-    );
-  }
 
   return (
     <form

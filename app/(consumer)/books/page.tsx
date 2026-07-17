@@ -7,9 +7,21 @@ import { Section } from '@/components/layout/Section';
 import { BookFilters } from './BookFilters';
 import { BookListStream } from '../components/BookListStream';
 import { BooksSkeleton } from '../components/BooksSkeleton';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/books`;
+
 export const metadata: Metadata = {
   title: 'Browse Books',
   description: 'Browse published books from independent authors on MANGU Publishers.',
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Browse Books',
+    description: 'Browse published books from independent authors on MANGU Publishers.',
+    url: pageUrl,
+  },
 };
 
 interface BooksPageProps {

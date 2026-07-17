@@ -107,17 +107,27 @@ const nextConfig = {
   },
 };
 
-// PERF-PHASE2-8
-const { withSentryConfig } = require('@sentry/nextjs');
+// PERF-PHASE2-8 — Only apply Sentry's Next.js wrapper when a DSN is configured.
+const analyzedConfig = withBundleAnalyzer(nextConfig);
+const sentryDsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
-const sentryWebpackPluginOptions = {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: !process.env.SENTRY_AUTH_TOKEN,
-  hideSourceMaps: true,
-  disableLogger: true,
-  automaticVercelMonitors: false,
-};
+if (!sentryDsn) {
+  module.exports = analyzedConfig;
+} else {
+  const { withSentryConfig } = require('@sentry/nextjs');
+  const hasSentryAuthToken = Boolean(process.env.SENTRY_AUTH_TOKEN);
 
-module.exports = withSentryConfig(withBundleAnalyzer(nextConfig), sentryWebpackPluginOptions);
+  module.exports = withSentryConfig(analyzedConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    silent: !hasSentryAuthToken,
+    // Avoid source-map upload work when no auth token is available.
+    sourcemaps: {
+      disable: !hasSentryAuthToken,
+    },
+    hideSourceMaps: true,
+    disableLogger: true,
+    automaticVercelMonitors: false,
+  });
+}

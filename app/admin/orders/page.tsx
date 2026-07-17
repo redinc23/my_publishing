@@ -4,15 +4,27 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { updateOrderStatusAction } from '../actions';
+import { AdminQueryError } from '../_lib/query-error';
 
 export default async function AdminOrdersPage() {
   const supabase = createClient();
 
-  const { data: orders } = await supabase
+  const { data: orders, error } = await supabase
     .from('orders')
     .select('id, order_number, total_amount, status, created_at, user:profiles(email)')
     .order('created_at', { ascending: false })
     .limit(50);
+
+  if (error) {
+    console.error('[admin/orders] query failed:', error);
+    return (
+      <Section>
+        <Container>
+          <AdminQueryError title="Orders Management" />
+        </Container>
+      </Section>
+    );
+  }
 
   return (
     <Section>

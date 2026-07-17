@@ -3,19 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Twitter, Github, Instagram, Linkedin, Mail, ChevronDown, Globe } from 'lucide-react';
+import { Mail, ChevronDown, Globe } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const footerLinkVariants = { rest: { x: 0 }, hover: { x: 4 } };
-
-const socialLinks = [
-  { name: 'Twitter', icon: Twitter, href: '#', label: 'MANGU Publishers on Twitter' },
-  { name: 'GitHub', icon: Github, href: '#', label: 'MANGU Publishers on GitHub' },
-  { name: 'Instagram', icon: Instagram, href: '#', label: 'MANGU Publishers on Instagram' },
-  { name: 'LinkedIn', icon: Linkedin, href: '#', label: 'MANGU Publishers on LinkedIn' },
-];
 
 const footerColumns = [
   {
@@ -77,31 +70,6 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
         {children}
       </Link>
     </motion.div>
-  );
-}
-
-function SocialIcon({
-  href,
-  icon: Icon,
-  label,
-}: {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-}) {
-  return (
-    <motion.a
-      href={href}
-      aria-label={label}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-muted-foreground transition-colors duration-200 hover:border-primary/50 hover:text-primary"
-      whileHover={{ scale: 1.1, y: -2 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-    >
-      <Icon className="h-4 w-4" aria-hidden="true" />
-    </motion.a>
   );
 }
 
@@ -177,11 +145,6 @@ export function Footer() {
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
               Your digital publishing platform for discovering and reading great books.
             </p>
-            <div className="flex items-center gap-3 pt-1">
-              {socialLinks.map((s) => (
-                <SocialIcon key={s.name} href={s.href} icon={s.icon} label={s.label} />
-              ))}
-            </div>
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <AppStoreButton store="App Store" href="https://www.apple.com/app-store/" />
               <AppStoreButton store="Google Play" href="https://play.google.com/store" />

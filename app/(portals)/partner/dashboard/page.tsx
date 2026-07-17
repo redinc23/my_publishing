@@ -4,10 +4,28 @@ import { Section } from '@/components/layout/Section';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatDate, formatMoney, getPartnerPortalData, titleCase } from '../_lib/partner-data';
+import {
+  formatDate,
+  formatMoney,
+  getPartnerPortalData,
+  PartnerDataUnavailableError,
+  titleCase,
+} from '../_lib/partner-data';
+import { PartnerUnavailable } from '../_lib/partner-unavailable';
 
 export default async function PartnerDashboardPage() {
-  const { partner, catalogBooks, arcRequests, orders } = await getPartnerPortalData();
+  let portalData;
+  try {
+    portalData = await getPartnerPortalData();
+  } catch (error) {
+    const message =
+      error instanceof PartnerDataUnavailableError
+        ? error.message
+        : 'Partner portal data is temporarily unavailable.';
+    return <PartnerUnavailable message={message} />;
+  }
+
+  const { partner, catalogBooks, arcRequests, orders } = portalData;
 
   if (!partner) {
     return (

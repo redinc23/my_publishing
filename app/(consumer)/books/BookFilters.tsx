@@ -59,6 +59,7 @@ export function BookFilters() {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
       <Input
+        aria-label="Search books"
         placeholder="Search books..."
         defaultValue={searchParams?.get('q') || ''}
         onChange={(e) => {
@@ -78,7 +79,7 @@ export function BookFilters() {
         value={searchParams?.get('genre') || ''}
         onValueChange={(value) => updateSearchParam('genre', value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger aria-label="Filter by genre" className="w-full sm:w-[180px]">
           <SelectValue placeholder="All Genres" />
         </SelectTrigger>
         <SelectContent>
@@ -94,7 +95,7 @@ export function BookFilters() {
         value={searchParams?.get('sort') || 'published_at'}
         onValueChange={(value) => updateSearchParam('sort', value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger aria-label="Sort books" className="w-full sm:w-[180px]">
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>

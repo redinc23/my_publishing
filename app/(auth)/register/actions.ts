@@ -37,7 +37,7 @@ async function resolveAuthOrigin() {
   return 'http://localhost:3001';
 }
 
-function toFriendlyRegisterError(message: string) {
+export function toFriendlyRegisterError(message: string) {
   if (message.includes('User already registered')) {
     return 'An account with this email already exists. Please sign in instead.';
   }
@@ -48,6 +48,14 @@ function toFriendlyRegisterError(message: string) {
 
   if (/email.*(invalid|validate)|invalid.*email/i.test(message)) {
     return 'Please use a valid email address that can receive email.';
+  }
+
+  if (
+    /email rate limit exceeded|over_email_send_rate_limit|email.*quota|quota.*email|email.*temporarily unavailable|smtp|error sending/i.test(
+      message
+    )
+  ) {
+    return 'Verification email delivery is temporarily unavailable because the email provider is throttling messages. Please try again later.';
   }
 
   if (/too many requests|rate limit|security purposes/i.test(message)) {
@@ -62,10 +70,12 @@ export async function registerUser(formData: FormData) {
   const password = formData.get('password') as string;
   const fullName = formData.get('fullName') as string;
 
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+
   // Rate limiting
   const headersList = await headers();
   const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
-  const identifier = getAuthIdentifier(ip, email);
+  const identifier = getAuthIdentifier(ip, normalizedEmail);
 
   if (!(await authRateLimit(identifier))) {
     return { error: 'Too many registration attempts. Please try again in 15 minutes.' };
@@ -78,7 +88,7 @@ export async function registerUser(formData: FormData) {
 
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!emailRegex.test(normalizedEmail)) {
     return { error: 'Please enter a valid email address' };
   }
 
@@ -89,8 +99,6 @@ export async function registerUser(formData: FormData) {
   if (fullName.trim().length < 2) {
     return { error: 'Full name must be at least 2 characters long' };
   }
-
-  let needsVerification = false;
 
   try {
     const supabase = await createClient();
@@ -115,7 +123,7 @@ export async function registerUser(formData: FormData) {
     // Create auth user with metadata for profile creation trigger
     // The trigger will automatically create the profile
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
       options: {
         emailRedirectTo: `${await resolveAuthOrigin()}/callback`,
@@ -137,7 +145,7 @@ export async function registerUser(formData: FormData) {
 
     // When Supabase requires email confirmation there is no session yet, so
     // the browser gets no auth cookies — surface that to the client.
-    needsVerification = !authData.session;
+    const needsVerification = !authData.session;
 
     // Profile will be created automatically by the trigger
     // Verify it was created (with a small delay to allow trigger to run)
@@ -156,7 +164,7 @@ export async function registerUser(formData: FormData) {
       const admin = createAdminClient();
       const { error: profileError } = await admin.from('profiles').insert({
         user_id: authData.user.id,
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         full_name: fullName.trim(),
         role: 'reader',
         subscription_tier: 'free',
@@ -168,16 +176,15 @@ export async function registerUser(formData: FormData) {
       }
     }
 
-    // Revalidate paths
     revalidatePath('/', 'layout');
+
+    return {
+      success: true,
+      needsVerification,
+      verificationEmail: needsVerification ? normalizedEmail : undefined,
+    };
   } catch (error) {
     console.error('Unexpected error during registration:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
-
-  // Success: the client performs a full-page navigation so the browser
-  // Supabase client picks up the freshly set auth cookies.
-  // When email confirmation is required there is no session yet, so the
-  // client shows a "check your email" notice instead.
-  return { success: true, needsVerification };
 }

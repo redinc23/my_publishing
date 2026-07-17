@@ -6,14 +6,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { reorderPartnerOrder } from '@/lib/actions/partner';
-import { formatDate, formatMoney, getPartnerOrder, titleCase } from '../../_lib/partner-data';
+import {
+  formatDate,
+  formatMoney,
+  getPartnerOrder,
+  PartnerDataUnavailableError,
+  titleCase,
+} from '../../_lib/partner-data';
+import { PartnerUnavailable } from '../../_lib/partner-unavailable';
 
 interface OrderDetailPageProps {
   params: { id: string };
 }
 
 export default async function OrderDetailPage({ params }: OrderDetailPageProps) {
-  const { partner, order } = await getPartnerOrder(params.id);
+  let orderData;
+  try {
+    orderData = await getPartnerOrder(params.id);
+  } catch (error) {
+    const message =
+      error instanceof PartnerDataUnavailableError
+        ? error.message
+        : 'Partner portal data is temporarily unavailable.';
+    return <PartnerUnavailable title="Order unavailable" message={message} />;
+  }
+
+  const { partner, order } = orderData;
 
   if (!partner) {
     return (

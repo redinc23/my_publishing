@@ -4,9 +4,22 @@ import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/discover`;
+
 export const metadata: Metadata = {
   title: 'Discover',
   description: 'Find personalized recommendations, reading communities, and new stories on MANGU.',
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Discover',
+    description:
+      'Find personalized recommendations, reading communities, and new stories on MANGU.',
+    url: pageUrl,
+  },
 };
 
 export default function DiscoverPage() {

@@ -7,7 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { createArcRequest } from '@/lib/actions/partner';
-import { formatDate, formatMoney, getPartnerPortalData, titleCase } from '../_lib/partner-data';
+import {
+  clampPage,
+  formatDate,
+  formatMoney,
+  getPartnerPortalData,
+  PartnerDataUnavailableError,
+  titleCase,
+} from '../_lib/partner-data';
+import { PartnerUnavailable } from '../_lib/partner-unavailable';
 
 interface CatalogsPageProps {
   searchParams?: { q?: string; genre?: string; sort?: string; page?: string };
@@ -16,7 +24,18 @@ interface CatalogsPageProps {
 const PAGE_SIZE = 2;
 
 export default async function CatalogsPage({ searchParams }: CatalogsPageProps) {
-  const { partner, catalogBooks, arcRequests } = await getPartnerPortalData();
+  let portalData;
+  try {
+    portalData = await getPartnerPortalData();
+  } catch (error) {
+    const message =
+      error instanceof PartnerDataUnavailableError
+        ? error.message
+        : 'Partner portal data is temporarily unavailable.';
+    return <PartnerUnavailable message={message} />;
+  }
+
+  const { partner, catalogBooks, arcRequests } = portalData;
 
   if (!partner) {
     return (
@@ -33,7 +52,6 @@ export default async function CatalogsPage({ searchParams }: CatalogsPageProps) 
   const query = searchParams?.q?.trim().toLowerCase() ?? '';
   const genre = searchParams?.genre ?? 'all';
   const sort = searchParams?.sort ?? 'newest';
-  const currentPage = Math.max(Number(searchParams?.page ?? '1') || 1, 1);
   const genres = Array.from(new Set(catalogBooks.map((book) => book.genre).filter(Boolean))).sort();
   const filteredBooks = catalogBooks
     .filter((book) => {
@@ -50,6 +68,7 @@ export default async function CatalogsPage({ searchParams }: CatalogsPageProps) 
       return new Date(b.published_at ?? 0).getTime() - new Date(a.published_at ?? 0).getTime();
     });
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PAGE_SIZE));
+  const currentPage = clampPage(Number(searchParams?.page ?? '1') || 1, totalPages);
   const pagedBooks = filteredBooks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const paginationParams = {
     ...(query ? { q: searchParams?.q ?? '' } : {}),
@@ -141,7 +160,7 @@ export default async function CatalogsPage({ searchParams }: CatalogsPageProps) 
             })}
             </div>
             <Pagination
-              currentPage={Math.min(currentPage, totalPages)}
+              currentPage={currentPage}
               totalPages={totalPages}
               basePath="/partner/catalogs"
               queryParams={paginationParams}

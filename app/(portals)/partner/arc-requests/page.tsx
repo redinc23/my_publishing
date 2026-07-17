@@ -7,7 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { createArcRequest } from '@/lib/actions/partner';
-import { formatDate, getPartnerPortalData, titleCase } from '../_lib/partner-data';
+import {
+  clampPage,
+  formatDate,
+  getPartnerPortalData,
+  normalizeArcStatusFilter,
+  PartnerDataUnavailableError,
+  titleCase,
+} from '../_lib/partner-data';
+import { PartnerUnavailable } from '../_lib/partner-unavailable';
 
 interface ArcRequestsPageProps {
   searchParams?: { status?: string; sort?: string; page?: string };
@@ -16,7 +24,18 @@ interface ArcRequestsPageProps {
 const PAGE_SIZE = 5;
 
 export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageProps) {
-  const { partner, arcRequests, catalogBooks } = await getPartnerPortalData();
+  let portalData;
+  try {
+    portalData = await getPartnerPortalData();
+  } catch (error) {
+    const message =
+      error instanceof PartnerDataUnavailableError
+        ? error.message
+        : 'Partner portal data is temporarily unavailable.';
+    return <PartnerUnavailable message={message} />;
+  }
+
+  const { partner, arcRequests, catalogBooks } = portalData;
 
   if (!partner) {
     return (
@@ -29,9 +48,8 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
     );
   }
 
-  const status = searchParams?.status ?? 'all';
+  const status = normalizeArcStatusFilter(searchParams?.status);
   const sort = searchParams?.sort ?? 'newest';
-  const currentPage = Math.max(Number(searchParams?.page ?? '1') || 1, 1);
   const requestedBookIds = new Set(arcRequests.map((request) => request.book_id));
   const availableBooks = catalogBooks.filter((book) => !requestedBookIds.has(book.id));
   const filteredRequests = arcRequests
@@ -42,6 +60,7 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
       return new Date(b.requested_at ?? 0).getTime() - new Date(a.requested_at ?? 0).getTime();
     });
   const totalPages = Math.max(1, Math.ceil(filteredRequests.length / PAGE_SIZE));
+  const currentPage = clampPage(Number(searchParams?.page ?? '1') || 1, totalPages);
   const pagedRequests = filteredRequests.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const paginationParams = {
     ...(status !== 'all' ? { status } : {}),
@@ -84,7 +103,7 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
               <option value="all">All statuses</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
-              <option value="denied">Denied</option>
+              <option value="rejected">Rejected</option>
               <option value="fulfilled">Fulfilled</option>
             </select>
             <select name="sort" defaultValue={sort} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
@@ -142,7 +161,7 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
             ))}
             </div>
             <Pagination
-              currentPage={Math.min(currentPage, totalPages)}
+              currentPage={currentPage}
               totalPages={totalPages}
               basePath="/partner/arc-requests"
               queryParams={paginationParams}

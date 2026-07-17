@@ -1,11 +1,10 @@
-/* eslint-disable */
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Container } from '@/components/layout/Container';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import { ResendVerificationForm } from './ResendVerificationForm';
 
 export const metadata: Metadata = {
@@ -13,24 +12,36 @@ export const metadata: Metadata = {
   description: 'Verify your email address to activate your MANGU Publishers account.',
 };
 
-async function checkVerificationStatus() {
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function checkVerificationStatus(requestedEmail?: string) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  const normalizedRequestedEmail = requestedEmail?.trim().toLowerCase();
+  const email =
+    normalizedRequestedEmail && EMAIL_PATTERN.test(normalizedRequestedEmail)
+      ? normalizedRequestedEmail
+      : user?.email?.trim().toLowerCase();
+
+  if (!email) {
     redirect('/login?error=' + encodeURIComponent('Please sign in to verify your email.'));
   }
 
   return {
-    email: user.email,
-    emailConfirmed: user.email_confirmed_at !== null,
+    email,
+    emailConfirmed: user?.email?.trim().toLowerCase() === email && user.email_confirmed_at !== null,
   };
 }
 
-export default async function VerifyEmailPage() {
-  const { email, emailConfirmed } = await checkVerificationStatus();
+export default async function VerifyEmailPage({
+  searchParams,
+}: {
+  searchParams?: { email?: string };
+}) {
+  const { email, emailConfirmed } = await checkVerificationStatus(searchParams?.email);
 
   if (emailConfirmed) {
     redirect('/');
@@ -42,7 +53,7 @@ export default async function VerifyEmailPage() {
         <CardHeader>
           <h1 className="text-2xl font-semibold leading-none tracking-tight">Verify Your Email</h1>
           <CardDescription>
-            We've sent a verification email to <strong>{email}</strong>
+            We&apos;ve sent a verification email to <strong>{email}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -53,7 +64,7 @@ export default async function VerifyEmailPage() {
           </div>
 
           <Suspense fallback={<div>Loading...</div>}>
-            <ResendVerificationForm email={email!} />
+            <ResendVerificationForm email={email} />
           </Suspense>
 
           <div className="pt-4">

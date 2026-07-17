@@ -4,15 +4,27 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { updateManuscriptStatusAction } from '../actions';
+import { AdminQueryError } from '../_lib/query-error';
 
 export default async function AdminManuscriptsPage() {
   const supabase = createClient();
 
-  const { data: manuscripts } = await supabase
+  const { data: manuscripts, error } = await supabase
     .from('manuscripts')
     .select('id, title, status, genre, created_at, author:authors(pen_name)')
     .order('created_at', { ascending: false })
     .limit(50);
+
+  if (error) {
+    console.error('[admin/manuscripts] query failed:', error);
+    return (
+      <Section>
+        <Container>
+          <AdminQueryError title="Manuscripts Management" />
+        </Container>
+      </Section>
+    );
+  }
 
   return (
     <Section>

@@ -44,11 +44,43 @@ export interface PartnerPortalData {
 }
 
 export type ArcRequest = Omit<ArcRequestRow, 'book'> & { book: Book | null };
-export type PartnerOrder = Omit<OrderRow, 'items'> & { items: Array<Omit<OrderItemRow, 'book'> & { book: Book | null }> };
+export type PartnerOrder = Omit<OrderRow, 'items'> & {
+  items: Array<Omit<OrderItemRow, 'book'> & { book: Book | null }>;
+};
+
+export class PartnerDataUnavailableError extends Error {
+  constructor(message = 'Partner portal data is temporarily unavailable.') {
+    super(message);
+    this.name = 'PartnerDataUnavailableError';
+  }
+}
+
+/** Normalize ARC filter aliases so UI labels map to DB status values. */
+export function normalizeArcStatusFilter(status: string | undefined | null): string {
+  const value = status ?? 'all';
+  if (value === 'denied') return 'rejected';
+  return value;
+}
+
+/** Clamp a 1-based page index into [1, totalPages] before slicing. */
+export function clampPage(page: number, totalPages: number): number {
+  const safeTotal = Math.max(1, totalPages);
+  if (!Number.isFinite(page) || page < 1) return 1;
+  return Math.min(Math.floor(page), safeTotal);
+}
 
 function normalizeBook(book: BookRelation): Book | null {
   if (!book) return null;
   return Array.isArray(book) ? (book[0] ?? null) : book;
+}
+
+function assertQueryOk(result: { error: { message?: string } | null }, label: string) {
+  if (result.error) {
+    console.error(`[partner-data] ${label} failed:`, result.error);
+    throw new PartnerDataUnavailableError(
+      `Unable to load ${label}. Please try again shortly.`
+    );
+  }
 }
 
 export function formatDate(value: string | null | undefined) {
@@ -131,6 +163,10 @@ export async function getPartnerPortalData(): Promise<PartnerPortalData> {
       .order('created_at', { ascending: false }),
   ]);
 
+  assertQueryOk(catalogResult, 'catalog');
+  assertQueryOk(arcResult, 'ARC requests');
+  assertQueryOk(orderResult, 'orders');
+
   const arcRequests = ((arcResult.data as ArcRequestRow[] | null) ?? []).map((request) => ({
     ...request,
     book: normalizeBook(request.book),
@@ -149,7 +185,9 @@ export async function getPartnerPortalData(): Promise<PartnerPortalData> {
   };
 }
 
-export async function getPartnerOrder(orderId: string): Promise<{ partner: Partner | null; order: PartnerOrder | null }> {
+export async function getPartnerOrder(
+  orderId: string
+): Promise<{ partner: Partner | null; order: PartnerOrder | null }> {
   const partner = await requirePartner();
 
   if (!partner) {
@@ -157,7 +195,7 @@ export async function getPartnerOrder(orderId: string): Promise<{ partner: Partn
   }
 
   const admin = createAdminClient();
-  const { data } = await admin
+  const { data, error } = await admin
     .from('orders')
     .select(
       'id, order_number, user_id, total_amount, status, payment_intent_id, created_at, updated_at, items:order_items(id, unit_price, license_key, created_at, book:books(id, title, slug, description, genre, price, discount_price, status, visibility, published_at, cover_url))'
@@ -165,6 +203,15 @@ export async function getPartnerOrder(orderId: string): Promise<{ partner: Partn
     .eq('id', orderId)
     .eq('user_id', partner.profile_id)
     .single();
+
+  if (error) {
+    // PGRST116 = no rows — genuine 404, not an infrastructure failure
+    if (error.code === 'PGRST116') {
+      return { partner, order: null };
+    }
+    console.error('[partner-data] order detail failed:', error);
+    throw new PartnerDataUnavailableError('Unable to load this order. Please try again shortly.');
+  }
 
   if (!data) {
     return { partner, order: null };

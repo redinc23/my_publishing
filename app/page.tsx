@@ -12,6 +12,7 @@ import {
   NewsletterCTA,
   AuthorSpotlight,
 } from '@/components/home';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 export const metadata: Metadata = {
   title: 'Digital Publishing Platform',
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  const siteUrl = 'https://manguprojectz.vercel.app';
+  const siteUrl = getSiteUrl();
   const pageTitle = 'MANGU Publishers - Digital Publishing Platform';
   const pageDescription =
     'Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime.';

@@ -5,6 +5,7 @@ import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { updateBookStatusAction } from '../actions';
+import { AdminQueryError } from '../_lib/query-error';
 
 const PAGE_SIZE = 10;
 
@@ -28,7 +29,18 @@ export default async function AdminBooksPage({
   if (queryText) query = query.ilike('title', `%${queryText}%`);
   if (status !== 'all') query = query.eq('status', status);
 
-  const { data: books, count } = await query.range(from, to);
+  const { data: books, count, error } = await query.range(from, to);
+  if (error) {
+    console.error('[admin/books] query failed:', error);
+    return (
+      <Section>
+        <Container>
+          <AdminQueryError title="Books Management" />
+        </Container>
+      </Section>
+    );
+  }
+
   const totalPages = Math.max(Math.ceil((count || 0) / PAGE_SIZE), 1);
   const pageHref = (page: number) => {
     const params = new URLSearchParams();

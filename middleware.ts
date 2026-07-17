@@ -71,8 +71,10 @@ export async function middleware(request: NextRequest) {
     const userId = authUser.userId;
 
     // Auth routes
+    const isPasswordRecoveryConfirm = pathname === '/reset-password/confirm';
     const authRoutes = ['/login', '/register', '/reset-password'];
-    const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+    const isAuthRoute =
+      !isPasswordRecoveryConfirm && authRoutes.some((route) => pathname.startsWith(route));
 
     // Protected routes
     const isReadingRoute = pathname.startsWith('/reading');

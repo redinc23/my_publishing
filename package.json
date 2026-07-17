@@ -71,7 +71,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.10",
+    "@next/bundle-analyzer": "14.2.35",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.2.0",
     "@testing-library/react": "^14.1.2",

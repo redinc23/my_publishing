@@ -38,6 +38,7 @@ export default function ResetPasswordConfirmPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
+  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -61,8 +62,6 @@ export default function ResetPasswordConfirmPage() {
         const searchError =
           searchParams?.get('error_description') || searchParams?.get('error') || null;
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
         const hashError = hashParams.get('error_description') || hashParams.get('error');
 
         if (searchError || hashError) {
@@ -70,41 +69,29 @@ export default function ResetPasswordConfirmPage() {
         }
 
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          let recoveryAuthorized = false;
+          const {
+            data: { subscription },
+          } = supabase.auth.onAuthStateChange((event) => {
+            if (event === 'PASSWORD_RECOVERY') {
+              recoveryAuthorized = true;
+            }
+          });
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          subscription.unsubscribe();
+
           if (exchangeError) {
             throw exchangeError;
           }
 
-          stripSensitiveUrlState();
-          if (isActive) {
-            setStatus('ready');
-          }
-          return;
-        }
-
-        if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (sessionError) {
-            throw sessionError;
+          if (!recoveryAuthorized) {
+            await supabase.auth.signOut();
+            throw new Error('This link is not authorized for password recovery.');
           }
 
           stripSensitiveUrlState();
           if (isActive) {
-            setStatus('ready');
-          }
-          return;
-        }
-
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session) {
-          if (isActive) {
+            setRecoveryUserId(data.user.id);
             setStatus('ready');
           }
           return;
@@ -150,6 +137,16 @@ export default function ResetPasswordConfirmPage() {
     }
 
     setIsSubmitting(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user || user.id !== recoveryUserId) {
+      setIsSubmitting(false);
+      setStatus('error');
+      setError('Your recovery authorization expired. Please request a new reset email.');
+      return;
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setIsSubmitting(false);
 
@@ -158,6 +155,7 @@ export default function ResetPasswordConfirmPage() {
       return;
     }
 
+    await supabase.auth.signOut();
     setIsUpdated(true);
     setTimeout(() => {
       router.push('/login');

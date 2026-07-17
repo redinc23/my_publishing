@@ -4,10 +4,21 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { AuthorCard } from '@/components/cards/AuthorCard';
 import type { Author, Profile } from '@/types';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/authors`;
 
 export const metadata: Metadata = {
   title: 'Authors',
   description: 'Discover the authors publishing on Mangu Publishers.',
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Authors',
+    description: 'Discover the authors publishing on Mangu Publishers.',
+    url: pageUrl,
+  },
 };
 
 export const revalidate = 300;

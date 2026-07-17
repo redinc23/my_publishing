@@ -3,6 +3,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { hasCompletedOrderForBook } from '@/lib/reading/entitlement';
 
 export async function saveReadingProgress(bookId: string, position: number) {
   const supabase = await createClient();
@@ -19,6 +20,14 @@ export async function saveReadingProgress(bookId: string, position: number) {
     .maybeSingle();
 
   if (!profile) return;
+
+  let entitled = false;
+  try {
+    entitled = await hasCompletedOrderForBook(admin, profile.id, bookId);
+  } catch {
+    return;
+  }
+  if (!entitled) return;
 
   await admin.from('reading_progress').upsert(
     {
