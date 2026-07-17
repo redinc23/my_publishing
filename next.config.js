@@ -32,7 +32,7 @@ const ContentSecurityPolicy = [
   // Images come from self, Supabase Storage, Stripe, and placeholder services.
   "img-src 'self' data: blob: https://*.supabase.co https://picsum.photos https://images.unsplash.com https://q.stripe.com",
   // API calls go to Supabase (REST + Realtime WS) and Stripe.
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://q.stripe.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://q.stripe.com https://*.sentry.io https://*.ingest.sentry.io",
   // Stripe embeds iframes for secure card input.
   'frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com',
   "font-src 'self'",
@@ -100,4 +100,16 @@ const nextConfig = {
 };
 
 // PERF-PHASE2-8
-module.exports = withBundleAnalyzer(nextConfig);
+const { withSentryConfig } = require('@sentry/nextjs');
+
+const sentryWebpackPluginOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+  hideSourceMaps: true,
+  disableLogger: true,
+  automaticVercelMonitors: false,
+};
+
+module.exports = withSentryConfig(withBundleAnalyzer(nextConfig), sentryWebpackPluginOptions);

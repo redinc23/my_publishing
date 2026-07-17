@@ -147,6 +147,22 @@ const envConfigs: EnvConfig[] = [
       return true;
     },
   },
+  {
+    name: 'NEXT_PUBLIC_SENTRY_DSN',
+    required: false,
+    description: 'Sentry DSN for client and server error tracking (optional)',
+    validate: (value) => {
+      if (value && !value.startsWith('https://')) {
+        return 'Sentry DSN must be an https:// ingest URL';
+      }
+      return true;
+    },
+  },
+  {
+    name: 'SENTRY_DSN',
+    required: false,
+    description: 'Server-only Sentry DSN (optional; defaults to NEXT_PUBLIC_SENTRY_DSN)',
+  },
 ];
 
 /**

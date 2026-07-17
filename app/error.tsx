@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { captureException } from '@/lib/sentry';
 
 export default function Error({
   error,
@@ -12,8 +13,8 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error to console or error reporting service
     console.error('Application error:', error);
+    captureException(error, { digest: error.digest });
   }, [error]);
 
   return (
