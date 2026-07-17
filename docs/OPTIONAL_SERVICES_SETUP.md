@@ -4,11 +4,11 @@ Enable production observability and Phase 2 features. All are **optional for lau
 
 ## Quick priority
 
-| Service | What it does | Launch priority |
-|---------|----------------|-----------------|
-| **Sentry** | Error tracking + session replay | Recommended |
-| **Resend** | Transactional email | Needed for password reset / receipts |
-| **OpenAI** | AI recommendations (Resenace) | Nice-to-have |
+| Service    | What it does                    | Launch priority                      |
+| ---------- | ------------------------------- | ------------------------------------ |
+| **Sentry** | Error tracking + session replay | Recommended                          |
+| **Resend** | Transactional email             | Needed for password reset / receipts |
+| **OpenAI** | AI recommendations (Resenace)   | Nice-to-have                         |
 
 ---
 
@@ -120,11 +120,11 @@ OPENAI_API_KEY=sk-proj-...
 
 ## Already configured (you have these)
 
-| Service | Status |
-|---------|--------|
-| Supabase | Required — DB + auth |
-| Stripe | Required — payments (you're on test keys) |
-| Upstash | Required for prod rate limiting |
+| Service  | Status                                    |
+| -------- | ----------------------------------------- |
+| Supabase | Required — DB + auth                      |
+| Stripe   | Required — payments (you're on test keys) |
+| Upstash  | Required for prod rate limiting           |
 
 ---
 

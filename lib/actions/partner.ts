@@ -94,7 +94,10 @@ export async function reorderPartnerOrder(formData: FormData) {
     throw new Error('Order not found for this partner account.');
   }
 
-  const totalAmount = sourceOrder.items.reduce((sum, item) => sum + Number(item.unit_price ?? 0), 0);
+  const totalAmount = sourceOrder.items.reduce(
+    (sum, item) => sum + Number(item.unit_price ?? 0),
+    0
+  );
   const orderNumber = `PARTNER-REORDER-${Date.now()}`;
   const { data: newOrder, error: orderError } = await admin
     .from('orders')
