@@ -52,31 +52,39 @@ const nextConfig = {
   env: publicEnv,
   output: process.platform === 'win32' ? undefined : 'standalone',
   async headers() {
+    const securityHeaders = [
+      { key: 'X-DNS-Prefetch-Control', value: 'on' },
+      // HSTS should never be sent from local/dev environments because browsers can cache
+      // it and force HTTPS on localhost, which breaks local http:// test runs.
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              key: 'Strict-Transport-Security',
+              value: 'max-age=63072000; includeSubDomains; preload',
+            },
+          ]
+        : []),
+      // CSP supersedes X-Frame-Options; keep both for legacy browser coverage.
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      // X-XSS-Protection is deprecated in modern browsers but harmless for older ones.
+      { key: 'X-XSS-Protection', value: '1; mode=block' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+      },
+      // Prevent popups from retaining opener access (protects OAuth flows).
+      { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+      // Restrict how this page's resources can be embedded by cross-origin pages.
+      { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
+      { key: 'Content-Security-Policy', value: ContentSecurityPolicy },
+    ];
+
     return [
       {
         source: '/:path*',
-        headers: [
-          { key: 'X-DNS-Prefetch-Control', value: 'on' },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
-          // CSP supersedes X-Frame-Options; keep both for legacy browser coverage.
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          // X-XSS-Protection is deprecated in modern browsers but harmless for older ones.
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
-          },
-          // Prevent popups from retaining opener access (protects OAuth flows).
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
-          // Restrict how this page's resources can be embedded by cross-origin pages.
-          { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
-          { key: 'Content-Security-Policy', value: ContentSecurityPolicy },
-        ],
+        headers: securityHeaders,
       },
     ];
   },
