@@ -44,7 +44,9 @@ export interface PartnerPortalData {
 }
 
 export type ArcRequest = Omit<ArcRequestRow, 'book'> & { book: Book | null };
-export type PartnerOrder = Omit<OrderRow, 'items'> & { items: Array<Omit<OrderItemRow, 'book'> & { book: Book | null }> };
+export type PartnerOrder = Omit<OrderRow, 'items'> & {
+  items: Array<Omit<OrderItemRow, 'book'> & { book: Book | null }>;
+};
 
 function normalizeBook(book: BookRelation): Book | null {
   if (!book) return null;
@@ -149,7 +151,9 @@ export async function getPartnerPortalData(): Promise<PartnerPortalData> {
   };
 }
 
-export async function getPartnerOrder(orderId: string): Promise<{ partner: Partner | null; order: PartnerOrder | null }> {
+export async function getPartnerOrder(
+  orderId: string
+): Promise<{ partner: Partner | null; order: PartnerOrder | null }> {
   const partner = await requirePartner();
 
   if (!partner) {

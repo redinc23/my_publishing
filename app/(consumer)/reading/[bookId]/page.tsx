@@ -27,10 +27,10 @@ export default async function ReadingPage({ params }: { params: { bookId: string
     admin.from('books').select('*').eq('id', params.bookId).single(),
     profile
       ? admin
-      .from('reading_progress')
-      .select('*')
+          .from('reading_progress')
+          .select('*')
           .eq('user_id', profile.id)
-      .eq('book_id', params.bookId)
+          .eq('book_id', params.bookId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);

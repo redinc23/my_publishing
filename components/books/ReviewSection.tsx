@@ -151,7 +151,6 @@ export function ReviewSection({
                   book={{ id: bookId, title: '', cover_url: '' }}
                 />
               ))}
-
             </div>
           )}
         </TabsContent>

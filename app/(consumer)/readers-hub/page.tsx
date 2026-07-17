@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 export const metadata: Metadata = {
   title: 'Readers Hub',
-  description: 'Manage reading activity, wishlists, and community features in the MANGU Readers Hub.',
+  description:
+    'Manage reading activity, wishlists, and community features in the MANGU Readers Hub.',
 };
 
 export default function ReadersHubPage() {

@@ -40,7 +40,9 @@ function toFriendlyResendError(message: string) {
     return 'We recently sent a verification email. Please wait a minute before trying again.';
   }
 
-  if (/email.*quota|quota.*email|email.*temporarily unavailable|smtp|error sending/i.test(message)) {
+  if (
+    /email.*quota|quota.*email|email.*temporarily unavailable|smtp|error sending/i.test(message)
+  ) {
     return 'Verification email delivery is temporarily unavailable. Please try again later.';
   }
 
@@ -60,7 +62,9 @@ export async function resendVerificationEmail(email: string) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Your session expired. Please sign in again to resend the verification email.' };
+      return {
+        error: 'Your session expired. Please sign in again to resend the verification email.',
+      };
     }
 
     if (user.email?.trim().toLowerCase() !== email.trim().toLowerCase()) {

@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
-      return NextResponse.json({ error: 'limit must be an integer between 1 and 50' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'limit must be an integer between 1 and 50' },
+        { status: 400 }
+      );
     }
 
     const supabase = createPublicCatalogClient();

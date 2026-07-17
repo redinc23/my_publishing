@@ -42,7 +42,10 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
       return new Date(b.requested_at ?? 0).getTime() - new Date(a.requested_at ?? 0).getTime();
     });
   const totalPages = Math.max(1, Math.ceil(filteredRequests.length / PAGE_SIZE));
-  const pagedRequests = filteredRequests.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pagedRequests = filteredRequests.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
   const paginationParams = {
     ...(status !== 'all' ? { status } : {}),
     ...(sort !== 'newest' ? { sort } : {}),
@@ -53,7 +56,9 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
       <Container>
         <div className="mb-8">
           <h1 className="text-4xl font-bold">ARC Requests</h1>
-          <p className="mt-2 text-secondary">Advance reader copy activity for {partner.institution_name}.</p>
+          <p className="mt-2 text-secondary">
+            Advance reader copy activity for {partner.institution_name}.
+          </p>
         </div>
 
         <div className="mb-6 grid gap-4 rounded-lg border border-border p-4 lg:grid-cols-[2fr_1fr]">
@@ -73,26 +78,43 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
                 </option>
               ))}
             </select>
-            <Input name="quantity" type="number" min="1" max="500" defaultValue="1" aria-label="ARC request quantity" />
+            <Input
+              name="quantity"
+              type="number"
+              min="1"
+              max="500"
+              defaultValue="1"
+              aria-label="ARC request quantity"
+            />
             <Button type="submit" disabled={availableBooks.length === 0}>
               Request ARC
             </Button>
           </form>
 
           <form className="grid gap-3 md:grid-cols-[1fr_1fr_auto]" method="get">
-            <select name="status" defaultValue={status} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+            <select
+              name="status"
+              defaultValue={status}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
               <option value="all">All statuses</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="denied">Denied</option>
               <option value="fulfilled">Fulfilled</option>
             </select>
-            <select name="sort" defaultValue={sort} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+            <select
+              name="sort"
+              defaultValue={sort}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
               <option value="newest">Newest</option>
               <option value="status">Status</option>
               <option value="quantity">Quantity</option>
             </select>
-            <Button type="submit" variant="outline">Filter</Button>
+            <Button type="submit" variant="outline">
+              Filter
+            </Button>
           </form>
         </div>
 
@@ -103,43 +125,48 @@ export default async function ArcRequestsPage({ searchParams }: ArcRequestsPageP
         ) : (
           <>
             <div className="space-y-4">
-            {pagedRequests.map((request) => (
-              <Card key={request.id}>
-                <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-                  <div>
-                    <CardTitle>{request.book?.title ?? 'Untitled book'}</CardTitle>
-                    <p className="mt-2 text-sm text-secondary">{request.book?.genre ?? 'Uncategorized'}</p>
-                  </div>
-                  <Badge variant="outline">{titleCase(request.status)}</Badge>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 text-sm md:grid-cols-4">
+              {pagedRequests.map((request) => (
+                <Card key={request.id}>
+                  <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
                     <div>
-                      <p className="font-semibold">Quantity</p>
-                      <p className="text-secondary">{request.quantity}</p>
+                      <CardTitle>{request.book?.title ?? 'Untitled book'}</CardTitle>
+                      <p className="mt-2 text-sm text-secondary">
+                        {request.book?.genre ?? 'Uncategorized'}
+                      </p>
                     </div>
-                    <div>
-                      <p className="font-semibold">Requested</p>
-                      <p className="text-secondary">{formatDate(request.requested_at)}</p>
+                    <Badge variant="outline">{titleCase(request.status)}</Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 text-sm md:grid-cols-4">
+                      <div>
+                        <p className="font-semibold">Quantity</p>
+                        <p className="text-secondary">{request.quantity}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Requested</p>
+                        <p className="text-secondary">{formatDate(request.requested_at)}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Fulfilled</p>
+                        <p className="text-secondary">{formatDate(request.fulfilled_at)}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Book</p>
+                        {request.book ? (
+                          <Link
+                            href={`/books/${request.book.slug}`}
+                            className="text-primary hover:underline"
+                          >
+                            View catalog page
+                          </Link>
+                        ) : (
+                          <p className="text-secondary">Unavailable</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">Fulfilled</p>
-                      <p className="text-secondary">{formatDate(request.fulfilled_at)}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Book</p>
-                      {request.book ? (
-                        <Link href={`/books/${request.book.slug}`} className="text-primary hover:underline">
-                          View catalog page
-                        </Link>
-                      ) : (
-                        <p className="text-secondary">Unavailable</p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
             <Pagination
               currentPage={Math.min(currentPage, totalPages)}

@@ -1,9 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import {
-  createPublicCatalogClient,
-  PUBLIC_AUTHOR_COLUMNS,
-} from '@/lib/supabase/public-queries';
+import { createPublicCatalogClient, PUBLIC_AUTHOR_COLUMNS } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
@@ -25,11 +22,7 @@ async function getAuthor(id: string): Promise<AuthorWithProfile | null> {
   return (data as unknown as AuthorWithProfile) || null;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const author = await getAuthor(params.id);
 
   if (!author) {

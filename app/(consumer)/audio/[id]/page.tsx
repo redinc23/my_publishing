@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { createPublicCatalogClient, PUBLIC_BOOK_WITH_CONTENT_SELECT } from '@/lib/supabase/public-queries';
+import {
+  createPublicCatalogClient,
+  PUBLIC_BOOK_WITH_CONTENT_SELECT,
+} from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { AudioPlayer } from '@/components/players/AudioPlayer';
@@ -29,11 +32,7 @@ async function getAudiobook(id: string): Promise<BookFull | null> {
   return { ...data, content: contentRow } as BookFull;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const book = await getAudiobook(params.id);
 
   if (!book) {
@@ -47,7 +46,8 @@ export async function generateMetadata({
 
   return {
     title: `${book.title} - Audiobook`,
-    description: book.description || `Listen to ${book.title} by ${authorName} on MANGU Publishers.`,
+    description:
+      book.description || `Listen to ${book.title} by ${authorName} on MANGU Publishers.`,
   };
 }
 

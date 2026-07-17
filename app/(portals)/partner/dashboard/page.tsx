@@ -92,9 +92,15 @@ export default async function PartnerDashboardPage() {
               ) : (
                 <ul className="space-y-4">
                   {arcRequests.slice(0, 5).map((request) => (
-                    <li key={request.id} className="flex items-start justify-between gap-4 border-b border-border pb-4 last:border-0 last:pb-0">
+                    <li
+                      key={request.id}
+                      className="flex items-start justify-between gap-4 border-b border-border pb-4 last:border-0 last:pb-0"
+                    >
                       <div>
-                        <Link href="/partner/arc-requests" className="font-medium transition-colors hover:text-primary">
+                        <Link
+                          href="/partner/arc-requests"
+                          className="font-medium transition-colors hover:text-primary"
+                        >
                           {request.book?.title ?? 'Untitled book'}
                         </Link>
                         <p className="text-sm text-secondary">
@@ -119,9 +125,15 @@ export default async function PartnerDashboardPage() {
               ) : (
                 <ul className="space-y-4">
                   {orders.slice(0, 5).map((order) => (
-                    <li key={order.id} className="flex items-start justify-between gap-4 border-b border-border pb-4 last:border-0 last:pb-0">
+                    <li
+                      key={order.id}
+                      className="flex items-start justify-between gap-4 border-b border-border pb-4 last:border-0 last:pb-0"
+                    >
                       <div>
-                        <Link href={`/partner/orders/${order.id}`} className="font-medium transition-colors hover:text-primary">
+                        <Link
+                          href={`/partner/orders/${order.id}`}
+                          className="font-medium transition-colors hover:text-primary"
+                        >
                           Order {order.order_number}
                         </Link>
                         <p className="text-sm text-secondary">
