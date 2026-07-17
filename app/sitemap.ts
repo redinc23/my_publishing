@@ -9,10 +9,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
     { url: `${baseUrl}/books`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.95 },
-    { url: `${baseUrl}/comics`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${baseUrl}/papers`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.75 },
-    { url: `${baseUrl}/audio`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.75 },
-    { url: `${baseUrl}/authors`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    {
+      url: `${baseUrl}/comics`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/papers`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.75,
+    },
+    {
+      url: `${baseUrl}/audio`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.75,
+    },
+    {
+      url: `${baseUrl}/authors`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
     {
       url: `${baseUrl}/discover`,
       lastModified: new Date(),

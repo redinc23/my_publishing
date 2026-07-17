@@ -138,25 +138,29 @@ export default async function MyReviewsPage() {
                 {publishedReviews.map((review) => {
                   const book = Array.isArray(review.book) ? review.book[0] : review.book;
                   return (
-                  <div key={review.id} className="group relative">
-                    <ReviewCard
-                      review={review}
-                      user={reviewUser}
-                      book={
-                        book
-                          ? { id: book.slug || book.id, title: book.title, cover_url: book.cover_url }
-                          : undefined
-                      }
-                      showBookInfo
-                    />
-                    <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
-                      <ReviewActions
+                    <div key={review.id} className="group relative">
+                      <ReviewCard
                         review={review}
-                        isOwnReview
-                        editHref={book?.slug ? `/books/${book.slug}#reviews` : undefined}
+                        user={reviewUser}
+                        book={
+                          book
+                            ? {
+                                id: book.slug || book.id,
+                                title: book.title,
+                                cover_url: book.cover_url,
+                              }
+                            : undefined
+                        }
+                        showBookInfo
                       />
+                      <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
+                        <ReviewActions
+                          review={review}
+                          isOwnReview
+                          editHref={book?.slug ? `/books/${book.slug}#reviews` : undefined}
+                        />
+                      </div>
                     </div>
-                  </div>
                   );
                 })}
               </div>

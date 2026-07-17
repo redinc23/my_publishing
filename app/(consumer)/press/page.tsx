@@ -46,8 +46,8 @@ export default function PressPage() {
               <h2 className="mb-2 text-2xl font-semibold">Brand</h2>
               <p className="text-secondary">
                 Please write our name as <strong className="text-foreground">MANGU</strong> or{' '}
-                <strong className="text-foreground">Mangu Publishers</strong>. Do not alter the
-                logo colors or proportions when using brand assets.
+                <strong className="text-foreground">Mangu Publishers</strong>. Do not alter the logo
+                colors or proportions when using brand assets.
               </p>
             </section>
 

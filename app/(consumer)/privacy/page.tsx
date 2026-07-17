@@ -19,16 +19,20 @@ export default function PrivacyPage() {
 
           <div className="space-y-6 text-secondary">
             <section>
-              <h2 className="mb-2 text-2xl font-semibold text-foreground">Information We Collect</h2>
+              <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                Information We Collect
+              </h2>
               <p>
-                We collect the information you provide when creating an account (name, email),
-                your reading activity and preferences, and purchase history. Payment details are
+                We collect the information you provide when creating an account (name, email), your
+                reading activity and preferences, and purchase history. Payment details are
                 processed securely by our payment provider and are never stored on our servers.
               </p>
             </section>
 
             <section>
-              <h2 className="mb-2 text-2xl font-semibold text-foreground">How We Use Your Information</h2>
+              <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                How We Use Your Information
+              </h2>
               <p>
                 Your information is used to provide the service, personalize recommendations,
                 process purchases, pay author royalties, and improve the platform. We do not sell

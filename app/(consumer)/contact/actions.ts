@@ -39,12 +39,15 @@ export async function submitContactMessage(
     };
   }
 
-  console.log('Contact form submission validated (not persisted: no contact_messages migration found)', {
-    name,
-    email,
-    subject,
-    messageLength: message.length,
-  });
+  console.log(
+    'Contact form submission validated (not persisted: no contact_messages migration found)',
+    {
+      name,
+      email,
+      subject,
+      messageLength: message.length,
+    }
+  );
 
   return {
     status: 'success',

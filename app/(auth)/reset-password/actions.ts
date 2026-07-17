@@ -40,7 +40,9 @@ function toFriendlyResetError(message: string) {
     return 'We recently sent a reset email. Please wait a minute before trying again.';
   }
 
-  if (/email.*quota|quota.*email|email.*temporarily unavailable|smtp|error sending/i.test(message)) {
+  if (
+    /email.*quota|quota.*email|email.*temporarily unavailable|smtp|error sending/i.test(message)
+  ) {
     return 'Password reset email delivery is temporarily unavailable. Please try again later.';
   }
 

@@ -1,4 +1,4 @@
-import { toFriendlyRegisterError } from '@/app/(auth)/register/actions';
+import { toFriendlyRegisterError } from '@/lib/utils/register-errors';
 import { resendVerificationEmail } from '@/app/(auth)/verify-email/actions';
 import { createClient } from '@/lib/supabase/server';
 import { emailVerificationRateLimit } from '@/lib/utils/auth-rate-limit';
