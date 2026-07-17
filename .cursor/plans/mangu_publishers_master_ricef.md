@@ -146,7 +146,7 @@ Source: [docs/BRD.md](../../docs/BRD.md), [docs/FEATURE_PHASES.md](../../docs/FE
 
 | ID | Requirement | Verification |
 |----|-------------|--------------|
-| TR-01 | Node **20.x** in CI, Docker, Cloud Build | `package.json` engines; [ci.yml](../../.github/workflows/ci.yml) |
+| TR-01 | Node **22.x** in CI, Docker, Cloud Build | `package.json` engines; [ci.yml](../../.github/workflows/ci.yml) |
 | TR-02 | Standalone Next build for Cloud Run | `next.config.js` `output: 'standalone'`; artifact in Docker |
 | TR-03 | Health endpoint for probes | `GET /api/health` → 200 when configured |
 | TR-04 | No service-role or Stripe secret in client bundle | Secret scan step + manual bundle review |
