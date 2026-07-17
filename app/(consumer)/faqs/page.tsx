@@ -66,10 +66,7 @@ export default function FaqsPage() {
 
           <div className="space-y-3">
             {faqs.map((faq, i) => (
-              <details
-                key={i}
-                className="group rounded-lg border border-border bg-card px-6 py-4"
-              >
+              <details key={i} className="group rounded-lg border border-border bg-card px-6 py-4">
                 <summary className="cursor-pointer list-none text-base font-semibold marker:hidden">
                   {faq.question}
                 </summary>

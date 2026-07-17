@@ -7,8 +7,7 @@ import { Grid } from '@/components/layout/Grid';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 const pageUrl = `${getSiteUrl()}/genres`;
-const description =
-  'Explore books, comics, audiobooks, and papers by genre on MANGU Publishers.';
+const description = 'Explore books, comics, audiobooks, and papers by genre on MANGU Publishers.';
 
 export const metadata: Metadata = {
   title: 'Browse Genres',

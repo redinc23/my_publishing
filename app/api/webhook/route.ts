@@ -128,10 +128,7 @@ async function handleCheckoutCompleted(
   }
 
   // Check for duplicate order (additional idempotency check)
-  let existingOrderQuery = supabase
-    .from('orders')
-    .select('id')
-    .limit(1);
+  let existingOrderQuery = supabase.from('orders').select('id').limit(1);
 
   existingOrderQuery = paymentIntentId
     ? existingOrderQuery.eq('payment_intent_id', paymentIntentId)

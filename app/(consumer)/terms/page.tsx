@@ -19,7 +19,9 @@ export default function TermsPage() {
 
           <div className="space-y-6 text-secondary">
             <section>
-              <h2 className="mb-2 text-2xl font-semibold text-foreground">1. Acceptance of Terms</h2>
+              <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                1. Acceptance of Terms
+              </h2>
               <p>
                 By accessing or using Mangu Publishers, you agree to be bound by these Terms of
                 Service. If you do not agree to these terms, please do not use the platform.
@@ -36,7 +38,9 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="mb-2 text-2xl font-semibold text-foreground">3. Purchases &amp; Licenses</h2>
+              <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                3. Purchases &amp; Licenses
+              </h2>
               <p>
                 Purchasing a book grants you a personal, non-transferable license to read the
                 content for your own use. You may not redistribute, resell, or share purchased
@@ -48,8 +52,8 @@ export default function TermsPage() {
               <h2 className="mb-2 text-2xl font-semibold text-foreground">4. Author Content</h2>
               <p>
                 Authors retain the rights to their submitted work. By submitting a manuscript,
-                authors grant Mangu Publishers a license to distribute the work through the
-                platform under the agreed royalty terms.
+                authors grant Mangu Publishers a license to distribute the work through the platform
+                under the agreed royalty terms.
               </p>
             </section>
 
@@ -57,8 +61,8 @@ export default function TermsPage() {
               <h2 className="mb-2 text-2xl font-semibold text-foreground">5. Prohibited Conduct</h2>
               <p>
                 You may not use the platform to distribute unlawful content, infringe intellectual
-                property rights, attempt to access other users&apos; accounts, or interfere with
-                the operation of the service.
+                property rights, attempt to access other users&apos; accounts, or interfere with the
+                operation of the service.
               </p>
             </section>
 

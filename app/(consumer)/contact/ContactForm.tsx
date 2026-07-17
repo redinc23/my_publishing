@@ -35,7 +35,9 @@ export function ContactForm() {
           required
           minLength={2}
         />
-        {state.fieldErrors?.name && <p className="mt-1 text-sm text-red-600">{state.fieldErrors.name}</p>}
+        {state.fieldErrors?.name && (
+          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.name}</p>
+        )}
       </div>
 
       <div>
@@ -49,7 +51,9 @@ export function ContactForm() {
           required
           type="email"
         />
-        {state.fieldErrors?.email && <p className="mt-1 text-sm text-red-600">{state.fieldErrors.email}</p>}
+        {state.fieldErrors?.email && (
+          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.email}</p>
+        )}
       </div>
 
       <div>
@@ -85,7 +89,9 @@ export function ContactForm() {
       </div>
 
       {state.message && (
-        <p className={state.status === 'success' ? 'text-sm text-green-700' : 'text-sm text-red-600'}>
+        <p
+          className={state.status === 'success' ? 'text-sm text-green-700' : 'text-sm text-red-600'}
+        >
           {state.message}
         </p>
       )}
