@@ -1,10 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { isSentryEnabled } from './shared-options';
 
-export function captureException(
-  error: unknown,
-  context?: Record<string, unknown>
-): void {
+export function captureException(error: unknown, context?: Record<string, unknown>): void {
   if (!isSentryEnabled()) {
     return;
   }
