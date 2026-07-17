@@ -115,17 +115,17 @@ export default async function AdminBooksPage({
                       <td className="px-4 py-3">${book.price}</td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
-                         <form action={updateBookStatusAction}>
-                           <input type="hidden" name="bookId" value={book.id} />
-                           <input
-                             type="hidden"
-                             name="status"
-                             value={book.status === 'published' ? 'draft' : 'published'}
-                           />
-                           <Button variant="outline" size="sm" type="submit">
-                             {book.status === 'published' ? 'Unpublish' : 'Publish'}
-                           </Button>
-                         </form>
+                          <form action={updateBookStatusAction}>
+                            <input type="hidden" name="bookId" value={book.id} />
+                            <input
+                              type="hidden"
+                              name="status"
+                              value={book.status === 'published' ? 'draft' : 'published'}
+                            />
+                            <Button variant="outline" size="sm" type="submit">
+                              {book.status === 'published' ? 'Unpublish' : 'Publish'}
+                            </Button>
+                          </form>
                           <Button asChild variant="outline" size="sm">
                             <Link href={`/admin/books/${book.id}/edit`}>Edit</Link>
                           </Button>

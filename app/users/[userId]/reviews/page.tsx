@@ -171,20 +171,20 @@ export default async function UserReviewsPage({ params, searchParams }: UserRevi
             <TabsList>
               <TabsTrigger value="recent" className="flex items-center gap-2" asChild>
                 <a href={`/users/${userId}/reviews?sort=recent`}>
-                <Calendar className="h-4 w-4" />
-                Most Recent
+                  <Calendar className="h-4 w-4" />
+                  Most Recent
                 </a>
               </TabsTrigger>
               <TabsTrigger value="rating" className="flex items-center gap-2" asChild>
                 <a href={`/users/${userId}/reviews?sort=rating`}>
-                <Star className="h-4 w-4" />
-                Highest Rated
+                  <Star className="h-4 w-4" />
+                  Highest Rated
                 </a>
               </TabsTrigger>
               <TabsTrigger value="helpful" className="flex items-center gap-2" asChild>
                 <a href={`/users/${userId}/reviews?sort=helpful`}>
-                <TrendingUp className="h-4 w-4" />
-                Most Helpful
+                  <TrendingUp className="h-4 w-4" />
+                  Most Helpful
                 </a>
               </TabsTrigger>
             </TabsList>
@@ -212,7 +212,11 @@ export default async function UserReviewsPage({ params, searchParams }: UserRevi
                       user={publicUser}
                       book={
                         book
-                          ? { id: book.slug || book.id, title: book.title, cover_url: book.cover_url }
+                          ? {
+                              id: book.slug || book.id,
+                              title: book.title,
+                              cover_url: book.cover_url,
+                            }
                           : undefined
                       }
                       showBookInfo
