@@ -1,8 +1,11 @@
 # MANGU Publishers
 
-A complete, production-ready, Netflix-inspired digital publishing platform built with Next.js 14.
+A Netflix-inspired digital publishing platform built with Next.js 14.
 
 ## Deployment Status
+
+> **Release authority: [docs/NEXT_GO.md](docs/NEXT_GO.md)** governs launch status, the hard gates (G1–G13), and the Go/No-Go decision.
+> Current status: **NO-GO / NOT RELEASE-READY** until all 13 gates are evidenced TRUE. This README is a subordinate snapshot (CCR-001).
 
 **Full project documentation:** [docs/MANGU_PUBLISHERS_END_TO_END.md](docs/MANGU_PUBLISHERS_END_TO_END.md) — business, architecture, env, deploy, migrations, Phase 2, and operator roadmap in one place.
 
@@ -178,6 +181,7 @@ docker run -p 3000:3000 mangu-publishers
 
 ## Documentation
 
+- **[Release Authority (NEXT_GO)](./docs/NEXT_GO.md)** — launch status, hard gates G1–G13, P0 backlog, Go/No-Go sign-off
 - **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
 - **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
 - [Cloud Build + Cloud Run Config](./cloudbuild.yaml) - Canonical production deployment pipeline

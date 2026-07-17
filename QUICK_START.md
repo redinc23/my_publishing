@@ -1,8 +1,9 @@
 # MANGU Publishers - Quick Start Guide
 
-## ✅ Platform Status: PRODUCTION READY
+## 🚦 Platform Status: NO-GO — NOT RELEASE-READY
 
-All 150+ files have been created and the platform is complete!
+Release status is governed by the execution authority: **[docs/NEXT_GO.md](docs/NEXT_GO.md)**.
+No production-ready claim is valid until hard gates G1–G13 are all evidenced TRUE (see the authority document for the gate matrix, P0 backlog, and Go/No-Go sign-off). This guide covers local development only.
 
 ## 📋 Prerequisites
 
@@ -121,6 +122,7 @@ npm run db:seed      # Seed database
 
 ## 📚 Documentation
 
+- [Release Authority (NEXT_GO)](./docs/NEXT_GO.md) — launch status, gates G1–G13, P0 backlog
 - [Deployment Guide](./docs/DEPLOYMENT.md)
 - [API Documentation](./docs/API.md)
 - [Development Guide](./docs/DEVELOPMENT.md)
@@ -145,6 +147,6 @@ docker build -t mangu-publishers .
 docker run -p 3000:3000 mangu-publishers
 ```
 
-## 🎉 You're Ready!
+## ✅ Local Development Ready
 
-The platform is fully functional and ready for production deployment. All features are implemented and tested.
+The platform runs locally with the steps above. **Production deployment is gated**: follow [docs/NEXT_GO.md](docs/NEXT_GO.md) — deployment, DNS cutover, and any release claim require gates G1–G13 evidenced TRUE on the exact release SHA.
