@@ -1,15 +1,25 @@
-import { createClient } from '@/lib/supabase/server';
+import type { Metadata } from 'next';
+import { createPublicCatalogClient } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { GenreCard } from '@/components/cards/GenreCard';
 import { Grid } from '@/components/layout/Grid';
+export const metadata: Metadata = {
+  title: 'Browse Genres',
+  description: 'Explore books, comics, audiobooks, and papers by genre on MANGU Publishers.',
+};
 
 async function getGenres() {
-  const supabase = await createClient();
-  const { data } = await supabase.from('books').select('genre').eq('status', 'published');
+  const supabase = createPublicCatalogClient();
+  const { data } = await supabase
+    .from('books')
+    .select('genre')
+    .eq('status', 'published')
+    .eq('visibility', 'public');
 
   const genreCounts: Record<string, number> = {};
   data?.forEach((book) => {
+    if (!book.genre) return;
     genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
   });
 

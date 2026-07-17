@@ -1,9 +1,8 @@
 /* eslint-disable */
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { ReviewCard } from '@/components/books/ReviewCard';
 import { Pagination } from '@/components/ui/pagination';
-import { ReviewFilters } from '@/components/books/ReviewFilters';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, TrendingUp, Calendar, Filter } from 'lucide-react';
 
@@ -18,37 +17,54 @@ interface UserReviewsPageProps {
 }
 
 export default async function UserReviewsPage({ params, searchParams }: UserReviewsPageProps) {
-  const supabase = await createClient();
+  const admin = createAdminClient();
   const { userId } = params;
   const page = parseInt(searchParams.page || '1');
   const sort = searchParams.sort || 'recent';
   const limit = 10;
 
-  // Get user info
-  const { data: user } = await supabase
-    .from('users')
-    .select('id, username, full_name, avatar_url')
-    .eq('id', userId)
-    .single();
-
-  if (!user) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
     notFound();
   }
 
+  // Get user info
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('user_id, full_name')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!profile) {
+    notFound();
+  }
+
+  const publicUser = {
+    id: profile.user_id,
+    username: profile.full_name || 'Reader',
+    full_name: profile.full_name || undefined,
+  };
+
   // Get user's reviews with pagination
-  let query = supabase
+  let query = admin
     .from('reviews')
     .select(
       `
-      *,
+      id,
+      book_id,
+      user_id,
+      rating,
+      title,
+      content,
+      is_spoiler,
+      is_public,
+      helpful_count,
+      created_at,
+      updated_at,
       book:books (
         id,
+        slug,
         title,
-        cover_url,
-        author:users (
-          username,
-          full_name
-        )
+        cover_url
       )
     `,
       { count: 'exact' }
@@ -77,12 +93,12 @@ export default async function UserReviewsPage({ params, searchParams }: UserRevi
   const { data: reviews, error, count } = await query;
 
   if (error) {
-    console.error('Error fetching reviews:', error);
+    console.error('Error fetching public reviews:', error);
     notFound();
   }
 
   // Get review stats
-  const { data: stats } = await supabase
+  const { data: stats } = await admin
     .from('reviews')
     .select('rating, helpful_count')
     .eq('user_id', userId)
@@ -100,7 +116,7 @@ export default async function UserReviewsPage({ params, searchParams }: UserRevi
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {user.full_name || user.username}&apos;s Reviews
+              {publicUser.full_name || publicUser.username}&apos;s Reviews
             </h1>
             <p className="mt-2 text-gray-600">
               {count || 0} reviews • Average rating: {averageRating.toFixed(1)}/5
@@ -153,17 +169,23 @@ export default async function UserReviewsPage({ params, searchParams }: UserRevi
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <Tabs defaultValue={sort} className="w-full md:w-auto">
             <TabsList>
-              <TabsTrigger value="recent" className="flex items-center gap-2">
+              <TabsTrigger value="recent" className="flex items-center gap-2" asChild>
+                <a href={`/users/${userId}/reviews?sort=recent`}>
                 <Calendar className="h-4 w-4" />
                 Most Recent
+                </a>
               </TabsTrigger>
-              <TabsTrigger value="rating" className="flex items-center gap-2">
+              <TabsTrigger value="rating" className="flex items-center gap-2" asChild>
+                <a href={`/users/${userId}/reviews?sort=rating`}>
                 <Star className="h-4 w-4" />
                 Highest Rated
+                </a>
               </TabsTrigger>
-              <TabsTrigger value="helpful" className="flex items-center gap-2">
+              <TabsTrigger value="helpful" className="flex items-center gap-2" asChild>
+                <a href={`/users/${userId}/reviews?sort=helpful`}>
                 <TrendingUp className="h-4 w-4" />
                 Most Helpful
+                </a>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -181,13 +203,23 @@ export default async function UserReviewsPage({ params, searchParams }: UserRevi
         {reviews && reviews.length > 0 ? (
           <>
             {reviews.map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                user={user}
-                book={review.book}
-                showBookInfo
-              />
+              <div key={review.id}>
+                {(() => {
+                  const book = Array.isArray(review.book) ? review.book[0] : review.book;
+                  return (
+                    <ReviewCard
+                      review={review}
+                      user={publicUser}
+                      book={
+                        book
+                          ? { id: book.slug || book.id, title: book.title, cover_url: book.cover_url }
+                          : undefined
+                      }
+                      showBookInfo
+                    />
+                  );
+                })()}
+              </div>
             ))}
 
             {/* Pagination */}

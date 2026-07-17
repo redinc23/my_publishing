@@ -1,9 +1,9 @@
 /* eslint-disable */
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function AdminDashboard() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const [
     { count: totalUsers },

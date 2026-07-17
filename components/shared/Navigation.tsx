@@ -29,7 +29,7 @@ export function Navigation() {
   const isLibraryActive = libraryItems.some((item) => pathname?.startsWith(item.href));
 
   return (
-    <nav className="hidden items-center gap-6 md:flex">
+    <nav aria-label="Primary navigation" className="hidden items-center gap-6 md:flex">
       {/* Library Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -39,7 +39,10 @@ export function Navigation() {
           )}
         >
           Library
-          <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          <ChevronDown
+            className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180"
+            aria-hidden="true"
+          />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-[140px]">
           {libraryItems.map((item) => {

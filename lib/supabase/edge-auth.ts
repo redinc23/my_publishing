@@ -62,6 +62,18 @@ function tokenFromParsedSession(parsed: unknown): string | null {
   return null;
 }
 
+function decodeBase64CookieValue(value: string): string | null {
+  // Newer @supabase/ssr versions store the session as "base64-<base64url JSON>".
+  if (!value.startsWith('base64-')) return null;
+  try {
+    const b64 = value.slice('base64-'.length).replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    return atob(padded);
+  } catch {
+    return null;
+  }
+}
+
 function parseAccessTokenFromCookie(rawCookie: string): string | null {
   const candidates = [rawCookie];
 
@@ -69,6 +81,11 @@ function parseAccessTokenFromCookie(rawCookie: string): string | null {
     candidates.push(decodeURIComponent(rawCookie));
   } catch {
     // Cookie may already be decoded.
+  }
+
+  for (const candidate of candidates) {
+    const decoded = decodeBase64CookieValue(candidate);
+    if (decoded) candidates.push(decoded);
   }
 
   for (const candidate of candidates) {

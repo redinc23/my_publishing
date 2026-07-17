@@ -4,7 +4,7 @@ import { LoginForm } from './LoginForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Login - MANGU',
+  title: 'Login',
   description: 'Sign in to your MANGU account',
 };
 

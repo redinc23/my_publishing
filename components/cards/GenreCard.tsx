@@ -10,7 +10,7 @@ interface GenreCardProps {
 
 export function GenreCard({ genre, bookCount, className }: GenreCardProps) {
   return (
-    <Link href={`/genres/${genre.toLowerCase()}`}>
+    <Link href={`/genres/${encodeURIComponent(genre)}`}>
       <Card className={cn('transition-transform duration-300 hover:scale-[1.02]', className)}>
         <CardContent className="p-6">
           <h3 className="mb-2 text-xl font-semibold capitalize">{genre}</h3>

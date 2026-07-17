@@ -77,8 +77,9 @@ export async function middleware(request: NextRequest) {
     // Protected routes
     const isReadingRoute = pathname.startsWith('/reading');
     const isLibraryRoute = pathname.startsWith('/library');
-    const isAuthorRoute = pathname.startsWith('/author');
-    const isPartnerRoute = pathname.startsWith('/partner');
+    // Note: '/author/...' (portal) must not match public '/authors' pages.
+    const isAuthorRoute = pathname === '/author' || pathname.startsWith('/author/');
+    const isPartnerRoute = pathname === '/partner' || pathname.startsWith('/partner/');
     const isAdminRoute = pathname.startsWith('/admin');
 
     // Redirect logged-in users away from auth pages
@@ -129,9 +130,18 @@ export async function middleware(request: NextRequest) {
       '/',
       '/books',
       '/genres',
+      '/authors',
+      '/about',
+      '/audio',
+      '/comics',
+      '/contact',
+      '/discover',
+      '/papers',
+      '/readers-hub',
       '/login',
       '/register',
       '/reset-password',
+      '/verify-email',
       '/api',
     ];
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));

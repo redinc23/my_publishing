@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createPublicCatalogClient } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Users } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
@@ -17,10 +17,8 @@ interface AuthorWithProfile {
 
 const getFeaturedAuthors = unstable_cache(
   async (limit: number): Promise<AuthorWithProfile[]> => {
-    const supabase = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Admin client: authors/profiles are not readable by anon under RLS.
+    const supabase = createPublicCatalogClient();
     const { data, error } = await supabase
       .from('authors')
       .select('id, pen_name, bio, total_books, is_verified, profile:profiles(full_name)')

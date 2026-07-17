@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthorForUser } from '@/lib/supabase/portal-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,11 +28,8 @@ async function getAuthorData() {
     redirect('/');
   }
 
-  const { data: author } = await supabase
-    .from('authors')
-    .select('*')
-    .eq('profile_id', user.id)
-    .single();
+  // authors has no RLS SELECT policy, so resolve the author row server-side.
+  const author = await getAuthorForUser(user.id);
 
   if (!author) {
     return { author: null, books: [], manuscripts: [], earnings: 0 };

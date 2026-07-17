@@ -1,15 +1,16 @@
 /* eslint-disable */
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/admin';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
+import { updateManuscriptStatusAction } from '../actions';
 
 export default async function AdminManuscriptsPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: manuscripts } = await supabase
     .from('manuscripts')
-    .select('*, author:authors(*)')
+    .select('id, title, status, genre, created_at, author:authors(pen_name)')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -51,9 +52,32 @@ export default async function AdminManuscriptsPage() {
                       </td>
                       <td className="px-4 py-3">{manuscript.genre}</td>
                       <td className="px-4 py-3">
-                        <Button variant="outline" size="sm">
-                          Review
-                        </Button>
+                        <div className="flex gap-2">
+                          <form action={updateManuscriptStatusAction}>
+                            <input type="hidden" name="manuscriptId" value={manuscript.id} />
+                            <input type="hidden" name="status" value="accepted" />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="submit"
+                              disabled={manuscript.status === 'accepted'}
+                            >
+                              Approve
+                            </Button>
+                          </form>
+                          <form action={updateManuscriptStatusAction}>
+                            <input type="hidden" name="manuscriptId" value={manuscript.id} />
+                            <input type="hidden" name="status" value="rejected" />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="submit"
+                              disabled={manuscript.status === 'rejected'}
+                            >
+                              Reject
+                            </Button>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   ))}

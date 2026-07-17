@@ -1,18 +1,42 @@
 /* eslint-disable */
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/admin';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { updateBookStatusAction } from '../actions';
 
-export default async function AdminBooksPage() {
-  const supabase = await createClient();
+const PAGE_SIZE = 10;
 
-  const { data: books } = await supabase
+export default async function AdminBooksPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string; status?: string; page?: string };
+}) {
+  const supabase = createClient();
+  const queryText = searchParams?.q?.trim() || '';
+  const status = searchParams?.status || 'all';
+  const currentPage = Math.max(Number(searchParams?.page || '1') || 1, 1);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  let query = supabase
     .from('books')
-    .select('*, author:authors(*)')
-    .order('created_at', { ascending: false })
-    .limit(50);
+    .select('id, title, status, price, author:authors(pen_name)', { count: 'exact' })
+    .order('created_at', { ascending: false });
+
+  if (queryText) query = query.ilike('title', `%${queryText}%`);
+  if (status !== 'all') query = query.eq('status', status);
+
+  const { data: books, count } = await query.range(from, to);
+  const totalPages = Math.max(Math.ceil((count || 0) / PAGE_SIZE), 1);
+  const pageHref = (page: number) => {
+    const params = new URLSearchParams();
+    if (queryText) params.set('q', queryText);
+    if (status !== 'all') params.set('status', status);
+    params.set('page', String(page));
+    return `/admin/books?${params.toString()}`;
+  };
 
   return (
     <Section>
@@ -23,6 +47,29 @@ export default async function AdminBooksPage() {
             <Link href="/admin/books/new">Add New Book</Link>
           </Button>
         </div>
+
+        <form className="mb-6 grid gap-3 md:grid-cols-[1fr_180px_auto]" action="/admin/books">
+          <input
+            type="search"
+            name="q"
+            defaultValue={queryText}
+            placeholder="Search by title"
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          <select
+            name="status"
+            defaultValue={status}
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">All statuses</option>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+          <Button type="submit" variant="outline">
+            Filter
+          </Button>
+        </form>
 
         <div className="space-y-4">
           {books && books.length > 0 ? (
@@ -56,6 +103,17 @@ export default async function AdminBooksPage() {
                       <td className="px-4 py-3">${book.price}</td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
+                         <form action={updateBookStatusAction}>
+                           <input type="hidden" name="bookId" value={book.id} />
+                           <input
+                             type="hidden"
+                             name="status"
+                             value={book.status === 'published' ? 'draft' : 'published'}
+                           />
+                           <Button variant="outline" size="sm" type="submit">
+                             {book.status === 'published' ? 'Unpublish' : 'Publish'}
+                           </Button>
+                         </form>
                           <Button asChild variant="outline" size="sm">
                             <Link href={`/admin/books/${book.id}/edit`}>Edit</Link>
                           </Button>
@@ -69,6 +127,20 @@ export default async function AdminBooksPage() {
           ) : (
             <p className="text-secondary">No books found</p>
           )}
+        </div>
+
+        <div className="mt-6 flex items-center justify-between text-sm">
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" size="sm" disabled={currentPage <= 1}>
+              <Link href={pageHref(Math.max(currentPage - 1, 1))}>Previous</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" disabled={currentPage >= totalPages}>
+              <Link href={pageHref(Math.min(currentPage + 1, totalPages))}>Next</Link>
+            </Button>
+          </div>
         </div>
       </Container>
     </Section>

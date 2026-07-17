@@ -34,6 +34,21 @@ export function ReviewSection({
   const [filterSpoilers, setFilterSpoilers] = useState(true);
 
   const hasUserReviewed = !!userReview;
+  const visibleReviews = reviews
+    .filter((review) => !filterSpoilers || !review.is_spoiler)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'recent':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'highest':
+          return b.rating - a.rating;
+        case 'lowest':
+          return a.rating - b.rating;
+        case 'helpful':
+        default:
+          return (b.helpful_count || 0) - (a.helpful_count || 0);
+      }
+    });
 
   const handleReviewSubmit = () => {
     setShowReviewForm(false);
@@ -124,11 +139,11 @@ export function ReviewSection({
             </div>
           )}
 
-          {reviews.length === 0 ? (
+          {visibleReviews.length === 0 ? (
             renderEmptyState()
           ) : (
             <div className="space-y-6">
-              {reviews.map((review) => (
+              {visibleReviews.map((review) => (
                 <ReviewCard
                   key={review.id}
                   review={review}
@@ -137,13 +152,6 @@ export function ReviewSection({
                 />
               ))}
 
-              {reviews.length < totalReviews && (
-                <div className="pt-6 text-center">
-                  <Button variant="outline" size="lg">
-                    Load More Reviews
-                  </Button>
-                </div>
-              )}
             </div>
           )}
         </TabsContent>

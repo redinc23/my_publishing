@@ -1,4 +1,5 @@
 /* eslint-disable */
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Container } from '@/components/layout/Container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +8,11 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ResendVerificationForm } from './ResendVerificationForm';
 
+export const metadata: Metadata = {
+  title: 'Verify Email',
+  description: 'Verify your email address to activate your MANGU Publishers account.',
+};
+
 async function checkVerificationStatus() {
   const supabase = await createClient();
   const {
@@ -14,7 +20,7 @@ async function checkVerificationStatus() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login');
+    redirect('/login?error=' + encodeURIComponent('Please sign in to verify your email.'));
   }
 
   return {
@@ -34,7 +40,7 @@ export default async function VerifyEmailPage() {
     <Container className="flex min-h-screen items-center justify-center py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Verify Your Email</CardTitle>
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">Verify Your Email</h1>
           <CardDescription>
             We've sent a verification email to <strong>{email}</strong>
           </CardDescription>

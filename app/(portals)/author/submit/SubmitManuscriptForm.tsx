@@ -46,6 +46,8 @@ const genres = [
 export function SubmitManuscriptForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [manuscriptFile, setManuscriptFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -61,8 +63,14 @@ export function SubmitManuscriptForm() {
   const genre = watch('genre');
 
   const onSubmit = async (data: ManuscriptFormData) => {
+    if (!manuscriptFile) {
+      setFileError('Manuscript file is required');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
+    setFileError(null);
 
     try {
       const formData = new FormData();
@@ -72,6 +80,7 @@ export function SubmitManuscriptForm() {
       if (data.synopsis) formData.append('synopsis', data.synopsis);
       if (data.wordCount) formData.append('wordCount', data.wordCount.toString());
       if (data.targetAudience) formData.append('targetAudience', data.targetAudience);
+      formData.append('manuscriptFile', manuscriptFile);
 
       const result = await submitManuscript(formData);
 
@@ -128,6 +137,27 @@ export function SubmitManuscriptForm() {
           </SelectContent>
         </Select>
         {errors.genre && <p className="mt-1 text-sm text-red-500">{errors.genre.message}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="manuscriptFile" className="mb-2 block text-sm font-medium">
+          Manuscript File <span className="text-red-500">*</span>
+        </label>
+        <Input
+          id="manuscriptFile"
+          type="file"
+          accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            setManuscriptFile(file);
+            setFileError(null);
+          }}
+          disabled={isLoading}
+        />
+        <p className="mt-1 text-xs text-secondary">
+          Accepted formats: PDF, DOC, DOCX, or TXT up to 100MB.
+        </p>
+        {fileError && <p className="mt-1 text-sm text-red-500">{fileError}</p>}
       </div>
 
       <div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Twitter, Github, Instagram, Linkedin, Mail, ChevronDown, Globe } from 'lucide-react';
@@ -10,10 +11,10 @@ import { Input } from '@/components/ui/input';
 const footerLinkVariants = { rest: { x: 0 }, hover: { x: 4 } };
 
 const socialLinks = [
-  { name: 'Twitter', icon: Twitter, href: '#' },
-  { name: 'GitHub', icon: Github, href: '#' },
-  { name: 'Instagram', icon: Instagram, href: '#' },
-  { name: 'LinkedIn', icon: Linkedin, href: '#' },
+  { name: 'Twitter', icon: Twitter, href: '#', label: 'MANGU Publishers on Twitter' },
+  { name: 'GitHub', icon: Github, href: '#', label: 'MANGU Publishers on GitHub' },
+  { name: 'Instagram', icon: Instagram, href: '#', label: 'MANGU Publishers on Instagram' },
+  { name: 'LinkedIn', icon: Linkedin, href: '#', label: 'MANGU Publishers on LinkedIn' },
 ];
 
 const footerColumns = [
@@ -22,9 +23,9 @@ const footerColumns = [
     links: [
       { label: 'Browse Books', href: '/books' },
       { label: 'Genres', href: '/genres' },
-      { label: 'New Releases', href: '/books?sort=newest' },
+      { label: 'New Releases', href: '/books?sort=published_at' },
       { label: 'Trending', href: '/discover' },
-      { label: 'Authors', href: '/readers-hub' },
+      { label: 'Authors', href: '/authors' },
       { label: 'Audiobooks', href: '/audio' },
     ],
   },
@@ -33,9 +34,9 @@ const footerColumns = [
     links: [
       { label: 'Submit Manuscript', href: '/author/submit' },
       { label: 'Author Dashboard', href: '/author/dashboard' },
-      { label: 'Royalty Reports', href: '/author/royalties' },
-      { label: 'Marketing Guide', href: '/author/marketing' },
-      { label: 'Community', href: '/author/community' },
+      { label: 'Royalty Reports', href: '/author/analytics' },
+      { label: 'Help Center', href: '/help' },
+      { label: 'Community', href: '/readers-hub' },
     ],
   },
   {
@@ -92,12 +93,14 @@ function SocialIcon({
     <motion.a
       href={href}
       aria-label={label}
+      target="_blank"
+      rel="noopener noreferrer"
       className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-muted-foreground transition-colors duration-200 hover:border-primary/50 hover:text-primary"
       whileHover={{ scale: 1.1, y: -2 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-4 w-4" aria-hidden="true" />
     </motion.a>
   );
 }
@@ -110,7 +113,10 @@ function AppStoreButton({ store, href }: { store: 'App Store' | 'Google Play'; h
       rel="noopener noreferrer"
       className="group flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2.5 text-left transition-all duration-200 hover:border-primary/50 hover:bg-secondary"
     >
-      <Globe className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
+      <Globe
+        className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary"
+        aria-hidden="true"
+      />
       <div className="flex flex-col">
         <span className="text-[10px] uppercase leading-none tracking-wide text-muted-foreground">
           {store === 'App Store' ? 'Download on the' : 'Get it on'}
@@ -123,7 +129,11 @@ function AppStoreButton({ store, href }: { store: 'App Store' | 'Google Play'; h
 
 function PaymentIcon({ name }: { name: string }) {
   return (
-    <div className="flex h-8 items-center justify-center rounded-md border border-border bg-secondary/60 px-3 text-xs font-medium text-muted-foreground">
+    <div
+      className="flex h-8 items-center justify-center rounded-md border border-border bg-secondary/60 px-3 text-xs font-medium text-muted-foreground"
+      role="img"
+      aria-label={`${name} accepted`}
+    >
       {name === 'Stripe' && (
         <span className="tracking-wide">
           <span className="text-[#635BFF]">Stripe</span>
@@ -134,8 +144,8 @@ function PaymentIcon({ name }: { name: string }) {
       )}
       {name === 'Mastercard' && (
         <div className="flex items-center gap-0.5">
-          <span className="h-3 w-3 rounded-full bg-red-500/90" />
-          <span className="-ml-1.5 h-3 w-3 rounded-full bg-yellow-500/90" />
+          <span className="h-3 w-3 rounded-full bg-red-500/90" aria-hidden="true" />
+          <span className="-ml-1.5 h-3 w-3 rounded-full bg-yellow-500/90" aria-hidden="true" />
         </div>
       )}
       {name === 'PayPal' && (
@@ -150,6 +160,7 @@ function PaymentIcon({ name }: { name: string }) {
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [subscribed, setSubscribed] = useState(false);
 
   return (
     <footer className="border-t border-border bg-background">
@@ -168,7 +179,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-3 pt-1">
               {socialLinks.map((s) => (
-                <SocialIcon key={s.name} href={s.href} icon={s.icon} label={s.name} />
+                <SocialIcon key={s.name} href={s.href} icon={s.icon} label={s.label} />
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -199,7 +210,7 @@ export function Footer() {
           <div className="flex flex-col items-start justify-between gap-6 py-10 md:flex-row md:items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-primary" />
+                <Mail className="h-5 w-5 text-primary" aria-hidden="true" />
                 <h3 className="text-base font-semibold text-foreground">
                   Subscribe to our newsletter
                 </h3>
@@ -208,20 +219,30 @@ export function Footer() {
                 Get the latest books and updates delivered to your inbox.
               </p>
             </div>
-            <form
-              className="flex w-full items-center gap-3 md:w-auto"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full border-border bg-background md:w-72"
-                aria-label="Email address for newsletter"
-              />
-              <Button type="submit" className="shrink-0">
-                Subscribe
-              </Button>
-            </form>
+            {subscribed ? (
+              <p className="text-sm font-medium text-primary" role="status">
+                Thanks for subscribing! Keep an eye on your inbox.
+              </p>
+            ) : (
+              <form
+                className="flex w-full items-center gap-3 md:w-auto"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setSubscribed(true);
+                }}
+              >
+                <Input
+                  type="email"
+                  required
+                  placeholder="Enter your email"
+                  className="w-full border-border bg-background md:w-72"
+                  aria-label="Email address for newsletter"
+                />
+                <Button type="submit" className="shrink-0">
+                  Subscribe
+                </Button>
+              </form>
+            )}
           </div>
         </Container>
       </div>
@@ -251,9 +272,9 @@ export function Footer() {
                 aria-label="Select language"
                 className="hidden items-center gap-1.5 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 sm:flex"
               >
-                <Globe className="h-3 w-3" />
+                <Globe className="h-3 w-3" aria-hidden="true" />
                 <span>EN</span>
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3" aria-hidden="true" />
               </button>
             </div>
           </div>

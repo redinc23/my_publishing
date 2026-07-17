@@ -1,6 +1,7 @@
 // PERF-PHASE2-6 — Server-first reading page
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import ReadingClient from './ReadingClient';
 import type { Book, ReadingProgress } from '@/types';
 
@@ -14,15 +15,24 @@ export default async function ReadingPage({ params }: { params: { bookId: string
     redirect('/login');
   }
 
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
   // PERF-PHASE2-6 — Parallel fetch book + progress on the server
   const [{ data: book }, { data: progress }] = await Promise.all([
-    supabase.from('books').select('*').eq('id', params.bookId).single(),
-    supabase
+    admin.from('books').select('*').eq('id', params.bookId).single(),
+    profile
+      ? admin
       .from('reading_progress')
       .select('*')
-      .eq('user_id', user.id)
+          .eq('user_id', profile.id)
       .eq('book_id', params.bookId)
-      .single(),
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   if (!book) {

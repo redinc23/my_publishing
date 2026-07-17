@@ -1,7 +1,7 @@
 /* eslint-disable */
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -36,8 +36,14 @@ const sortOptions = [
 ];
 
 export function BookFilters() {
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const pushWithParams = (params: URLSearchParams) => {
+    const query = params.toString();
+    router.push(query ? `${pathname ?? ''}?${query}` : (pathname ?? '/'));
+  };
 
   const updateSearchParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
@@ -47,7 +53,7 @@ export function BookFilters() {
       params.delete(key);
     }
     params.delete('page'); // Reset to first page
-    router.push(`/books?${params.toString()}`);
+    pushWithParams(params);
   };
 
   return (
@@ -64,7 +70,7 @@ export function BookFilters() {
             params.delete('q');
           }
           params.delete('page');
-          router.push(`/books?${params.toString()}`);
+          pushWithParams(params);
         }}
         className="flex-1"
       />

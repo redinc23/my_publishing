@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: 'Invalid multipart form data' }, { status: 400 });
+    }
     const file = formData.get('file') as File;
 
     if (!file) {
@@ -29,18 +35,20 @@ export async function POST(request: NextRequest) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-    const { data, error } = await supabase.storage.from('manuscripts').upload(fileName, file, {
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase.storage.from('manuscripts').upload(fileName, file, {
       cacheControl: '3600',
       upsert: false,
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[Upload] Failed to store file:', error);
+      return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
     }
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from('manuscripts').getPublicUrl(fileName);
+    } = adminSupabase.storage.from('manuscripts').getPublicUrl(fileName);
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {

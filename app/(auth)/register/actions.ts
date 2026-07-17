@@ -2,9 +2,60 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { authRateLimit, getAuthIdentifier } from '@/lib/utils/auth-rate-limit';
 import { headers } from 'next/headers';
+
+function normalizeOrigin(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  return value.trim().replace(/\/+$/, '');
+}
+
+async function resolveAuthOrigin() {
+  const headersList = await headers();
+  const host = headersList.get('x-forwarded-host') || headersList.get('host');
+  const proto = headersList.get('x-forwarded-proto') || 'http';
+  const requestOrigin = host ? `${proto}://${host.split(',')[0].trim()}` : null;
+  const configuredOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+  const vercelUrl = normalizeOrigin(process.env.VERCEL_URL);
+
+  if (requestOrigin) {
+    return normalizeOrigin(requestOrigin)!;
+  }
+
+  if (configuredOrigin) {
+    return configuredOrigin;
+  }
+
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/^https?:\/\//, '')}`;
+  }
+
+  return 'http://localhost:3001';
+}
+
+function toFriendlyRegisterError(message: string) {
+  if (message.includes('User already registered')) {
+    return 'An account with this email already exists. Please sign in instead.';
+  }
+
+  if (message.includes('Password')) {
+    return 'Password does not meet requirements. Please choose a stronger password.';
+  }
+
+  if (/email.*(invalid|validate)|invalid.*email/i.test(message)) {
+    return 'Please use a valid email address that can receive email.';
+  }
+
+  if (/too many requests|rate limit|security purposes/i.test(message)) {
+    return 'Too many registration attempts. Please wait a minute and try again.';
+  }
+
+  return message;
+}
 
 export async function registerUser(formData: FormData) {
   const email = formData.get('email') as string;
@@ -39,6 +90,8 @@ export async function registerUser(formData: FormData) {
     return { error: 'Full name must be at least 2 characters long' };
   }
 
+  let needsVerification = false;
+
   try {
     const supabase = await createClient();
 
@@ -65,6 +118,7 @@ export async function registerUser(formData: FormData) {
       email: email.trim().toLowerCase(),
       password,
       options: {
+        emailRedirectTo: `${await resolveAuthOrigin()}/callback`,
         data: {
           full_name: fullName.trim(),
           name: fullName.trim(), // Some OAuth providers use 'name'
@@ -74,19 +128,16 @@ export async function registerUser(formData: FormData) {
     });
 
     if (authError) {
-      // Provide user-friendly error messages
-      if (authError.message.includes('User already registered')) {
-        return { error: 'An account with this email already exists. Please sign in instead.' };
-      }
-      if (authError.message.includes('Password')) {
-        return { error: 'Password does not meet requirements. Please choose a stronger password.' };
-      }
-      return { error: authError.message };
+      return { error: toFriendlyRegisterError(authError.message) };
     }
 
     if (!authData.user) {
       return { error: 'Failed to create user account. Please try again.' };
     }
+
+    // When Supabase requires email confirmation there is no session yet, so
+    // the browser gets no auth cookies — surface that to the client.
+    needsVerification = !authData.session;
 
     // Profile will be created automatically by the trigger
     // Verify it was created (with a small delay to allow trigger to run)
@@ -100,8 +151,10 @@ export async function registerUser(formData: FormData) {
 
     if (profileCheckError || !profile) {
       console.warn('Profile not created by trigger, attempting manual creation...');
-      // Fallback: manually create profile if trigger didn't work
-      const { error: profileError } = await supabase.from('profiles').insert({
+      // Fallback: use admin client to bypass RLS (session client has no auth when
+      // email confirmation is required and authData.session is null).
+      const admin = createAdminClient();
+      const { error: profileError } = await admin.from('profiles').insert({
         user_id: authData.user.id,
         email: email.trim().toLowerCase(),
         full_name: fullName.trim(),
@@ -117,12 +170,14 @@ export async function registerUser(formData: FormData) {
 
     // Revalidate paths
     revalidatePath('/', 'layout');
-
-    // Redirect to home page after successful registration
-    // Note: User may need to verify email depending on Supabase settings
-    redirect('/');
   } catch (error) {
     console.error('Unexpected error during registration:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
+
+  // Success: the client performs a full-page navigation so the browser
+  // Supabase client picks up the freshly set auth cookies.
+  // When email confirmation is required there is no session yet, so the
+  // client shows a "check your email" notice instead.
+  return { success: true, needsVerification };
 }

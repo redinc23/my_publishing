@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
+
+export const metadata: Metadata = {
+  title: 'About MANGU',
+  description:
+    'Learn how MANGU Publishers connects readers with fresh voices and independent authors worldwide.',
+};
 
 export default function AboutPage() {
   return (

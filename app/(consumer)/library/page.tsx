@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient, PUBLIC_BOOK_SELECT } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
@@ -33,12 +34,27 @@ async function getLibraryItems() {
     redirect('/login');
   }
 
-  const { data } = await supabase
+  // Admin client so the nested author join resolves under RLS; safe because
+  // results are filtered to the authenticated user's own orders.
+  const adminClient = createPublicCatalogClient();
+
+  // orders.user_id stores profiles.id (not the auth user id) — resolve it first.
+  const { data: profile } = await adminClient
+    .from('profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!profile) {
+    return [];
+  }
+
+  const { data } = await adminClient
     .from('orders')
     .select(
-      'id, order_number, created_at, items:order_items(id, unit_price, book:books(*, author:authors!inner(*, profile:profiles!inner(*))))'
+      `id, order_number, created_at, items:order_items(id, unit_price, book:books(${PUBLIC_BOOK_SELECT}))`
     )
-    .eq('user_id', user.id)
+    .eq('user_id', profile.id)
     .order('created_at', { ascending: false });
 
   return (data as OrderWithItems[]) || [];

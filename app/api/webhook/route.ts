@@ -8,7 +8,7 @@ import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
-import type { WebhookProcessingResult, CheckoutMetadata, OrderFromWebhook } from '@/types/webhook';
+import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
 // Webhook secret for signature verification
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -95,6 +95,9 @@ async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session
 ): Promise<WebhookProcessingResult> {
   const metadata = session.metadata as CheckoutMetadata | null;
+  const paymentIntentId =
+    typeof session.payment_intent === 'string' ? session.payment_intent : null;
+  const orderNumber = `STRIPE-${session.id}`;
 
   // Validate required metadata
   if (!metadata?.book_id || !metadata?.user_id) {
@@ -107,43 +110,110 @@ async function handleCheckoutCompleted(
     };
   }
 
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', metadata.user_id)
+    .single();
+
+  if (profileError || !profile) {
+    console.error('[Webhook] Failed to resolve purchasing profile:', profileError);
+    return {
+      success: false,
+      error: `Failed to resolve purchasing profile: ${profileError?.message || 'Profile not found'}`,
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+      should_retry: true,
+    };
+  }
+
   // Check for duplicate order (additional idempotency check)
-  const { data: existingOrder } = await supabase
+  let existingOrderQuery = supabase
     .from('orders')
     .select('id')
-    .eq('stripe_session_id', session.id)
-    .single();
+    .limit(1);
+
+  existingOrderQuery = paymentIntentId
+    ? existingOrderQuery.eq('payment_intent_id', paymentIntentId)
+    : existingOrderQuery.eq('order_number', orderNumber);
+
+  const { data: existingOrders } = await existingOrderQuery;
+  const existingOrder = existingOrders?.[0];
 
   if (existingOrder) {
     console.log('[Webhook] Order already exists for session:', session.id);
+    const { data: existingItems } = await supabase
+      .from('order_items')
+      .select('id')
+      .eq('order_id', existingOrder.id)
+      .eq('book_id', metadata.book_id)
+      .limit(1);
+
+    if (!existingItems?.length) {
+      const { error: itemError } = await supabase.from('order_items').insert({
+        order_id: existingOrder.id,
+        book_id: metadata.book_id,
+        unit_price: session.amount_total ? session.amount_total / 100 : 0,
+        license_key: `LIC-${Date.now()}-${metadata.book_id}`,
+      });
+
+      if (itemError) {
+        console.error('[Webhook] Failed to repair missing order item:', itemError);
+        return {
+          success: false,
+          error: `Failed to repair missing order item: ${itemError.message}`,
+          event_id: session.id,
+          event_type: 'checkout.session.completed',
+          should_retry: true,
+        };
+      }
+    }
+
     return {
       success: true,
       event_id: session.id,
       event_type: 'checkout.session.completed',
-      action_taken: 'Order already exists, skipped creation',
+      action_taken: 'Order already exists, ensured order item exists',
     };
   }
 
   // Create the order
-  const orderData: OrderFromWebhook = {
-    user_id: metadata.user_id,
-    book_id: metadata.book_id,
-    amount: session.amount_total ? session.amount_total / 100 : 0,
-    currency: session.currency?.toUpperCase() || 'USD',
-    stripe_session_id: session.id,
-    stripe_payment_intent_id: session.payment_intent as string,
-    stripe_customer_id: session.customer as string | undefined,
-    status: 'completed',
-    metadata: metadata as unknown as Record<string, unknown>,
-  };
+  const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .insert({
+      order_number: orderNumber,
+      user_id: profile.id,
+      total_amount: totalAmount,
+      payment_intent_id: paymentIntentId,
+      status: 'completed',
+    })
+    .select('id')
+    .single();
 
-  const { error: orderError } = await supabase.from('orders').insert(orderData);
-
-  if (orderError) {
+  if (orderError || !order) {
     console.error('[Webhook] Failed to create order:', orderError);
     return {
       success: false,
-      error: `Failed to create order: ${orderError.message}`,
+      error: `Failed to create order: ${orderError?.message || 'No order returned'}`,
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+      should_retry: true,
+    };
+  }
+
+  const { error: itemError } = await supabase.from('order_items').insert({
+    order_id: order.id,
+    book_id: metadata.book_id,
+    unit_price: totalAmount,
+    license_key: `LIC-${Date.now()}-${metadata.book_id}`,
+  });
+
+  if (itemError) {
+    console.error('[Webhook] Failed to create order item:', itemError);
+    return {
+      success: false,
+      error: `Failed to create order item: ${itemError.message}`,
       event_id: session.id,
       event_type: 'checkout.session.completed',
       should_retry: true,
@@ -157,8 +227,8 @@ async function handleCheckoutCompleted(
     event_type: 'purchase',
     session_id: session.id,
     event_data: {
-      amount: orderData.amount,
-      currency: orderData.currency,
+      amount: totalAmount,
+      currency: session.currency?.toUpperCase() || 'USD',
     },
   });
 
@@ -268,7 +338,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Rate limiting
   const clientId = getClientIdentifier(request);
   if (!webhookSecret) {
-    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 503 });
   }
 
   const rateLimitResult = await enforceRateLimit('webhook', clientId);
