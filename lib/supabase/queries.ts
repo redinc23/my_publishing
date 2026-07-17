@@ -48,8 +48,16 @@ export const getBooksPage = cache(
           query = query.eq('genre', params.genre);
         }
 
-        const VALID_SORT_KEYS = new Set(['published_at', 'total_reads', 'average_rating', 'price', 'title']);
-        const sort = VALID_SORT_KEYS.has(params.sort ?? '') ? (params.sort as string) : 'published_at';
+        const VALID_SORT_KEYS = new Set([
+          'published_at',
+          'total_reads',
+          'average_rating',
+          'price',
+          'title',
+        ]);
+        const sort = VALID_SORT_KEYS.has(params.sort ?? '')
+          ? (params.sort as string)
+          : 'published_at';
         const ascending = sort === 'price' || sort === 'title';
         query = query.order(sort, { ascending });
 

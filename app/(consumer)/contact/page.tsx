@@ -4,7 +4,8 @@ import { Section } from '@/components/layout/Section';
 import { ContactForm } from './ContactForm';
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Contact MANGU Publishers for reader support, publishing questions, and media inquiries.',
+  description:
+    'Contact MANGU Publishers for reader support, publishing questions, and media inquiries.',
 };
 
 export default function ContactPage() {

@@ -64,7 +64,8 @@ export default async function CatalogsPage({ searchParams }: CatalogsPageProps) 
     })
     .sort((a, b) => {
       if (sort === 'title') return a.title.localeCompare(b.title);
-      if (sort === 'price') return Number(a.discount_price ?? a.price ?? 0) - Number(b.discount_price ?? b.price ?? 0);
+      if (sort === 'price')
+        return Number(a.discount_price ?? a.price ?? 0) - Number(b.discount_price ?? b.price ?? 0);
       return new Date(b.published_at ?? 0).getTime() - new Date(a.published_at ?? 0).getTime();
     });
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PAGE_SIZE));
@@ -81,12 +82,21 @@ export default async function CatalogsPage({ searchParams }: CatalogsPageProps) 
       <Container>
         <div className="mb-8">
           <h1 className="text-4xl font-bold">Catalogs</h1>
-          <p className="mt-2 text-secondary">Published public books available to {partner.institution_name}.</p>
+          <p className="mt-2 text-secondary">
+            Published public books available to {partner.institution_name}.
+          </p>
         </div>
 
-        <form className="mb-6 grid gap-3 rounded-lg border border-border p-4 md:grid-cols-[1fr_auto_auto_auto]" method="get">
+        <form
+          className="mb-6 grid gap-3 rounded-lg border border-border p-4 md:grid-cols-[1fr_auto_auto_auto]"
+          method="get"
+        >
           <Input name="q" placeholder="Search catalogs" defaultValue={searchParams?.q ?? ''} />
-          <select name="genre" defaultValue={genre} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+          <select
+            name="genre"
+            defaultValue={genre}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
             <option value="all">All genres</option>
             {genres.map((item) => (
               <option key={item} value={item}>
@@ -94,7 +104,11 @@ export default async function CatalogsPage({ searchParams }: CatalogsPageProps) 
               </option>
             ))}
           </select>
-          <select name="sort" defaultValue={sort} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+          <select
+            name="sort"
+            defaultValue={sort}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
             <option value="newest">Newest</option>
             <option value="title">Title</option>
             <option value="price">Lowest price</option>
@@ -109,55 +123,66 @@ export default async function CatalogsPage({ searchParams }: CatalogsPageProps) 
         ) : (
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {pagedBooks.map((book) => {
-              const request = requestByBook.get(book.id);
-              return (
-                <Card key={book.id} className="flex flex-col">
-                  <CardHeader>
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <Badge variant="secondary">{book.genre}</Badge>
-                      {request ? <Badge variant="outline">ARC {titleCase(request.status)}</Badge> : null}
-                    </div>
-                    <CardTitle>{book.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-1 flex-col gap-4">
-                    <p className="line-clamp-4 text-sm text-secondary">
-                      {book.description || 'No description available.'}
-                    </p>
-                    <div className="mt-auto space-y-2 text-sm">
-                      <p>
-                        <span className="font-semibold">Price:</span> {formatMoney(Number(book.discount_price ?? book.price ?? 0))}
+              {pagedBooks.map((book) => {
+                const request = requestByBook.get(book.id);
+                return (
+                  <Card key={book.id} className="flex flex-col">
+                    <CardHeader>
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <Badge variant="secondary">{book.genre}</Badge>
+                        {request ? (
+                          <Badge variant="outline">ARC {titleCase(request.status)}</Badge>
+                        ) : null}
+                      </div>
+                      <CardTitle>{book.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-1 flex-col gap-4">
+                      <p className="line-clamp-4 text-sm text-secondary">
+                        {book.description || 'No description available.'}
                       </p>
-                      <p>
-                        <span className="font-semibold">Published:</span> {formatDate(book.published_at)}
-                      </p>
-                      <Link href={`/books/${book.slug}`} className="inline-flex text-primary hover:underline">
-                        View book details
-                      </Link>
-                      {request ? (
-                        <Button asChild variant="outline" size="sm" className="w-full">
-                          <Link href={`/partner/arc-requests?status=${request.status}`}>View ARC request</Link>
-                        </Button>
-                      ) : (
-                        <form action={createArcRequest} className="flex gap-2">
-                          <input type="hidden" name="bookId" value={book.id} />
-                          <Input
-                            className="w-24"
-                            name="quantity"
-                            type="number"
-                            min="1"
-                            max="500"
-                            defaultValue="1"
-                            aria-label={`ARC quantity for ${book.title}`}
-                          />
-                          <Button type="submit" size="sm">Request ARC</Button>
-                        </form>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      <div className="mt-auto space-y-2 text-sm">
+                        <p>
+                          <span className="font-semibold">Price:</span>{' '}
+                          {formatMoney(Number(book.discount_price ?? book.price ?? 0))}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Published:</span>{' '}
+                          {formatDate(book.published_at)}
+                        </p>
+                        <Link
+                          href={`/books/${book.slug}`}
+                          className="inline-flex text-primary hover:underline"
+                        >
+                          View book details
+                        </Link>
+                        {request ? (
+                          <Button asChild variant="outline" size="sm" className="w-full">
+                            <Link href={`/partner/arc-requests?status=${request.status}`}>
+                              View ARC request
+                            </Link>
+                          </Button>
+                        ) : (
+                          <form action={createArcRequest} className="flex gap-2">
+                            <input type="hidden" name="bookId" value={book.id} />
+                            <Input
+                              className="w-24"
+                              name="quantity"
+                              type="number"
+                              min="1"
+                              max="500"
+                              defaultValue="1"
+                              aria-label={`ARC quantity for ${book.title}`}
+                            />
+                            <Button type="submit" size="sm">
+                              Request ARC
+                            </Button>
+                          </form>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
             <Pagination
               currentPage={currentPage}

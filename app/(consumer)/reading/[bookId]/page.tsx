@@ -27,7 +27,11 @@ export default async function ReadingPage({ params }: { params: { bookId: string
     redirect('/books');
   }
 
-  const { data: book } = await admin.from('books').select('*').eq('id', params.bookId).maybeSingle();
+  const { data: book } = await admin
+    .from('books')
+    .select('*')
+    .eq('id', params.bookId)
+    .maybeSingle();
 
   if (!book) {
     redirect('/books');
