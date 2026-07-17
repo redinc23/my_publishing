@@ -22,7 +22,9 @@ const getFeaturedAuthors = unstable_cache(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('authors')
-      .select('id, pen_name, bio, total_books, is_verified, profile:profiles(full_name, avatar_url)')
+      .select(
+        'id, pen_name, bio, total_books, is_verified, profile:profiles(full_name, avatar_url)'
+      )
       .eq('is_verified', true)
       .order('total_books', { ascending: false })
       .limit(limit);

@@ -36,3 +36,5 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://mangu-publishers.com/homepage/
 **Stripe webhook:** Dashboard → Developers → Webhooks → `https://mangu-publishers.com/api/webhook` → events `checkout.session.completed` → copy `whsec_...` into `.env.local` as `STRIPE_WEBHOOK_SECRET` → `./scripts/sync-gcp-secrets-from-env.sh` → `./scripts/gcloud-build-submit.sh`
 
 **DNS cutover:** `www.mangu-publishers.com` currently serves via **Vercel**. Point apex/www to Cloud Run only after step 4 passes (see PHASE4_OPERATOR_RUNBOOK §7). Use DNS-only in Cloudflare during cutover.
+
+**Optional services (Sentry, Resend, OpenAI):** See [OPTIONAL_SERVICES_SETUP.md](./OPTIONAL_SERVICES_SETUP.md). Sentry DSN goes in `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` and is passed automatically by `./scripts/gcloud-build-submit.sh`.
