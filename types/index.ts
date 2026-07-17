@@ -148,6 +148,8 @@ export interface Book {
   isbn?: string;
   content_type?: 'book' | 'comic' | 'paper';
   published_at?: string;
+  total_reads?: number;
+  average_rating?: number;
   created_at: string;
   updated_at: string;
 }
