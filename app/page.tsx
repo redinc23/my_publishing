@@ -1,14 +1,43 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/layout/Container';
 import { ArrowRight } from 'lucide-react';
-import { Stats } from '@/components/landing/Stats';
-import { Features } from '@/components/landing/Features';
-import { CTA } from '@/components/landing/CTA';
+import { WebPageJsonLd } from '@/components/seo';
+import {
+  FeaturedBooksSection,
+  TrendingBooksSection,
+  GenreExplorer,
+  StatsBar,
+  NewsletterCTA,
+  AuthorSpotlight,
+} from '@/components/home';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+export const metadata: Metadata = {
+  title: 'Digital Publishing Platform',
+  description:
+    'Discover books, audiobooks, comics, papers, and independent authors on MANGU Publishers.',
+};
 
 export default function HomePage() {
+  const siteUrl = getSiteUrl();
+  const pageTitle = 'MANGU Publishers - Digital Publishing Platform';
+  const pageDescription =
+    'Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime.';
+
   return (
     <div className="relative">
+      {/* JSON-LD Structured Data - WebPage */}
+      <WebPageJsonLd
+        title={pageTitle}
+        description={pageDescription}
+        url={siteUrl}
+        type="WebPage"
+        image={`${siteUrl}/og-image.png`}
+        breadcrumb={[{ name: 'Home', item: siteUrl }]}
+      />
+
       {/* Background depth layer — giant faded "MANGU" text */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
         <span className="select-none text-[22vw] font-black leading-none tracking-tighter text-foreground/[0.03] dark:text-foreground/[0.05]">
@@ -96,14 +125,23 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* Stats Section */}
-      <Stats />
+      {/* Featured Books Carousel */}
+      <FeaturedBooksSection />
 
-      {/* Features Section */}
-      <Features />
+      {/* Trending Books Grid */}
+      <TrendingBooksSection />
 
-      {/* CTA Section */}
-      <CTA />
+      {/* Stats Bar */}
+      <StatsBar />
+
+      {/* Genre Explorer */}
+      <GenreExplorer />
+
+      {/* Author Spotlight */}
+      <AuthorSpotlight />
+
+      {/* Newsletter CTA */}
+      <NewsletterCTA />
     </div>
   );
 }

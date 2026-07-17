@@ -10,6 +10,28 @@ import {
   Heading,
 } from '@react-email/components';
 
+function getEmailBaseUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, '');
+  }
+
+  const vercelUrl =
+    process.env.VERCEL_URL?.trim() || process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelUrl) {
+    const normalizedVercelUrl = vercelUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    return `https://${normalizedVercelUrl}`;
+  }
+
+  // Email templates are often rendered outside a request context, so they
+  // cannot reliably infer the active localhost port at runtime.
+  return 'http://localhost:3001';
+}
+
+function getEmailUrl(path: string) {
+  return `${getEmailBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 export function WelcomeEmail({ userName }: { userName: string }) {
   return (
     <Html>
@@ -38,7 +60,7 @@ export function WelcomeEmail({ userName }: { userName: string }) {
               Start discovering amazing books today!
             </Text>
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/books`}
+              href={getEmailUrl('/books')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -96,7 +118,7 @@ export function PurchaseConfirmationEmail({
               Amount: ${amount.toFixed(2)}
             </Text>
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reading`}
+              href={getEmailUrl('/reading')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -152,7 +174,7 @@ export function ManuscriptSubmittedEmail({
               Our editorial team will review your submission and get back to you within 2-4 weeks.
             </Text>
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/author/projects`}
+              href={getEmailUrl('/author/projects')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -233,7 +255,7 @@ export function ManuscriptStatusEmail({
               </Text>
             )}
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/author/projects`}
+              href={getEmailUrl('/author/projects')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -313,7 +335,7 @@ export function WeeklyDigestEmail({
             ))}
 
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/books`}
+              href={getEmailUrl('/books')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',

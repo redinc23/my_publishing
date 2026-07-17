@@ -1,19 +1,45 @@
 // PERF-PHASE2-7
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/admin';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 import { generateBookEmbedding } from '@/lib/resonance/embeddings';
 import { revalidateResonance } from '@/lib/supabase/queries';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: { book_id?: string };
+    try {
+      body = (await request.json()) as { book_id?: string };
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const { book_id } = body;
 
     if (!book_id) {
       return NextResponse.json({ error: 'book_id is required' }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const authClient = await createServerClient();
+    const {
+      data: { user },
+    } = await authClient.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await authClient
+      .from('profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const supabase = createAdminClient();
 
     const { data: book, error: bookError } = await supabase
       .from('books')

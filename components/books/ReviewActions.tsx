@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,9 +20,10 @@ interface ReviewActionsProps {
     user_id: string;
   };
   isOwnReview?: boolean;
+  editHref?: string;
 }
 
-export function ReviewActions({ review, isOwnReview = false }: ReviewActionsProps) {
+export function ReviewActions({ review, isOwnReview = false, editHref }: ReviewActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -31,8 +33,9 @@ export function ReviewActions({ review, isOwnReview = false }: ReviewActionsProp
 
     setIsDeleting(true);
     try {
-      // In a real implementation, this would call a delete action
+      await deleteReview(review.id);
       toast.success('Review deleted successfully');
+      window.location.reload();
     } catch (error) {
       toast.error('Failed to delete review');
     } finally {
@@ -59,10 +62,14 @@ export function ReviewActions({ review, isOwnReview = false }: ReviewActionsProp
       <DropdownMenuContent align="end">
         {isOwnReview ? (
           <>
-            <DropdownMenuItem>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Review
-            </DropdownMenuItem>
+            {editHref && (
+              <DropdownMenuItem asChild>
+                <Link href={editHref}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Review
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={handleDelete} disabled={isDeleting} className="text-red-600">
               <Trash2 className="mr-2 h-4 w-4" />
               {isDeleting ? 'Deleting...' : 'Delete Review'}

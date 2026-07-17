@@ -1,7 +1,12 @@
+import type { Metadata } from 'next';
 /* eslint-disable */
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+export const metadata: Metadata = {
+  title: 'Book Clubs',
+  description: 'Join MANGU book clubs and connect with readers discussing favorite stories.',
+};
 
 export default function BookClubsPage() {
   return (

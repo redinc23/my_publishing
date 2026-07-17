@@ -1,16 +1,30 @@
 /* eslint-disable */
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/admin';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
+import { Button } from '@/components/ui/button';
+import { updateOrderStatusAction } from '../actions';
+import { AdminQueryError } from '../_lib/query-error';
 
 export default async function AdminOrdersPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  const { data: orders } = await supabase
+  const { data: orders, error } = await supabase
     .from('orders')
-    .select('*, user:profiles(email)')
+    .select('id, order_number, total_amount, status, created_at, user:profiles(email)')
     .order('created_at', { ascending: false })
     .limit(50);
+
+  if (error) {
+    console.error('[admin/orders] query failed:', error);
+    return (
+      <Section>
+        <Container>
+          <AdminQueryError title="Orders Management" />
+        </Container>
+      </Section>
+    );
+  }
 
   return (
     <Section>
@@ -28,6 +42,7 @@ export default async function AdminOrdersPage() {
                     <th className="px-4 py-3 text-left">Amount</th>
                     <th className="px-4 py-3 text-left">Status</th>
                     <th className="px-4 py-3 text-left">Date</th>
+                    <th className="px-4 py-3 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -49,6 +64,26 @@ export default async function AdminOrdersPage() {
                       </td>
                       <td className="px-4 py-3">
                         {new Date(order.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <form action={updateOrderStatusAction} className="flex items-center gap-2">
+                          <input type="hidden" name="orderId" value={order.id} />
+                          <select
+                            name="status"
+                            defaultValue={order.status}
+                            className="h-9 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                            aria-label={`Status for order ${order.order_number}`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="refunded">Refunded</option>
+                          </select>
+                          <Button type="submit" variant="outline" size="sm">
+                            Save
+                          </Button>
+                        </form>
                       </td>
                     </tr>
                   ))}

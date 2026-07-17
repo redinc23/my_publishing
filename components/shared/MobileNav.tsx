@@ -38,7 +38,10 @@ export function MobileNav() {
           <SheetTitle className="text-2xl font-bold text-primary">MANGU</SheetTitle>
         </SheetHeader>
 
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+        <nav
+          aria-label="Mobile primary navigation"
+          className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
+        >
           <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-secondary">
             Library
           </p>

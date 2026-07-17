@@ -10,6 +10,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
+function toFriendlyResetError(error: unknown) {
+  const message = error instanceof Error ? error.message : 'We could not verify this reset link.';
+
+  if (/expired|otp_expired|invalid|token/i.test(message)) {
+    return 'This password reset link is invalid or has expired. Please request a new reset email.';
+  }
+
+  if (/same password/i.test(message)) {
+    return 'Please choose a password you have not used recently.';
+  }
+
+  if (/password/i.test(message) && /weak|short|least/i.test(message)) {
+    return 'Password must be at least 6 characters long.';
+  }
+
+  return message;
+}
+
 export default function ResetPasswordConfirmPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -20,50 +38,83 @@ export default function ResetPasswordConfirmPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
+  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    let isActive = true;
+
+    const stripSensitiveUrlState = () => {
+      if (!window.location.search && !window.location.hash) {
+        return;
+      }
+
+      window.history.replaceState({}, document.title, '/reset-password/confirm');
+    };
+
     const handleResetLink = async () => {
-      setStatus('loading');
-      setError(null);
+      if (isActive) {
+        setStatus('loading');
+        setError(null);
+      }
 
-      const code = searchParams?.get('code');
-      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
+      try {
+        const code = searchParams?.get('code');
+        const searchError =
+          searchParams?.get('error_description') || searchParams?.get('error') || null;
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        const hashError = hashParams.get('error_description') || hashParams.get('error');
 
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          setError(exchangeError.message);
-          setStatus('error');
-          return;
+        if (searchError || hashError) {
+          throw new Error(searchError || hashError || 'Unable to verify your password reset link.');
         }
 
-        setStatus('ready');
+        if (code) {
+          let recoveryAuthorized = false;
+          const {
+            data: { subscription },
+          } = supabase.auth.onAuthStateChange((event) => {
+            if (event === 'PASSWORD_RECOVERY') {
+              recoveryAuthorized = true;
+            }
+          });
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          subscription.unsubscribe();
+
+          if (exchangeError) {
+            throw exchangeError;
+          }
+
+          if (!recoveryAuthorized) {
+            await supabase.auth.signOut();
+            throw new Error('This link is not authorized for password recovery.');
+          }
+
+          stripSensitiveUrlState();
+          if (isActive) {
+            setRecoveryUserId(data.user.id);
+            setStatus('ready');
+          }
+          return;
+        }
+      } catch (linkError) {
+        if (isActive) {
+          setError(toFriendlyResetError(linkError));
+          setStatus('error');
+        }
         return;
       }
 
-      if (accessToken && refreshToken) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (sessionError) {
-          setError(sessionError.message);
-          setStatus('error');
-          return;
-        }
-
-        setStatus('ready');
-        return;
+      if (isActive) {
+        setError('Invalid or expired password reset link. Please request a new reset email.');
+        setStatus('error');
       }
-
-      setError('Invalid or expired password reset link. Please request a new reset email.');
-      setStatus('error');
     };
 
     handleResetLink();
+
+    return () => {
+      isActive = false;
+    };
   }, [searchParams, supabase]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -80,15 +131,31 @@ export default function ResetPasswordConfirmPage() {
       return;
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
     setIsSubmitting(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user || user.id !== recoveryUserId) {
+      setIsSubmitting(false);
+      setStatus('error');
+      setError('Your recovery authorization expired. Please request a new reset email.');
+      return;
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setIsSubmitting(false);
 
     if (updateError) {
-      setError(updateError.message);
+      setError(toFriendlyResetError(updateError));
       return;
     }
 
+    await supabase.auth.signOut();
     setIsUpdated(true);
     setTimeout(() => {
       router.push('/login');
@@ -130,6 +197,7 @@ export default function ResetPasswordConfirmPage() {
                 autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -140,6 +208,7 @@ export default function ResetPasswordConfirmPage() {
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}

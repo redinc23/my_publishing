@@ -1,10 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient } from '@/lib/supabase/public-queries';
+import { createCheckoutSession } from '@/lib/stripe/server';
 
 interface CheckoutSearchParams {
   book_id?: string;
@@ -23,7 +26,7 @@ interface BookCheckoutSummary {
     profile: {
       full_name: string | null;
     } | null;
-  };
+  } | null;
 }
 
 async function getBookSummary({ book_id, slug }: CheckoutSearchParams) {
@@ -31,13 +34,14 @@ async function getBookSummary({ book_id, slug }: CheckoutSearchParams) {
     return null;
   }
 
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   let query = supabase
     .from('books')
     .select(
-      'id, slug, title, cover_url, price, discount_price, author:authors!inner(pen_name, profile:profiles!inner(full_name))'
+      'id, slug, title, cover_url, price, discount_price, author:authors(pen_name, profile:profiles(full_name))'
     )
-    .eq('status', 'published');
+    .eq('status', 'published')
+    .eq('visibility', 'public');
 
   if (book_id) {
     query = query.eq('id', book_id);
@@ -64,29 +68,38 @@ async function startCheckout(formData: FormData) {
     redirect('/login');
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/checkout`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      book_id: bookId || undefined,
-      book_slug: bookSlug || undefined,
-      user_id: user.id,
-    }),
+  // Look up the purchasable book directly — an HTTP self-fetch would drop
+  // the caller's auth cookies (401) and hard-codes the wrong port in dev.
+  const book = await getBookSummary({
+    book_id: bookId || undefined,
+    slug: bookSlug || undefined,
   });
 
-  if (!response.ok) {
-    throw new Error('Unable to start checkout.');
+  if (!book) {
+    throw new Error('Book not found or unavailable for purchase.');
   }
 
-  const payload = (await response.json()) as { url?: string };
-  if (payload.url) {
-    redirect(payload.url);
+  // Derive origin for Stripe success/cancel URLs from the actual request.
+  const headersList = await headers();
+  const host = headersList.get('x-forwarded-host') || headersList.get('host');
+  const proto = headersList.get('x-forwarded-proto') || 'http';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (host ? `${proto}://${host}` : undefined);
+
+  const session = await createCheckoutSession({
+    bookId: book.id,
+    bookSlug: book.slug ?? undefined,
+    userId: user.id,
+    bookTitle: book.title,
+    price: book.discount_price || book.price,
+    baseUrl,
+  });
+
+  if (!session.url) {
+    throw new Error('Checkout session missing redirect URL.');
   }
 
-  throw new Error('Checkout session missing redirect URL.');
+  // redirect() throws internally — keep it outside any try/catch.
+  redirect(session.url);
 }
 
 export default async function CheckoutPage({
@@ -94,13 +107,22 @@ export default async function CheckoutPage({
 }: {
   searchParams: CheckoutSearchParams;
 }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
   const book = await getBookSummary(searchParams);
 
   if (!book) {
     notFound();
   }
 
-  const authorName = book.author.profile?.full_name || book.author.pen_name || 'Unknown Author';
+  const authorName = book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author';
 
   return (
     <Section>

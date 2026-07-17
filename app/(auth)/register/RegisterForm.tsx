@@ -1,7 +1,6 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,7 +24,6 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-  const router = useRouter();
   const errorId = useId();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,13 +50,19 @@ export function RegisterForm() {
 
       if (result?.error) {
         setError(result.error);
+        setIsLoading(false);
+      } else if (result?.needsVerification && result.verificationEmail) {
+        // No session yet — the user must confirm their email first.
+        window.location.assign(
+          `/verify-email?email=${encodeURIComponent(result.verificationEmail)}`
+        );
       } else {
-        router.push('/');
-        router.refresh();
+        // Full-page navigation so the client-side Supabase session picks up
+        // the auth cookies set by the server action.
+        window.location.assign('/');
       }
     } catch {
       setError('An unexpected error occurred');
-    } finally {
       setIsLoading(false);
     }
   };

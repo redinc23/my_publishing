@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,7 +18,6 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const errorId = useId();
   const [error, setError] = useState<string | null>(null);
@@ -53,13 +52,14 @@ export function LoginForm() {
 
       if (result?.error) {
         setError(result.error);
+        setIsLoading(false);
       } else {
-        router.push('/');
-        router.refresh();
+        // Full-page navigation so the client-side Supabase session picks up
+        // the auth cookies set by the server action.
+        window.location.assign('/');
       }
     } catch {
       setError('An unexpected error occurred');
-    } finally {
       setIsLoading(false);
     }
   };

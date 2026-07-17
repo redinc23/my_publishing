@@ -4,7 +4,7 @@ import { ResetPasswordForm } from './ResetPasswordForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Reset Password - MANGU',
+  title: 'Reset Password',
   description: 'Reset your MANGU account password',
 };
 

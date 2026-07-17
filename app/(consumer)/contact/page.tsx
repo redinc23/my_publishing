@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
+import { ContactForm } from './ContactForm';
+export const metadata: Metadata = {
+  title: 'Contact',
+  description: 'Contact MANGU Publishers for reader support, publishing questions, and media inquiries.',
+};
 
 export default function ContactPage() {
   return (
@@ -13,6 +19,7 @@ export default function ContactPage() {
           </a>
           . We&apos;ll get back to you within two business days.
         </p>
+        <ContactForm />
       </Container>
     </Section>
   );

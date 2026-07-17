@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Comprehensive local launch readiness gate (no GCP auth required).
+# Comprehensive local launch readiness gate (no cloud-provider auth required).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -68,10 +68,9 @@ echo "╔═══════════════════════�
 echo "║  ✅ LOCAL LAUNCH GATES PASS                              ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
-echo "Operator-only next steps (require real credentials):"
+echo "Next steps:"
 echo "  1. cp .env.local.example .env.local  # fill from dashboards"
-echo "  2. gcloud auth login && ./scripts/sync-gcp-secrets-from-env.sh"
-echo "  3. ./scripts/bundle-migrations.sh → Supabase SQL Editor"
-echo "  4. Stripe webhook → STRIPE_WEBHOOK_SECRET → re-sync secrets"
-echo "  5. ./scripts/verify-gcp-production.sh"
-echo "  6. Browser QA per docs/OPERATOR_QA_LOG.md"
+echo "  2. Set required environment variables in your Vercel project"
+echo "  3. Trigger a Vercel deployment"
+echo "  4. Stripe webhook: keep STRIPE_WEBHOOK_SECRET in Vercel env vars"
+echo "  5. Browser QA per docs/OPERATOR_QA_LOG.md"

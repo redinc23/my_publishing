@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient, PUBLIC_BOOK_SELECT, PUBLIC_BOOK_WITH_CONTENT_SELECT } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
@@ -12,23 +12,25 @@ import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
 
 async function getComic(slug: string): Promise<BookFull | null> {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*)), content:book_content(*)')
+    .select(PUBLIC_BOOK_WITH_CONTENT_SELECT)
     .eq('slug', slug)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .eq('content_type', 'comic')
     .single();
   return data as BookFull | null;
 }
 
 async function getSimilarComics(excludeId: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .eq('content_type', 'comic')
     .neq('id', excludeId)
     .limit(6);
@@ -62,7 +64,7 @@ export default async function ComicDetailPage({ params }: { params: { slug: stri
               {comic.cover_url && (
                 <Image
                   src={comic.cover_url}
-                  alt={comic.title}
+                  alt={`Cover of ${comic.title}`}
                   fill
                   className="rounded-lg object-cover"
                   priority
@@ -73,9 +75,13 @@ export default async function ComicDetailPage({ params }: { params: { slug: stri
               <h1 className="mb-4 text-4xl font-bold">{comic.title}</h1>
               <p className="mb-4 text-xl text-muted-foreground">
                 by{' '}
-                <Link href={`/authors/${comic.author.id}`} className="hover:text-primary">
-                  {comic.author.profile?.full_name || comic.author.pen_name || 'Unknown Author'}
-                </Link>
+                {comic.author ? (
+                  <Link href={`/authors/${comic.author.id}`} className="hover:text-primary">
+                    {comic.author.profile?.full_name || comic.author.pen_name || 'Unknown Author'}
+                  </Link>
+                ) : (
+                  <span>Unknown Author</span>
+                )}
               </p>
               <p className="mb-6 text-lg">{comic.description}</p>
               <div className="mb-6 flex gap-4">
@@ -135,7 +141,7 @@ export default async function ComicDetailPage({ params }: { params: { slug: stri
             <h2 className="mb-8 text-3xl font-bold">Similar Comics</h2>
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
               {similarComics.map((b) => (
-                <BookCard key={b.id} book={b} />
+                <BookCard key={b.id} book={b} href={`/comics/${b.slug}`} />
               ))}
             </div>
           </Container>

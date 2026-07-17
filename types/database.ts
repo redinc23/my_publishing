@@ -506,6 +506,12 @@ export type Database = {
           total_books: number;
         };
       };
+      public_profiles: {
+        Row: {
+          user_id: string;
+          name: string | null;
+        };
+      };
     };
     Functions: {
       [_ in never]: never;

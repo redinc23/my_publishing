@@ -22,6 +22,8 @@ interface CreateCheckoutSessionParams {
   userId: string;
   bookTitle: string;
   price: number;
+  /** Origin for success/cancel URLs; falls back to NEXT_PUBLIC_SITE_URL. */
+  baseUrl?: string;
 }
 
 export async function createCheckoutSession({
@@ -30,8 +32,9 @@ export async function createCheckoutSession({
   userId,
   bookTitle,
   price,
+  baseUrl,
 }: CreateCheckoutSessionParams) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const resolvedBaseUrl = baseUrl || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const stripe = getStripe();
   const bookPath = bookSlug || bookId;
 
@@ -50,8 +53,8 @@ export async function createCheckoutSession({
         quantity: 1,
       },
     ],
-    success_url: `${baseUrl}/books/${bookPath}?success=true`,
-    cancel_url: `${baseUrl}/books/${bookPath}?canceled=true`,
+    success_url: `${resolvedBaseUrl}/books/${bookPath}?success=true`,
+    cancel_url: `${resolvedBaseUrl}/books/${bookPath}?canceled=true`,
     metadata: {
       book_id: bookId,
       book_slug: bookSlug || '',

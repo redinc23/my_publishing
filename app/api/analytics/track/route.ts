@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { AnalyticsEventSchema, validateSafe, getFirstError } from '@/lib/validations/schemas';
 import type { TrackEventResponse, AnalyticsEvent } from '@/types/analytics';
@@ -164,7 +165,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       device_type: deviceType,
     };
 
-    const { data: insertedEvent, error: insertError } = await supabase
+    const adminSupabase = createAdminClient();
+    const { data: insertedEvent, error: insertError } = await adminSupabase
       .from('analytics_events')
       .insert(eventRecord)
       .select('id')

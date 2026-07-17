@@ -58,5 +58,8 @@ fi
 if [[ -n "${UPSTASH_REDIS_REST_TOKEN:-}" ]]; then
   upsert_secret upstash-redis-rest-token "${UPSTASH_REDIS_REST_TOKEN}"
 fi
+if [[ -n "${SENTRY_AUTH_TOKEN:-}" ]]; then
+  upsert_secret sentry-auth-token "${SENTRY_AUTH_TOKEN}"
+fi
 
 echo "Done. Run ./scripts/verify-gcp-production.sh to confirm."

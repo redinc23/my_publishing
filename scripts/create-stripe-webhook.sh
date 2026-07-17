@@ -40,9 +40,4 @@ else
 fi
 
 echo "Updated .env.local"
-
-# Sync to GCP
-echo "Syncing secrets to GCP..."
-"${ROOT}/scripts/sync-gcp-secrets-from-env.sh"
-
-echo "Done."
+echo "Done. Update STRIPE_WEBHOOK_SECRET in your Vercel project environment variables before the next deploy."

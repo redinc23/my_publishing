@@ -13,7 +13,7 @@
  */
 
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import { Redis } from '@upstash/redis/cloudflare';
 
 export type RateLimitBucket =
   | 'auth' // middleware: auth endpoints per IP

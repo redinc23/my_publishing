@@ -5,7 +5,13 @@ import type { CheckoutSessionRequest, CheckoutSessionResponse } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const body: CheckoutSessionRequest = await request.json();
+    let body: CheckoutSessionRequest;
+    try {
+      body = (await request.json()) as CheckoutSessionRequest;
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const { book_id, book_slug, user_id } = body;
 
     if ((!book_id && !book_slug) || !user_id) {

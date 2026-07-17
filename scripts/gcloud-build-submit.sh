@@ -41,6 +41,10 @@ subs+=",_NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
 subs+=",_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}"
 subs+=",_NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}"
 
+if [[ -n "${NEXT_PUBLIC_SENTRY_DSN:-}" ]]; then
+  subs+=",_NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}"
+fi
+
 echo "Submitting Cloud Build to project ${PROJECT_ID}..."
 echo "Substitutions loaded from .env.local (values not shown)."
 

@@ -1,13 +1,24 @@
 import type { Metadata } from 'next';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient, PUBLIC_AUTHOR_COLUMNS } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { AuthorCard } from '@/components/cards/AuthorCard';
 import type { Author, Profile } from '@/types';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/authors`;
 
 export const metadata: Metadata = {
-  title: 'Authors | Mangu Publishers',
+  title: 'Authors',
   description: 'Discover the authors publishing on Mangu Publishers.',
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Authors',
+    description: 'Discover the authors publishing on Mangu Publishers.',
+    url: pageUrl,
+  },
 };
 
 export const revalidate = 300;
@@ -15,14 +26,14 @@ export const revalidate = 300;
 type AuthorWithProfile = Author & { profile: Profile };
 
 async function getAuthors(): Promise<AuthorWithProfile[]> {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('authors')
-    .select('*, profile:profiles!inner(*)')
+    .select(PUBLIC_AUTHOR_COLUMNS)
     .order('total_books', { ascending: false })
     .order('created_at', { ascending: false });
 
-  return (data as AuthorWithProfile[]) || [];
+  return (data as unknown as AuthorWithProfile[]) || [];
 }
 
 export default async function AuthorsPage() {

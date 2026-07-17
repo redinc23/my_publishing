@@ -4,7 +4,7 @@ import { RegisterForm } from './RegisterForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Register - MANGU',
+  title: 'Create Account',
   description: 'Create a new MANGU account',
 };
 
