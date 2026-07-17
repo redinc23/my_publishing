@@ -93,8 +93,8 @@ Maintain a running execution log with:
 Use this format for each entry:
 
 | Timestamp | Milestone | Task | Command/Action | Result | Evidence Link | Next Step |
-|---|---|---|---|---|---|---|
-| | | | | | | |
+| --------- | --------- | ---- | -------------- | ------ | ------------- | --------- |
+|           |           |      |                |        |               |           |
 
 ## Acceptance Gate Protocol
 

@@ -1,19 +1,25 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient, PUBLIC_BOOK_SELECT } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import type { BookWithAuthor } from '@/types';
+export const metadata: Metadata = {
+  title: 'Recommended Books',
+  description: 'Explore personalized and trending book recommendations from MANGU Publishers.',
+};
 
 async function getRecommendations() {
   // For now, return trending books
   // In production, this would call the resonance API
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .order('total_reads', { ascending: false })
     .limit(12);
 
@@ -26,14 +32,14 @@ export default async function RecommendationsPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Recommended for You</h1>
+        <h1 className="mb-8 text-4xl font-bold">Recommended for You</h1>
         <Suspense fallback={<LoadingSpinner />}>
           {books.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="py-12 text-center">
               <p className="text-secondary">No recommendations available.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
               {books.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}

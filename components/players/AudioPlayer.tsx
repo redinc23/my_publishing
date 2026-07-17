@@ -69,7 +69,12 @@ export function AudioPlayer({ src, title, className }: AudioPlayerProps) {
         <ProgressBar value={progress} showLabel={false} />
         <div className="flex items-center justify-between">
           <span className="text-sm text-secondary">{formatTime(currentTime)}</span>
-          <Button onClick={togglePlay} variant="default" size="icon">
+          <Button
+            onClick={togglePlay}
+            variant="default"
+            size="icon"
+            aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+          >
             {isPlaying ? '⏸' : '▶'}
           </Button>
           <span className="text-sm text-secondary">{formatTime(duration)}</span>

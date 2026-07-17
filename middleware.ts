@@ -1,7 +1,6 @@
-// PERF-PHASE2-9
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { enforceRateLimit } from '@/lib/rate-limit';
+import { getEdgeAuthUser, getEdgeUserRole } from '@/lib/supabase/edge-auth';
 
 /** Reject a request per rate-limit result: 429 when limited, 503 when the limiter is unavailable (fail-closed). */
 function rateLimitRejection(result: { reason: string; headers: Record<string, string> }) {
@@ -52,67 +51,46 @@ export async function middleware(request: NextRequest) {
 
   // Check for required environment variables
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.error('Missing Supabase environment variables. Check .env.local.example for setup instructions.');
+    console.error(
+      'Missing Supabase environment variables. Check .env.local.example for setup instructions.'
+    );
   }
 
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    // If auth fails due to config issues, allow public routes to proceed
-    if (userError && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       return response;
     }
 
+    const authUser = await getEdgeAuthUser(request);
+    const userId = authUser.userId;
+
     // Auth routes
+    const isPasswordRecoveryConfirm = pathname === '/reset-password/confirm';
     const authRoutes = ['/login', '/register', '/reset-password'];
-    const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+    const isAuthRoute =
+      !isPasswordRecoveryConfirm && authRoutes.some((route) => pathname.startsWith(route));
 
     // Protected routes
     const isReadingRoute = pathname.startsWith('/reading');
     const isLibraryRoute = pathname.startsWith('/library');
-    const isAuthorRoute = pathname.startsWith('/author');
-    const isPartnerRoute = pathname.startsWith('/partner');
+    // Note: '/author/...' (portal) must not match public '/authors' pages.
+    const isAuthorRoute = pathname === '/author' || pathname.startsWith('/author/');
+    const isPartnerRoute = pathname === '/partner' || pathname.startsWith('/partner/');
     const isAdminRoute = pathname.startsWith('/admin');
 
     // Redirect logged-in users away from auth pages
-    if (user && isAuthRoute) {
+    if (userId && isAuthRoute) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
     // Redirect unauthenticated users from protected routes
-    if (!user) {
+    if (!userId) {
       if (isReadingRoute || isLibraryRoute || isAuthorRoute || isPartnerRoute || isAdminRoute) {
         return NextResponse.redirect(new URL('/login', request.url));
       }
@@ -120,22 +98,15 @@ export async function middleware(request: NextRequest) {
 
     // ── Role-based access control ────────────────────────────────────────────
     // Fetch the user profile exactly once, shared across all role-gated checks.
-    if (user && (isAdminRoute || isAuthorRoute || isPartnerRoute)) {
+    if (userId && authUser.accessToken && (isAdminRoute || isAuthorRoute || isPartnerRoute)) {
       let role: string | undefined;
 
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Error fetching profile for role check:', profileError.message);
+        role = await getEdgeUserRole(authUser.accessToken, userId);
+        if (!role) {
+          console.error('Error fetching profile for role check: missing role');
           return NextResponse.redirect(new URL('/', request.url));
         }
-
-        role = profile?.role;
       } catch (error) {
         console.error('Error in role-based route protection:', error);
         return NextResponse.redirect(new URL('/', request.url));
@@ -157,7 +128,24 @@ export async function middleware(request: NextRequest) {
     return response;
   } catch (error) {
     // If middleware fails completely, allow public routes to proceed
-    const publicRoutes = ['/', '/books', '/genres', '/login', '/register', '/reset-password', '/api'];
+    const publicRoutes = [
+      '/',
+      '/books',
+      '/genres',
+      '/authors',
+      '/about',
+      '/audio',
+      '/comics',
+      '/contact',
+      '/discover',
+      '/papers',
+      '/readers-hub',
+      '/login',
+      '/register',
+      '/reset-password',
+      '/verify-email',
+      '/api',
+    ];
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
     if (isPublicRoute) {

@@ -18,25 +18,22 @@ export function calculatePercentageChange(current: number, previous: number): nu
  * Returns null when the previous period has no data, so callers can
  * render an em dash instead of a misleading 0% / 100%.
  */
-export function calculatePeriodGrowthRate(
-  current: number,
-  previous: number
-): number | null {
+export function calculatePeriodGrowthRate(current: number, previous: number): number | null {
   if (previous === 0) return null;
   return Math.round(((current - previous) / previous) * 100);
 }
 
 export function calculateGrowthRate(values: number[]): number {
   if (values.length < 2) return 0;
-  
+
   const firstHalf = values.slice(0, Math.floor(values.length / 2));
   const secondHalf = values.slice(Math.floor(values.length / 2));
-  
+
   const avg1 = firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
   const avg2 = secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
-  
+
   if (avg1 === 0) return avg2 > 0 ? 100 : 0;
-  
+
   return Math.round(((avg2 - avg1) / avg1) * 100);
 }
 
@@ -72,7 +69,5 @@ export function calculateMedian(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }

@@ -1,11 +1,10 @@
-
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { LoginForm } from './LoginForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Login - MANGU',
+  title: 'Login',
   description: 'Sign in to your MANGU account',
 };
 
@@ -13,7 +12,7 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <Link href="/" className="text-3xl font-bold text-primary mb-2 block">
+        <Link href="/" className="mb-2 block text-3xl font-bold text-primary">
           MANGU
         </Link>
         <CardTitle className="text-2xl">Welcome back</CardTitle>

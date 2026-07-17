@@ -1,4 +1,3 @@
-
 import { createClient } from '@/lib/supabase/client';
 
 interface RealtimeEvent {
@@ -22,7 +21,8 @@ export class RealtimeAnalytics {
   }
 
   async connect() {
-    this.channel = this.supabase.channel('analytics-realtime')
+    this.channel = this.supabase
+      .channel('analytics-realtime')
       .on('broadcast', { event: 'analytics_event' }, (payload) => {
         this.notifySubscribers(payload.payload);
       })
@@ -51,7 +51,7 @@ export class RealtimeAnalytics {
   private notifySubscribers(event: RealtimeEvent) {
     const callbacks = this.subscribers.get(event.bookId);
     if (callbacks) {
-      callbacks.forEach(callback => callback(event));
+      callbacks.forEach((callback) => callback(event));
     }
   }
 

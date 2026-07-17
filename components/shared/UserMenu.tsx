@@ -8,7 +8,7 @@ export function UserMenu() {
   const { user, isLoading, signOut } = useAuth();
 
   if (isLoading) {
-    return <div className="h-10 w-10 animate-pulse rounded-full bg-muted" />;
+    return <div className="h-10 w-10 animate-pulse rounded-full bg-muted" aria-label="Loading user menu" />;
   }
 
   if (!user) {
@@ -32,7 +32,10 @@ export function UserMenu() {
       <Button variant="ghost" size="sm" onClick={signOut}>
         Sign Out
       </Button>
-      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-sm font-semibold">
+      <div
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold"
+        aria-label="Signed in user"
+      >
         {user.email?.[0].toUpperCase()}
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { AnalyticsEventType } from '@/types/analytics';
@@ -28,7 +27,7 @@ class AnalyticsTracker {
 
   private getOrCreateSessionId(): string {
     if (typeof window === 'undefined') return '';
-    
+
     let sessionId = sessionStorage.getItem('analytics_session_id');
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -39,7 +38,7 @@ class AnalyticsTracker {
 
   private getOrCreateDeviceId(): string {
     if (typeof window === 'undefined') return '';
-    
+
     let deviceId = localStorage.getItem('analytics_device_id');
     if (!deviceId) {
       deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -50,7 +49,7 @@ class AnalyticsTracker {
 
   private startFlushInterval() {
     if (typeof window === 'undefined') return;
-    
+
     this.flushInterval = setInterval(() => {
       this.flush();
     }, 10000); // Flush every 10 seconds
@@ -63,7 +62,7 @@ class AnalyticsTracker {
       session_id: this.sessionId,
       event_data: data,
     });
-    
+
     this.flush(); // Immediate flush for views
   }
 
@@ -92,7 +91,7 @@ class AnalyticsTracker {
       session_id: this.sessionId,
       event_data: data,
     });
-    
+
     this.flush(); // Immediate flush for purchases
   }
 
@@ -103,7 +102,7 @@ class AnalyticsTracker {
       session_id: this.sessionId,
       event_data: data,
     });
-    
+
     this.flush(); // Immediate flush for downloads
   }
 
@@ -114,13 +113,13 @@ class AnalyticsTracker {
       session_id: this.sessionId,
       event_data: { platform },
     });
-    
+
     this.flush(); // Immediate flush for shares
   }
 
   private async flush() {
     if (this.queue.length === 0) return;
-    
+
     const events = [...this.queue];
     this.queue = [];
 

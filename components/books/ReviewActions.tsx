@@ -2,8 +2,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Edit, Trash2, MoreVertical, Flag } from 'lucide-react';
 import { deleteReview, reportReview } from '@/lib/actions/reviews';
 import { toast } from 'sonner';
@@ -14,9 +20,10 @@ interface ReviewActionsProps {
     user_id: string;
   };
   isOwnReview?: boolean;
+  editHref?: string;
 }
 
-export function ReviewActions({ review, isOwnReview = false }: ReviewActionsProps) {
+export function ReviewActions({ review, isOwnReview = false, editHref }: ReviewActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -26,8 +33,9 @@ export function ReviewActions({ review, isOwnReview = false }: ReviewActionsProp
 
     setIsDeleting(true);
     try {
-      // In a real implementation, this would call a delete action
+      await deleteReview(review.id);
       toast.success('Review deleted successfully');
+      window.location.reload();
     } catch (error) {
       toast.error('Failed to delete review');
     } finally {
@@ -54,22 +62,22 @@ export function ReviewActions({ review, isOwnReview = false }: ReviewActionsProp
       <DropdownMenuContent align="end">
         {isOwnReview ? (
           <>
-            <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Review
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="text-red-600"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
+            {editHref && (
+              <DropdownMenuItem asChild>
+                <Link href={editHref}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Review
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={handleDelete} disabled={isDeleting} className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
               {isDeleting ? 'Deleting...' : 'Delete Review'}
             </DropdownMenuItem>
           </>
         ) : (
           <DropdownMenuItem onClick={handleReport}>
-            <Flag className="h-4 w-4 mr-2" />
+            <Flag className="mr-2 h-4 w-4" />
             Report Review
           </DropdownMenuItem>
         )}

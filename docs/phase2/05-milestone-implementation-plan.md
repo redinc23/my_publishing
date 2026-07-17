@@ -84,28 +84,29 @@ git status -sb
 
 Use this table as the source of truth for sequencing checks in `P0-2` and `P0-7` (`06-acceptance-and-test-protocol.md`).
 
-| Step | Stage | Required Outcome |
-|---|---|---|
-| 1 | setup | checkout source |
-| 2 | setup | install dependencies (`npm ci`) |
-| 3 | setup | verify lockfile integrity |
-| 4 | build | lint/typecheck (`npm run lint` or `npm run type-check` if available) |
-| 5 | build | Next.js build (`npm run build`) producing `.next/standalone/` |
-| 6 | build | static export/asset integrity check (`.next/standalone/` exists) |
-| 7 | security gate | secret audit gate — scan `.next/`, source for token leakage (fail-closed) |
-| 8 | security gate | dependency audit (`npm audit` or equivalent) |
-| 9 | container | docker build runtime image (multi-stage Node build) |
-| 10 | artifact/deploy | push image with SHA tag to Artifact Registry |
-| 11 | security gate | vulnerability scan on pushed image (HIGH/CRITICAL fail-closed) |
-| 12 | artifact/deploy | deploy Cloud Run (`--port 3000 --memory=512Mi --no-default-url`) |
-| 13 | post-deploy verify | smoke checks (`/api/health`, deep link, headers) |
-| 14 | post-deploy verify | traffic shift / domain verification |
+| Step | Stage              | Required Outcome                                                          |
+| ---- | ------------------ | ------------------------------------------------------------------------- |
+| 1    | setup              | checkout source                                                           |
+| 2    | setup              | install dependencies (`npm ci`)                                           |
+| 3    | setup              | verify lockfile integrity                                                 |
+| 4    | build              | lint/typecheck (`npm run lint` or `npm run type-check` if available)      |
+| 5    | build              | Next.js build (`npm run build`) producing `.next/standalone/`             |
+| 6    | build              | static export/asset integrity check (`.next/standalone/` exists)          |
+| 7    | security gate      | secret audit gate — scan `.next/`, source for token leakage (fail-closed) |
+| 8    | security gate      | dependency audit (`npm audit` or equivalent)                              |
+| 9    | container          | docker build runtime image (multi-stage Node build)                       |
+| 10   | artifact/deploy    | push image with SHA tag to Artifact Registry                              |
+| 11   | security gate      | vulnerability scan on pushed image (HIGH/CRITICAL fail-closed)            |
+| 12   | artifact/deploy    | deploy Cloud Run (`--port 3000 --memory=512Mi --no-default-url`)          |
+| 13   | post-deploy verify | smoke checks (`/api/health`, deep link, headers)                          |
+| 14   | post-deploy verify | traffic shift / domain verification                                       |
 
 Sequencing rule: vulnerability scanning runs against an image that exists in Artifact Registry (after push), not before the image is built and pushed.
 
 ## M0 Pre-Flight Setup
 
 ### Objective
+
 Confirm access, tooling, repository state, and baseline controls.
 
 ### Commands
@@ -133,6 +134,7 @@ git status -sb
 ## M1 Local Security Hardening
 
 ### Objective
+
 Eliminate secret exposure paths before infra automation.
 
 ### Commands
@@ -159,7 +161,7 @@ rg -n 'audit:secrets|audit-secrets' cloudbuild.yaml package.json
 
 ### Expected Output
 
-- no results for deprecated VITE_* prefixed variable names
+- no results for deprecated VITE\_\* prefixed variable names
 - no results for runtime secrets in client-side code paths
 - `output: 'standalone'` present in Next.js config
 - audit script exists and is referenced by CI
@@ -172,6 +174,7 @@ rg -n 'audit:secrets|audit-secrets' cloudbuild.yaml package.json
 ## M2 Build Pipeline Scripts
 
 ### Objective
+
 Generate deterministic Next.js standalone output.
 
 ### Commands
@@ -196,6 +199,7 @@ npm run build
 ## M3 Runtime Container
 
 ### Objective
+
 Package `.next/standalone/` as hardened Node.js runtime image.
 
 ### Commands
@@ -222,6 +226,7 @@ docker rm -f mangu-publishers-local
 ## M4 GCP Foundation
 
 ### Objective
+
 Provision registry, secrets, IAM, and trigger prerequisites.
 
 ### Commands (Provision Then Verify)
@@ -286,6 +291,7 @@ gcloud builds triggers list --region="${REGION}" --project="${PROJECT_ID}"
 ## M5 Cloud Build End-To-End
 
 ### Objective
+
 Deploy from `main` through gated 14-step pipeline.
 
 ### Commands (Template)
@@ -313,6 +319,7 @@ curl -fsS -i "https://${CUSTOM_DOMAIN}/api/health"
 ## M6 Firebase Hosting And Domain
 
 ### Objective
+
 Enable public custom-domain HTTPS entrypoint.
 
 ### Commands (Template)
@@ -339,6 +346,7 @@ curl -fsS -I "https://${CUSTOM_DOMAIN}/books/${SAMPLE_BOOK_SLUG}"
 ## M7a Pre-Cutover Guardrails
 
 ### Objective
+
 Confirm observability and cost controls are fully configured before launch.
 
 ### Commands (Template)
@@ -365,6 +373,7 @@ gcloud billing budgets list --billing-account="${BILLING_ACCOUNT_ID}"
 ## M7b Post-Cutover Stabilization
 
 ### Objective
+
 Validate day-2 operational behavior after live traffic cutover.
 
 ### Commands (Template)

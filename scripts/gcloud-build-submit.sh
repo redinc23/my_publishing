@@ -5,9 +5,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ROOT}/.env.local"
-PROJECT_ID="${PROJECT_ID:-delta-wonder-488420-i3}"
-REGION="${REGION:-us-central1}"
-SERVICE_NAME="${SERVICE_NAME:-mangu-publishers}"
+# shellcheck source=scripts/gcp-config.sh
+source "${ROOT}/scripts/gcp-config.sh"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "ERROR: ${ENV_FILE} not found"
@@ -41,6 +40,10 @@ subs+=",_NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}"
 subs+=",_NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
 subs+=",_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}"
 subs+=",_NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}"
+
+if [[ -n "${NEXT_PUBLIC_SENTRY_DSN:-}" ]]; then
+  subs+=",_NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}"
+fi
 
 echo "Submitting Cloud Build to project ${PROJECT_ID}..."
 echo "Substitutions loaded from .env.local (values not shown)."

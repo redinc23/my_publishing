@@ -1,7 +1,15 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import type { BookStats } from '@/types/analytics';
 import { formatChartData } from '@/lib/utils/chart-data';
 
@@ -25,11 +33,19 @@ export function ViewsChart({ stats }: ViewsChartProps) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
-                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                }
               />
               <YAxis />
               <Tooltip
-                labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                labelFormatter={(value) =>
+                  new Date(value).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                }
               />
               <Line
                 type="monotone"
@@ -41,7 +57,7 @@ export function ViewsChart({ stats }: ViewsChartProps) {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
             No data available
           </div>
         )}

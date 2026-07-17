@@ -8,11 +8,7 @@ export async function handleStripeWebhook(body: string, signature: string): Prom
   }
 
   const stripe = getStripe();
-  const event = stripe.webhooks.constructEvent(
-    body,
-    signature,
-    webhookSecret
-  );
+  const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
 
   return event;
 }

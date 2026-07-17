@@ -147,6 +147,22 @@ const envConfigs: EnvConfig[] = [
       return true;
     },
   },
+  {
+    name: 'NEXT_PUBLIC_SENTRY_DSN',
+    required: false,
+    description: 'Sentry DSN for client and server error tracking (optional)',
+    validate: (value) => {
+      if (value && !value.startsWith('https://')) {
+        return 'Sentry DSN must be an https:// ingest URL';
+      }
+      return true;
+    },
+  },
+  {
+    name: 'SENTRY_DSN',
+    required: false,
+    description: 'Server-only Sentry DSN (optional; defaults to NEXT_PUBLIC_SENTRY_DSN)',
+  },
 ];
 
 /**
@@ -159,8 +175,7 @@ export function validateEnvironment(): EnvValidationResult {
 
   for (const config of envConfigs) {
     const value = process.env[config.name];
-    const isRequired =
-      config.required || (config.requiredUnlessMocks === true && !mocksEnabled);
+    const isRequired = config.required || (config.requiredUnlessMocks === true && !mocksEnabled);
 
     if (isRequired && !value) {
       missing.push(config.name);
@@ -239,7 +254,9 @@ export function isDevelopment(): boolean {
  * Check if mock mode is enabled
  */
 export function useMocks(): boolean {
-  return process.env.USE_MOCKS === 'true' || (isDevelopment() && !process.env.NEXT_PUBLIC_SUPABASE_URL);
+  return (
+    process.env.USE_MOCKS === 'true' || (isDevelopment() && !process.env.NEXT_PUBLIC_SUPABASE_URL)
+  );
 }
 
 /**

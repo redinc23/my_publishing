@@ -5,7 +5,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ROOT}/.env.local"
-PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}"
+# shellcheck source=scripts/gcp-config.sh
+source "${ROOT}/scripts/gcp-config.sh"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "ERROR: ${ENV_FILE} not found"
@@ -56,6 +57,9 @@ if [[ -n "${UPSTASH_REDIS_REST_URL:-}" ]]; then
 fi
 if [[ -n "${UPSTASH_REDIS_REST_TOKEN:-}" ]]; then
   upsert_secret upstash-redis-rest-token "${UPSTASH_REDIS_REST_TOKEN}"
+fi
+if [[ -n "${SENTRY_AUTH_TOKEN:-}" ]]; then
+  upsert_secret sentry-auth-token "${SENTRY_AUTH_TOKEN}"
 fi
 
 echo "Done. Run ./scripts/verify-gcp-production.sh to confirm."

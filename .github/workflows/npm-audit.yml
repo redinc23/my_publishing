@@ -2,7 +2,7 @@ name: npm Audit
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Mondays 9am UTC
+    - cron: '0 9 * * 1' # Mondays 9am UTC
   workflow_dispatch:
   push:
     branches: [main]
@@ -13,10 +13,10 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      - run: npm audit --audit-level=critical

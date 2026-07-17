@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { DateRange } from '@/types/analytics';
 import type { BookSale, BookPricing } from '@/types/revenue';
+import { requireAuthorOwnedBook } from '@/lib/supabase/author-ownership';
 
 export async function getBookRevenue(
   bookId: string,
@@ -10,20 +11,13 @@ export async function getBookRevenue(
 ): Promise<{ total: number; sales: BookSale[] }> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
-    // Verify book ownership
-    const { data: book } = await supabase
-      .from('books')
-      .select('author_id')
-      .eq('id', bookId)
-      .single();
-
-    if (!book || book.author_id !== user.id) {
-      throw new Error('Unauthorized');
-    }
+    await requireAuthorOwnedBook(user.id, bookId);
 
     let query = supabase
       .from('book_sales')
@@ -57,9 +51,13 @@ export async function getBookRevenue(
 export async function getBookPricing(bookId: string): Promise<BookPricing | null> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
+
+    await requireAuthorOwnedBook(user.id, bookId);
 
     const { data: pricing, error } = await supabase
       .from('book_pricing')
@@ -82,28 +80,19 @@ export async function updateBookPricing(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Not authenticated');
 
-    // Verify book ownership
-    const { data: book } = await supabase
-      .from('books')
-      .select('author_id')
-      .eq('id', bookId)
-      .single();
+    await requireAuthorOwnedBook(user.id, bookId);
 
-    if (!book || book.author_id !== user.id) {
-      throw new Error('Unauthorized');
-    }
-
-    const { error } = await supabase
-      .from('book_pricing')
-      .upsert({
-        book_id: bookId,
-        ...pricing,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from('book_pricing').upsert({
+      book_id: bookId,
+      ...pricing,
+      updated_at: new Date().toISOString(),
+    });
 
     if (error) throw error;
 

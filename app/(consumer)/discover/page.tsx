@@ -1,15 +1,33 @@
+import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/discover`;
+
+export const metadata: Metadata = {
+  title: 'Discover',
+  description: 'Find personalized recommendations, reading communities, and new stories on MANGU.',
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Discover',
+    description:
+      'Find personalized recommendations, reading communities, and new stories on MANGU.',
+    url: pageUrl,
+  },
+};
 
 export default function DiscoverPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">Discover</h1>
-        <div className="grid md:grid-cols-2 gap-6">
+        <h1 className="mb-8 text-4xl font-bold">Discover</h1>
+        <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>AI Recommendations</CardTitle>

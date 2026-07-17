@@ -11,7 +11,7 @@ import {
   UpdateBookSchema,
   type Book,
   type CreateBookInput,
-  type UpdateBookInput
+  type UpdateBookInput,
 } from '@/types/books';
 
 // Rate limiting
@@ -23,8 +23,10 @@ const checkRateLimit = (userId: string, action: string) => {
   const limit = RATE_LIMIT.get(key);
 
   if (limit) {
-    if (now - limit.timestamp < 60000) { // 1 minute window
-      if (limit.count >= 10) { // 10 requests per minute
+    if (now - limit.timestamp < 60000) {
+      // 1 minute window
+      if (limit.count >= 10) {
+        // 10 requests per minute
         throw new Error('Rate limit exceeded. Please try again later.');
       }
       limit.count += 1;
@@ -49,8 +51,10 @@ const logAudit = async (
   resourceType: string,
   details: Record<string, any>
 ) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   await supabase.from('audit_logs').insert({
     user_id: user?.id,
     action,
@@ -58,15 +62,18 @@ const logAudit = async (
     resource_type: resourceType,
     details,
     ip_address: null, // Would be set by a middleware in production
-    user_agent: null
+    user_agent: null,
   });
 };
 
 export async function createBook(input: CreateBookInput) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
@@ -92,10 +99,10 @@ export async function createBook(input: CreateBookInput) {
       .single();
 
     if (existingBook) {
-      return { 
-        success: false, 
-        error: 'A book with this title already exists', 
-        code: 'DUPLICATE_BOOK' 
+      return {
+        success: false,
+        error: 'A book with this title already exists',
+        code: 'DUPLICATE_BOOK',
       };
     }
 
@@ -118,7 +125,7 @@ export async function createBook(input: CreateBookInput) {
     // Log audit
     await logAudit(supabase, 'CREATE', data.id, 'book', {
       title: data.title,
-      status: data.status
+      status: data.status,
     });
 
     revalidatePath('/admin/books');
@@ -129,20 +136,20 @@ export async function createBook(input: CreateBookInput) {
     return { success: true, data, code: 'BOOK_CREATED' };
   } catch (error) {
     console.error('Create book error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return { 
-        success: false, 
-        error: 'Validation failed', 
+      return {
+        success: false,
+        error: 'Validation failed',
         details: error.errors,
-        code: 'VALIDATION_ERROR'
+        code: 'VALIDATION_ERROR',
       };
     }
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to create book',
-      code: 'UNKNOWN_ERROR'
+      code: 'UNKNOWN_ERROR',
     };
   }
 }
@@ -150,8 +157,11 @@ export async function createBook(input: CreateBookInput) {
 export async function updateBook(bookId: string, input: UpdateBookInput) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
@@ -188,10 +198,10 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
         .single();
 
       if (existingBook) {
-        return { 
-          success: false, 
-          error: 'Another book with this slug already exists', 
-          code: 'DUPLICATE_SLUG' 
+        return {
+          success: false,
+          error: 'Another book with this slug already exists',
+          code: 'DUPLICATE_SLUG',
         };
       }
     }
@@ -211,7 +221,7 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
     // Log audit
     await logAudit(supabase, 'UPDATE', bookId, 'book', {
       changes: Object.keys(validated),
-      new_status: validated.status
+      new_status: validated.status,
     });
 
     revalidatePath('/admin/books');
@@ -223,20 +233,20 @@ export async function updateBook(bookId: string, input: UpdateBookInput) {
     return { success: true, data, code: 'BOOK_UPDATED' };
   } catch (error) {
     console.error('Update book error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return { 
-        success: false, 
-        error: 'Validation failed', 
+      return {
+        success: false,
+        error: 'Validation failed',
         details: error.errors,
-        code: 'VALIDATION_ERROR'
+        code: 'VALIDATION_ERROR',
       };
     }
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to update book',
-      code: 'UNKNOWN_ERROR'
+      code: 'UNKNOWN_ERROR',
     };
   }
 }
@@ -270,7 +280,10 @@ export async function updateBookAdmin(
   try {
     const supabase = await createClient();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
@@ -289,7 +302,11 @@ export async function updateBookAdmin(
 
     checkRateLimit(user.id, 'update_book_admin');
 
-    const { data: existing } = await supabase
+    // Service-role client after role check — matches createBookAdmin / updateBookStatusAction.
+    // There is no admin UPDATE RLS policy on books for the session client.
+    const admin = createAdminClient();
+
+    const { data: existing } = await admin
       .from('books')
       .select('id, deleted_at')
       .eq('id', bookId)
@@ -325,12 +342,14 @@ export async function updateBookAdmin(
     if (input.kindle_url !== undefined) updates.kindle_url = url(input.kindle_url);
     if (input.apple_books_url !== undefined) updates.apple_books_url = url(input.apple_books_url);
     if (input.audible_url !== undefined) updates.audible_url = url(input.audible_url);
-    if (input.barnes_noble_url !== undefined) updates.barnes_noble_url = url(input.barnes_noble_url);
-    if (input.google_play_books_url !== undefined) updates.google_play_books_url = url(input.google_play_books_url);
+    if (input.barnes_noble_url !== undefined)
+      updates.barnes_noble_url = url(input.barnes_noble_url);
+    if (input.google_play_books_url !== undefined)
+      updates.google_play_books_url = url(input.google_play_books_url);
 
     // Slug uniqueness across all books (admin is not author-scoped).
     if (typeof updates.slug === 'string') {
-      const { data: dupe } = await supabase
+      const { data: dupe } = await admin
         .from('books')
         .select('id')
         .eq('slug', updates.slug)
@@ -346,7 +365,7 @@ export async function updateBookAdmin(
       }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from('books')
       .update(updates)
       .eq('id', bookId)
@@ -396,7 +415,10 @@ export async function createBookAdmin(input: {
   try {
     const supabase = await createClient();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
@@ -427,18 +449,22 @@ export async function createBookAdmin(input: {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
     if (!slug) {
-      return { success: false, error: 'Slug could not be derived from title', code: 'VALIDATION_ERROR' };
+      return {
+        success: false,
+        error: 'Slug could not be derived from title',
+        code: 'VALIDATION_ERROR',
+      };
     }
 
     const admin = createAdminClient();
 
-    const { data: dupe } = await admin
-      .from('books')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle();
+    const { data: dupe } = await admin.from('books').select('id').eq('slug', slug).maybeSingle();
     if (dupe) {
-      return { success: false, error: 'A book with this slug already exists', code: 'DUPLICATE_SLUG' };
+      return {
+        success: false,
+        error: 'A book with this slug already exists',
+        code: 'DUPLICATE_SLUG',
+      };
     }
 
     const status = input.status || 'draft';
@@ -485,8 +511,11 @@ export async function createBookAdmin(input: {
 export async function deleteBook(bookId: string, hardDelete: boolean = false) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
@@ -509,10 +538,7 @@ export async function deleteBook(bookId: string, hardDelete: boolean = false) {
 
     if (hardDelete) {
       // Hard delete (admin only)
-      const { error } = await supabase
-        .from('books')
-        .delete()
-        .eq('id', bookId);
+      const { error } = await supabase.from('books').delete().eq('id', bookId);
 
       if (error) throw error;
     } else {
@@ -536,10 +562,10 @@ export async function deleteBook(bookId: string, hardDelete: boolean = false) {
     return { success: true, code: hardDelete ? 'BOOK_HARD_DELETED' : 'BOOK_SOFT_DELETED' };
   } catch (error) {
     console.error('Delete book error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to delete book',
-      code: 'UNKNOWN_ERROR'
+      code: 'UNKNOWN_ERROR',
     };
   }
 }
@@ -547,8 +573,11 @@ export async function deleteBook(bookId: string, hardDelete: boolean = false) {
 export async function restoreBook(bookId: string) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
       return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
     }
@@ -569,9 +598,9 @@ export async function restoreBook(bookId: string) {
 
     const { error } = await supabase
       .from('books')
-      .update({ 
+      .update({
         deleted_at: null,
-        status: 'draft' // Reset to draft when restoring
+        status: 'draft', // Reset to draft when restoring
       })
       .eq('id', bookId);
 
@@ -588,10 +617,10 @@ export async function restoreBook(bookId: string) {
     return { success: true, code: 'BOOK_RESTORED' };
   } catch (error) {
     console.error('Restore book error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to restore book',
-      code: 'UNKNOWN_ERROR'
+      code: 'UNKNOWN_ERROR',
     };
   }
 }
@@ -604,8 +633,10 @@ export async function getMyBooks(options?: {
 }) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
 
     let query = supabase
@@ -634,29 +665,32 @@ export async function getMyBooks(options?: {
 
     if (error) throw error;
 
-    return { 
-      success: true, 
-      data, 
+    return {
+      success: true,
+      data,
       count: count || 0,
-      code: 'BOOKS_FETCHED' 
+      code: 'BOOKS_FETCHED',
     };
   } catch (error) {
     console.error('Get my books error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch books',
-      code: 'UNKNOWN_ERROR'
+      code: 'UNKNOWN_ERROR',
     };
   }
 }
 
-export async function searchBooks(query: string, filters?: {
-  language?: string;
-  minRating?: number;
-  category?: string;
-  tag?: string;
-  limit?: number;
-}) {
+export async function searchBooks(
+  query: string,
+  filters?: {
+    language?: string;
+    minRating?: number;
+    category?: string;
+    tag?: string;
+    limit?: number;
+  }
+) {
   try {
     const supabase = await createClient();
 
@@ -699,7 +733,7 @@ export async function searchBooks(query: string, filters?: {
     }
 
     sqlQuery += ` ORDER BY relevance DESC`;
-    
+
     if (filters?.limit) {
       sqlQuery += ` LIMIT $${paramIndex}`;
       params.push(filters.limit);
@@ -707,7 +741,7 @@ export async function searchBooks(query: string, filters?: {
 
     const { data, error } = await supabase.rpc('books_search', {
       search_query: query,
-      ...filters
+      ...filters,
     });
 
     if (error) throw error;
@@ -715,10 +749,10 @@ export async function searchBooks(query: string, filters?: {
     return { success: true, data, code: 'SEARCH_COMPLETED' };
   } catch (error) {
     console.error('Search books error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to search books',
-      code: 'UNKNOWN_ERROR'
+      code: 'UNKNOWN_ERROR',
     };
   }
 }
@@ -726,8 +760,10 @@ export async function searchBooks(query: string, filters?: {
 export async function getBookStats(bookId: string) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
 
     const { data: book } = await supabase
@@ -755,20 +791,20 @@ export async function getBookStats(bookId: string) {
       .eq('id', bookId)
       .single();
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: {
         ...totalStats,
-        monthly_trends: monthlyStats || []
+        monthly_trends: monthlyStats || [],
       },
-      code: 'STATS_FETCHED'
+      code: 'STATS_FETCHED',
     };
   } catch (error) {
     console.error('Get book stats error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch stats',
-      code: 'UNKNOWN_ERROR'
+      code: 'UNKNOWN_ERROR',
     };
   }
 }
@@ -777,7 +813,9 @@ export async function incrementViewCount(bookId: string) {
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const userId = user?.id || 'anonymous';
 
     // Check if user has viewed this book recently (within 24 hours)
@@ -797,12 +835,13 @@ export async function incrementViewCount(bookId: string) {
         supabase.rpc('increment_view_count', { book_id: bookId }),
 
         // Update cache
-        supabase
-          .from('book_view_cache')
-          .upsert({
+        supabase.from('book_view_cache').upsert(
+          {
             cache_key: cacheKey,
-            last_viewed: now.toISOString()
-          }, { onConflict: 'cache_key' }),
+            last_viewed: now.toISOString(),
+          },
+          { onConflict: 'cache_key' }
+        ),
 
         // Log view for analytics
         supabase.from('book_views').insert({
@@ -810,8 +849,8 @@ export async function incrementViewCount(bookId: string) {
           user_id: userId,
           viewed_at: now.toISOString(),
           ip_address: null,
-          user_agent: null
-        })
+          user_agent: null,
+        }),
       ]);
     }
 

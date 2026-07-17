@@ -506,6 +506,12 @@ export type Database = {
           total_books: number;
         };
       };
+      public_profiles: {
+        Row: {
+          user_id: string;
+          name: string | null;
+        };
+      };
     };
     Functions: {
       [_ in never]: never;
@@ -535,7 +541,8 @@ export type ManuscriptStatus =
 export type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled' | 'refunded';
 
 // Helper types
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row'];
 export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];
 
 // Composite types

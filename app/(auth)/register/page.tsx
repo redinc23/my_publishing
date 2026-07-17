@@ -4,7 +4,7 @@ import { RegisterForm } from './RegisterForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Register - MANGU',
+  title: 'Create Account',
   description: 'Create a new MANGU account',
 };
 
@@ -12,7 +12,7 @@ export default function RegisterPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <Link href="/" className="text-3xl font-bold text-primary mb-2 block">
+        <Link href="/" className="mb-2 block text-3xl font-bold text-primary">
           MANGU
         </Link>
         <CardTitle className="text-2xl">Create an account</CardTitle>

@@ -26,10 +26,7 @@ export function useBooks(options?: { q?: string; genre?: string; sort?: string; 
 }
 
 export function useBook(slug: string) {
-  const { data, error, isLoading, mutate } = useSWR<BookWithAuthor>(
-    `/api/books/${slug}`,
-    fetcher
-  );
+  const { data, error, isLoading, mutate } = useSWR<BookWithAuthor>(`/api/books/${slug}`, fetcher);
 
   return {
     book: data,
@@ -50,10 +47,7 @@ export function useFeaturedBooks() {
 }
 
 export function useTrendingBooks() {
-  const { data, error, isLoading } = useSWR<BookWithAuthor[]>(
-    '/api/books?sort=trending',
-    fetcher
-  );
+  const { data, error, isLoading } = useSWR<BookWithAuthor[]>('/api/books?sort=trending', fetcher);
 
   return {
     books: data || [],

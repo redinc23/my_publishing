@@ -17,14 +17,14 @@ export function StarRating({
   size = 'md',
   interactive = false,
   onRatingChange,
-  className
+  className,
 }: StarRatingProps) {
   const [hoverRating, setHoverRating] = useState(0);
 
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-5 h-5',
-    lg: 'w-6 h-6'
+    lg: 'w-6 h-6',
   };
 
   const handleClick = (starIndex: number) => {
@@ -53,23 +53,20 @@ export function StarRating({
         <button
           key={star}
           type="button"
-          className={cn(
-            'transition-colors',
-            interactive && 'cursor-pointer hover:scale-110'
-          )}
+          className={cn('transition-colors', interactive && 'cursor-pointer hover:scale-110')}
           onClick={() => handleClick(star)}
           onMouseEnter={() => handleMouseEnter(star)}
           onMouseLeave={handleMouseLeave}
           disabled={!interactive}
+          aria-label={`${star} star${star === 1 ? '' : 's'}`}
         >
           <Star
             className={cn(
               sizeClasses[size],
               'transition-colors',
-              star <= displayRating
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-gray-300'
+              star <= displayRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
             )}
+            aria-hidden="true"
           />
         </button>
       ))}

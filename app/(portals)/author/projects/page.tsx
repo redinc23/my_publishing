@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthorForUser } from '@/lib/supabase/portal-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ManuscriptCard } from '@/components/cards/ManuscriptCard';
@@ -15,11 +16,8 @@ async function getManuscripts() {
     redirect('/login');
   }
 
-  const { data: author } = await supabase
-    .from('authors')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
+  // authors has no RLS SELECT policy, so resolve the author row server-side.
+  const author = await getAuthorForUser(user.id);
 
   if (!author) {
     return [];
@@ -40,13 +38,13 @@ export default async function ProjectsPage() {
   return (
     <Section>
       <Container>
-        <h1 className="text-4xl font-bold mb-8">My Projects</h1>
+        <h1 className="mb-8 text-4xl font-bold">My Projects</h1>
         {manuscripts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-secondary mb-4">No manuscripts submitted yet.</p>
+          <div className="py-12 text-center">
+            <p className="mb-4 text-secondary">No manuscripts submitted yet.</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {manuscripts.map((manuscript) => (
               <ManuscriptCard key={manuscript.id} manuscript={manuscript} />
             ))}

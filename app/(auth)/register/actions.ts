@@ -2,20 +2,81 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { authRateLimit, getAuthIdentifier } from '@/lib/utils/auth-rate-limit';
 import { headers } from 'next/headers';
+
+function normalizeOrigin(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  return value.trim().replace(/\/+$/, '');
+}
+
+async function resolveAuthOrigin() {
+  const headersList = await headers();
+  const host = headersList.get('x-forwarded-host') || headersList.get('host');
+  const proto = headersList.get('x-forwarded-proto') || 'http';
+  const requestOrigin = host ? `${proto}://${host.split(',')[0].trim()}` : null;
+  const configuredOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+  const vercelUrl = normalizeOrigin(process.env.VERCEL_URL);
+
+  if (requestOrigin) {
+    return normalizeOrigin(requestOrigin)!;
+  }
+
+  if (configuredOrigin) {
+    return configuredOrigin;
+  }
+
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/^https?:\/\//, '')}`;
+  }
+
+  return 'http://localhost:3001';
+}
+
+export function toFriendlyRegisterError(message: string) {
+  if (message.includes('User already registered')) {
+    return 'An account with this email already exists. Please sign in instead.';
+  }
+
+  if (message.includes('Password')) {
+    return 'Password does not meet requirements. Please choose a stronger password.';
+  }
+
+  if (/email.*(invalid|validate)|invalid.*email/i.test(message)) {
+    return 'Please use a valid email address that can receive email.';
+  }
+
+  if (
+    /email rate limit exceeded|over_email_send_rate_limit|email.*quota|quota.*email|email.*temporarily unavailable|smtp|error sending/i.test(
+      message
+    )
+  ) {
+    return 'Verification email delivery is temporarily unavailable because the email provider is throttling messages. Please try again later.';
+  }
+
+  if (/too many requests|rate limit|security purposes/i.test(message)) {
+    return 'Too many registration attempts. Please wait a minute and try again.';
+  }
+
+  return message;
+}
 
 export async function registerUser(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const fullName = formData.get('fullName') as string;
 
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+
   // Rate limiting
   const headersList = await headers();
   const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
-  const identifier = getAuthIdentifier(ip, email);
-  
+  const identifier = getAuthIdentifier(ip, normalizedEmail);
+
   if (!(await authRateLimit(identifier))) {
     return { error: 'Too many registration attempts. Please try again in 15 minutes.' };
   }
@@ -27,7 +88,7 @@ export async function registerUser(formData: FormData) {
 
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!emailRegex.test(normalizedEmail)) {
     return { error: 'Please enter a valid email address' };
   }
 
@@ -43,10 +104,7 @@ export async function registerUser(formData: FormData) {
     const supabase = await createClient();
 
     // Check if profiles table exists by attempting a simple query
-    const { error: tableCheckError } = await supabase
-      .from('profiles')
-      .select('id')
-      .limit(1);
+    const { error: tableCheckError } = await supabase.from('profiles').select('id').limit(1);
 
     if (tableCheckError) {
       if (tableCheckError.message.includes('relation "profiles" does not exist')) {
@@ -65,9 +123,10 @@ export async function registerUser(formData: FormData) {
     // Create auth user with metadata for profile creation trigger
     // The trigger will automatically create the profile
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
       options: {
+        emailRedirectTo: `${await resolveAuthOrigin()}/callback`,
         data: {
           full_name: fullName.trim(),
           name: fullName.trim(), // Some OAuth providers use 'name'
@@ -77,24 +136,21 @@ export async function registerUser(formData: FormData) {
     });
 
     if (authError) {
-      // Provide user-friendly error messages
-      if (authError.message.includes('User already registered')) {
-        return { error: 'An account with this email already exists. Please sign in instead.' };
-      }
-      if (authError.message.includes('Password')) {
-        return { error: 'Password does not meet requirements. Please choose a stronger password.' };
-      }
-      return { error: authError.message };
+      return { error: toFriendlyRegisterError(authError.message) };
     }
 
     if (!authData.user) {
       return { error: 'Failed to create user account. Please try again.' };
     }
 
+    // When Supabase requires email confirmation there is no session yet, so
+    // the browser gets no auth cookies — surface that to the client.
+    const needsVerification = !authData.session;
+
     // Profile will be created automatically by the trigger
     // Verify it was created (with a small delay to allow trigger to run)
     await new Promise((resolve) => setTimeout(resolve, 500));
-    
+
     const { data: profile, error: profileCheckError } = await supabase
       .from('profiles')
       .select('id')
@@ -103,10 +159,12 @@ export async function registerUser(formData: FormData) {
 
     if (profileCheckError || !profile) {
       console.warn('Profile not created by trigger, attempting manual creation...');
-      // Fallback: manually create profile if trigger didn't work
-      const { error: profileError } = await supabase.from('profiles').insert({
+      // Fallback: use admin client to bypass RLS (session client has no auth when
+      // email confirmation is required and authData.session is null).
+      const admin = createAdminClient();
+      const { error: profileError } = await admin.from('profiles').insert({
         user_id: authData.user.id,
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         full_name: fullName.trim(),
         role: 'reader',
         subscription_tier: 'free',
@@ -118,12 +176,13 @@ export async function registerUser(formData: FormData) {
       }
     }
 
-    // Revalidate paths
     revalidatePath('/', 'layout');
 
-    // Redirect to home page after successful registration
-    // Note: User may need to verify email depending on Supabase settings
-    redirect('/');
+    return {
+      success: true,
+      needsVerification,
+      verificationEmail: needsVerification ? normalizedEmail : undefined,
+    };
   } catch (error) {
     console.error('Unexpected error during registration:', error);
     return { error: 'An unexpected error occurred. Please try again.' };

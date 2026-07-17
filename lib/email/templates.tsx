@@ -10,12 +10,36 @@ import {
   Heading,
 } from '@react-email/components';
 
+function getEmailBaseUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, '');
+  }
+
+  const vercelUrl =
+    process.env.VERCEL_URL?.trim() || process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelUrl) {
+    const normalizedVercelUrl = vercelUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    return `https://${normalizedVercelUrl}`;
+  }
+
+  // Email templates are often rendered outside a request context, so they
+  // cannot reliably infer the active localhost port at runtime.
+  return 'http://localhost:3001';
+}
+
+function getEmailUrl(path: string) {
+  return `${getEmailBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 export function WelcomeEmail({ userName }: { userName: string }) {
   return (
     <Html>
       <Head />
       <Preview>Welcome to MANGU - Your digital publishing platform</Preview>
-      <Body style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+      <Body
+        style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}
+      >
         <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
           <Section>
             <Heading
@@ -36,7 +60,7 @@ export function WelcomeEmail({ userName }: { userName: string }) {
               Start discovering amazing books today!
             </Text>
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/books`}
+              href={getEmailUrl('/books')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -69,7 +93,9 @@ export function PurchaseConfirmationEmail({
     <Html>
       <Head />
       <Preview>Your MANGU purchase confirmation</Preview>
-      <Body style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+      <Body
+        style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}
+      >
         <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
           <Section>
             <Heading
@@ -92,7 +118,7 @@ export function PurchaseConfirmationEmail({
               Amount: ${amount.toFixed(2)}
             </Text>
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reading`}
+              href={getEmailUrl('/reading')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -123,7 +149,9 @@ export function ManuscriptSubmittedEmail({
     <Html>
       <Head />
       <Preview>Your manuscript has been submitted</Preview>
-      <Body style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+      <Body
+        style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}
+      >
         <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
           <Section>
             <Heading
@@ -146,7 +174,7 @@ export function ManuscriptSubmittedEmail({
               Our editorial team will review your submission and get back to you within 2-4 weeks.
             </Text>
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/author/projects`}
+              href={getEmailUrl('/author/projects')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -188,7 +216,9 @@ export function ManuscriptStatusEmail({
     <Html>
       <Head />
       <Preview>Manuscript status update: {status}</Preview>
-      <Body style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+      <Body
+        style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}
+      >
         <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
           <Section>
             <Heading
@@ -225,7 +255,7 @@ export function ManuscriptStatusEmail({
               </Text>
             )}
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/author/projects`}
+              href={getEmailUrl('/author/projects')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -258,7 +288,9 @@ export function WeeklyDigestEmail({
     <Html>
       <Head />
       <Preview>Your weekly MANGU digest</Preview>
-      <Body style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+      <Body
+        style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}
+      >
         <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
           <Section>
             <Heading
@@ -282,7 +314,10 @@ export function WeeklyDigestEmail({
               Featured Books
             </Heading>
             {featuredBooks.map((book) => (
-              <Text key={book.slug} style={{ fontSize: '14px', lineHeight: '20px', marginBottom: '8px' }}>
+              <Text
+                key={book.slug}
+                style={{ fontSize: '14px', lineHeight: '20px', marginBottom: '8px' }}
+              >
                 • {book.title}
               </Text>
             ))}
@@ -291,13 +326,16 @@ export function WeeklyDigestEmail({
               New Releases
             </Heading>
             {newReleases.map((book) => (
-              <Text key={book.slug} style={{ fontSize: '14px', lineHeight: '20px', marginBottom: '8px' }}>
+              <Text
+                key={book.slug}
+                style={{ fontSize: '14px', lineHeight: '20px', marginBottom: '8px' }}
+              >
                 • {book.title}
               </Text>
             ))}
 
             <Button
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/books`}
+              href={getEmailUrl('/books')}
               style={{
                 backgroundColor: '#e50914',
                 color: '#ffffff',
@@ -322,7 +360,9 @@ export function PasswordResetEmail({ resetLink }: { resetLink: string }) {
     <Html>
       <Head />
       <Preview>Reset your MANGU password</Preview>
-      <Body style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+      <Body
+        style={{ backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}
+      >
         <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
           <Section>
             <Heading
@@ -338,8 +378,11 @@ export function PasswordResetEmail({ resetLink }: { resetLink: string }) {
             <Text style={{ fontSize: '16px', lineHeight: '24px', marginBottom: '16px' }}>
               You requested to reset your password. Click the button below to create a new password.
             </Text>
-            <Text style={{ fontSize: '14px', lineHeight: '20px', marginBottom: '20px', color: '#999' }}>
-              This link will expire in 1 hour. If you didn&apos;t request this, you can safely ignore this email.
+            <Text
+              style={{ fontSize: '14px', lineHeight: '20px', marginBottom: '20px', color: '#999' }}
+            >
+              This link will expire in 1 hour. If you didn&apos;t request this, you can safely
+              ignore this email.
             </Text>
             <Button
               href={resetLink}

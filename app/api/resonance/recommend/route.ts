@@ -36,7 +36,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             ? 'Rate limiter unavailable. Please try again shortly.'
             : 'Rate limit exceeded. Please try again later.',
       } satisfies ApiResponse,
-      { 
+      {
         status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
         headers: rateLimitHeaders,
       }
@@ -79,26 +79,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Get current user if not specified
     let targetUserId = user_id;
     if (!targetUserId) {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       targetUserId = user?.id;
     }
 
     // Build recommendation query
     let query = supabase
       .from('books')
-      .select(`
-        *,
-        author:profiles!books_author_id_fkey(
-          id,
-          full_name,
-          avatar_url
-        ),
-        stats:book_stats_summary(
-          total_views,
-          total_purchases,
-          total_revenue
-        )
-      `)
+      .select('*')
       .eq('status', 'published')
       .eq('visibility', 'public')
       .order('created_at', { ascending: false })
@@ -127,7 +117,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         .eq('status', 'completed');
 
       if (purchasedBooks && purchasedBooks.length > 0) {
-        const purchasedIds = purchasedBooks.map(p => p.book_id);
+        const purchasedIds = purchasedBooks.map((p) => p.book_id);
         query = query.not('id', 'in', `(${purchasedIds.join(',')})`);
       }
     }
@@ -150,9 +140,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const transformedBooks: BookWithStats[] = (books || []).map((book) => ({
       ...book,
       stats: {
-        views: book.stats?.total_views || 0,
-        purchases: book.stats?.total_purchases || 0,
-        revenue: book.stats?.total_revenue || 0,
+        views: book.total_reads || 0,
+        purchases: 0,
+        revenue: 0,
       },
     }));
 
@@ -163,11 +153,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         (Date.now() - new Date(book.created_at).getTime()) / (1000 * 60 * 60 * 24)
       );
       const recencyBonus = Math.max(0, 30 - recencyDays) * 5;
-      
-      const score = 
-        (book.stats?.views || 0) + 
-        ((book.stats?.purchases || 0) * 10) + 
-        recencyBonus;
+
+      const score = (book.stats?.views || 0) + (book.stats?.purchases || 0) * 10 + recencyBonus;
 
       return { ...book, _score: score };
     });
@@ -192,7 +179,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         success: true,
         data: result,
       } satisfies ApiResponse<RecommendationResult>,
-      { 
+      {
         status: 200,
         headers: rateLimitHeaders,
       }
@@ -214,7 +201,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
-  
+
   const body = {
     limit: parseInt(searchParams.get('limit') || '10'),
     genre: searchParams.get('genre') || undefined,

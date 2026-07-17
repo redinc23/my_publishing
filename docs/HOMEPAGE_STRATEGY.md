@@ -33,12 +33,12 @@ export default function HomePage() {
 
 ### Assets (committed in `public/homepage/`)
 
-| File | Purpose |
-|------|---------|
-| `v_a_1.html` | Main landing page |
-| `enhancements.css` | Styles |
-| `enhancements.js` | Interactions |
-| `laps.mp4` | Hero video |
+| File               | Purpose           |
+| ------------------ | ----------------- |
+| `v_a_1.html`       | Main landing page |
+| `enhancements.css` | Styles            |
+| `enhancements.js`  | Interactions      |
+| `laps.mp4`         | Hero video        |
 
 ### Previous React homepage
 
@@ -56,10 +56,10 @@ Recommendation: stay static until design stabilizes, then port to `app/(consumer
 
 The project uses **App Router** error handling:
 
-| Concern | App Router file | Replaces |
-|---------|-----------------|----------|
-| 404 | `app/not-found.tsx` | Legacy `pages/404.tsx` |
-| Runtime errors | `app/error.tsx` | Legacy `pages/500.tsx` |
+| Concern        | App Router file     | Replaces               |
+| -------------- | ------------------- | ---------------------- |
+| 404            | `app/not-found.tsx` | Legacy `pages/404.tsx` |
+| Runtime errors | `app/error.tsx`     | Legacy `pages/500.tsx` |
 
 Legacy Pages Router error files (`pages/404.tsx`, `pages/500.tsx`) were removed. Only `pages/_document.tsx` remains for any legacy pages compatibility. No duplicate error pages.
 

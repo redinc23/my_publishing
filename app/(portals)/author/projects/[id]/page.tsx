@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthorForUser } from '@/lib/supabase/portal-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,11 +17,8 @@ async function getManuscript(id: string) {
     redirect('/login');
   }
 
-  const { data: author } = await supabase
-    .from('authors')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single();
+  // authors has no RLS SELECT policy, so resolve the author row server-side.
+  const author = await getAuthorForUser(user.id);
 
   if (!author) {
     return null;
@@ -57,18 +55,14 @@ export default async function ManuscriptDetailPage({ params }: { params: { id: s
     <Section>
       <Container>
         <div className="max-w-4xl">
-          <div className="flex items-start justify-between mb-6">
+          <div className="mb-6 flex items-start justify-between">
             <h1 className="text-4xl font-bold">{manuscript.title}</h1>
-            <Badge
-              className={`text-white ${
-                statusColors[manuscript.status] || 'bg-gray-500'
-              }`}
-            >
+            <Badge className={`text-white ${statusColors[manuscript.status] || 'bg-gray-500'}`}>
               {manuscript.status.replace('_', ' ')}
             </Badge>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="mb-6 grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Details</CardTitle>

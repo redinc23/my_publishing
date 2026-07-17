@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAuthorForUser } from '@/lib/supabase/portal-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,11 +28,8 @@ async function getAuthorData() {
     redirect('/');
   }
 
-  const { data: author } = await supabase
-    .from('authors')
-    .select('*')
-    .eq('profile_id', user.id)
-    .single();
+  // authors has no RLS SELECT policy, so resolve the author row server-side.
+  const author = await getAuthorForUser(user.id);
 
   if (!author) {
     return { author: null, books: [], manuscripts: [], earnings: 0 };
@@ -40,7 +38,11 @@ async function getAuthorData() {
   // PERF-PHASE2-3 — Parallelize independent queries
   const [{ data: books }, { data: manuscripts }] = await Promise.all([
     supabase.from('books').select('*').eq('author_id', author.id),
-    supabase.from('manuscripts').select('*').eq('author_id', author.id).order('created_at', { ascending: false }),
+    supabase
+      .from('manuscripts')
+      .select('*')
+      .eq('author_id', author.id)
+      .order('created_at', { ascending: false }),
   ]);
 
   const earnings = 0;
@@ -61,8 +63,8 @@ export default async function AuthorDashboardPage() {
       <Section>
         <Container>
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Author profile not found</h1>
-            <p className="text-secondary mb-4">Please complete your author profile setup.</p>
+            <h1 className="mb-4 text-2xl font-bold">Author profile not found</h1>
+            <p className="mb-4 text-secondary">Please complete your author profile setup.</p>
           </div>
         </Container>
       </Section>
@@ -72,7 +74,7 @@ export default async function AuthorDashboardPage() {
   return (
     <Section>
       <Container>
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <h1 className="text-4xl font-bold">Author Dashboard</h1>
           <Button asChild>
             <Link href="/author/submit">Submit Manuscript</Link>
@@ -80,7 +82,7 @@ export default async function AuthorDashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="mb-8 grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Total Books</CardTitle>
@@ -108,7 +110,7 @@ export default async function AuthorDashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Recent Books</CardTitle>
@@ -122,7 +124,7 @@ export default async function AuthorDashboardPage() {
                     <li key={book.id}>
                       <Link
                         href={`/books/${book.slug}`}
-                        className="hover:text-primary transition-colors"
+                        className="transition-colors hover:text-primary"
                       >
                         {book.title}
                       </Link>
@@ -145,7 +147,7 @@ export default async function AuthorDashboardPage() {
                     <li key={manuscript.id}>
                       <Link
                         href={`/author/projects/${manuscript.id}`}
-                        className="hover:text-primary transition-colors"
+                        className="transition-colors hover:text-primary"
                       >
                         {manuscript.title} - {manuscript.status}
                       </Link>

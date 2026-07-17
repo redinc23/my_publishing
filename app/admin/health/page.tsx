@@ -2,7 +2,9 @@ import { requireAdmin } from '@/lib/middleware/auth';
 import { Container } from '@/components/layout/Container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface HealthCheck {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -17,20 +19,25 @@ interface HealthCheck {
 }
 
 async function getHealthStatus(): Promise<HealthCheck> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/health`, {
-    cache: 'no-store',
-  });
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001';
+  try {
+    const response = await fetch(`${baseUrl}/api/health?ready=1`, {
+      cache: 'no-store',
+    });
 
-  if (!response.ok) {
+    const data = await response.json();
+    // Ensure checks is always an object even if the API shape differs
+    if (!data.checks || typeof data.checks !== 'object') {
+      data.checks = {};
+    }
+    return data as HealthCheck;
+  } catch {
     return {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
       checks: {},
     };
   }
-
-  return response.json();
 }
 
 function StatusIcon({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }) {
@@ -43,7 +50,7 @@ function StatusIcon({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }
   if (status === 'warn') {
     return <AlertCircle className="h-5 w-5 text-yellow-500" />;
   }
-  return <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />;
+  return <Loader2 className="h-5 w-5 animate-spin text-gray-400" />;
 }
 
 function StatusBadge({ status }: { status: 'pass' | 'fail' | 'warn' | undefined }) {
@@ -66,11 +73,16 @@ export default async function HealthDashboardPage() {
   return (
     <Container className="py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">System Health Dashboard</h1>
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <h1 className="text-4xl font-bold">System Health Dashboard</h1>
+          <Button asChild variant="outline">
+            <Link href="/admin/health">Refresh</Link>
+          </Button>
+        </div>
         <p className="text-muted-foreground">
           Monitor the health and status of all system components
         </p>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="mt-2 text-sm text-muted-foreground">
           Last updated: {new Date(health.timestamp).toLocaleString()}
         </p>
       </div>

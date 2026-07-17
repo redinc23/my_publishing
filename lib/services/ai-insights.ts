@@ -1,4 +1,3 @@
-
 // Note: This service should be called from server actions, not client components
 import type { BookStats, HeatmapData } from '@/types/analytics';
 
@@ -47,7 +46,7 @@ export class AIInsightsService {
 
     // Content recommendations based on heatmap
     if (heatmap.length > 0) {
-      const highDropOffChapter = heatmap.find(h => h.drop_off_rate > 50);
+      const highDropOffChapter = heatmap.find((h) => h.drop_off_rate > 50);
       if (highDropOffChapter) {
         recommendations.push({
           type: 'content_improvement',
@@ -88,7 +87,7 @@ export class AIInsightsService {
 
     const lastWeek = stats.slice(-7);
     const avgViews = lastWeek.reduce((sum, day) => sum + day.views, 0) / 7;
-    const trend = this.calculateTrend(lastWeek.map(d => d.views));
+    const trend = this.calculateTrend(lastWeek.map((d) => d.views));
 
     return {
       nextWeekViews: Math.round(avgViews * (1 + trend)),
@@ -102,9 +101,9 @@ export class AIInsightsService {
   private calculateTrends(stats: BookStats[]) {
     // Implementation for trend analysis
     return {
-      views: this.calculateTrend(stats.map(s => s.views)),
-      readers: this.calculateTrend(stats.map(s => s.unique_users)),
-      revenue: this.calculateTrend(stats.map(s => s.purchases * 10)), // Simplified
+      views: this.calculateTrend(stats.map((s) => s.views)),
+      readers: this.calculateTrend(stats.map((s) => s.unique_users)),
+      revenue: this.calculateTrend(stats.map((s) => s.purchases * 10)), // Simplified
     };
   }
 
@@ -120,17 +119,21 @@ export class AIInsightsService {
   private identifyPatterns(stats: BookStats[]) {
     // Identify weekly patterns
     const patterns = [];
-    const dayOfWeek = stats.map(s => new Date(s.date).getDay());
+    const dayOfWeek = stats.map((s) => new Date(s.date).getDay());
 
     // Check for weekend spikes
     const weekendDays = [0, 6]; // Sunday, Saturday
-    const weekendAvg = stats
-      .filter((_, i) => weekendDays.includes(dayOfWeek[i]))
-      .reduce((sum, s) => sum + s.views, 0) / stats.filter((_, i) => weekendDays.includes(dayOfWeek[i])).length;
+    const weekendAvg =
+      stats
+        .filter((_, i) => weekendDays.includes(dayOfWeek[i]))
+        .reduce((sum, s) => sum + s.views, 0) /
+      stats.filter((_, i) => weekendDays.includes(dayOfWeek[i])).length;
 
-    const weekdayAvg = stats
-      .filter((_, i) => !weekendDays.includes(dayOfWeek[i]))
-      .reduce((sum, s) => sum + s.views, 0) / stats.filter((_, i) => !weekendDays.includes(dayOfWeek[i])).length;
+    const weekdayAvg =
+      stats
+        .filter((_, i) => !weekendDays.includes(dayOfWeek[i]))
+        .reduce((sum, s) => sum + s.views, 0) /
+      stats.filter((_, i) => !weekendDays.includes(dayOfWeek[i])).length;
 
     if (weekendAvg > weekdayAvg * 1.2) {
       patterns.push('weekend_peak');
@@ -141,17 +144,13 @@ export class AIInsightsService {
 
   private findBestDay(stats: BookStats[]): string | null {
     if (stats.length === 0) return null;
-    const best = stats.reduce((prev, current) =>
-      prev.views > current.views ? prev : current
-    );
+    const best = stats.reduce((prev, current) => (prev.views > current.views ? prev : current));
     return new Date(best.date).toLocaleDateString('en-US', { weekday: 'long' });
   }
 
   private findWorstDay(stats: BookStats[]): string | null {
     if (stats.length === 0) return null;
-    const worst = stats.reduce((prev, current) =>
-      prev.views < current.views ? prev : current
-    );
+    const worst = stats.reduce((prev, current) => (prev.views < current.views ? prev : current));
     return new Date(worst.date).toLocaleDateString('en-US', { weekday: 'long' });
   }
 
@@ -165,13 +164,13 @@ export class AIInsightsService {
 
       if (avgDropOff < 20) {
         zones.push({
-          chapters: chunk.map(h => h.chapter_number),
+          chapters: chunk.map((h) => h.chapter_number),
           type: 'high_engagement',
           score: 5,
         });
       } else if (avgDropOff > 50) {
         zones.push({
-          chapters: chunk.map(h => h.chapter_number),
+          chapters: chunk.map((h) => h.chapter_number),
           type: 'low_engagement',
           score: 1,
         });
@@ -205,15 +204,19 @@ export class AIInsightsService {
     const suggestions: string[] = [];
 
     // Find chapters with high drop-off
-    const highDropOff = heatmap.filter(h => h.drop_off_rate > 50);
-    highDropOff.forEach(chapter => {
-      suggestions.push(`Chapter ${chapter.chapter_number} might be too long or complex. Consider breaking it into smaller sections.`);
+    const highDropOff = heatmap.filter((h) => h.drop_off_rate > 50);
+    highDropOff.forEach((chapter) => {
+      suggestions.push(
+        `Chapter ${chapter.chapter_number} might be too long or complex. Consider breaking it into smaller sections.`
+      );
     });
 
     // Find chapters with low time spent
-    const lowTime = heatmap.filter(h => h.avg_time_spent < 60); // Less than 1 minute
-    lowTime.forEach(chapter => {
-      suggestions.push(`Readers are skimming Chapter ${chapter.chapter_number}. Add more engaging content or visuals.`);
+    const lowTime = heatmap.filter((h) => h.avg_time_spent < 60); // Less than 1 minute
+    lowTime.forEach((chapter) => {
+      suggestions.push(
+        `Readers are skimming Chapter ${chapter.chapter_number}. Add more engaging content or visuals.`
+      );
     });
 
     return suggestions;
@@ -228,7 +231,7 @@ export class AIInsightsService {
   private forecastRevenue(stats: BookStats[]): number {
     if (stats.length < 14) return 0;
 
-    const recentRevenue = stats.slice(-14).reduce((sum, day) => sum + (day.purchases * 9.99), 0);
+    const recentRevenue = stats.slice(-14).reduce((sum, day) => sum + day.purchases * 9.99, 0);
     const dailyAvg = recentRevenue / 14;
 
     // Simple linear projection

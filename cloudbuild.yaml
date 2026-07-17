@@ -4,16 +4,17 @@ substitutions:
   _AR_REPO: web-images
   _IMAGE_NAME: mangu-publishers
   _PLATFORM: managed
-  _PORT: "3000"
+  _PORT: '3000'
   _MEMORY: 512Mi
-  _NEXT_PUBLIC_SUPABASE_URL: ""
-  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
-  _NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ""
-  _NEXT_PUBLIC_SITE_URL: ""
+  _NEXT_PUBLIC_SUPABASE_URL: ''
+  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
+  _NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ''
+  _NEXT_PUBLIC_SITE_URL: ''
+  _NEXT_PUBLIC_SENTRY_DSN: ''
 
 steps:
   - id: npm-ci
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
@@ -22,7 +23,7 @@ steps:
         npm ci
 
   - id: lint-and-typecheck
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
@@ -32,12 +33,14 @@ steps:
         npm run type-check
 
   - id: next-build
-    name: node:20
+    name: node:22
     env:
       - NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       - NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL}
+      - NEXT_PUBLIC_SENTRY_DSN=${_NEXT_PUBLIC_SENTRY_DSN}
+      - SENTRY_RELEASE=$SHORT_SHA
     entrypoint: bash
     args:
       - -c
@@ -64,7 +67,7 @@ steps:
 
   # PERF-PHASE2-8 — CI perf budget check: fail if main JS bundle exceeds 250kB gzipped
   - id: perf-budget
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
@@ -83,7 +86,7 @@ steps:
         echo "All chunks under $${MAX_SIZE_KB}kB gzipped — PASS"
 
   - id: secret-audit
-    name: node:20
+    name: node:22
     entrypoint: bash
     args:
       - -c
@@ -114,6 +117,10 @@ steps:
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       - --build-arg
       - NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL}
+      - --build-arg
+      - NEXT_PUBLIC_SENTRY_DSN=${_NEXT_PUBLIC_SENTRY_DSN}
+      - --build-arg
+      - SENTRY_RELEASE=$SHORT_SHA
       - .
 
   - id: docker-push
@@ -178,7 +185,7 @@ steps:
           --no-default-url \
           --startup-probe=httpGet.path=/api/live,httpGet.port=3000,initialDelaySeconds=10,timeoutSeconds=5,periodSeconds=10,failureThreshold=12 \
           --liveness-probe=httpGet.path=/api/live,httpGet.port=3000,initialDelaySeconds=30,timeoutSeconds=5,periodSeconds=20,failureThreshold=3 \
-          --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL},NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY},NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY},NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL}" \
+          --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL},NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY},NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY},NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL},SENTRY_RELEASE=$SHORT_SHA" \
           --set-secrets="$${REQUIRED_SECRETS}$${OPTIONAL_SECRETS}"
 
   - id: verify-deploy

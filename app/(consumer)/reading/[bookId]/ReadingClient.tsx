@@ -30,11 +30,11 @@ export default function ReadingClient({ book, initialProgress }: ReadingClientPr
     return () => clearInterval(interval);
   }, [currentPosition, book.id]);
 
-  const progressPercentage = initialProgress ? (currentPosition / 100) * 100 : 0;
+  const progressPercentage = currentPosition;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-50 bg-muted border-b border-border p-4">
+      <div className="sticky top-0 z-50 border-b border-border bg-muted p-4">
         <Container>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -51,22 +51,20 @@ export default function ReadingClient({ book, initialProgress }: ReadingClientPr
       </div>
 
       <Container className="py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           <div className="prose prose-invert max-w-none">
             <p className="text-lg leading-relaxed">
-              Reading interface coming soon. This will display the book content based on the
-              current position.
+              Reading interface coming soon. This will display the book content based on the current
+              position.
             </p>
-            <p className="text-lg leading-relaxed mt-4">
-              Current position: {currentPosition}%
-            </p>
+            <p className="mt-4 text-lg leading-relaxed">Current position: {currentPosition}%</p>
           </div>
         </div>
       </Container>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-muted border-t border-border p-4">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-muted p-4">
         <Container>
-          <div className="flex items-center justify-between max-w-4xl mx-auto">
+          <div className="mx-auto flex max-w-4xl items-center justify-between">
             <Button
               variant="outline"
               onClick={() => setCurrentPosition(Math.max(0, currentPosition - 1))}

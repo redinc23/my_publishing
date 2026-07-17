@@ -98,5 +98,4 @@ fi
 echo "OK — updated NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local"
 echo "Backup: ${ENV_FILE}.bak"
 echo
-echo "Next (required — anon key is baked into the deploy):"
-echo "  ./scripts/gcloud-build-submit.sh"
+echo "Next (required): update NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel project env vars, then redeploy."

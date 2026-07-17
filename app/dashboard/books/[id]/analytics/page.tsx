@@ -1,22 +1,9 @@
 // PERF-PHASE2-4
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import dynamic from 'next/dynamic';
-import { Skeleton } from '@/components/ui/skeleton';
-
-// PERF-PHASE2-4 — Dynamic import: heavy client dashboard loaded as island
-const AnalyticsDashboard = dynamic(
-  () => import('@/components/analytics/AnalyticsDashboard'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="space-y-6">
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    ),
-  }
-);
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { getAuthorForUser } from '@/lib/supabase/portal-queries';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 
 interface AnalyticsPageProps {
   params: {
@@ -26,19 +13,31 @@ interface AnalyticsPageProps {
 
 export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect('/login');
   }
 
-  const { data: book } = await supabase
+  const author = await getAuthorForUser(user.id);
+  if (!author) {
+    redirect('/dashboard');
+  }
+
+  const admin = createAdminClient();
+  const { data: book } = await admin
     .from('books')
     .select('id, title, author_id')
     .eq('id', params.id)
-    .single();
+    .maybeSingle();
 
-  if (!book || book.author_id !== user.id) {
+  if (!book) {
+    notFound();
+  }
+
+  if (book.author_id !== author.id) {
     redirect('/dashboard');
   }
 

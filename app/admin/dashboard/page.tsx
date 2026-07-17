@@ -1,21 +1,15 @@
 /* eslint-disable */
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdminQueryError, firstQueryError } from '../_lib/query-error';
 
 export default async function AdminDashboard() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  const [
-    { count: totalUsers },
-    { count: totalBooks },
-    { count: totalOrders },
-    { data: recentActivity },
-  ] = await Promise.all([
+  const [usersResult, booksResult, ordersResult, activityResult] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('books').select('*', { count: 'exact', head: true }),
-    supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true }),
+    supabase.from('orders').select('*', { count: 'exact', head: true }),
     supabase
       .from('engagement_events')
       .select('*, book:books(title)')
@@ -23,11 +17,21 @@ export default async function AdminDashboard() {
       .limit(10),
   ]);
 
+  const queryError = firstQueryError([usersResult, booksResult, ordersResult, activityResult]);
+  if (queryError) {
+    return <AdminQueryError title="Admin Dashboard" />;
+  }
+
+  const totalUsers = usersResult.count;
+  const totalBooks = booksResult.count;
+  const totalOrders = ordersResult.count;
+  const recentActivity = activityResult.data;
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Total Users</CardTitle>
@@ -66,7 +70,7 @@ export default async function AdminDashboard() {
               {recentActivity.map((activity: any) => (
                 <div
                   key={activity.id}
-                  className="flex items-center justify-between p-2 border-b border-border"
+                  className="flex items-center justify-between border-b border-border p-2"
                 >
                   <div>
                     <p className="font-medium">{activity.event_type}</p>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,7 +24,6 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-  const router = useRouter();
   const errorId = useId();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,13 +50,19 @@ export function RegisterForm() {
 
       if (result?.error) {
         setError(result.error);
+        setIsLoading(false);
+      } else if (result?.needsVerification && result.verificationEmail) {
+        // No session yet — the user must confirm their email first.
+        window.location.assign(
+          `/verify-email?email=${encodeURIComponent(result.verificationEmail)}`
+        );
       } else {
-        router.push('/');
-        router.refresh();
+        // Full-page navigation so the client-side Supabase session picks up
+        // the auth cookies set by the server action.
+        window.location.assign('/');
       }
     } catch {
       setError('An unexpected error occurred');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -76,14 +80,14 @@ export function RegisterForm() {
           <div
             id={errorId}
             role="alert"
-            className="rounded-md bg-red-500/10 border border-red-500 p-3 text-sm text-red-500"
+            className="rounded-md border border-red-500 bg-red-500/10 p-3 text-sm text-red-500"
           >
             {error}
           </div>
         )}
       </div>
       <div>
-        <label htmlFor="fullName" className="block text-sm font-medium mb-2">
+        <label htmlFor="fullName" className="mb-2 block text-sm font-medium">
           Full Name
         </label>
         <Input
@@ -103,7 +107,7 @@ export function RegisterForm() {
         )}
       </div>
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-2">
+        <label htmlFor="email" className="mb-2 block text-sm font-medium">
           Email
         </label>
         <Input
@@ -123,7 +127,7 @@ export function RegisterForm() {
         )}
       </div>
       <div>
-        <label htmlFor="password" className="block text-sm font-medium mb-2">
+        <label htmlFor="password" className="mb-2 block text-sm font-medium">
           Password
         </label>
         <Input
@@ -143,7 +147,7 @@ export function RegisterForm() {
         )}
       </div>
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+        <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium">
           Confirm Password
         </label>
         <Input
@@ -162,12 +166,7 @@ export function RegisterForm() {
           </p>
         )}
       </div>
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isLoading}
-        aria-busy={isLoading}
-      >
+      <Button type="submit" className="w-full" disabled={isLoading} aria-busy={isLoading}>
         {isLoading ? <LoadingSpinner size="sm" /> : 'Create account'}
       </Button>
     </form>

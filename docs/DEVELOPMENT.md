@@ -88,12 +88,14 @@ const books = await getPublishedBooks({ genre: 'sci-fi', limit: 10 });
 ### Testing
 
 Run tests:
+
 ```bash
 npm test              # Unit tests
 npm run test:e2e      # E2E tests
 ```
 
 Write tests:
+
 - Unit tests: `tests/unit/`
 - E2E tests: `tests/e2e/`
 
@@ -115,6 +117,7 @@ npm run db:seed
 ### Query Patterns
 
 **Server Components:**
+
 ```typescript
 import { createClient } from '@/lib/supabase/server';
 
@@ -123,6 +126,7 @@ const { data } = await supabase.from('books').select('*');
 ```
 
 **Client Components:**
+
 ```typescript
 import { createClient } from '@/lib/supabase/client';
 

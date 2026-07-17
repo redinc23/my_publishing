@@ -8,18 +8,18 @@ The risk register contains eight risks spanning security, infrastructure, deploy
 
 #### 7.1.1 Risk Matrix
 
-| ID | Description | Probability | Impact | Mitigation | Owner |
-|---|---|---|---|---|---|
-| R1 | Secret leakage via `VITE_` prefix inlining token into browser bundle | Medium | Critical | `audit:secrets` script, Zod validation, grep checks across `src/` | Security Lead |
-| R2 | Cloud Run deployment failure due to 256Mi memory floor on gen2 | High | High | ADR-003 correction to `--memory=512Mi`; validate in cloudbuild.yaml | Platform Engineer |
-| R3 | Developer Connect OAuth interruption blocking GitHub-triggered builds | Medium | High | Verify GitHub owner rights before starting; allow retry with delete/recreate | Platform Engineer |
-| R4 | Immutable tag conflict on `:latest` push blocking Artifact Registry write | Medium | Medium | Remove `--immutable-tags` from repository or push SHA-only images | Platform Engineer |
-| R5 | Vulnerability scan (HIGH/CRITICAL CVE) blocking deployment pipeline | Medium | Medium | Update base image to latest patch; acceptable-risk override with documented exception | Security Lead |
-| R6 | Playwright timeout during prerender in Cloud Build environment | Medium | Medium | Increase step timeout to 600s; upgrade Playwright image to `v1.59.1-noble` | Build Engineer |
-| R7 | Webhook content update not reflected on site after Sanity publish | Medium | Medium | Clear npm cache; verify token dataset access; check webhook payload | Build Engineer |
-| R8 | `.env.local` committed to git exposing SANITY_API_READ_TOKEN | Low | Critical | `git filter-repo` history rewrite; rotate token; force push; update `.gitignore` | Security Lead |
+| ID  | Description                                                               | Probability | Impact   | Mitigation                                                                            | Owner             |
+| --- | ------------------------------------------------------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------- | ----------------- |
+| R1  | Secret leakage via `VITE_` prefix inlining token into browser bundle      | Medium      | Critical | `audit:secrets` script, Zod validation, grep checks across `src/`                     | Security Lead     |
+| R2  | Cloud Run deployment failure due to 256Mi memory floor on gen2            | High        | High     | ADR-003 correction to `--memory=512Mi`; validate in cloudbuild.yaml                   | Platform Engineer |
+| R3  | Developer Connect OAuth interruption blocking GitHub-triggered builds     | Medium      | High     | Verify GitHub owner rights before starting; allow retry with delete/recreate          | Platform Engineer |
+| R4  | Immutable tag conflict on `:latest` push blocking Artifact Registry write | Medium      | Medium   | Remove `--immutable-tags` from repository or push SHA-only images                     | Platform Engineer |
+| R5  | Vulnerability scan (HIGH/CRITICAL CVE) blocking deployment pipeline       | Medium      | Medium   | Update base image to latest patch; acceptable-risk override with documented exception | Security Lead     |
+| R6  | Playwright timeout during prerender in Cloud Build environment            | Medium      | Medium   | Increase step timeout to 600s; upgrade Playwright image to `v1.59.1-noble`            | Build Engineer    |
+| R7  | Webhook content update not reflected on site after Sanity publish         | Medium      | Medium   | Clear npm cache; verify token dataset access; check webhook payload                   | Build Engineer    |
+| R8  | `.env.local` committed to git exposing SANITY_API_READ_TOKEN              | Low         | Critical | `git filter-repo` history rewrite; rotate token; force push; update `.gitignore`      | Security Lead     |
 
-#### 7.1.2 R1 — Secret Leakage via VITE_ Prefix
+#### 7.1.2 R1 — Secret Leakage via VITE\_ Prefix
 
 A developer reintroduces `VITE_SANITY_API_READ_TOKEN` or fails to complete the rename to `SANITY_API_READ_TOKEN`, causing Vite to inline the secret into the client-side JavaScript bundle. Vite exposes all `VITE_`-prefixed variables to browser code via `import.meta.env` — any visitor could extract the token from `dist/assets/*.js` and gain read access to all Sanity content.
 
@@ -240,15 +240,15 @@ The seven gates form a structured checklist: PLAN → BUILD → REVIEW → TEST 
 
 #### 7.4.1 Quality Gates Summary
 
-| Gate | Name | Question | Description | Skip Condition |
-|---|---|---|---|---|
-| 1 | PLAN | Do you understand the task? | Name milestone, identify source doc, define done criteria, list dependencies, estimate effort | One-line command from a doc already read |
-| 2 | BUILD | Can you undo the work? | Work on a branch, commit BEFORE state, follow docs literally, scope changes, save GCP output | Comment-only or doc-only change |
-| 3 | REVIEW | Have you read what you wrote? | Read `git diff`, check for accidental files, debug code, secrets, commented-out code | gcloud command not changing repo files |
-| 4 | TEST | Does it work? | Run locally, verify exit criteria, run smoke check and secrets audit; infra: `gcloud describe` | Never skip |
-| 5 | STAGE | Is the change committed cleanly? | Commit message follows format, single logical change, branch up to date | Infra-only work not touching repo |
-| 6 | SHIP | Ready to push to `main`? | Previous milestone done, branch rebased, present at computer, build queue checked | Infra-only task not pushing code |
-| 7 | VERIFY | Working in production? | Cloud Build green, service healthy, behavior observable, checklist updated | Task did not deploy anything |
+| Gate | Name   | Question                         | Description                                                                                    | Skip Condition                           |
+| ---- | ------ | -------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 1    | PLAN   | Do you understand the task?      | Name milestone, identify source doc, define done criteria, list dependencies, estimate effort  | One-line command from a doc already read |
+| 2    | BUILD  | Can you undo the work?           | Work on a branch, commit BEFORE state, follow docs literally, scope changes, save GCP output   | Comment-only or doc-only change          |
+| 3    | REVIEW | Have you read what you wrote?    | Read `git diff`, check for accidental files, debug code, secrets, commented-out code           | gcloud command not changing repo files   |
+| 4    | TEST   | Does it work?                    | Run locally, verify exit criteria, run smoke check and secrets audit; infra: `gcloud describe` | Never skip                               |
+| 5    | STAGE  | Is the change committed cleanly? | Commit message follows format, single logical change, branch up to date                        | Infra-only work not touching repo        |
+| 6    | SHIP   | Ready to push to `main`?         | Previous milestone done, branch rebased, present at computer, build queue checked              | Infra-only task not pushing code         |
+| 7    | VERIFY | Working in production?           | Cloud Build green, service healthy, behavior observable, checklist updated                     | Task did not deploy anything             |
 
 #### 7.4.2 Gate 1 — PLAN
 
@@ -280,17 +280,17 @@ Requirements: Cloud Build status is `SUCCESS`; `curl -s https://www.yourdomain.c
 
 #### 7.4.9 Anti-Patterns Reference
 
-| Anti-Pattern | Gate That Catches It | Corrective Action |
-|---|---|---|
-| "I'll just push and see if it builds" | TEST | Run the local build first. Cloud Build is slow and noisy. |
-| "I'll fix the lint errors later" | REVIEW | Fix them now. Lint errors compound and obscure real issues. |
-| "Let me just edit `main` directly" | BUILD | Create a feature branch. Direct `main` commits are not reversible. |
-| "I think this is what the doc said" | PLAN | Open the source document. Read the exact section. Copy the command verbatim. |
-| "I'll skip the smoke test, it's only a small change" | TEST | The smoke test takes approximately 3 seconds. Run it. |
-| "I'll do M3 in parallel with M2 — they look unrelated" | PLAN | M3 requires `dist/` from M2. These milestones are sequential. |
-| Committing a Sanity token, even briefly | REVIEW | Rotate the token immediately. `git push --force` does not remove it from history if anyone fetched. |
-| "It's just a tiny config change, I'll skip the commit format" | STAGE | The format enables future debugging at 11pm. Use it for every commit. |
-| Running `npm run build` without `audit:secrets` after | TEST | The audit is the final backstop against secret leakage. Always run it. |
-| Not checking `gcloud builds list` before pushing M5+ | SHIP | A failing build in the queue may be unrelated. Verify first. |
+| Anti-Pattern                                                  | Gate That Catches It | Corrective Action                                                                                   |
+| ------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------- |
+| "I'll just push and see if it builds"                         | TEST                 | Run the local build first. Cloud Build is slow and noisy.                                           |
+| "I'll fix the lint errors later"                              | REVIEW               | Fix them now. Lint errors compound and obscure real issues.                                         |
+| "Let me just edit `main` directly"                            | BUILD                | Create a feature branch. Direct `main` commits are not reversible.                                  |
+| "I think this is what the doc said"                           | PLAN                 | Open the source document. Read the exact section. Copy the command verbatim.                        |
+| "I'll skip the smoke test, it's only a small change"          | TEST                 | The smoke test takes approximately 3 seconds. Run it.                                               |
+| "I'll do M3 in parallel with M2 — they look unrelated"        | PLAN                 | M3 requires `dist/` from M2. These milestones are sequential.                                       |
+| Committing a Sanity token, even briefly                       | REVIEW               | Rotate the token immediately. `git push --force` does not remove it from history if anyone fetched. |
+| "It's just a tiny config change, I'll skip the commit format" | STAGE                | The format enables future debugging at 11pm. Use it for every commit.                               |
+| Running `npm run build` without `audit:secrets` after         | TEST                 | The audit is the final backstop against secret leakage. Always run it.                              |
+| Not checking `gcloud builds list` before pushing M5+          | SHIP                 | A failing build in the queue may be unrelated. Verify first.                                        |
 
 These anti-patterns represent the majority of preventable failures observed during Phase 2. Each gate corresponds to a specific failure mode with measurable recovery cost. Catching a secret leak at REVIEW costs minutes; catching it in production costs hours of rotation, history rewriting, and incident communication. Catching a build failure at TEST costs seconds; catching it in Cloud Build costs 5–10 minutes of pipeline execution plus log analysis. The gates exist to make the cheapest detection stage the most likely one.

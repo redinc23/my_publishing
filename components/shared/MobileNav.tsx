@@ -5,13 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const libraryItems = [
   { href: '/books', label: 'Books' },
@@ -35,7 +29,7 @@ export function MobileNav() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         aria-label="Open menu"
-        className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hidden"
       >
         <Menu className="h-6 w-6" aria-hidden="true" />
       </SheetTrigger>
@@ -44,7 +38,10 @@ export function MobileNav() {
           <SheetTitle className="text-2xl font-bold text-primary">MANGU</SheetTitle>
         </SheetHeader>
 
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+        <nav
+          aria-label="Mobile primary navigation"
+          className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
+        >
           <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-secondary">
             Library
           </p>
