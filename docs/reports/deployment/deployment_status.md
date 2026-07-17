@@ -1,6 +1,6 @@
 ﻿# Deployment Status Tracker
 
-**Last updated:** 2026-07-09  
+**Last updated:** 2026-07-17  
 **Operator launch:** [`docs/LAUNCH_NOW.md`](../../LAUNCH_NOW.md) (single-page commands)  
 **Canonical target:** Google Cloud Run via [`cloudbuild.yaml`](../../../cloudbuild.yaml) â€” see [`docs/CANONICAL_PRODUCTION.md`](../../CANONICAL_PRODUCTION.md)  
 **Runbook:** [`docs/PHASE4_OPERATOR_RUNBOOK.md`](../../PHASE4_OPERATOR_RUNBOOK.md)  
@@ -26,6 +26,25 @@
 | Sentry              | Required for launch                                 | **Optional P1** â€” not implemented; only placeholder comment in [`components/common/ErrorBoundary.tsx`](../../../components/common/ErrorBoundary.tsx)                                        |
 | Node engines        | Strict upper bound (e.g. `20.x` only)               | **`>=20.0.0`** in `package.json`; `.nvmrc` pins 20 for CI/Cloud Build                                                                                                                         |
 | Cloud Build submit  | Raw `gcloud builds submit --config=cloudbuild.yaml` | **`./scripts/gcloud-build-submit.sh`** â€” loads `NEXT_PUBLIC_*` from `.env.local`                                                                                                            |
+
+---
+
+## Full-site validation and hardening wave (agent-run, 2026-07-17)
+
+Working tree vs baseline `326bb60`: **57 files changed, +1,799 / −269** (excluding `node_modules`). Uncommitted. Full detail in [`docs/OPERATOR_QA_LOG.md`](../../OPERATOR_QA_LOG.md) (2026-07-17 entry).
+
+| Area                 | Task                                                                                                                                   | Status | Owner | Evidence / blocker                                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Validation           | `npm test` 63/63 PASS; `tsc --noEmit` clean (after author analytics `Book` typing fix)                                                 | DONE   | Agent | Run at baseline 2026-07-17                                                                                                          |
+| SEO / a11y           | Canonical/OG metadata fixes; accessible labels (SearchBar, NewsletterCTA, AudioPlayer, Footer)                                         | DONE   | Agent | Consumer pages + shared components                                                                                                  |
+| Auth hardening       | Sessionless verification resend; honest provider quota errors; recovery-only reset confirm                                             | DONE   | Agent | `app/(auth)/*`                                                                                                                      |
+| API hardening        | Resonance track validation + rate limiting; upload MIME allowlist; safe similar-route errors                                           | DONE   | Agent | `app/api/resonance/*`, `app/api/upload`                                                                                             |
+| Reader / data access | Reading entitlement; completed-order library; author ownership checks; `analytics_sessions` RLS + `public_profiles` view               | DONE   | Agent | Migration `20260717114047`                                                                                                          |
+| Admin / partner      | `profiles.role` escalation protection; admin book update via admin client; honest error states; ARC rejected filter; pagination clamps | DONE   | Agent | Migration `20260717114020`; `app/admin/*`, `app/(portals)/partner/*`                                                                |
+| Build config         | `next.config.js` Sentry gating; `@next/bundle-analyzer` 14.2.35                                                                        | DONE   | Agent | —                                                                                                                                   |
+| **Apply migrations** | Apply **`20260717114047`** + **`20260717114020`** to hosted Supabase                                                                   | DONE   | Agent | Applied 2026-07-17 via Supabase MCP (with `public_read_authors`, `fix_review_stats_trigger`, `revoke_anon_update_reading_progress`) |
+
+**Known operational issues:** local Windows `node_modules` corruption from concurrent installs (install solo, repair with `npm install`); `@supabase/auth-js` requires Node **>=22**; dev server must run solo on port 3001.
 
 ---
 

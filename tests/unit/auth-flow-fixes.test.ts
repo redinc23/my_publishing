@@ -1,7 +1,7 @@
-import { toFriendlyRegisterError } from '@/app/(auth)/register/actions';
+import { toFriendlyRegisterError } from '@/lib/auth/register-errors';
 import { resendVerificationEmail } from '@/app/(auth)/verify-email/actions';
 import { createClient } from '@/lib/supabase/server';
-import { emailVerificationRateLimit } from '@/lib/utils/auth-rate-limit';
+import { authRateLimit, emailVerificationRateLimit } from '@/lib/utils/auth-rate-limit';
 
 jest.mock('next/headers', () => ({
   headers: jest
@@ -18,6 +18,7 @@ jest.mock('@/lib/utils/auth-rate-limit', () => ({
 }));
 
 const mockedCreateClient = createClient as jest.MockedFunction<typeof createClient>;
+const mockedAuthRateLimit = authRateLimit as jest.MockedFunction<typeof authRateLimit>;
 const mockedEmailVerificationRateLimit = emailVerificationRateLimit as jest.MockedFunction<
   typeof emailVerificationRateLimit
 >;
@@ -25,6 +26,7 @@ const mockedEmailVerificationRateLimit = emailVerificationRateLimit as jest.Mock
 describe('auth flow fixes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedAuthRateLimit.mockResolvedValue(true);
     mockedEmailVerificationRateLimit.mockResolvedValue(true);
   });
 
@@ -55,6 +57,19 @@ describe('auth flow fixes', () => {
     const result = await resendVerificationEmail('not-an-email');
 
     expect(result).toEqual({ error: 'Please provide a valid email address.' });
+    expect(mockedAuthRateLimit).not.toHaveBeenCalled();
+    expect(mockedEmailVerificationRateLimit).not.toHaveBeenCalled();
+    expect(mockedCreateClient).not.toHaveBeenCalled();
+  });
+
+  it('blocks resend by caller identity before the per-email limiter runs', async () => {
+    mockedAuthRateLimit.mockResolvedValue(false);
+
+    const result = await resendVerificationEmail('victim@example.com');
+
+    expect(result).toEqual({
+      error: 'Too many verification email requests. Please try again later.',
+    });
     expect(mockedEmailVerificationRateLimit).not.toHaveBeenCalled();
     expect(mockedCreateClient).not.toHaveBeenCalled();
   });

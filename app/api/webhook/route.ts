@@ -128,10 +128,7 @@ async function handleCheckoutCompleted(
   }
 
   // Check for duplicate order (additional idempotency check)
-  let existingOrderQuery = supabase
-    .from('orders')
-    .select('id')
-    .limit(1);
+  let existingOrderQuery = supabase.from('orders').select('id').limit(1);
 
   existingOrderQuery = paymentIntentId
     ? existingOrderQuery.eq('payment_intent_id', paymentIntentId)
@@ -268,11 +265,11 @@ async function handleChargeRefunded(
 ): Promise<WebhookProcessingResult> {
   const paymentIntentId = charge.payment_intent as string;
 
-  // Find the order by payment intent
+  // Find the order by payment intent (orders stores it as payment_intent_id)
   const { data: order, error: findError } = await supabase
     .from('orders')
     .select('id, status')
-    .eq('stripe_payment_intent_id', paymentIntentId)
+    .eq('payment_intent_id', paymentIntentId)
     .single();
 
   if (findError || !order) {
@@ -285,13 +282,10 @@ async function handleChargeRefunded(
     };
   }
 
-  // Update order status
+  // Update order status (orders has no refund_reason column; that lives on book_sales)
   const { error: updateError } = await supabase
     .from('orders')
-    .update({
-      status: 'refunded',
-      refund_reason: charge.refunds?.data[0]?.reason || 'No reason provided',
-    })
+    .update({ status: 'refunded' })
     .eq('id', order.id);
 
   if (updateError) {

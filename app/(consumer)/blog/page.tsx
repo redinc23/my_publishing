@@ -4,10 +4,30 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/blog`;
+const description = 'News, publishing insights, and stories from the Mangu Publishers team.';
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'News, publishing insights, and stories from the Mangu Publishers team.',
+  description,
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Blog',
+    description,
+    url: pageUrl,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'MANGU Publishers - Your digital publishing platform',
+      },
+    ],
+  },
 };
 
 export default function BlogPage() {
@@ -28,8 +48,8 @@ export default function BlogPage() {
             <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <h2 className="mb-2 text-2xl font-semibold">First post coming soon</h2>
             <p className="mx-auto mb-6 max-w-xl text-secondary">
-              We&apos;re working on our first stories. In the meantime, explore what&apos;s
-              trending on the platform.
+              We&apos;re working on our first stories. In the meantime, explore what&apos;s trending
+              on the platform.
             </p>
             <Button asChild>
               <Link href="/books">Browse Books</Link>

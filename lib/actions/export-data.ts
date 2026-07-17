@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import {
   BookIdSchema,
   DateRangeSchema,
@@ -170,22 +171,47 @@ export async function exportRevenueData(
       return { success: false, error: getFirstError(formatResult.error) };
     }
 
-    // Build query - get orders for user's books
-    let query = supabase
-      .from('orders')
+    // Resolve the caller's author identity. books.author_id references
+    // authors.id and authors.profile_id references profiles.id, so the auth
+    // user id must be translated through profiles → authors.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      return { success: false, error: 'Unauthorized - profile not found' };
+    }
+
+    const { data: authorRecords } = await supabase
+      .from('authors')
+      .select('id')
+      .eq('profile_id', profile.id);
+
+    const authorIds = (authorRecords ?? []).map((a) => a.id);
+    if (authorIds.length === 0) {
+      return { success: false, error: 'Unauthorized - no author account' };
+    }
+
+    // Revenue lives on order_items (per book) joined to buyer orders. Buyer
+    // orders are invisible to the author under RLS, so use the admin client
+    // after the ownership checks above and filter explicitly.
+    const admin = createAdminClient();
+    let query = admin
+      .from('order_items')
       .select(
         `
         id,
         book_id,
-        amount,
-        currency,
-        status,
+        unit_price,
         created_at,
-        books!inner(title, author_id)
+        book:books!inner(title, author_id),
+        order:orders!inner(id, status, created_at)
       `
       )
-      .eq('books.author_id', user.id)
-      .eq('status', 'completed')
+      .in('book.author_id', authorIds)
+      .eq('order.status', 'completed')
       .order('created_at', { ascending: false });
 
     // Filter by specific book if provided
@@ -207,32 +233,37 @@ export async function exportRevenueData(
       query = query.lte('created_at', toDate.toISOString());
     }
 
-    const { data: orders, error: queryError } = await query.limit(10000);
+    const { data: saleItems, error: queryError } = await query.limit(10000);
 
     if (queryError) {
       console.error('Revenue export error:', queryError);
       return { success: false, error: 'Failed to fetch revenue data' };
     }
 
+    const normalized = (saleItems ?? []).map((item) => {
+      const book = Array.isArray(item.book) ? item.book[0] : item.book;
+      const order = Array.isArray(item.order) ? item.order[0] : item.order;
+      return {
+        id: item.id,
+        book_id: item.book_id,
+        book_title: (book as { title?: string } | null)?.title || '',
+        amount: item.unit_price,
+        currency: 'USD',
+        status: (order as { status?: string } | null)?.status || '',
+        created_at: item.created_at,
+      };
+    });
+
     const validFormat = formatResult.data;
     let output: string;
 
     if (validFormat === 'json') {
-      output = JSON.stringify(orders, null, 2);
+      output = JSON.stringify(normalized, null, 2);
     } else {
       const headers = ['id', 'book_id', 'book_title', 'amount', 'currency', 'status', 'created_at'];
-      const rows =
-        orders?.map((o) =>
-          [
-            o.id,
-            o.book_id,
-            (o.books as any)?.title || '',
-            o.amount,
-            o.currency,
-            o.status,
-            o.created_at,
-          ].join(',')
-        ) || [];
+      const rows = normalized.map((o) =>
+        [o.id, o.book_id, o.book_title, o.amount, o.currency, o.status, o.created_at].join(',')
+      );
       output = [headers.join(','), ...rows].join('\n');
     }
 

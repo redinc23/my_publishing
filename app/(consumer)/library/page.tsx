@@ -74,6 +74,15 @@ export default async function LibraryPage() {
   try {
     orders = await getLibraryItems();
   } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'digest' in error &&
+      typeof (error as { digest?: unknown }).digest === 'string' &&
+      (error as { digest: string }).digest.startsWith('NEXT_REDIRECT')
+    ) {
+      throw error;
+    }
     const message = error instanceof Error ? error.message : 'Failed to load your library.';
     return (
       <Section>

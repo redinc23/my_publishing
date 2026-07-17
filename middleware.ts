@@ -28,7 +28,8 @@ export async function middleware(request: NextRequest) {
     method === 'POST' &&
     (pathname.startsWith('/login') ||
       pathname.startsWith('/register') ||
-      pathname.startsWith('/reset-password'));
+      pathname.startsWith('/reset-password') ||
+      pathname.startsWith('/verify-email'));
 
   if (isAuthApiPath || isAuthPageAction) {
     const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';

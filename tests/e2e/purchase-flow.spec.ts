@@ -54,6 +54,15 @@ test.describe('Purchase Flow', () => {
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
   });
 
+  test('reading a book without purchase is gated', async ({ page }) => {
+    // Unauthenticated: middleware redirects to /login. (Authenticated users
+    // without a completed order are redirected by the server component to the
+    // book detail page or /library — that path needs credentials to test.)
+    await page.goto('/reading/00000000-0000-0000-0000-000000000000');
+    await page.waitForURL(/\/login/);
+    expect(page.url()).toContain('/login');
+  });
+
   // Note: Purchase flow test requires Stripe test mode and authentication
   // Uncomment and configure when ready to test payments
   /*
@@ -63,7 +72,9 @@ test.describe('Purchase Flow', () => {
     // 2. Stripe test mode configured
     // 3. Valid book in database
     
-    // Login first (implement based on your auth flow)
+    // Login first (implement based on your auth flow). Note that login now
+    // performs a full-page navigation (window.location.assign('/')) after
+    // success, so wait for the load event rather than a client transition.
     // await loginUser(page, 'test@example.com', 'password');
     
     // Navigate to book
@@ -74,6 +85,12 @@ test.describe('Purchase Flow', () => {
     
     // Should redirect to Stripe checkout
     await expect(page).toHaveURL(/checkout.stripe.com/);
+
+    // After completing payment, entitlement is order-status based:
+    // - /library lists only orders with status 'completed' (and surfaces a
+    //   role="alert" error message if the library query fails).
+    // - /reading/[bookId] requires a completed order for that book and
+    //   otherwise redirects to the book's detail page (or /library).
   });
   */
 });

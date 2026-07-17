@@ -1,5 +1,9 @@
 import { notFound } from 'next/navigation';
-import { createPublicCatalogClient, PUBLIC_BOOK_SELECT, PUBLIC_BOOK_WITH_CONTENT_SELECT } from '@/lib/supabase/public-queries';
+import {
+  createPublicCatalogClient,
+  PUBLIC_BOOK_SELECT,
+  PUBLIC_BOOK_WITH_CONTENT_SELECT,
+} from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
@@ -140,15 +144,25 @@ export async function generateMetadata({
   const pageUrl = `${getSiteUrl()}/books/${params.slug}`;
 
   return {
-    title: `${book.title} - MANGU`,
+    title: book.title,
     description,
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
-      title: `${book.title} - MANGU`,
+      title: book.title,
       description,
       url: pageUrl,
+      images: [
+        book.cover_url
+          ? { url: book.cover_url, alt: `Cover of ${book.title}` }
+          : {
+              url: '/og-image.png',
+              width: 1200,
+              height: 630,
+              alt: 'MANGU Publishers - Your digital publishing platform',
+            },
+      ],
     },
   };
 }

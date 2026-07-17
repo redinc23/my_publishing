@@ -12,7 +12,7 @@ Complete guide for deploying the MANGU platform to production.
 
 ## Prerequisites
 
-- Node.js 18+ installed
+- Node.js 22+ installed
 - Supabase account and project
 - Vercel account (or alternative hosting)
 - Stripe account

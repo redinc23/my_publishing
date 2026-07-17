@@ -117,9 +117,9 @@ Before deploying to AWS Amplify, ensure you have:
    Apply migrations in the Supabase SQL Editor in this order:
 
    1. `supabase/migrations/20260116000000_initial_schema.sql`
-   2. `supabase/migrations/20260116000000_create_books_table.sql`
+   2. `supabase/migrations/20260116000001_create_books_table.sql`
    3. `supabase/migrations/20260117000000_analytics_events.sql`
-   4. `supabase/migrations/20260117000000_storage_policies.sql`
+   4. `supabase/migrations/20260117000007_storage_policies.sql`
    5. `supabase/migrations/20260117000001_analytics_sessions.sql`
    6. `supabase/migrations/20260117000002_book_stats_materialized.sql`
    7. `supabase/migrations/20260117000003_revenue_tracking.sql`

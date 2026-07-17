@@ -9,6 +9,14 @@
  *   - Invalid credential error display
  *   - Field-level validation error display
  *   - Rate-limit exceeded error display (simulated via server action response)
+ *   - Verify-email page rendering without a session (email via ?email= query)
+ *   - Reset-password confirm page recovery-link error states
+ *
+ * Note on successful login/register: both forms now perform a FULL-PAGE
+ * navigation (window.location.assign) after success so the client-side
+ * Supabase session picks up cookies set by the server action. Asserting that
+ * requires real credentials, which CI does not have, so it is not covered
+ * here; the error paths below run against the mock gate.
  */
 
 import { test, expect } from '@playwright/test';
@@ -197,5 +205,72 @@ test.describe('Reset password page', () => {
     // Supabase always returns success (doesn't reveal whether email exists).
     await expect(page.getByRole('status')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole('status')).toContainText(/check your email/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Verify-email page
+// ---------------------------------------------------------------------------
+//
+// The resend flow no longer requires a session: registration redirects to
+// /verify-email?email=<address> and the page renders the resend form for that
+// email even when the visitor is unauthenticated.
+
+test.describe('Verify email page', () => {
+  test('renders the resend form without a session when ?email= is provided', async ({ page }) => {
+    await page.goto('/verify-email?email=pending%40example.com');
+
+    await expect(page.getByRole('heading', { name: /verify your email/i })).toBeVisible();
+    await expect(page.getByText('pending@example.com')).toBeVisible();
+    await expect(page.getByRole('button', { name: /resend verification email/i })).toBeVisible();
+  });
+
+  test('redirects to login when there is no session and no email param', async ({ page }) => {
+    await page.goto('/verify-email');
+
+    await page.waitForURL(/\/login/);
+    const alert = page
+      .getByRole('alert')
+      .filter({ hasText: /please sign in to verify your email/i });
+    await expect(alert).toBeVisible();
+  });
+
+  test('invalid email param falls back to the signed-in check and redirects', async ({ page }) => {
+    // A malformed ?email= is ignored; with no session either, we land on /login.
+    await page.goto('/verify-email?email=not-an-email');
+    await page.waitForURL(/\/login/);
+    expect(page.url()).toContain('/login');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reset-password confirm page
+// ---------------------------------------------------------------------------
+//
+// The confirm page enforces recovery semantics: it only shows the new-password
+// form after exchanging a recovery code that fires a PASSWORD_RECOVERY auth
+// event. Without a code (or with provider error params) it must render an
+// explicit error state with a link to request a new reset email.
+
+test.describe('Reset password confirm page', () => {
+  test('shows an error state when visited without a recovery code', async ({ page }) => {
+    await page.goto('/reset-password/confirm');
+
+    await expect(page.getByRole('heading', { name: /create a new password/i })).toBeVisible();
+    await expect(page.getByText(/invalid or expired password reset link/i)).toBeVisible();
+    await expect(page.getByRole('link', { name: /request a new link/i })).toHaveAttribute(
+      'href',
+      '/reset-password'
+    );
+  });
+
+  test('surfaces provider error params as a friendly recovery error', async ({ page }) => {
+    await page.goto(
+      '/reset-password/confirm?error=access_denied&error_description=Email+link+is+invalid+or+has+expired'
+    );
+
+    // toFriendlyResetError maps expired/invalid token messages to this copy.
+    await expect(page.getByText(/reset link is invalid or has expired/i)).toBeVisible();
+    await expect(page.getByRole('link', { name: /request a new link/i })).toBeVisible();
   });
 });

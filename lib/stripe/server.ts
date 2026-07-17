@@ -19,6 +19,11 @@ export function getStripe(): Stripe {
 interface CreateCheckoutSessionParams {
   bookId: string;
   bookSlug?: string;
+  /**
+   * Supabase auth user id (auth.uid()). Stored in session metadata as
+   * `user_id`; the webhook resolves it to profiles.id before writing
+   * orders.user_id (which references profiles.id).
+   */
   userId: string;
   bookTitle: string;
   price: number;

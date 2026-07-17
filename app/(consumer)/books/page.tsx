@@ -21,6 +21,14 @@ export const metadata: Metadata = {
     title: 'Browse Books',
     description: 'Browse published books from independent authors on MANGU Publishers.',
     url: pageUrl,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'MANGU Publishers - Your digital publishing platform',
+      },
+    ],
   },
 };
 

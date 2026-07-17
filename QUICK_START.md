@@ -6,7 +6,7 @@ All 150+ files have been created and the platform is complete!
 
 ## 📋 Prerequisites
 
-- Node.js 20.x
+- Node.js 22.x (LTS)
 - npm or yarn
 - Supabase account
 - Stripe account (for payments)
