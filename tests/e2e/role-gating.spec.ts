@@ -78,7 +78,12 @@ const MATRIX: Record<Role, { allowed: string[]; denied: string[] }> = {
     denied: ['/admin/dashboard', '/partner/dashboard'],
   },
   partner: {
-    allowed: ['/partner/dashboard', '/partner/orders', '/partner/catalogs', '/partner/arc-requests'],
+    allowed: [
+      '/partner/dashboard',
+      '/partner/orders',
+      '/partner/catalogs',
+      '/partner/arc-requests',
+    ],
     denied: ['/admin/dashboard', '/author/dashboard'],
   },
   admin: {

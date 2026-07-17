@@ -27,9 +27,9 @@ describe('hasCompletedOrderForBook', () => {
     const chain = makeOrderChain({ data: { id: 'order-1' }, error: null });
     const admin = { from: jest.fn(() => chain) };
 
-    await expect(
-      hasCompletedOrderForBook(admin as never, 'profile-1', 'book-1')
-    ).resolves.toBe(true);
+    await expect(hasCompletedOrderForBook(admin as never, 'profile-1', 'book-1')).resolves.toBe(
+      true
+    );
 
     expect(admin.from).toHaveBeenCalledWith('orders');
     // Pin the exact join: the !inner modifier is what makes .eq('items.book_id')
@@ -46,18 +46,18 @@ describe('hasCompletedOrderForBook', () => {
     const chain = makeOrderChain({ data: null, error: null });
     const admin = { from: jest.fn(() => chain) };
 
-    await expect(
-      hasCompletedOrderForBook(admin as never, 'profile-1', 'book-1')
-    ).resolves.toBe(false);
+    await expect(hasCompletedOrderForBook(admin as never, 'profile-1', 'book-1')).resolves.toBe(
+      false
+    );
   });
 
   it('fails closed by throwing on query errors', async () => {
     const chain = makeOrderChain({ data: null, error: { message: 'db down' } });
     const admin = { from: jest.fn(() => chain) };
 
-    await expect(
-      hasCompletedOrderForBook(admin as never, 'profile-1', 'book-1')
-    ).rejects.toEqual({ message: 'db down' });
+    await expect(hasCompletedOrderForBook(admin as never, 'profile-1', 'book-1')).rejects.toEqual({
+      message: 'db down',
+    });
   });
 });
 

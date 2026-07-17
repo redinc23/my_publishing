@@ -25,8 +25,9 @@ jobs:
           docker build \
             --build-arg NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co \
             --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key-for-ci \
-            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder \
+            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_ci_build_only \
             --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3000 \
+            --build-arg SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY0NTI2NDAwMCwiZXhwIjoxOTYwODQwMDAwfQ.ci-build-only \
             -t my_publishing:${{ github.sha }} .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master

@@ -77,9 +77,7 @@ function normalizeBook(book: BookRelation): Book | null {
 function assertQueryOk(result: { error: { message?: string } | null }, label: string) {
   if (result.error) {
     console.error(`[partner-data] ${label} failed:`, result.error);
-    throw new PartnerDataUnavailableError(
-      `Unable to load ${label}. Please try again shortly.`
-    );
+    throw new PartnerDataUnavailableError(`Unable to load ${label}. Please try again shortly.`);
   }
 }
 

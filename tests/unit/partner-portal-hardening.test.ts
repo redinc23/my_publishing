@@ -92,9 +92,7 @@ describe('getPartnerPortalData error honesty', () => {
       auth: {
         getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'auth-1' } } }),
       },
-      from: jest.fn(() =>
-        makeSingleChain({ data: { role: 'partner' }, error: null })
-      ),
+      from: jest.fn(() => makeSingleChain({ data: { role: 'partner' }, error: null })),
     };
     (createServerClient as jest.Mock).mockResolvedValue(server);
     (getPartnerForUser as jest.Mock).mockResolvedValue(partner);
@@ -188,9 +186,7 @@ describe('getPartnerOrder error honesty', () => {
       auth: {
         getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'auth-1' } } }),
       },
-      from: jest.fn(() =>
-        makeSingleChain({ data: { role: 'partner' }, error: null })
-      ),
+      from: jest.fn(() => makeSingleChain({ data: { role: 'partner' }, error: null })),
     };
     (createServerClient as jest.Mock).mockResolvedValue(server);
     (getPartnerForUser as jest.Mock).mockResolvedValue(partner);

@@ -37,8 +37,8 @@ export default function BookClubsPage() {
       <Container>
         <h1 className="mb-4 text-4xl font-bold">Book Clubs</h1>
         <p className="mb-8 max-w-2xl text-secondary">
-          Book club creation is coming soon. In the meantime, use these working resources to
-          choose and organize your next read.
+          Book club creation is coming soon. In the meantime, use these working resources to choose
+          and organize your next read.
         </p>
         <div className="grid gap-6 md:grid-cols-3">
           {clubLinks.map((item) => (

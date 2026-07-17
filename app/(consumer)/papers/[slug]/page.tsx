@@ -1,5 +1,9 @@
 import { notFound } from 'next/navigation';
-import { createPublicCatalogClient, PUBLIC_BOOK_SELECT, PUBLIC_BOOK_WITH_CONTENT_SELECT } from '@/lib/supabase/public-queries';
+import {
+  createPublicCatalogClient,
+  PUBLIC_BOOK_SELECT,
+  PUBLIC_BOOK_WITH_CONTENT_SELECT,
+} from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';

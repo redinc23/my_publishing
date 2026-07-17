@@ -6,10 +6,10 @@ Automated checks from plan execution. Manual browser steps still required for au
 
 **Scope:** working tree vs baseline `326bb60` — **57 files changed, +1,799 / −269** (excluding `node_modules`). Not yet committed.
 
-| Check      | Command              | Result                                                                                          |
+| Check      | Command              | Result                                                                                           |
 | ---------- | -------------------- | ------------------------------------------------------------------------------------------------ |
 | Unit tests | `npm test`           | **PASS 63/63** (baseline was 42; new suites for auth, API, entitlement, analytics, portal fixes) |
-| Type-check | `npm run type-check` | **PASS** — `tsc --noEmit` clean after fixing author analytics `Book` typing                     |
+| Type-check | `npm run type-check` | **PASS** — `tsc --noEmit` clean after fixing author analytics `Book` typing                      |
 
 **Changes landed this wave:**
 

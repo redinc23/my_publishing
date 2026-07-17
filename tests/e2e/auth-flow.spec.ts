@@ -222,9 +222,7 @@ test.describe('Verify email page', () => {
 
     await expect(page.getByRole('heading', { name: /verify your email/i })).toBeVisible();
     await expect(page.getByText('pending@example.com')).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: /resend verification email/i })
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /resend verification email/i })).toBeVisible();
   });
 
   test('redirects to login when there is no session and no email param', async ({ page }) => {
@@ -259,9 +257,7 @@ test.describe('Reset password confirm page', () => {
     await page.goto('/reset-password/confirm');
 
     await expect(page.getByRole('heading', { name: /create a new password/i })).toBeVisible();
-    await expect(
-      page.getByText(/invalid or expired password reset link/i)
-    ).toBeVisible();
+    await expect(page.getByText(/invalid or expired password reset link/i)).toBeVisible();
     await expect(page.getByRole('link', { name: /request a new link/i })).toHaveAttribute(
       'href',
       '/reset-password'
@@ -274,9 +270,7 @@ test.describe('Reset password confirm page', () => {
     );
 
     // toFriendlyResetError maps expired/invalid token messages to this copy.
-    await expect(
-      page.getByText(/reset link is invalid or has expired/i)
-    ).toBeVisible();
+    await expect(page.getByText(/reset link is invalid or has expired/i)).toBeVisible();
     await expect(page.getByRole('link', { name: /request a new link/i })).toBeVisible();
   });
 });

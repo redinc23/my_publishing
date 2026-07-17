@@ -6,11 +6,12 @@ substitutions:
   _PLATFORM: managed
   _PORT: '3000'
   _MEMORY: 512Mi
-  _NEXT_PUBLIC_SUPABASE_URL: ''
-  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
-  _NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ''
-  _NEXT_PUBLIC_SITE_URL: ''
+  _NEXT_PUBLIC_SUPABASE_URL: 'https://tkzvikozrcynhwsqtkqp.supabase.co'
+  _NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrenZpa296cmN5bmh3c3F0a3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MzU4MzYsImV4cCI6MjA5NDIxMTgzNn0.mf8wC6KEzkw9K2d_H9VzG9rzFPSPWpgQUL0b5kMruDI'
+  _NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_ci_build_only'
+  _NEXT_PUBLIC_SITE_URL: 'https://mypublishing-redinc23s-projects.vercel.app'
   _NEXT_PUBLIC_SENTRY_DSN: ''
+  _SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrenZpa296cmN5bmh3c3F0a3FwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODYzNTgzNiwiZXhwIjoyMDk0MjExODM2fQ.ci-build-only-not-for-production'
 
 steps:
   - id: npm-ci
@@ -41,6 +42,7 @@ steps:
       - NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL}
       - NEXT_PUBLIC_SENTRY_DSN=${_NEXT_PUBLIC_SENTRY_DSN}
       - SENTRY_RELEASE=$SHORT_SHA
+      - SUPABASE_SERVICE_ROLE_KEY=${_SUPABASE_SERVICE_ROLE_KEY}
     entrypoint: bash
     args:
       - -c
@@ -121,6 +123,8 @@ steps:
       - NEXT_PUBLIC_SENTRY_DSN=${_NEXT_PUBLIC_SENTRY_DSN}
       - --build-arg
       - SENTRY_RELEASE=$SHORT_SHA
+      - --build-arg
+      - SUPABASE_SERVICE_ROLE_KEY=${_SUPABASE_SERVICE_ROLE_KEY}
       - .
 
   - id: docker-push

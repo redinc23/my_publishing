@@ -55,7 +55,10 @@ describe('analytics and revenue ownership actions', () => {
     };
     mockAuthedClient((table) => (table === 'book_stats_daily' ? statsChain : null));
 
-    const result = await getBookAnalytics('book-1', { from: new Date('2026-01-01'), to: new Date('2026-01-31') });
+    const result = await getBookAnalytics('book-1', {
+      from: new Date('2026-01-01'),
+      to: new Date('2026-01-31'),
+    });
 
     expect(mockedRequireAuthorOwnedBook).toHaveBeenCalledWith('auth-user-1', 'book-1');
     expect(result).toEqual([{ book_id: 'book-1', views: 3 }]);

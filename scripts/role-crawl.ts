@@ -66,7 +66,10 @@ function parseEnvFile(path: string): Record<string, string> {
     if (!line || line.startsWith('#')) continue;
     const eq = line.indexOf('=');
     if (eq <= 0) continue;
-    const key = line.slice(0, eq).replace(/^export\s+/, '').trim();
+    const key = line
+      .slice(0, eq)
+      .replace(/^export\s+/, '')
+      .trim();
     let value = line.slice(eq + 1).trim();
     if (
       (value.startsWith('"') && value.endsWith('"')) ||
@@ -84,7 +87,9 @@ const SUPABASE_URL = (env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/+$/, '');
 const ANON_KEY = env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 if (!SUPABASE_URL || !ANON_KEY) {
-  console.error('FATAL: NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY not found in .env.local');
+  console.error(
+    'FATAL: NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY not found in .env.local'
+  );
   process.exit(2);
 }
 
@@ -252,7 +257,8 @@ function judge(check: Check, result: FetchResult): Verdict {
       };
 
     case 'REDIRECT_LOGIN':
-      if (isRedirect && redirPath.startsWith('/login')) return { ...base, verdict: 'PASS', note: '' };
+      if (isRedirect && redirPath.startsWith('/login'))
+        return { ...base, verdict: 'PASS', note: '' };
       return {
         ...base,
         verdict: 'FAIL',
@@ -283,7 +289,11 @@ function judge(check: Check, result: FetchResult): Verdict {
             ? `200 with markers: ${result.markers.join(', ')}`
             : '200 OK'
           : `${result.status}${redirPath ? ` -> ${redirPath}` : ''}`;
-      return { ...base, verdict: 'INFO', note: `recorded only (expected: author-scoped): ${summary}` };
+      return {
+        ...base,
+        verdict: 'INFO',
+        note: `recorded only (expected: author-scoped): ${summary}`,
+      };
     }
   }
 }
@@ -297,7 +307,9 @@ async function discoverBook(): Promise<{ id: string; slug: string } | null> {
     signal: AbortSignal.timeout(30_000),
   });
   if (!res.ok) {
-    console.error(`WARN: book discovery failed: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+    console.error(
+      `WARN: book discovery failed: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`
+    );
     return null;
   }
   const rows = (await res.json()) as Array<{ id: string; slug: string }>;
@@ -327,7 +339,9 @@ async function main() {
   if (book) {
     console.log(`Discovered book: id=${book.id} slug=${book.slug}`);
   } else {
-    console.log('WARN: no published book discovered; book-dependent routes will be SKIPped (counted as failures).');
+    console.log(
+      'WARN: no published book discovered; book-dependent routes will be SKIPped (counted as failures).'
+    );
   }
   const readerUserId = sessions.reader.user.id;
   console.log(`Reader user id: ${readerUserId}`);
@@ -346,7 +360,9 @@ async function main() {
       : []),
     { role: 'reader', path: '/dashboard/my-reviews', expect: 'OK' },
     ...(book
-      ? ([{ role: 'reader', path: `/dashboard/books/${book.id}/analytics`, expect: 'INFO' }] as Check[])
+      ? ([
+          { role: 'reader', path: `/dashboard/books/${book.id}/analytics`, expect: 'INFO' },
+        ] as Check[])
       : []),
     { role: 'reader', path: `/users/${readerUserId}/reviews`, expect: 'OK' },
     // gating: reader must be bounced from role-scoped areas
@@ -398,7 +414,11 @@ async function main() {
 
   // Record SKIPs for book-dependent reader routes we could not build.
   if (!book) {
-    for (const path of ['/books/[slug]', '/reading/[bookId]', '/dashboard/books/[bookId]/analytics']) {
+    for (const path of [
+      '/books/[slug]',
+      '/reading/[bookId]',
+      '/dashboard/books/[bookId]/analytics',
+    ]) {
       verdicts.push({
         role: 'reader',
         path,
@@ -431,7 +451,9 @@ async function main() {
         };
       }
       verdicts.push(verdict);
-      console.log(`  ${verdict.verdict.padEnd(21)} ${check.path}  (${verdict.status})${verdict.note ? `  ${verdict.note}` : ''}`);
+      console.log(
+        `  ${verdict.verdict.padEnd(21)} ${check.path}  (${verdict.status})${verdict.note ? `  ${verdict.note}` : ''}`
+      );
     }
   }
 
