@@ -15,6 +15,9 @@ interface BookCardProps {
 }
 
 export function BookCard({ book, variant = 'default' }: BookCardProps) {
+  const authorName =
+    book.author?.profile?.full_name || book.author?.pen_name || book.author?.full_name || 'Unknown Author';
+
   if (variant === 'compact') {
     return (
       <Link href={`/books/${book.slug}`} className="group block">
@@ -34,7 +37,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             {book.title}
           </h3>
           <p className="line-clamp-1 text-sm text-muted-foreground">
-            {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
+            {authorName}
           </p>
         </div>
       </Link>
@@ -70,7 +73,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
               {book.title}
             </h3>
             <p className="mb-2 line-clamp-1 text-sm text-muted-foreground">
-              {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
+              {authorName}
             </p>
             <div className="flex items-center justify-between">
               {book.average_rating ? (

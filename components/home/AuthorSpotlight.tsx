@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { Container } from '@/components/layout/Container';
 import { Users } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
@@ -13,18 +12,18 @@ interface AuthorWithProfile {
   is_verified: boolean;
   profile: {
     full_name: string | null;
-    avatar_url: string | null;
   } | null;
 }
 
 const getFeaturedAuthors = unstable_cache(
   async (limit: number): Promise<AuthorWithProfile[]> => {
-    const supabase = await createClient();
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     const { data, error } = await supabase
       .from('authors')
-      .select(
-        'id, pen_name, bio, total_books, is_verified, profile:profiles(full_name, avatar_url)'
-      )
+      .select('id, pen_name, bio, total_books, is_verified, profile:profiles(full_name)')
       .eq('is_verified', true)
       .order('total_books', { ascending: false })
       .limit(limit);
@@ -83,18 +82,9 @@ export async function AuthorSpotlight() {
               <div className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
                 <div className="mb-4 flex justify-center">
                   <div className="relative h-20 w-20 overflow-hidden rounded-full bg-primary/10 ring-2 ring-border transition-all duration-300 group-hover:ring-primary/30">
-                    {author.profile?.avatar_url ? (
-                      <Image
-                        src={author.profile.avatar_url}
-                        alt={author.pen_name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-primary/60">
-                        {author.pen_name[0].toUpperCase()}
-                      </div>
-                    )}
+                    <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-primary/60">
+                      {author.pen_name[0].toUpperCase()}
+                    </div>
                   </div>
                 </div>
 
