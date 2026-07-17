@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version-file: '.nvmrc'
 
       - name: Install deps
         # Pin to CJS-compatible releases; unpinned @actions/core@2+ is ESM-only and breaks require() in bug-to-issue.js

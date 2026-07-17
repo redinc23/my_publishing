@@ -18,6 +18,15 @@ export default async function PartnerDashboardPage() {
   try {
     portalData = await getPartnerPortalData();
   } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'digest' in error &&
+      typeof (error as { digest?: unknown }).digest === 'string' &&
+      (error as { digest: string }).digest.startsWith('NEXT_REDIRECT')
+    ) {
+      throw error;
+    }
     const message =
       error instanceof PartnerDataUnavailableError
         ? error.message

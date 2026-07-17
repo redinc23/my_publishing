@@ -10,7 +10,7 @@
  * Migration Order (apply in this sequence):
  * 1. 20260116000000_initial_schema.sql - Creates profiles table and core schema
  * 2. 20260117000000_analytics_events.sql - Analytics tracking
- * 3. 20260117000000_storage_policies.sql - Storage bucket policies
+ * 3. 20260117000006_storage_policies.sql - Storage bucket policies
  * 4. 20260117000001_analytics_sessions.sql - Session tracking
  * 5. 20260117000002_book_stats_materialized.sql - Materialized views
  * 6. 20260117000003_revenue_tracking.sql - Revenue tables

@@ -204,7 +204,7 @@ flowchart TB
 | `docs/`                | Deployment, BRD, Phase 2 runbooks, this document                       |
 | `.github/workflows/`   | `ci.yml`, `admin-setup.yml`, `bug-to-issue.yml`                        |
 | `cloudbuild.yaml`      | Canonical production pipeline                                          |
-| `Dockerfile`           | Node 20 Alpine, standalone                                             |
+| `Dockerfile`           | Node 22 Alpine, standalone                                             |
 
 ### 5.2 Route groups
 
@@ -333,7 +333,7 @@ gcloud auth login
 
 1. `20260116000000_initial_schema.sql` — profiles, authors, books, genres, core schema
 2. `20260117000000_analytics_events.sql`
-3. `20260117000000_storage_policies.sql`
+3. `20260117000007_storage_policies.sql` (no-op stub; real policies in `20260117000006_storage_policies.sql`)
 4. `20260117000001_analytics_sessions.sql`
 5. `20260117000002_book_stats_materialized.sql`
 6. `20260117000003_revenue_tracking.sql`
@@ -504,7 +504,7 @@ _Snapshot for planning; verify live state in GitHub/GCP dashboards._
 ### R — Requirements
 
 - **Business:** BRD Phase 1 MVP + Phase 2 growth ([BRD.md](./BRD.md)).
-- **Technical:** Node 20, standalone build, health endpoint, RBAC, webhook verification, 12 migrations ([Master RICEF](../.cursor/plans/mangu_publishers_master_ricef.md)).
+- **Technical:** Node 22, standalone build, health endpoint, RBAC, webhook verification, 12 migrations ([Master RICEF](../.cursor/plans/mangu_publishers_master_ricef.md)).
 - **Decisions:** Cloud Run canonical (#70 closed); repo rename #71 open; Phase 2 cutover when RACI filled.
 
 ### I — Inputs

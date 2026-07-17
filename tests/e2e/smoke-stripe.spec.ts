@@ -2,11 +2,24 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Stripe checkout smoke tests', () => {
-  test('checkout API returns 401 without auth', async ({ request }) => {
+  test('checkout API rejects a payload with missing fields', async ({ request }) => {
+    // The API expects snake_case book_id/book_slug plus user_id; anything else
+    // fails validation before auth is consulted.
     const response = await request.post('/api/checkout', {
       data: { bookId: 'nonexistent' },
     });
-    expect([401, 400, 500]).toContain(response.status());
+    expect(response.status()).toBe(400);
+  });
+
+  test('checkout API returns 401 without auth', async ({ request }) => {
+    const response = await request.post('/api/checkout', {
+      data: {
+        book_id: '00000000-0000-0000-0000-000000000000',
+        user_id: '00000000-0000-0000-0000-000000000000',
+      },
+    });
+    // 401 from the auth check; 500 only if Supabase env is entirely absent.
+    expect([401, 500]).toContain(response.status());
   });
 
   test('books listing page renders after perf changes', async ({ page }) => {

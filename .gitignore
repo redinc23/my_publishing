@@ -39,6 +39,7 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+.auth/
 
 # Logs
 *.log
@@ -51,3 +52,11 @@ nexus_analysis_rollout/
 nexus_rollout_results/
 nexus_analysis_reports/
 docs/phase2/_intake/environment.local.sh
+
+# Local node_modules backups / trash (never commit)
+node_modules.repo.bak*/
+node_modules.trash*/
+.SERVER_RESTORE_LOCK
+SERVER_PID.txt
+.tmp-audit-report.txt
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mirror GitHub Actions CI locally (npm, Node 20).
+# Mirror GitHub Actions CI locally (npm, Node 22).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

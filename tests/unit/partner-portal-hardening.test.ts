@@ -140,6 +140,36 @@ describe('getPartnerPortalData error honesty', () => {
       orders: [],
     });
   });
+
+  it('tenant-scopes every service-role portal query', async () => {
+    const books = makeListChain({ data: [], error: null });
+    const arcs = makeListChain({ data: [], error: null });
+    const orders = makeListChain({ data: [], error: null });
+    const admin = {
+      from: jest.fn((table: string) => {
+        if (table === 'books') return books;
+        if (table === 'arc_requests') return arcs;
+        return orders;
+      }),
+    };
+    (createAdminClient as jest.Mock).mockReturnValue(admin);
+
+    await getPartnerPortalData();
+
+    // The service-role client bypasses RLS, so these filters ARE the tenant
+    // isolation. ARC requests must be scoped to the partner row id, and
+    // orders to the partner's profile id.
+    expect(arcs.eq).toHaveBeenCalledWith('partner_id', partner.id);
+    expect(orders.eq).toHaveBeenCalledWith('user_id', partner.profile_id);
+
+    // No unscoped variants slipped in (e.g. filtering by the wrong tenant key).
+    expect(arcs.eq.mock.calls).toEqual([['partner_id', partner.id]]);
+    expect(orders.eq.mock.calls).toEqual([['user_id', partner.profile_id]]);
+
+    // Catalog is intentionally global but must stay limited to public books.
+    expect(books.eq).toHaveBeenCalledWith('status', 'published');
+    expect(books.eq).toHaveBeenCalledWith('visibility', 'public');
+  });
 });
 
 describe('getPartnerOrder error honesty', () => {
@@ -175,6 +205,25 @@ describe('getPartnerOrder error honesty', () => {
     (createAdminClient as jest.Mock).mockReturnValue(admin);
 
     await expect(getPartnerOrder('missing')).resolves.toEqual({ partner, order: null });
+  });
+
+  it('scopes the service-role order lookup to the partner profile', async () => {
+    const chain = makeSingleChain({
+      data: { id: 'order-1', items: [] },
+      error: null,
+    });
+    const admin = { from: jest.fn(() => chain) };
+    (createAdminClient as jest.Mock).mockReturnValue(admin);
+
+    await getPartnerOrder('order-1');
+
+    // Service-role query: without the user_id filter, any partner could read
+    // any order by guessing its id.
+    expect(admin.from).toHaveBeenCalledWith('orders');
+    expect(chain.eq.mock.calls).toEqual([
+      ['id', 'order-1'],
+      ['user_id', partner.profile_id],
+    ]);
   });
 
   it('throws when order detail query fails for non-404 reasons', async () => {

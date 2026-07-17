@@ -18,6 +18,14 @@ export const metadata: Metadata = {
     title: 'Authors',
     description: 'Discover the authors publishing on Mangu Publishers.',
     url: pageUrl,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'MANGU Publishers - Your digital publishing platform',
+      },
+    ],
   },
 };
 

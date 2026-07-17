@@ -6,7 +6,7 @@ Complete guide for developing on the MANGU platform.
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+
 - npm or yarn
 - Git
 - Supabase account

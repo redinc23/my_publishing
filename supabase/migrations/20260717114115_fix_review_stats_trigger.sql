@@ -2,6 +2,13 @@
 -- which is ambiguous with the reviews.book_id column (error 42702) and broke every
 -- INSERT/UPDATE/DELETE on reviews via the update_book_stats_on_review trigger.
 -- This re-creates the functions with unambiguous parameter names.
+--
+-- The live functions were created with the old parameter name ("book_id");
+-- CREATE OR REPLACE cannot rename a parameter, so drop them first. They are
+-- only invoked at runtime by update_book_review_stats(), so the drop is safe.
+
+DROP FUNCTION IF EXISTS get_book_average_rating(UUID);
+DROP FUNCTION IF EXISTS get_book_review_count(UUID);
 
 CREATE OR REPLACE FUNCTION get_book_average_rating(target_book_id UUID)
 RETURNS DECIMAL(3,2) AS $$

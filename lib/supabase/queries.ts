@@ -405,15 +405,35 @@ export async function updateManuscriptStatus(id: string, status: string, editori
 
 // ============================================================================
 // ORDERS QUERIES
+//
+// orders.user_id stores profiles.id (FK → profiles.id), NOT the auth user id.
 // ============================================================================
 
-export async function getUserOrders(userId: string) {
+/**
+ * Orders for the given auth user. Resolves the auth user id to the profile id
+ * before filtering, since orders.user_id stores profiles.id.
+ */
+export async function getUserOrders(authUserId: string) {
   const supabase = await createClient();
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', authUserId)
+    .maybeSingle();
+
+  if (profileError) {
+    return { data: null, error: profileError };
+  }
+
+  if (!profile) {
+    return { data: [], error: null };
+  }
 
   return supabase
     .from('orders')
     .select('*, items:order_items(*, book:books(*))')
-    .eq('user_id', userId)
+    .eq('user_id', profile.id)
     .order('created_at', { ascending: false });
 }
 
@@ -427,7 +447,12 @@ export async function getOrderById(orderId: string) {
     .single();
 }
 
+/**
+ * Creates an order with items. `user_id` must be a profiles.id (not an auth
+ * user id) — orders.user_id references profiles(id).
+ */
 export async function createOrder(data: {
+  /** profiles.id of the purchaser */
   user_id: string;
   order_number: string;
   total_amount: number;

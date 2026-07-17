@@ -4,9 +4,23 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { GenreCard } from '@/components/cards/GenreCard';
 import { Grid } from '@/components/layout/Grid';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/genres`;
+const description =
+  'Explore books, comics, audiobooks, and papers by genre on MANGU Publishers.';
+
 export const metadata: Metadata = {
   title: 'Browse Genres',
-  description: 'Explore books, comics, audiobooks, and papers by genre on MANGU Publishers.',
+  description,
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Browse Genres',
+    description,
+    url: pageUrl,
+  },
 };
 
 async function getGenres() {

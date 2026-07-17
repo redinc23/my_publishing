@@ -2,9 +2,31 @@ import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ContactForm } from './ContactForm';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/contact`;
+const description =
+  'Contact MANGU Publishers for reader support, publishing questions, and media inquiries.';
+
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Contact MANGU Publishers for reader support, publishing questions, and media inquiries.',
+  description,
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Contact',
+    description,
+    url: pageUrl,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'MANGU Publishers - Your digital publishing platform',
+      },
+    ],
+  },
 };
 
 export default function ContactPage() {

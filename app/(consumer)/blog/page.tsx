@@ -4,10 +4,30 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/blog`;
+const description = 'News, publishing insights, and stories from the Mangu Publishers team.';
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'News, publishing insights, and stories from the Mangu Publishers team.',
+  description,
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'Blog',
+    description,
+    url: pageUrl,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'MANGU Publishers - Your digital publishing platform',
+      },
+    ],
+  },
 };
 
 export default function BlogPage() {

@@ -90,6 +90,11 @@ export interface WebhookConfig {
  */
 export interface CheckoutMetadata {
   book_id: string;
+  /**
+   * Supabase auth user id (auth.uid()) of the purchaser — NOT profiles.id.
+   * Fulfillment must resolve it via profiles.user_id before writing
+   * orders.user_id, which references profiles(id).
+   */
   user_id: string;
   price_id?: string;
   coupon_code?: string;

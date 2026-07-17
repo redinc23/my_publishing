@@ -5,7 +5,7 @@ import { join } from 'path';
 
 const migrationPath = join(
   process.cwd(),
-  'supabase/migrations/20260717000000_tighten_analytics_sessions_rls.sql'
+  'supabase/migrations/20260717114047_tighten_analytics_sessions_rls.sql'
 );
 
 describe('analytics_sessions RLS migration', () => {

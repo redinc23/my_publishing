@@ -2,6 +2,32 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Full-site validation and hardening wave (agent-run, 2026-07-17)
+
+**Scope:** working tree vs baseline `326bb60` — **57 files changed, +1,799 / −269** (excluding `node_modules`). Not yet committed.
+
+| Check      | Command              | Result                                                                                          |
+| ---------- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| Unit tests | `npm test`           | **PASS 63/63** (baseline was 42; new suites for auth, API, entitlement, analytics, portal fixes) |
+| Type-check | `npm run type-check` | **PASS** — `tsc --noEmit` clean after fixing author analytics `Book` typing                     |
+
+**Changes landed this wave:**
+
+- **SEO / a11y:** canonical + Open Graph metadata fixes across consumer pages; accessible labels added (SearchBar, NewsletterCTA, AudioPlayer, Footer, BookFilters).
+- **Auth hardening:** sessionless verification-email resend; honest provider quota errors on register; reset-password confirm restricted to recovery flow only.
+- **API hardening:** `/api/resonance/track` input validation + rate limiting; `/api/upload` MIME allowlist; `/api/resonance/similar` safe error responses.
+- **Reader / data access:** reading entitlement checks (`lib/reading/entitlement.ts`); library scoped to completed orders; author ownership checks (`lib/supabase/author-ownership.ts`); `analytics_sessions` RLS tightened + `public_profiles` view (migration `20260717114047_tighten_analytics_sessions_rls.sql`).
+- **Admin / partner portals:** `profiles.role` escalation protection (migration `20260717114020_protect_profiles_role.sql`); admin book update via admin client; honest error states instead of silent empty tables (`app/admin/_lib/query-error.tsx`, `partner-unavailable.tsx`); ARC rejected filter; pagination clamps.
+- **Build config:** `next.config.js` Sentry wrapping gated on Sentry env; `@next/bundle-analyzer` pinned 14.2.35.
+
+**Resolved 2026-07-17:** migrations **`20260717114047`** and **`20260717114020`** (plus `public_read_authors`, `fix_review_stats_trigger`, `revoke_anon_update_reading_progress`) applied to hosted Supabase via MCP — RLS/role protections are live.
+
+**Known operational issues (this machine):**
+
+- Local Windows `node_modules` corruption when multiple agents run `npm ci`/`npm install` concurrently — install solo, repair with `npm install`.
+- `@supabase/auth-js` now requires Node **>=22** — older local Node versions fail install/runtime.
+- Dev server must run **solo on port 3001** (concurrent dev servers conflict).
+
 ## Pre-launch verification (2026-07-09)
 
 Command: `bash scripts/pre-launch-verify.sh` via Git Bash (`C:\Program Files\Git\bin\bash.exe`). Node **v24.14.0** (satisfies `.nvmrc` / `engines`). Final green run: `export SKIP_NPM_CI=1` (Windows: bare `npm ci` in repo root often `ENOTEMPTY` when multiple agents install concurrently; gate skips when `node_modules/.bin/next` exists).

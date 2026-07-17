@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { RecommendRequestSchema, validateSafe, getFirstError } from '@/lib/validations/schemas';
+import { getCompletedOrderBookIds } from '@/lib/reading/entitlement';
 import type { BookWithStats, ApiResponse } from '@/types';
 
 interface RecommendationResult {
@@ -104,21 +105,37 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       query = query.not('id', 'in', `(${exclude_book_ids.join(',')})`);
     }
 
-    // If user is authenticated, exclude their own books and purchased books
+    // If user is authenticated, exclude their own books and purchased books.
+    // targetUserId is an auth user id; orders.user_id and authors.profile_id
+    // store profiles.id, so resolve the profile first.
     if (targetUserId) {
-      // Exclude user's own books
-      query = query.neq('author_id', targetUserId);
-
-      // Get user's purchased books
-      const { data: purchasedBooks } = await supabase
-        .from('orders')
-        .select('book_id')
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
         .eq('user_id', targetUserId)
-        .eq('status', 'completed');
+        .maybeSingle();
 
-      if (purchasedBooks && purchasedBooks.length > 0) {
-        const purchasedIds = purchasedBooks.map((p) => p.book_id);
-        query = query.not('id', 'in', `(${purchasedIds.join(',')})`);
+      if (profile) {
+        // Exclude books authored by this user (books.author_id → authors.id)
+        const { data: authorRecords } = await supabase
+          .from('authors')
+          .select('id')
+          .eq('profile_id', profile.id);
+
+        if (authorRecords && authorRecords.length > 0) {
+          query = query.not('author_id', 'in', `(${authorRecords.map((a) => a.id).join(',')})`);
+        }
+
+        // Exclude already-purchased books (best-effort; recommendations
+        // should not fail outright if the exclusion lookup errors)
+        try {
+          const purchasedIds = await getCompletedOrderBookIds(supabase, profile.id);
+          if (purchasedIds.length > 0) {
+            query = query.not('id', 'in', `(${purchasedIds.join(',')})`);
+          }
+        } catch (exclusionError) {
+          console.warn('[Recommend] Failed to load purchased-book exclusions:', exclusionError);
+        }
       }
     }
 

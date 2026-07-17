@@ -98,6 +98,14 @@ describe('updateBookAdmin', () => {
 
     const result = await updateBookAdmin('book-1', { title: 'Updated' });
 
+    // The role gate must look up profiles by user_id (the auth uid), not by
+    // profiles.id (a separate UUID). Filtering on the wrong column would match
+    // no rows — or worse, an attacker-controlled row.
+    expect(server.from).toHaveBeenCalledWith('profiles');
+    expect(profileChain.select).toHaveBeenCalledWith('role');
+    expect(profileChain.eq).toHaveBeenCalledWith('user_id', 'admin-user');
+    expect(profileChain.eq).not.toHaveBeenCalledWith('id', expect.anything());
+
     expect(createAdminClient).toHaveBeenCalled();
     expect(admin.from).toHaveBeenCalledWith('books');
     expect(booksChain.update).toHaveBeenCalled();
@@ -122,6 +130,7 @@ describe('updateBookAdmin', () => {
       error: 'Admin access required',
       code: 'FORBIDDEN',
     });
+    expect(profileChain.eq).toHaveBeenCalledWith('user_id', 'reader-1');
     expect(createAdminClient).not.toHaveBeenCalled();
   });
 });

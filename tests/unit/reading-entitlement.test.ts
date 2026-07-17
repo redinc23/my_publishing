@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { hasCompletedOrderForBook } from '@/lib/reading/entitlement';
+import { hasCompletedOrderForBook, getCompletedOrderBookIds } from '@/lib/reading/entitlement';
 
 function makeOrderChain(result: { data: unknown; error: unknown }) {
   const chain = {
@@ -9,6 +9,16 @@ function makeOrderChain(result: { data: unknown; error: unknown }) {
     limit: jest.fn().mockReturnThis(),
     maybeSingle: jest.fn().mockResolvedValue(result),
   };
+  return chain;
+}
+
+function makeListChain(result: { data: unknown; error: unknown }) {
+  // .eq() is called twice; the final call resolves as the awaited query.
+  const chain = {
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn(),
+  };
+  chain.eq.mockReturnValueOnce(chain).mockResolvedValueOnce(result);
   return chain;
 }
 
@@ -22,6 +32,11 @@ describe('hasCompletedOrderForBook', () => {
     ).resolves.toBe(true);
 
     expect(admin.from).toHaveBeenCalledWith('orders');
+    // Pin the exact join: the !inner modifier is what makes .eq('items.book_id')
+    // filter the parent order rows. A plain (non-inner) join would return the
+    // order with an empty items array and grant entitlement to any completed
+    // order regardless of book.
+    expect(chain.select).toHaveBeenCalledWith('id, items:order_items!inner(book_id)');
     expect(chain.eq).toHaveBeenCalledWith('user_id', 'profile-1');
     expect(chain.eq).toHaveBeenCalledWith('status', 'completed');
     expect(chain.eq).toHaveBeenCalledWith('items.book_id', 'book-1');
@@ -43,5 +58,44 @@ describe('hasCompletedOrderForBook', () => {
     await expect(
       hasCompletedOrderForBook(admin as never, 'profile-1', 'book-1')
     ).rejects.toEqual({ message: 'db down' });
+  });
+});
+
+describe('getCompletedOrderBookIds', () => {
+  it('filters orders by profile id and status, returning deduped book ids', async () => {
+    const chain = makeListChain({
+      data: [
+        { items: [{ book_id: 'book-1' }, { book_id: 'book-2' }] },
+        { items: [{ book_id: 'book-1' }] },
+        { items: null },
+      ],
+      error: null,
+    });
+    const client = { from: jest.fn(() => chain) };
+
+    await expect(getCompletedOrderBookIds(client as never, 'profile-1')).resolves.toEqual([
+      'book-1',
+      'book-2',
+    ]);
+
+    expect(client.from).toHaveBeenCalledWith('orders');
+    expect(chain.eq).toHaveBeenNthCalledWith(1, 'user_id', 'profile-1');
+    expect(chain.eq).toHaveBeenNthCalledWith(2, 'status', 'completed');
+  });
+
+  it('returns an empty list when the profile has no completed orders', async () => {
+    const chain = makeListChain({ data: [], error: null });
+    const client = { from: jest.fn(() => chain) };
+
+    await expect(getCompletedOrderBookIds(client as never, 'profile-1')).resolves.toEqual([]);
+  });
+
+  it('throws on query errors', async () => {
+    const chain = makeListChain({ data: null, error: { message: 'db down' } });
+    const client = { from: jest.fn(() => chain) };
+
+    await expect(getCompletedOrderBookIds(client as never, 'profile-1')).rejects.toEqual({
+      message: 'db down',
+    });
   });
 });

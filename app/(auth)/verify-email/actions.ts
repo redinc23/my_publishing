@@ -2,7 +2,11 @@
 
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { emailVerificationRateLimit } from '@/lib/utils/auth-rate-limit';
+import {
+  authRateLimit,
+  emailVerificationRateLimit,
+  getAuthIdentifier,
+} from '@/lib/utils/auth-rate-limit';
 
 function normalizeOrigin(value: string | null | undefined) {
   if (!value) {
@@ -56,7 +60,18 @@ export async function resendVerificationEmail(email: string) {
     return { error: 'Please provide a valid email address.' };
   }
 
-  // Rate limiting
+  // IP-keyed rate limiting: the action is callable without a session, so limit
+  // per caller IP (not just per target email) to block email-bomb abuse where
+  // one client cycles through many victim addresses.
+  const headersList = await headers();
+  const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
+  const ipIdentifier = getAuthIdentifier(ip);
+
+  if (!(await authRateLimit(ipIdentifier))) {
+    return { error: 'Too many verification email requests. Please try again later.' };
+  }
+
+  // Per-email rate limiting
   if (!(await emailVerificationRateLimit(normalizedEmail))) {
     return { error: 'Too many verification email requests. Please try again in an hour.' };
   }

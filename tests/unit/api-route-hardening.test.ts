@@ -109,6 +109,69 @@ describe('API route hardening', () => {
     );
   });
 
+  it('rejects a spoofed user_id when no user is authenticated', async () => {
+    mockedCreateClient.mockResolvedValue({
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: null } }) },
+    } as never);
+
+    const response = await trackEvent(
+      jsonRequest({
+        user_id: '11111111-1111-4111-8111-111111111111',
+        book_id: '550e8400-e29b-41d4-a716-446655440000',
+        event_type: 'view',
+      })
+    );
+
+    expect(response.status).toBe(401);
+    expect(mockedCreateAdminClient).not.toHaveBeenCalled();
+  });
+
+  it('rejects a user_id that does not match the authenticated user', async () => {
+    mockedCreateClient.mockResolvedValue({
+      auth: {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: '22222222-2222-4222-8222-222222222222' } },
+        }),
+      },
+    } as never);
+
+    const response = await trackEvent(
+      jsonRequest({
+        // Attacker attributes the event to a different (victim) user id.
+        user_id: '11111111-1111-4111-8111-111111111111',
+        book_id: '550e8400-e29b-41d4-a716-446655440000',
+        event_type: 'view',
+      })
+    );
+
+    expect(response.status).toBe(403);
+    expect(mockedCreateAdminClient).not.toHaveBeenCalled();
+  });
+
+  it('accepts a user_id that matches the authenticated user and inserts it verbatim', async () => {
+    const authedId = '22222222-2222-4222-8222-222222222222';
+    mockedCreateClient.mockResolvedValue({
+      auth: {
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: authedId } } }),
+      },
+    } as never);
+    const insert = jest.fn().mockResolvedValue({ error: null });
+    mockedCreateAdminClient.mockReturnValue({
+      from: jest.fn(() => ({ insert })),
+    } as never);
+
+    const response = await trackEvent(
+      jsonRequest({
+        user_id: authedId,
+        book_id: '550e8400-e29b-41d4-a716-446655440000',
+        event_type: 'view',
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ user_id: authedId }));
+  });
+
   it('rejects unsupported upload MIME types before storage access', async () => {
     mockedCreateClient.mockResolvedValue({
       auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
