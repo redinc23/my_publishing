@@ -88,21 +88,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Build recommendation query
     let query = supabase
       .from('books')
-      .select(
-        `
-        *,
-        author:profiles!books_author_id_fkey(
-          id,
-          full_name,
-          avatar_url
-        ),
-        stats:book_stats_summary(
-          total_views,
-          total_purchases,
-          total_revenue
-        )
-      `
-      )
+      .select('*')
       .eq('status', 'published')
       .eq('visibility', 'public')
       .order('created_at', { ascending: false })
@@ -154,9 +140,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const transformedBooks: BookWithStats[] = (books || []).map((book) => ({
       ...book,
       stats: {
-        views: book.stats?.total_views || 0,
-        purchases: book.stats?.total_purchases || 0,
-        revenue: book.stats?.total_revenue || 0,
+        views: book.total_reads || 0,
+        purchases: 0,
+        revenue: 0,
       },
     }));
 

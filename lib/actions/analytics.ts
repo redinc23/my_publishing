@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { DateRange } from '@/types/analytics';
 import type { BookStats, HeatmapData, GeographyData, LiveReader } from '@/types/analytics';
 import { getCache, setCache } from '@/lib/services/cache-service';
+import { requireAuthorOwnedBook } from '@/lib/supabase/author-ownership';
 
 export async function getBookAnalytics(bookId: string, dateRange: DateRange): Promise<BookStats[]> {
   try {
@@ -14,16 +15,7 @@ export async function getBookAnalytics(bookId: string, dateRange: DateRange): Pr
 
     if (!user) throw new Error('Not authenticated');
 
-    // Verify book ownership
-    const { data: book } = await supabase
-      .from('books')
-      .select('author_id')
-      .eq('id', bookId)
-      .single();
-
-    if (!book || book.author_id !== user.id) {
-      throw new Error('Unauthorized');
-    }
+    await requireAuthorOwnedBook(user.id, bookId);
 
     // Check cache
     const cacheKey = `analytics:${bookId}:${dateRange.from?.toISOString()}-${dateRange.to?.toISOString()}`;
@@ -60,6 +52,8 @@ export async function getEngagementHeatmap(bookId: string): Promise<HeatmapData[
 
     if (!user) throw new Error('Not authenticated');
 
+    await requireAuthorOwnedBook(user.id, bookId);
+
     const { data, error } = await supabase.rpc('get_engagement_heatmap', {
       p_book_id: bookId,
     });
@@ -85,6 +79,8 @@ export async function getGeographyData(
 
     if (!user) throw new Error('Not authenticated');
 
+    await requireAuthorOwnedBook(user.id, bookId);
+
     const { data, error } = await supabase.rpc('get_geography_data', {
       p_book_id: bookId,
       p_start_date: dateRange.from?.toISOString().split('T')[0],
@@ -106,18 +102,20 @@ export async function getLiveReaders(bookId: string): Promise<{
 }> {
   try {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) throw new Error('Not authenticated');
+
+    await requireAuthorOwnedBook(user.id, bookId);
 
     // Get active sessions from the last 15 minutes
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
 
-    const { data, error } = await supabase
+    const { data: sessions, error } = await supabase
       .from('analytics_sessions')
-      .select(
-        `
-        *,
-        user:users(name, email, avatar_url)
-      `
-      )
+      .select('*')
       .eq('book_id', bookId)
       .eq('is_active', true)
       .gte('last_activity_at', fifteenMinutesAgo.toISOString())
@@ -125,9 +123,33 @@ export async function getLiveReaders(bookId: string): Promise<{
 
     if (error) throw error;
 
+    const userIds = Array.from(
+      new Set((sessions || []).map((session) => session.user_id).filter(Boolean))
+    ) as string[];
+
+    const profilesByUserId = new Map<string, { name?: string }>();
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('public_profiles')
+        .select('user_id, name')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      for (const profile of profiles || []) {
+        profilesByUserId.set(profile.user_id, { name: profile.name ?? undefined });
+      }
+    }
+
+    const readers: LiveReader[] = (sessions || []).map((session) => ({
+      ...session,
+      user: session.user_id ? profilesByUserId.get(session.user_id) : undefined,
+      reading_progress: session.max_progress ?? undefined,
+    }));
+
     return {
-      readers: data || [],
-      total: data?.length || 0,
+      readers,
+      total: readers.length,
     };
   } catch (error) {
     console.error('Error fetching live readers:', error);

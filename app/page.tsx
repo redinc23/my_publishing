@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/layout/Container';
 import { ArrowRight } from 'lucide-react';
@@ -11,9 +12,16 @@ import {
   NewsletterCTA,
   AuthorSpotlight,
 } from '@/components/home';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+export const metadata: Metadata = {
+  title: 'Digital Publishing Platform',
+  description:
+    'Discover books, audiobooks, comics, papers, and independent authors on MANGU Publishers.',
+};
 
 export default function HomePage() {
-  const siteUrl = 'https://manguprojectz.vercel.app';
+  const siteUrl = getSiteUrl();
   const pageTitle = 'MANGU Publishers - Digital Publishing Platform';
   const pageDescription =
     'Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime.';

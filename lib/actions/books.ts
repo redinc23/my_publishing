@@ -302,7 +302,11 @@ export async function updateBookAdmin(
 
     checkRateLimit(user.id, 'update_book_admin');
 
-    const { data: existing } = await supabase
+    // Service-role client after role check — matches createBookAdmin / updateBookStatusAction.
+    // There is no admin UPDATE RLS policy on books for the session client.
+    const admin = createAdminClient();
+
+    const { data: existing } = await admin
       .from('books')
       .select('id, deleted_at')
       .eq('id', bookId)
@@ -345,7 +349,7 @@ export async function updateBookAdmin(
 
     // Slug uniqueness across all books (admin is not author-scoped).
     if (typeof updates.slug === 'string') {
-      const { data: dupe } = await supabase
+      const { data: dupe } = await admin
         .from('books')
         .select('id')
         .eq('slug', updates.slug)
@@ -361,7 +365,7 @@ export async function updateBookAdmin(
       }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from('books')
       .update(updates)
       .eq('id', bookId)

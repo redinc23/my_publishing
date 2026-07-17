@@ -1,16 +1,12 @@
 /* eslint-disable */
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdminQueryError, firstQueryError } from '../_lib/query-error';
 
 export default async function AdminDashboard() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  const [
-    { count: totalUsers },
-    { count: totalBooks },
-    { count: totalOrders },
-    { data: recentActivity },
-  ] = await Promise.all([
+  const [usersResult, booksResult, ordersResult, activityResult] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('books').select('*', { count: 'exact', head: true }),
     supabase.from('orders').select('*', { count: 'exact', head: true }),
@@ -20,6 +16,16 @@ export default async function AdminDashboard() {
       .order('created_at', { ascending: false })
       .limit(10),
   ]);
+
+  const queryError = firstQueryError([usersResult, booksResult, ordersResult, activityResult]);
+  if (queryError) {
+    return <AdminQueryError title="Admin Dashboard" />;
+  }
+
+  const totalUsers = usersResult.count;
+  const totalBooks = booksResult.count;
+  const totalOrders = ordersResult.count;
+  const recentActivity = activityResult.data;
 
   return (
     <div className="space-y-8">

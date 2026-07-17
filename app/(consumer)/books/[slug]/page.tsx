@@ -1,24 +1,29 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient, PUBLIC_BOOK_SELECT, PUBLIC_BOOK_WITH_CONTENT_SELECT } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookCard } from '@/components/cards/BookCard';
+import { ReviewSection } from '@/components/books/ReviewSection';
 import { VimeoPlayer } from '@/components/players/VimeoPlayer';
 import { AudioPlayer } from '@/components/players/AudioPlayer';
+import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 async function getBook(slug: string): Promise<BookFull | null> {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*)), content:book_content(*)')
+    .select(PUBLIC_BOOK_WITH_CONTENT_SELECT)
     .eq('slug', slug)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .eq('content_type', 'book')
     .single();
 
@@ -26,11 +31,12 @@ async function getBook(slug: string): Promise<BookFull | null> {
 }
 
 async function getSimilarBooks(genre: string | undefined, excludeId: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   let query = supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .eq('content_type', 'book')
     .neq('id', excludeId);
 
@@ -41,6 +47,78 @@ async function getSimilarBooks(genre: string | undefined, excludeId: string) {
   const { data } = await query.limit(6);
 
   return data || [];
+}
+
+async function getReviewData(bookId: string) {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: reviews } = await admin
+    .from('reviews')
+    .select(
+      `
+      id,
+      book_id,
+      user_id,
+      rating,
+      title,
+      content,
+      is_spoiler,
+      is_public,
+      helpful_count,
+      created_at,
+      updated_at
+    `
+    )
+    .eq('book_id', bookId)
+    .eq('is_public', true)
+    .order('helpful_count', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  const userIds = Array.from(new Set((reviews || []).map((review) => review.user_id)));
+  const { data: profiles } = userIds.length
+    ? await admin.from('profiles').select('user_id, full_name').in('user_id', userIds)
+    : { data: [] };
+
+  const profilesByUserId = new Map(
+    (profiles || []).map((profile) => [
+      profile.user_id,
+      {
+        id: profile.user_id,
+        username: profile.full_name || 'Reader',
+        full_name: profile.full_name || undefined,
+      },
+    ])
+  );
+
+  const normalizedReviews = (reviews || []).map((review) => ({
+    ...review,
+    user: profilesByUserId.get(review.user_id) || {
+      id: review.user_id,
+      username: 'Reader',
+    },
+  }));
+
+  const totalReviews = normalizedReviews.length;
+  const averageRating = totalReviews
+    ? normalizedReviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+    : 0;
+  const ratingDistribution = normalizedReviews.reduce<Record<number, number>>((acc, review) => {
+    acc[review.rating] = (acc[review.rating] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    reviews: normalizedReviews,
+    averageRating,
+    totalReviews,
+    ratingDistribution,
+    userReview: normalizedReviews.find((review) => review.user_id === user?.id),
+    isAuthenticated: !!user,
+  };
 }
 
 export async function generateMetadata({
@@ -56,11 +134,22 @@ export async function generateMetadata({
     };
   }
 
+  const description =
+    book.description ||
+    `Read ${book.title} by ${book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author'}`;
+  const pageUrl = `${getSiteUrl()}/books/${params.slug}`;
+
   return {
     title: `${book.title} - MANGU`,
-    description:
-      book.description ||
-      `Read ${book.title} by ${book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}`,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title: `${book.title} - MANGU`,
+      description,
+      url: pageUrl,
+    },
   };
 }
 
@@ -72,6 +161,7 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
   }
 
   const similarBooks = await getSimilarBooks(book.genre, book.id);
+  const reviewData = await getReviewData(book.id);
 
   return (
     <div>
@@ -83,7 +173,7 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               {book.cover_url && (
                 <Image
                   src={book.cover_url}
-                  alt={book.title}
+                  alt={`Cover of ${book.title}`}
                   fill
                   className="rounded-lg object-cover"
                   priority
@@ -94,9 +184,13 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               <h1 className="mb-4 text-4xl font-bold">{book.title}</h1>
               <p className="mb-4 text-xl text-secondary">
                 by{' '}
-                <Link href={`/authors/${book.author.id}`} className="hover:text-primary">
-                  {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
-                </Link>
+                {book.author ? (
+                  <Link href={`/authors/${book.author.id}`} className="hover:text-primary">
+                    {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
+                  </Link>
+                ) : (
+                  <span>Unknown Author</span>
+                )}
               </p>
               <div className="mb-6 flex items-center gap-4">
                 {book.average_rating && (
@@ -219,8 +313,16 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
                 <p className="text-secondary">No audio sample available.</p>
               )}
             </TabsContent>
-            <TabsContent value="reviews" className="mt-6">
-              <p className="text-secondary">Reviews coming soon.</p>
+            <TabsContent value="reviews" className="mt-6" id="reviews">
+              <ReviewSection
+                bookId={book.id}
+                initialReviews={reviewData.reviews}
+                averageRating={reviewData.averageRating}
+                totalReviews={reviewData.totalReviews}
+                ratingDistribution={reviewData.ratingDistribution}
+                userReview={reviewData.userReview}
+                isAuthenticated={reviewData.isAuthenticated}
+              />
             </TabsContent>
           </Tabs>
         </Container>

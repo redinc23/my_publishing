@@ -30,7 +30,7 @@ export default function ReadingClient({ book, initialProgress }: ReadingClientPr
     return () => clearInterval(interval);
   }, [currentPosition, book.id]);
 
-  const progressPercentage = initialProgress ? (currentPosition / 100) * 100 : 0;
+  const progressPercentage = currentPosition;
 
   return (
     <div className="min-h-screen bg-background">

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import { authRateLimit, getAuthIdentifier } from '@/lib/utils/auth-rate-limit';
 import { headers } from 'next/headers';
 
@@ -60,11 +59,14 @@ export async function signIn(formData: FormData) {
       return { error: 'Failed to sign in. Please try again.' };
     }
 
-    // Revalidate paths and redirect
+    // Revalidate paths
     revalidatePath('/', 'layout');
-    redirect('/');
   } catch (error) {
     console.error('Unexpected error during sign in:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
+
+  // Success: the client performs a full-page navigation so the browser
+  // Supabase client picks up the freshly set auth cookies.
+  return { success: true };
 }

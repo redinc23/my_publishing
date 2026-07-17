@@ -1,10 +1,15 @@
 // PERF-PHASE2-1
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BookFilters } from '../books/BookFilters';
 import { BookListStream } from '../components/BookListStream';
 import { BooksSkeleton } from '../components/BooksSkeleton';
+export const metadata: Metadata = {
+  title: 'Comic Books',
+  description: 'Discover comic books and illustrated stories available on MANGU Publishers.',
+};
 
 interface ComicsPageProps {
   searchParams: { q?: string; genre?: string; sort?: string; page?: string };

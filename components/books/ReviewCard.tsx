@@ -95,7 +95,7 @@ export function ReviewCard({
       setHelpfulCount((prev) => Math.max(0, prev + delta));
       setUserVote(newVoteState);
 
-      await voteOnReview(review.id, helpful);
+      await voteOnReview(review.id, newVoteState);
       onVoteChange?.();
     } catch (error) {
       toast.error('Failed to submit vote');
@@ -123,7 +123,7 @@ export function ReviewCard({
         {user.avatar_url ? (
           <Image
             src={user.avatar_url}
-            alt={user.username}
+            alt={`Avatar for ${user.full_name || user.username}`}
             width={compact ? 32 : 40}
             height={compact ? 32 : 40}
             className="rounded-full border-2 border-white shadow-sm"
@@ -135,7 +135,7 @@ export function ReviewCard({
               compact ? 'h-8 w-8' : 'h-10 w-10'
             )}
           >
-            <User className={cn('text-blue-600', compact ? 'h-4 w-4' : 'h-5 w-5')} />
+            <User className={cn('text-blue-600', compact ? 'h-4 w-4' : 'h-5 w-5')} aria-hidden="true" />
           </div>
         )}
       </div>
@@ -150,14 +150,14 @@ export function ReviewCard({
       {book?.cover_url ? (
         <Image
           src={book.cover_url}
-          alt={book.title}
+          alt={`Cover of ${book.title}`}
           width={40}
           height={60}
           className="rounded object-cover"
         />
       ) : (
         <div className="flex h-12 w-10 items-center justify-center rounded bg-gradient-to-br from-gray-200 to-gray-300">
-          <Book className="h-5 w-5 text-gray-500" />
+          <Book className="h-5 w-5 text-gray-500" aria-hidden="true" />
         </div>
       )}
       <div className="min-w-0 flex-1">
@@ -197,13 +197,13 @@ export function ReviewCard({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Review actions">
+                  <MoreVertical className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleReport} disabled={isReported}>
-                  <Flag className="mr-2 h-4 w-4" />
+                  <Flag className="mr-2 h-4 w-4" aria-hidden="true" />
                   {isReported ? 'Reported' : 'Report Review'}
                 </DropdownMenuItem>
               </DropdownMenuContent>

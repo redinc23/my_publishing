@@ -109,7 +109,7 @@ BEGIN
 END $$;
 
 -- Create helper functions
-CREATE OR REPLACE FUNCTION get_book_average_rating(book_id UUID)
+CREATE OR REPLACE FUNCTION get_book_average_rating(target_book_id UUID)
 RETURNS DECIMAL(3,2) AS $$
 DECLARE
     avg_rating DECIMAL(3,2);
@@ -117,13 +117,13 @@ BEGIN
     SELECT AVG(rating)::DECIMAL(3,2)
     INTO avg_rating
     FROM reviews
-    WHERE book_id = $1 AND is_public = true;
+    WHERE reviews.book_id = target_book_id AND reviews.is_public = true;
     
     RETURN COALESCE(avg_rating, 0);
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION get_book_review_count(book_id UUID)
+CREATE OR REPLACE FUNCTION get_book_review_count(target_book_id UUID)
 RETURNS INTEGER AS $$
 DECLARE
     review_count INTEGER;
@@ -131,7 +131,7 @@ BEGIN
     SELECT COUNT(*)
     INTO review_count
     FROM reviews
-    WHERE book_id = $1 AND is_public = true;
+    WHERE reviews.book_id = target_book_id AND reviews.is_public = true;
     
     RETURN COALESCE(review_count, 0);
 END;
@@ -148,9 +148,10 @@ RETURNS TRIGGER AS $$
 BEGIN
     UPDATE books
     SET 
-        average_rating = get_book_average_rating(NEW.book_id),
-        review_count = get_book_review_count(NEW.book_id)
-    WHERE id = NEW.book_id;
+        average_rating = get_book_average_rating(COALESCE(NEW.book_id, OLD.book_id)),
+        review_count = get_book_review_count(COALESCE(NEW.book_id, OLD.book_id)),
+        total_reviews = get_book_review_count(COALESCE(NEW.book_id, OLD.book_id))
+    WHERE id = COALESCE(NEW.book_id, OLD.book_id);
     
     RETURN NEW;
 END;

@@ -1,5 +1,24 @@
+import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+
+const pageUrl = `${getSiteUrl()}/about`;
+const description =
+  'Learn how MANGU Publishers connects readers with fresh voices and independent authors worldwide.';
+
+export const metadata: Metadata = {
+  title: 'About MANGU',
+  description,
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    title: 'About MANGU',
+    description,
+    url: pageUrl,
+  },
+};
 
 export default function AboutPage() {
   return (

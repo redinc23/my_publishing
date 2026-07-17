@@ -1,19 +1,25 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient, PUBLIC_BOOK_SELECT } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import type { BookWithAuthor } from '@/types';
+export const metadata: Metadata = {
+  title: 'Recommended Books',
+  description: 'Explore personalized and trending book recommendations from MANGU Publishers.',
+};
 
 async function getRecommendations() {
   // For now, return trending books
   // In production, this would call the resonance API
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .order('total_reads', { ascending: false })
     .limit(12);
 

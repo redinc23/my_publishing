@@ -58,6 +58,7 @@ export function StarRating({
           onMouseEnter={() => handleMouseEnter(star)}
           onMouseLeave={handleMouseLeave}
           disabled={!interactive}
+          aria-label={`${star} star${star === 1 ? '' : 's'}`}
         >
           <Star
             className={cn(
@@ -65,6 +66,7 @@ export function StarRating({
               'transition-colors',
               star <= displayRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
             )}
+            aria-hidden="true"
           />
         </button>
       ))}

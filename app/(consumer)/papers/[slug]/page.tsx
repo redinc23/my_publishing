@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicCatalogClient, PUBLIC_BOOK_SELECT, PUBLIC_BOOK_WITH_CONTENT_SELECT } from '@/lib/supabase/public-queries';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
@@ -12,23 +12,25 @@ import type { Metadata } from 'next';
 import type { BookFull } from '@/types';
 
 async function getPaper(slug: string): Promise<BookFull | null> {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*)), content:book_content(*)')
+    .select(PUBLIC_BOOK_WITH_CONTENT_SELECT)
     .eq('slug', slug)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .eq('content_type', 'paper')
     .single();
   return data as BookFull | null;
 }
 
 async function getSimilarPapers(excludeId: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
   const { data } = await supabase
     .from('books')
-    .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .eq('content_type', 'paper')
     .neq('id', excludeId)
     .limit(6);
@@ -62,7 +64,7 @@ export default async function PaperDetailPage({ params }: { params: { slug: stri
               {paper.cover_url && (
                 <Image
                   src={paper.cover_url}
-                  alt={paper.title}
+                  alt={`Cover of ${paper.title}`}
                   fill
                   className="rounded-lg object-cover"
                   priority
@@ -73,9 +75,13 @@ export default async function PaperDetailPage({ params }: { params: { slug: stri
               <h1 className="mb-4 text-4xl font-bold">{paper.title}</h1>
               <p className="mb-4 text-xl text-muted-foreground">
                 by{' '}
-                <Link href={`/authors/${paper.author.id}`} className="hover:text-primary">
-                  {paper.author.profile?.full_name || paper.author.pen_name || 'Unknown Author'}
-                </Link>
+                {paper.author ? (
+                  <Link href={`/authors/${paper.author.id}`} className="hover:text-primary">
+                    {paper.author.profile?.full_name || paper.author.pen_name || 'Unknown Author'}
+                  </Link>
+                ) : (
+                  <span>Unknown Author</span>
+                )}
               </p>
               <p className="mb-6 text-lg">{paper.description}</p>
               <div className="mb-6 flex gap-4">
@@ -135,7 +141,7 @@ export default async function PaperDetailPage({ params }: { params: { slug: stri
             <h2 className="mb-8 text-3xl font-bold">Similar Papers</h2>
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
               {similarPapers.map((b) => (
-                <BookCard key={b.id} book={b} />
+                <BookCard key={b.id} book={b} href={`/papers/${b.slug}`} />
               ))}
             </div>
           </Container>

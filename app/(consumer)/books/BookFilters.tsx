@@ -1,7 +1,7 @@
 /* eslint-disable */
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -36,8 +36,14 @@ const sortOptions = [
 ];
 
 export function BookFilters() {
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const pushWithParams = (params: URLSearchParams) => {
+    const query = params.toString();
+    router.push(query ? `${pathname ?? ''}?${query}` : (pathname ?? '/'));
+  };
 
   const updateSearchParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
@@ -47,12 +53,13 @@ export function BookFilters() {
       params.delete(key);
     }
     params.delete('page'); // Reset to first page
-    router.push(`/books?${params.toString()}`);
+    pushWithParams(params);
   };
 
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
       <Input
+        aria-label="Search books"
         placeholder="Search books..."
         defaultValue={searchParams?.get('q') || ''}
         onChange={(e) => {
@@ -64,7 +71,7 @@ export function BookFilters() {
             params.delete('q');
           }
           params.delete('page');
-          router.push(`/books?${params.toString()}`);
+          pushWithParams(params);
         }}
         className="flex-1"
       />
@@ -72,7 +79,7 @@ export function BookFilters() {
         value={searchParams?.get('genre') || ''}
         onValueChange={(value) => updateSearchParam('genre', value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger aria-label="Filter by genre" className="w-full sm:w-[180px]">
           <SelectValue placeholder="All Genres" />
         </SelectTrigger>
         <SelectContent>
@@ -88,7 +95,7 @@ export function BookFilters() {
         value={searchParams?.get('sort') || 'published_at'}
         onValueChange={(value) => updateSearchParam('sort', value)}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger aria-label="Sort books" className="w-full sm:w-[180px]">
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>

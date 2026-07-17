@@ -12,17 +12,22 @@ import { cn } from '@/lib/utils/cn';
 interface BookCardProps {
   book: BookWithAuthor;
   variant?: 'default' | 'compact';
+  href?: string;
 }
 
-export function BookCard({ book, variant = 'default' }: BookCardProps) {
+export function BookCard({ book, variant = 'default', href }: BookCardProps) {
+  const authorName =
+    book.author?.profile?.full_name || book.author?.pen_name || book.author?.full_name || 'Unknown Author';
+  const bookHref = href ?? `/books/${book.slug}`;
+
   if (variant === 'compact') {
     return (
-      <Link href={`/books/${book.slug}`} className="group block">
+      <Link href={bookHref} className="group block">
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-muted">
           {book.cover_url && (
             <Image
               src={book.cover_url}
-              alt={book.title}
+              alt={`Cover of ${book.title}`}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
@@ -34,7 +39,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             {book.title}
           </h3>
           <p className="line-clamp-1 text-sm text-muted-foreground">
-            {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
+            {authorName}
           </p>
         </div>
       </Link>
@@ -47,7 +52,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
       <Link
-        href={`/books/${book.slug}`}
+        href={bookHref}
         className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
@@ -55,7 +60,7 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
             {book.cover_url && (
               <Image
                 src={book.cover_url}
-                alt={book.title}
+                alt={`Cover of ${book.title}`}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-110"
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
@@ -70,12 +75,12 @@ export function BookCard({ book, variant = 'default' }: BookCardProps) {
               {book.title}
             </h3>
             <p className="mb-2 line-clamp-1 text-sm text-muted-foreground">
-              {book.author.profile?.full_name || book.author.pen_name || 'Unknown Author'}
+              {authorName}
             </p>
             <div className="flex items-center justify-between">
               {book.average_rating ? (
                 <div className="flex items-center gap-1">
-                  <span className="text-yellow-400">★</span>
+                  <span className="text-yellow-400" aria-hidden="true">★</span>
                   <span className="text-sm">{(book.average_rating || 0).toFixed(1)}</span>
                 </div>
               ) : (

@@ -2,6 +2,12 @@
 import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import {
+  createPublicCatalogClient,
+  PUBLIC_AUTHOR_COLUMNS,
+  PUBLIC_BOOK_SELECT,
+  PUBLIC_BOOK_WITH_CONTENT_SELECT,
+} from '@/lib/supabase/public-queries';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import type { Database } from '@/types/database';
 import type { BookWithAuthor } from '@/types';
@@ -30,7 +36,7 @@ export const getBooksPage = cache(
         const supabase = createAdminClient();
         let query = supabase
           .from('books')
-          .select('*, author:authors!inner(*, profile:profiles!inner(*))')
+          .select(PUBLIC_BOOK_SELECT)
           .eq('status', 'published')
           .eq('visibility', 'public')
           .eq('content_type', params.contentType);
@@ -42,7 +48,8 @@ export const getBooksPage = cache(
           query = query.eq('genre', params.genre);
         }
 
-        const sort = params.sort || 'published_at';
+        const VALID_SORT_KEYS = new Set(['published_at', 'total_reads', 'average_rating', 'price', 'title']);
+        const sort = VALID_SORT_KEYS.has(params.sort ?? '') ? (params.sort as string) : 'published_at';
         const ascending = sort === 'price' || sort === 'title';
         query = query.order(sort, { ascending });
 
@@ -73,7 +80,7 @@ export const getAuthorSummary = unstable_cache(
     const supabase = createAdminClient();
     const { data } = await supabase
       .from('authors')
-      .select('*, profile:profiles(*)')
+      .select(PUBLIC_AUTHOR_COLUMNS)
       .eq('id', authorId)
       .single();
     return data;
@@ -93,13 +100,15 @@ export async function getPublishedBooks(filters?: {
   page?: number;
   limit?: number;
 }) {
-  const supabase = await createClient();
+  // Admin client with explicit published+public filters: RLS blocks anon
+  // reads of authors/profiles, which would strip author info from results.
+  const supabase = createPublicCatalogClient();
   const page = filters?.page || 0;
   const limit = filters?.limit || 20;
 
   let query = supabase
     .from('books')
-    .select('*, author:authors(*, profile:profiles(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('status', 'published')
     .eq('visibility', 'public')
     .range(page * limit, (page + 1) * limit - 1);
@@ -138,23 +147,26 @@ export async function getPublishedBooks(filters?: {
 }
 
 export async function getBookBySlug(slug: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
   return supabase
     .from('books')
-    .select('*, author:authors(*, profile:profiles(*)), content:book_content(*)')
+    .select(PUBLIC_BOOK_WITH_CONTENT_SELECT)
     .eq('slug', slug)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .single();
 }
 
 export async function getBookById(id: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
   return supabase
     .from('books')
-    .select('*, author:authors(*, profile:profiles(*)), content:book_content(*)')
+    .select(PUBLIC_BOOK_WITH_CONTENT_SELECT)
     .eq('id', id)
+    .eq('status', 'published')
+    .eq('visibility', 'public')
     .single();
 }
 
@@ -166,7 +178,7 @@ export async function getFeaturedBooks(limit = 6) {
         const supabase = createAdminClient();
         const { data, error } = await supabase
           .from('books')
-          .select('*, author:authors(*, profile:profiles(*))')
+          .select(PUBLIC_BOOK_SELECT)
           .eq('is_featured', true)
           .eq('status', 'published')
           .eq('visibility', 'public')
@@ -193,11 +205,11 @@ export async function getFeaturedBooks(limit = 6) {
 }
 
 export async function getTrendingBooks(limit = 12) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
   return supabase
     .from('books')
-    .select('*, author:authors(*, profile:profiles(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('status', 'published')
     .eq('visibility', 'public')
     .order('total_reads', { ascending: false })
@@ -205,11 +217,11 @@ export async function getTrendingBooks(limit = 12) {
 }
 
 export async function searchBooks(query: string, limit = 20) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
   return supabase
     .from('books')
-    .select('*, author:authors(*, profile:profiles(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .textSearch('search_vector', query, {
       type: 'websearch',
     })
@@ -219,11 +231,11 @@ export async function searchBooks(query: string, limit = 20) {
 }
 
 export async function getBooksByGenre(genre: string, limit = 20) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
   return supabase
     .from('books')
-    .select('*, author:authors(*, profile:profiles(*))')
+    .select(PUBLIC_BOOK_SELECT)
     .eq('genre', genre)
     .eq('status', 'published')
     .eq('visibility', 'public')
@@ -236,19 +248,19 @@ export async function getBooksByGenre(genre: string, limit = 20) {
 // ============================================================================
 
 export async function getAuthorById(id: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
-  return supabase.from('authors').select('*, profile:profiles(*)').eq('id', id).single();
+  return supabase.from('authors').select(PUBLIC_AUTHOR_COLUMNS).eq('id', id).single();
 }
 
 export async function getAuthorBySlug(slug: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
-  return supabase.from('authors').select('*, profile:profiles(*)').eq('pen_name', slug).single();
+  return supabase.from('authors').select(PUBLIC_AUTHOR_COLUMNS).eq('pen_name', slug).single();
 }
 
 export async function getAuthorBooks(authorId: string) {
-  const supabase = await createClient();
+  const supabase = createPublicCatalogClient();
 
   return supabase
     .from('books')
@@ -264,11 +276,13 @@ export async function getAuthorBooks(authorId: string) {
 // ============================================================================
 
 export async function getUserReadingProgress(userId: string) {
-  const supabase = await createClient();
+  // Admin client so the nested author join resolves (authors has no anon/user
+  // SELECT policy); safe because results are filtered to the given user id.
+  const supabase = createPublicCatalogClient();
 
   return supabase
     .from('reading_progress')
-    .select('*, book:books(*, author:authors(*, profile:profiles(*)))')
+    .select(`*, book:books(${PUBLIC_BOOK_SELECT})`)
     .eq('user_id', userId)
     .order('last_accessed', { ascending: false });
 }

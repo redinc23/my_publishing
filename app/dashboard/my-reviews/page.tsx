@@ -1,11 +1,12 @@
 /* eslint-disable */
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { ReviewCard } from '@/components/books/ReviewCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, Star, TrendingUp, Filter, PlusCircle, Edit, Trash2 } from 'lucide-react';
-import { deleteReview } from '@/lib/actions/reviews';
 import { ReviewActions } from '@/components/books/ReviewActions';
 
 export default async function MyReviewsPage() {
@@ -19,20 +20,34 @@ export default async function MyReviewsPage() {
     redirect('/login');
   }
 
-  // Get user's reviews
-  const { data: reviews } = await supabase
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('full_name')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  // Get user's reviews with the admin client because reviews has RLS enabled and no SELECT policy.
+  const { data: reviews } = await admin
     .from('reviews')
     .select(
       `
-      *,
+      id,
+      book_id,
+      user_id,
+      rating,
+      title,
+      content,
+      is_spoiler,
+      is_public,
+      helpful_count,
+      created_at,
+      updated_at,
       book:books (
         id,
+        slug,
         title,
-        cover_url,
-        author:users (
-          username,
-          full_name
-        )
+        cover_url
       )
     `
     )
@@ -48,6 +63,12 @@ export default async function MyReviewsPage() {
     ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
     : 0;
   const helpfulReviews = reviews?.filter((r) => r.helpful_count > 5).length || 0;
+  const reviewUser = {
+    id: user.id,
+    username: profile?.full_name || user.user_metadata?.username || 'Reader',
+    full_name: profile?.full_name || undefined,
+    avatar_url: user.user_metadata?.avatar_url,
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -96,9 +117,11 @@ export default async function MyReviewsPage() {
               <Filter className="mr-2 h-4 w-4" />
               Filter
             </Button>
-            <Button size="sm">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Write New Review
+            <Button size="sm" asChild>
+              <Link href="/books">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Write New Review
+              </Link>
             </Button>
           </div>
         </div>
@@ -112,24 +135,30 @@ export default async function MyReviewsPage() {
           <TabsContent value="published">
             {publishedReviews.length > 0 ? (
               <div className="space-y-6">
-                {publishedReviews.map((review) => (
+                {publishedReviews.map((review) => {
+                  const book = Array.isArray(review.book) ? review.book[0] : review.book;
+                  return (
                   <div key={review.id} className="group relative">
                     <ReviewCard
                       review={review}
-                      user={{
-                        id: user.id,
-                        username:
-                          user.user_metadata?.username || user.email?.split('@')[0] || 'User',
-                        avatar_url: user.user_metadata?.avatar_url,
-                      }}
-                      book={review.book}
+                      user={reviewUser}
+                      book={
+                        book
+                          ? { id: book.slug || book.id, title: book.title, cover_url: book.cover_url }
+                          : undefined
+                      }
                       showBookInfo
                     />
                     <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
-                      <ReviewActions review={review} />
+                      <ReviewActions
+                        review={review}
+                        isOwnReview
+                        editHref={book?.slug ? `/books/${book.slug}#reviews` : undefined}
+                      />
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="py-12 text-center">
@@ -140,9 +169,11 @@ export default async function MyReviewsPage() {
                 <p className="mb-6 text-gray-600">
                   Start sharing your thoughts on the books you've read!
                 </p>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Write Your First Review
+                <Button asChild>
+                  <Link href="/books">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Write Your First Review
+                  </Link>
                 </Button>
               </div>
             )}
@@ -158,20 +189,16 @@ export default async function MyReviewsPage() {
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <div>
-                        <h3 className="font-semibold">{review.book?.title}</h3>
+                        <h3 className="font-semibold">
+                          {(Array.isArray(review.book) ? review.book[0] : review.book)?.title}
+                        </h3>
                         <p className="text-sm text-gray-600">
                           Last edited: {new Date(review.updated_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Publish
-                        </Button>
-                      </div>
+                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800">
+                        Draft
+                      </span>
                     </div>
                     <p className="line-clamp-2 text-gray-700">{review.content}</p>
                   </div>
