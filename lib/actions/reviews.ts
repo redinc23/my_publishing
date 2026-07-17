@@ -59,7 +59,11 @@ export async function voteOnReview(reviewId: string, helpful: boolean | null) {
     throw new Error('You must be logged in to vote');
   }
 
-  const { data: review } = await admin.from('reviews').select('id').eq('id', reviewId).maybeSingle();
+  const { data: review } = await admin
+    .from('reviews')
+    .select('id')
+    .eq('id', reviewId)
+    .maybeSingle();
   if (!review) {
     throw new Error('Review not found');
   }
@@ -67,16 +71,14 @@ export async function voteOnReview(reviewId: string, helpful: boolean | null) {
   const { error } =
     helpful === null
       ? await admin.from('review_votes').delete().eq('review_id', reviewId).eq('user_id', user.id)
-      : await admin
-          .from('review_votes')
-          .upsert(
-            {
-              review_id: reviewId,
-              user_id: user.id,
-              is_helpful: helpful,
-            },
-            { onConflict: 'review_id,user_id' }
-          );
+      : await admin.from('review_votes').upsert(
+          {
+            review_id: reviewId,
+            user_id: user.id,
+            is_helpful: helpful,
+          },
+          { onConflict: 'review_id,user_id' }
+        );
 
   if (error) {
     throw new Error('Failed to submit vote');
