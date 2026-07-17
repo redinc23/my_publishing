@@ -135,7 +135,10 @@ export function ReviewCard({
               compact ? 'h-8 w-8' : 'h-10 w-10'
             )}
           >
-            <User className={cn('text-blue-600', compact ? 'h-4 w-4' : 'h-5 w-5')} aria-hidden="true" />
+            <User
+              className={cn('text-blue-600', compact ? 'h-4 w-4' : 'h-5 w-5')}
+              aria-hidden="true"
+            />
           </div>
         )}
       </div>

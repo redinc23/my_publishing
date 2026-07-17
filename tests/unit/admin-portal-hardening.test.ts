@@ -24,16 +24,7 @@ jest.mock('@/lib/supabase/queries', () => ({
 
 function makeChain(result: { data: unknown; error: unknown }) {
   const chain: Record<string, jest.Mock> = {};
-  const methods = [
-    'select',
-    'eq',
-    'neq',
-    'is',
-    'update',
-    'insert',
-    'single',
-    'maybeSingle',
-  ];
+  const methods = ['select', 'eq', 'neq', 'is', 'update', 'insert', 'single', 'maybeSingle'];
   for (const method of methods) {
     chain[method] = jest.fn().mockReturnValue(chain);
   }
@@ -49,9 +40,7 @@ describe('firstQueryError', () => {
 
   it('surfaces the first query error message', () => {
     const spy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    expect(
-      firstQueryError([{ error: null }, { error: { message: 'timeout' } }])
-    ).toBe('timeout');
+    expect(firstQueryError([{ error: null }, { error: { message: 'timeout' } }])).toBe('timeout');
     spy.mockRestore();
   });
 });

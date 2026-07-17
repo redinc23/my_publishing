@@ -15,7 +15,9 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001'));
+    return NextResponse.redirect(
+      new URL('/login', process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001')
+    );
   }
 
   const { data: profile } = await supabase
@@ -37,7 +39,9 @@ export async function GET() {
   const admin = createAdminClient();
   const { data: orders, error } = await admin
     .from('orders')
-    .select('order_number, status, total_amount, created_at, items:order_items(unit_price, book:books(title))')
+    .select(
+      'order_number, status, total_amount, created_at, items:order_items(unit_price, book:books(title))'
+    )
     .eq('user_id', partner.profile_id)
     .order('created_at', { ascending: false });
 
@@ -47,7 +51,7 @@ export async function GET() {
 
   const rows = [
     ['Order Number', 'Status', 'Total', 'Items', 'Created At'],
-    ...((orders ?? []).map((order) => [
+    ...(orders ?? []).map((order) => [
       order.order_number,
       order.status,
       order.total_amount,
@@ -59,7 +63,7 @@ export async function GET() {
         .filter(Boolean)
         .join('; '),
       order.created_at,
-    ])),
+    ]),
   ];
 
   return new NextResponse(rows.map((row) => row.map(csvCell).join(',')).join('\n'), {

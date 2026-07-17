@@ -14,7 +14,11 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <MobileNav />
-            <Link href="/" aria-label="MANGU Publishers home" className="text-2xl font-bold text-primary">
+            <Link
+              href="/"
+              aria-label="MANGU Publishers home"
+              className="text-2xl font-bold text-primary"
+            >
               MANGU
             </Link>
             <Navigation />

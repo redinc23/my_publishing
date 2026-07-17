@@ -69,23 +69,35 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       <Container>
         <div className="mb-8">
           <h1 className="text-4xl font-bold">Orders</h1>
-          <p className="mt-2 text-secondary">Institutional purchases for {partner.institution_name}.</p>
+          <p className="mt-2 text-secondary">
+            Institutional purchases for {partner.institution_name}.
+          </p>
         </div>
 
         <div className="mb-6 flex flex-col gap-3 rounded-lg border border-border p-4 md:flex-row md:items-center md:justify-between">
           <form className="grid gap-3 md:grid-cols-[1fr_1fr_auto]" method="get">
-            <select name="status" defaultValue={status} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+            <select
+              name="status"
+              defaultValue={status}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
               <option value="all">All statuses</option>
               <option value="pending">Pending</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
-            <select name="sort" defaultValue={sort} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+            <select
+              name="sort"
+              defaultValue={sort}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
               <option value="newest">Newest</option>
               <option value="total">Highest total</option>
               <option value="status">Status</option>
             </select>
-            <Button type="submit" variant="outline">Filter</Button>
+            <Button type="submit" variant="outline">
+              Filter
+            </Button>
           </form>
           <Button asChild variant="outline">
             <Link href="/partner/orders/export">Download CSV</Link>
@@ -99,48 +111,60 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         ) : (
           <>
             <div className="space-y-4">
-            {pagedOrders.map((order) => (
-              <Card key={order.id}>
-                <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-                  <div>
-                    <CardTitle>
-                      <Link href={`/partner/orders/${order.id}`} className="transition-colors hover:text-primary">
-                        Order {order.order_number}
-                      </Link>
-                    </CardTitle>
-                    <p className="mt-2 text-sm text-secondary">Placed {formatDate(order.created_at)}</p>
-                  </div>
-                  <Badge variant="outline">{titleCase(order.status)}</Badge>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4 grid gap-4 text-sm md:grid-cols-3">
+              {pagedOrders.map((order) => (
+                <Card key={order.id}>
+                  <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
                     <div>
-                      <p className="font-semibold">Total</p>
-                      <p className="text-secondary">{formatMoney(Number(order.total_amount))}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Items</p>
-                      <p className="text-secondary">{order.items.length}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Books</p>
-                      <p className="text-secondary">
-                        {order.items.map((item) => item.book?.title ?? 'Untitled book').join(', ')}
+                      <CardTitle>
+                        <Link
+                          href={`/partner/orders/${order.id}`}
+                          className="transition-colors hover:text-primary"
+                        >
+                          Order {order.order_number}
+                        </Link>
+                      </CardTitle>
+                      <p className="mt-2 text-sm text-secondary">
+                        Placed {formatDate(order.created_at)}
                       </p>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Link href={`/partner/orders/${order.id}`} className="text-sm text-primary hover:underline">
-                      View order details
-                    </Link>
-                    <form action={reorderPartnerOrder}>
-                      <input type="hidden" name="orderId" value={order.id} />
-                      <Button type="submit" size="sm" variant="outline">Reorder</Button>
-                    </form>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <Badge variant="outline">{titleCase(order.status)}</Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-4 grid gap-4 text-sm md:grid-cols-3">
+                      <div>
+                        <p className="font-semibold">Total</p>
+                        <p className="text-secondary">{formatMoney(Number(order.total_amount))}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Items</p>
+                        <p className="text-secondary">{order.items.length}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Books</p>
+                        <p className="text-secondary">
+                          {order.items
+                            .map((item) => item.book?.title ?? 'Untitled book')
+                            .join(', ')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Link
+                        href={`/partner/orders/${order.id}`}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        View order details
+                      </Link>
+                      <form action={reorderPartnerOrder}>
+                        <input type="hidden" name="orderId" value={order.id} />
+                        <Button type="submit" size="sm" variant="outline">
+                          Reorder
+                        </Button>
+                      </form>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
             <Pagination
               currentPage={currentPage}
