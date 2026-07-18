@@ -2,6 +2,17 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## P0-020 — production verification + IAM scripts (agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 P0-020 (Phases 6/11/14). Author the two MISSING reference scripts flagged in the baseline. Agent support only — scripts are **PROPOSED / unexecuted** here (no gcloud, live GCP, or production access); the operator runs them with credentials in Phases 11/14/15. No secret values are read, printed, or logged by either script (CCR-009).
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent | repo | branch base `9b4ce45` | P0-020 / G7 (Phase 11) | Add `scripts/grant-cloudrun-secret-access.sh` | Idempotent least-privilege secret grant | Grants `roles/secretmanager.secretAccessor` on the 3 required + 4 optional `--set-secrets` names to the Cloud Run runtime SA (resolved: `SERVICE_ACCOUNT` → deployed SA → default compute SA); sources `scripts/gcp-config.sh`; `DRY_RUN=1` supported; fails closed if a required secret is absent | `bash -n` PASS; unexecuted (needs gcloud) | issue #202 |
+| 2026-07-18 | agent | repo | branch base `9b4ce45` | P0-020 / G1,G7,G11 (Phase 14/15) | Add `scripts/verify-gcp-production.sh` | D1–D8 production smoke | Asserts Cloud Run Ready=True + 100%-to-latest + optional `EXPECT_SHA` image correlation (D1/D2); `/api/health` 200 (D3); `/api/health?ready=1` 200 & `ready:true` + per-component truth (D4/G7); route truth for `/ /books /comics /papers /login /register` (D5); served-asset localhost/secret scan (D6/D7); unsigned `POST /api/webhook` → 400 (D8); TLS note. Exit 0 pass / 1 fail / 2 degraded | `bash -n` PASS; JSON-extraction logic unit-tested against a mock readiness payload; unexecuted (needs live target) | issue #202 |
+
+**Notes:** Both scripts match existing conventions in `scripts/gcp-config.sh` / `sync-gcp-secrets-from-env.sh` (which already referenced `verify-gcp-production.sh` as the post-sync verifier). Readiness assertions derived from `app/api/health/route.ts` at `9b4ce45` (`ready: !anyFailing`; HTTP 200/503; checks: environment/database/auth/migrations/stripe). **No gate flips** — these are tooling for later phases; G1/G7/G11 require the operator to execute them against the deployed release SHA and append the resulting evidence here.
+
 ## Phase 5 (partial) — Format Check repair on main (agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 5 (CI/CD workflow repair) — resolve the only red required check on `main`. Verified via GitHub Actions API that on `main` HEAD `c925aae` (PR #210 merge) **Format Check = FAILURE** while CI, CodeQL, Lighthouse, Release Please = success. Root cause reproduced locally with pinned `prettier@3` + repo `.prettierrc`: 5 files fail `prettier --check .`. This corrects the stale "CI RED / Actions billing-locked" reports — Actions run and only formatting was red.
