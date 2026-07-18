@@ -147,6 +147,8 @@ steps:
     entrypoint: trivy
     args:
       - image
+      - --scanners
+      - vuln
       - --exit-code=1
       - --severity=CRITICAL
       - --no-progress
