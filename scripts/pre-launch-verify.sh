@@ -68,8 +68,8 @@ export_ci_mock_env() {
   export NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://test.supabase.co}"
   export NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key-for-ci}"
   export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-service-role-for-ci}"
-  export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}"
-  export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-sk_test_placeholder}"
+  export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-pk_ci_mock_only}"
+  export STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY:-sk_ci_mock_only}"
   export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
   export UPSTASH_REDIS_REST_URL="${UPSTASH_REDIS_REST_URL:-https://mock.upstash.io}"
   export UPSTASH_REDIS_REST_TOKEN="${UPSTASH_REDIS_REST_TOKEN:-mock-upstash-token}"
@@ -96,8 +96,8 @@ run_gate "validate-env" bash -c '
     export NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co
     export NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key-for-ci
     export SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-service-role-for-ci
-    export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
-    export STRIPE_SECRET_KEY=sk_test_placeholder
+    export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_ci_mock_only
+    export STRIPE_SECRET_KEY=sk_ci_mock_only
     export NEXT_PUBLIC_SITE_URL=http://localhost:3000
     export UPSTASH_REDIS_REST_URL=https://mock.upstash.io
     export UPSTASH_REDIS_REST_TOKEN=mock-upstash-token
@@ -124,8 +124,8 @@ run_gate "production build (CI mock env)" bash -c '
   export NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co
   export NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key-for-ci
   export SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-service-role-for-ci
-  export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
-  export STRIPE_SECRET_KEY=sk_test_placeholder
+  export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_ci_mock_only
+  export STRIPE_SECRET_KEY=sk_ci_mock_only
   export NEXT_PUBLIC_SITE_URL=http://localhost:3000
   export UPSTASH_REDIS_REST_URL=https://mock.upstash.io
   export UPSTASH_REDIS_REST_TOKEN=mock-upstash-token
