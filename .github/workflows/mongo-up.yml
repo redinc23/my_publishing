@@ -2,6 +2,9 @@
 # Does NOT run on every push — workflow_dispatch / manual only.
 name: Mongo Up
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
