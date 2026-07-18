@@ -37,8 +37,8 @@ Exactly one platform must own the canonical origin for `mangu-publishers.com` / 
 
 ## Signature Block (Phase 6)
 
-| Role            | Name | Decision | UTC  |
-| --------------- | ---- | -------- | ---- |
-| Platform        | ____ | ____     | ____ |
-| Release Manager | ____ | ____     | ____ |
-| Engineering     | ____ | ____     | ____ |
+| Role            | Name     | Decision | UTC      |
+| --------------- | -------- | -------- | -------- |
+| Platform        | \_\_\_\_ | \_\_\_\_ | \_\_\_\_ |
+| Release Manager | \_\_\_\_ | \_\_\_\_ | \_\_\_\_ |
+| Engineering     | \_\_\_\_ | \_\_\_\_ | \_\_\_\_ |

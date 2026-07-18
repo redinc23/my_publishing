@@ -212,13 +212,13 @@ Conditional: `RESEND_API_KEY`, `OPENAI_API_KEY` (feature flagged off if absent),
 
 | Role             | Scope                                              | Decision / Signature / UTC |
 | ---------------- | -------------------------------------------------- | -------------------------- |
-| Release Manager  | Sequence, gate integrity, version/tag              | ____                       |
-| Engineering      | Source/build correctness                           | ____                       |
-| Platform         | Deployment, secrets, monitoring, DNS/TLS, rollback | ____                       |
-| QA               | Tier L/R/P evidence, defect disposition            | ____                       |
-| Product          | Launch scope, public truth, residual risk          | ____                       |
-| Security         | RBAC/RLS/secret/abuse/privacy                      | ____                       |
-| Finance/Payments | Stripe mode, price mapping, refunds                | ____                       |
+| Release Manager  | Sequence, gate integrity, version/tag              | \_\_\_\_                   |
+| Engineering      | Source/build correctness                           | \_\_\_\_                   |
+| Platform         | Deployment, secrets, monitoring, DNS/TLS, rollback | \_\_\_\_                   |
+| QA               | Tier L/R/P evidence, defect disposition            | \_\_\_\_                   |
+| Product          | Launch scope, public truth, residual risk          | \_\_\_\_                   |
+| Security         | RBAC/RLS/secret/abuse/privacy                      | \_\_\_\_                   |
+| Finance/Payments | Stripe mode, price mapping, refunds                | \_\_\_\_                   |
 
 Rules: any owner NO-GO ⇒ NO-GO; absence is not consent; a signature on a different SHA is invalid.
 
