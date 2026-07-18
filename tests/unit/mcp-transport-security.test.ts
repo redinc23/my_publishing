@@ -12,7 +12,7 @@ jest.mock('@/lib/rate-limit', () => ({
   getClientIdentifier: jest.fn(() => '203.0.113.9'),
 }));
 
-import { mcpGuard, sanitizeSearchQuery, isMcpEnabled } from '@/app/api/mcp/[transport]/route';
+import { mcpGuard, sanitizeSearchQuery, isMcpEnabled } from '@/lib/mcp/transport-security';
 import { enforceRateLimit } from '@/lib/rate-limit';
 
 const mockedEnforce = enforceRateLimit as jest.MockedFunction<typeof enforceRateLimit>;
