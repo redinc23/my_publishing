@@ -2,6 +2,19 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 5 — preview-E2E BASE_URL / real-target semantics (P0-005, agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 5 / P0-005 → G2. The `E2E against Preview` workflow set `BASE_URL` to the deployment URL, but `playwright.config.ts` hardcoded `baseURL: 'http://localhost:3000'` and unconditionally booted a local dev server — so "preview E2E" silently tested a local mock server, never the deployed preview. It also forced `USE_MOCKS=true` + placeholder Supabase env against a real target, making real-backend suites skip and results dishonest.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent | repo | branch base `3fc8998` | P0-005 / G2 | Diagnose preview-E2E target | Identify why BASE_URL was ignored | `playwright.config.ts` hardcoded `baseURL: localhost:3000` + always-on `webServer`; workflow's `BASE_URL` env never read → preview runs tested a local placeholder-env server, not the deployment | DIAGNOSED | issue #194 |
+| 2026-07-18 | agent | local (Node 22) | branch `claude/mangu-phase-1-authority-sv2hyn` | P0-005 / G2 | Honor BASE_URL | Remote target when set; local otherwise | Config now uses `process.env.BASE_URL ?? localhost:3000` as `baseURL` and omits `webServer` entirely when `BASE_URL` is set (no local server against a remote target) | PASS | `playwright.config.ts` |
+| 2026-07-18 | agent | repo | branch | P0-005 / G2 (truthfulness) | Remove mock env from preview workflow | Real target, no mocks | `preview-e2e.yml` drops `USE_MOCKS=true` + all placeholder Supabase/Stripe env; only `BASE_URL` passed. Real-backend suites (auth-flow, role-gating) self-skip unless real `NEXT_PUBLIC_SUPABASE_URL` is provided — honest, not faked | PASS | `.github/workflows/preview-e2e.yml` |
+| 2026-07-18 | agent | local | branch | Verification | Run toolchain | Green | New `tests/unit/playwright-config.test.ts` (3 cases: default local, BASE_URL remote w/o webServer, CI chromium-only) pass; full suite 127/127 across 24 suites; `tsc --noEmit` clean; prettier 3.8.4 clean | PASS | `tests/unit/playwright-config.test.ts` |
+
+**Notes:** Live proof requires an actual preview deployment event (`deployment_status` → environment `Preview`) — recorded as the CI/operator confirmation step, observable on the next preview deploy. Optional follow-up for the operator: provide real `NEXT_PUBLIC_SUPABASE_URL` (+ TEST\_\* creds) as repo secrets to un-skip real-backend suites against previews. **G2 stays FALSE** pending green pipeline evidence at the candidate SHA.
+
 ## Phase 5 — bug-to-issue workflow trigger repair (P0-006, agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 5 / P0-006 → G2. The `bug-to-issue` automation (opens/closes an issue on continuous CI failure) never ran because its `workflow_run` trigger listened for a workflow named `CI/CD Pipeline`, which does not exist — the CI workflow's `name:` is `CI` (`ci.yml`). Verified via a full scan of `.github/workflows/*` `name:` fields.

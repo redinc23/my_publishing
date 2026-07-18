@@ -18,15 +18,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps
+      # BASE_URL makes playwright.config.ts target the deployed preview and
+      # skip the local webServer entirely — no server env placeholders needed.
+      # Real-backend suites (auth-flow, role-gating) self-skip unless the
+      # runner has real NEXT_PUBLIC_SUPABASE_URL, so no USE_MOCKS here: the
+      # preview is a real target and mocking it would fake the results.
       - run: npm run test:e2e
         env:
           BASE_URL: ${{ github.event.deployment_status.environment_url }}
-          USE_MOCKS: true
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
-          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
-          NEXT_PUBLIC_SITE_URL: ${{ github.event.deployment_status.environment_url }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
