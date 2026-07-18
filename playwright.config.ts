@@ -1,20 +1,19 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+const isRemote = !!process.env.BASE_URL;
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  // Never auto-open the HTML report; the local dev machine shares ports with
-  // the app server owned by another process.
   reporter: [['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL,
     trace: 'on-first-retry',
   },
-  // WebKit runs last in CI and the dev server is often degraded after long
-  // chromium/firefox suites; keep local cross-browser coverage, CI on chromium.
   projects: process.env.CI
     ? [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }]
     : [
@@ -31,11 +30,15 @@ export default defineConfig({
           use: { ...devices['Desktop Safari'] },
         },
       ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    // Next.js dev cold-start regularly exceeds the 60s default.
-    timeout: 120_000,
-  },
+  // Skip local dev server when BASE_URL points to a remote deployment.
+  ...(isRemote
+    ? {}
+    : {
+        webServer: {
+          command: 'npm run dev',
+          url: 'http://localhost:3000',
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
+      }),
 });
