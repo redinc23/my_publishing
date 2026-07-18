@@ -2,6 +2,36 @@
 
 This document describes the database migration system and the correct order for applying migrations.
 
+## Hosted reconciliation (P0-004) — VERIFIED 2026-07-18
+
+| Field       | Value                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| Project     | `mangu-publishers` / `tkzvikozrcynhwsqtkqp` (us-west-1)                                                             |
+| Source      | Supabase MCP `list_migrations` + `SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version` |
+| Local files | **25** in `supabase/migrations/`                                                                                    |
+| Hosted rows | **25**                                                                                                              |
+| Diff        | **Exact match** — every local version is applied; no pending; no remote-only                                        |
+| Tip         | `20260717114300_order_items_select_own` (`order_items` SELECT policy)                                               |
+| PR #184     | **Close as superseded** — no reorder needed; history already consistent                                             |
+
+### Classification
+
+| Class                     | Versions                        |
+| ------------------------- | ------------------------------- |
+| Applied (repo ∩ hosted)   | All 25 (see ordered list below) |
+| Pending (repo only)       | _(none)_                        |
+| Remote-only (hosted only) | _(none)_                        |
+
+### `order_items` SELECT policy (P0-015 schema verify)
+
+Hosted policy present and matches repo intent:
+
+- name: `Users can view own order items`
+- cmd: `SELECT` (`r`)
+- USING: `order_id IN (SELECT orders.id FROM orders WHERE orders.user_id IN (SELECT profiles.id FROM profiles WHERE profiles.user_id = auth.uid()))`
+
+Live entitled nested-read / `verify-rls` browser confirmation remains Phase 12/13.
+
 ## Migration Order
 
 Migrations **must be applied in this exact order** due to dependencies between tables and features:
@@ -79,6 +109,40 @@ Migrations **must be applied in this exact order** due to dependencies between t
 15. **20260619170000_add_retailer_urls.sql**
     - Adds retailer URL fields to `books`
     - **Dependencies**: `books`
+
+16. **20260708074716_enable_rls_on_exposed_tables.sql**
+    - Enables RLS on exposed tables
+    - **Dependencies**: prior public tables
+
+17. **20260708074819_harden_definer_views_and_rpcs.sql**
+    - Hardens SECURITY DEFINER views/RPCs
+    - **Dependencies**: prior schema
+
+18. **20260717114020_protect_profiles_role.sql**
+    - Protects `profiles.role` from client escalation
+    - **Dependencies**: `profiles`
+
+19. **20260717114047_tighten_analytics_sessions_rls.sql**
+    - Tightens analytics session RLS
+    - **Dependencies**: `analytics_sessions`
+
+20. **20260717114057_public_read_authors.sql**
+    - Public read policy for authors
+    - **Dependencies**: `authors`
+
+21. **20260717114115_fix_review_stats_trigger.sql**
+    - Fixes review stats trigger
+    - **Dependencies**: social/reviews
+
+22. **20260717114221_revoke_anon_update_reading_progress.sql**
+    - Revokes anon update on reading progress
+    - **Dependencies**: `reading_progress`
+
+23. **20260717114300_order_items_select_own.sql**
+    - Buyer SELECT on own `order_items` (P0-015)
+    - **Dependencies**: `orders`, `order_items`, `profiles`
+
+Also present (early sequence): **20260116000001_create_books_table.sql**, **20260117000007_storage_policies.sql** — both applied hosted; keep filenames stable.
 
 > **Note — duplicate `content_type` migrations (Fix C3):** `20260619124500` and
 > `20260619162409` intentionally overlap. Both are written with
@@ -172,10 +236,10 @@ Currently, there's no automatic rollback mechanism. To rollback:
 
 ## Migration Tracking
 
-Migrations are tracked in the `schema_migrations` table:
+Hosted Supabase tracks applied migrations in `supabase_migrations.schema_migrations`:
 
 ```sql
-SELECT * FROM schema_migrations ORDER BY applied_at;
+SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version;
 ```
 
-This table is automatically created by the migration runner script.
+(Some older tooling referred to a plain `schema_migrations` table — on this project the authoritative table is under the `supabase_migrations` schema.)
