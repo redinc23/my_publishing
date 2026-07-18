@@ -36,6 +36,18 @@
         "jobName": "test",
         "stepName": "Run npm run lint"
       }
+    },
+    "5b0472b113788aa4700f950feca2daa0a91b09b5": {
+      "consecutiveFails": 1,
+      "consecutiveSuccesses": 0,
+      "issueNumber": null,
+      "lastSeenRunId": 29640142992,
+      "lastSeenAt": "2026-07-18T10:04:35.012Z",
+      "meta": {
+        "workflowName": "CI",
+        "jobName": "test",
+        "stepName": "Run npm run lint"
+      }
     }
   }
 }
