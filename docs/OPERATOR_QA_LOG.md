@@ -2,6 +2,19 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 9 — Product Truth: contact / newsletter / homepage stats (agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 9 (P0-012, P0-013, P0-014 → G6 "no false success"). Removes three false-success surfaces and replaces them with honest, env-gated behavior per the locked launch scope (§7). Verified locally with the repo's real toolchain (Node 22, `npm ci`). No external services called — Resend paths are unit-tested via mocks; operator confirms live behavior in Phase 12.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent | local (Node 22) | branch base `9b4ce45` | P0-014 / G6 | Replace fabricated homepage StatsBar | No unverifiable stats | `StatsBar` now takes real counts; `StatsBarSection` (server) fetches published/public book + author counts via admin client, filters zeros, and the section renders nothing when empty. Hardcoded 10k/500/50k/1M removed | PASS (tsc/lint/tests green) | issue #204; `components/home/StatsBar*.tsx`, `lib/supabase/queries.ts:getPlatformStats` |
+| 2026-07-18 | agent | local | branch base `9b4ce45` | P0-012 / G6 | Fix contact form false success | Send or honest fallback; never fake | When `RESEND_API_KEY` set, submission emails `books@mangu-publishers.com` via Resend and reports success **only** on real delivery; when absent, form is replaced by an honest mailto fallback and the action returns an honest error (defense in depth). Stale `support@mangu.com` removed | PASS | issue #197; `contact/actions.ts`, `ContactForm.tsx`, `contact/page.tsx` |
+| 2026-07-18 | agent | local | branch base `9b4ce45` | P0-013 / G6 | Fix newsletter fake subscription | Real subscribe or honest disabled | `POST /api/newsletter`: 503 `disabled` when unconfigured, 400 invalid, 502 on provider error, 200 only on real subscribe (Resend audience or welcome email). `NewsletterCTA` shows "coming soon" when disabled and surfaces real errors — `setTimeout` fake removed | PASS | issue #201; `app/api/newsletter/route.ts`, `NewsletterCTA.tsx`, `lib/email/send.ts` |
+| 2026-07-18 | agent | local | branch base `9b4ce45` | Phase 9 verification | Run repo toolchain | Green | `tsc --noEmit` clean; `next lint` no warnings; **`jest` 116/116 pass** (22 suites) incl. new `tests/unit/product-truth.test.ts` (8 cases proving no false-success on either surface); `prettier --check` clean on all changed files | PASS | `tests/unit/product-truth.test.ts` |
+
+**Notes:** G6 also depends on P0-014's sibling items (route truth, other public claims) — this wave closes the contact/newsletter/stats defects specifically. Live real-backend confirmation (Resend delivery, populated stats) is Phase 12 operator QA; these changes make the surfaces **truthful when unconfigured**, which is the launch-scope requirement. New optional env: `CONTACT_INBOX_EMAIL`, `RESEND_AUDIENCE_ID` (both have safe defaults/fallbacks).
+
 ## P0-020 — production verification + IAM scripts (agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 P0-020 (Phases 6/11/14). Author the two MISSING reference scripts flagged in the baseline. Agent support only — scripts are **PROPOSED / unexecuted** here (no gcloud, live GCP, or production access); the operator runs them with credentials in Phases 11/14/15. No secret values are read, printed, or logged by either script (CCR-009).

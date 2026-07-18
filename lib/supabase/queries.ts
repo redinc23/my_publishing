@@ -542,3 +542,28 @@ export async function updateProfile(
 
   return supabase.from('profiles').update(updates).eq('user_id', userId).select().single();
 }
+
+/**
+ * Real, verifiable platform counts for the homepage StatsBar (P0-014, G6).
+ * Uses the admin client with the same published+public filter the public
+ * catalog enforces, so we never advertise draft/private inventory. Returns
+ * only counts that are truthfully derivable; the UI hides any zero stat and
+ * omits the whole section when there is nothing real to show.
+ */
+export async function getPlatformStats(): Promise<{ books: number; authors: number }> {
+  const admin = createAdminClient();
+
+  const [booksRes, authorsRes] = await Promise.all([
+    admin
+      .from('books')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .eq('visibility', 'public'),
+    admin.from('authors').select('*', { count: 'exact', head: true }),
+  ]);
+
+  return {
+    books: booksRes.count ?? 0,
+    authors: authorsRes.count ?? 0,
+  };
+}

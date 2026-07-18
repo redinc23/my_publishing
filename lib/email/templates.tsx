@@ -404,3 +404,69 @@ export function PasswordResetEmail({ resetLink }: { resetLink: string }) {
     </Html>
   );
 }
+
+export function ContactMessageEmail({
+  name,
+  email,
+  subject,
+  message,
+}: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}) {
+  return (
+    <Html>
+      <Head />
+      <Preview>New contact message: {subject}</Preview>
+      <Body style={{ backgroundColor: '#f6f6f6', fontFamily: 'Arial, sans-serif' }}>
+        <Container style={{ padding: '24px', maxWidth: '600px' }}>
+          <Section style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px' }}>
+            <Heading style={{ fontSize: '20px', marginBottom: '16px' }}>
+              New contact message
+            </Heading>
+            <Text style={{ fontSize: '14px', lineHeight: '22px', margin: '4px 0' }}>
+              <strong>From:</strong> {name} &lt;{email}&gt;
+            </Text>
+            <Text style={{ fontSize: '14px', lineHeight: '22px', margin: '4px 0' }}>
+              <strong>Subject:</strong> {subject}
+            </Text>
+            <Text
+              style={{
+                fontSize: '14px',
+                lineHeight: '22px',
+                marginTop: '16px',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {message}
+            </Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  );
+}
+
+export function NewsletterWelcomeEmail({ email }: { email: string }) {
+  return (
+    <Html>
+      <Head />
+      <Preview>You&apos;re subscribed to the MANGU newsletter</Preview>
+      <Body style={{ backgroundColor: '#f6f6f6', fontFamily: 'Arial, sans-serif' }}>
+        <Container style={{ padding: '24px', maxWidth: '600px' }}>
+          <Section style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px' }}>
+            <Heading style={{ fontSize: '20px', marginBottom: '16px' }}>
+              Welcome to the MANGU newsletter
+            </Heading>
+            <Text style={{ fontSize: '16px', lineHeight: '24px', marginBottom: '16px' }}>
+              Thanks for subscribing with {email}. You&apos;ll get book recommendations and author
+              updates in your inbox. You can unsubscribe at any time.
+            </Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  );
+}

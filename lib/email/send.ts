@@ -6,9 +6,23 @@ import {
   ManuscriptStatusEmail,
   WeeklyDigestEmail,
   PasswordResetEmail,
+  ContactMessageEmail,
+  NewsletterWelcomeEmail,
 } from './templates';
 
 let resend: Resend | null = null;
+
+/**
+ * True when the transactional-email provider is configured. Callers use this
+ * to decide whether an email-backed feature (contact form, newsletter) is
+ * available, so we never claim success for a message we cannot deliver.
+ */
+export function isEmailConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
+/** Inbox that reader/support contact submissions are delivered to. */
+export const CONTACT_INBOX = process.env.CONTACT_INBOX_EMAIL || 'books@mangu-publishers.com';
 
 function getResend() {
   if (!resend) {
@@ -118,4 +132,65 @@ export async function sendPasswordReset(data: { email: string; resetLink: string
     'Reset Your MANGU Password',
     PasswordResetEmail({ resetLink: data.resetLink })
   );
+}
+
+/**
+ * Deliver a contact-form submission to the support inbox. Returns the
+ * {success} shape from sendEmail so the caller only reports success to the
+ * user when the message was actually accepted by the provider.
+ */
+export async function sendContactMessage(data: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}) {
+  return sendEmail(
+    CONTACT_INBOX,
+    `[Contact] ${data.subject}`,
+    ContactMessageEmail({
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      message: data.message,
+    })
+  );
+}
+
+/**
+ * Subscribe an email to the newsletter. When RESEND_AUDIENCE_ID is set the
+ * address is added to that Resend audience; otherwise we fall back to sending
+ * a welcome confirmation. Either path only resolves success on a real 2xx.
+ */
+export async function subscribeToNewsletter(email: string) {
+  try {
+    const client = getResend();
+    const audienceId = process.env.RESEND_AUDIENCE_ID?.trim();
+
+    if (audienceId) {
+      const { error } = await client.contacts.create({
+        email,
+        audienceId,
+        unsubscribed: false,
+      });
+      if (error) {
+        console.error('Newsletter subscribe (audience) error:', error);
+        return { success: false as const, error };
+      }
+      return { success: true as const };
+    }
+
+    // No audience configured — confirm the subscription with a welcome email.
+    const result = await sendEmail(
+      email,
+      'Welcome to the MANGU newsletter',
+      NewsletterWelcomeEmail({ email })
+    );
+    return result.success
+      ? { success: true as const }
+      : { success: false as const, error: result.error };
+  } catch (error) {
+    console.error('Newsletter subscribe failed:', error);
+    return { success: false as const, error };
+  }
 }

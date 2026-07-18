@@ -5,19 +5,18 @@ import { motion, useInView } from 'framer-motion';
 import { Container } from '@/components/layout/Container';
 import { BookOpen, Users, Globe, FileText } from 'lucide-react';
 
-interface Stat {
+export interface Stat {
   value: number;
   suffix: string;
   label: string;
-  icon: React.ReactNode;
 }
 
-const stats: Stat[] = [
-  { value: 10000, suffix: '+', label: 'Books', icon: <BookOpen className="h-5 w-5" /> },
-  { value: 500, suffix: '+', label: 'Authors', icon: <Users className="h-5 w-5" /> },
-  { value: 50000, suffix: '+', label: 'Readers', icon: <Globe className="h-5 w-5" /> },
-  { value: 1, suffix: 'M+', label: 'Pages Read', icon: <FileText className="h-5 w-5" /> },
-];
+const ICONS: Record<string, React.ReactNode> = {
+  Books: <BookOpen className="h-5 w-5" />,
+  Authors: <Users className="h-5 w-5" />,
+  Readers: <Globe className="h-5 w-5" />,
+  'Pages Read': <FileText className="h-5 w-5" />,
+};
 
 function AnimatedCounter({
   value,
@@ -65,9 +64,22 @@ function AnimatedCounter({
   );
 }
 
-export function StatsBar() {
+export function StatsBar({ stats }: { stats: Stat[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  // Nothing verifiable to show — render nothing (P0-014, G6).
+  if (!stats || stats.length === 0) return null;
+
+  // Fixed class names so Tailwind keeps them; adapts columns to real count.
+  const colsClass =
+    stats.length >= 4
+      ? 'grid-cols-2 md:grid-cols-4'
+      : stats.length === 3
+        ? 'grid-cols-3'
+        : stats.length === 2
+          ? 'grid-cols-2'
+          : 'grid-cols-1';
 
   return (
     <section ref={ref} className="border-y border-border/60 bg-muted/20 py-14">
@@ -76,7 +88,7 @@ export function StatsBar() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-4"
+          className={`grid ${colsClass} gap-8 md:gap-4`}
         >
           {stats.map((stat, index) => (
             <motion.div
@@ -86,7 +98,7 @@ export function StatsBar() {
               transition={{ duration: 0.6, delay: index * 0.1, ease: 'easeOut' }}
               className="flex flex-col items-center text-center"
             >
-              <div className="mb-2 flex items-center gap-2 text-primary">{stat.icon}</div>
+              <div className="mb-2 flex items-center gap-2 text-primary">{ICONS[stat.label]}</div>
               <div className="mb-1 text-3xl font-light tracking-tight sm:text-4xl">
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} inView={inView} />
               </div>
