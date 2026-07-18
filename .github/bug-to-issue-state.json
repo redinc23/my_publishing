@@ -3,10 +3,10 @@
   "items": {
     "ef81a14fd1447d4edc40b88d3f9d86b480e5c1da": {
       "consecutiveFails": 0,
-      "consecutiveSuccesses": 2,
+      "consecutiveSuccesses": 3,
       "issueNumber": null,
-      "lastSeenRunId": 29629564974,
-      "lastSeenAt": "2026-07-18T03:55:21.940Z",
+      "lastSeenRunId": 29630066211,
+      "lastSeenAt": "2026-07-18T04:12:38.433Z",
       "meta": {
         "workflowName": "CI",
         "jobName": "test",
@@ -15,10 +15,10 @@
     },
     "7b64a4f685d6a77cc3e90e622bc099ed65ffa385": {
       "consecutiveFails": 0,
-      "consecutiveSuccesses": 1,
+      "consecutiveSuccesses": 2,
       "issueNumber": null,
-      "lastSeenRunId": 29629564974,
-      "lastSeenAt": "2026-07-18T03:55:21.940Z",
+      "lastSeenRunId": 29630066211,
+      "lastSeenAt": "2026-07-18T04:12:38.433Z",
       "meta": {
         "workflowName": "CI",
         "jobName": "test",
