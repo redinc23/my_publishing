@@ -19,8 +19,33 @@ function SubmitButton() {
   );
 }
 
-export function ContactForm() {
+export function ContactForm({
+  enabled = true,
+  fallbackEmail = 'books@mangu-publishers.com',
+}: {
+  enabled?: boolean;
+  fallbackEmail?: string;
+}) {
   const [state, formAction] = useFormState(submitContactMessage, initialContactFormState);
+
+  // Honest-unavailable state: when email delivery isn't configured we don't
+  // render a form that can't send — we point people at a working address.
+  if (!enabled) {
+    return (
+      <div className="mt-8 max-w-2xl rounded-md border border-input bg-muted/30 p-6">
+        <p className="text-sm text-secondary">
+          Our contact form is being set up. In the meantime, the fastest way to reach us is by
+          email:
+        </p>
+        <a
+          className="mt-3 inline-block font-medium text-primary hover:underline"
+          href={`mailto:${fallbackEmail}`}
+        >
+          {fallbackEmail}
+        </a>
+      </div>
+    );
+  }
 
   return (
     <form action={formAction} className="mt-8 max-w-2xl space-y-5">

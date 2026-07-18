@@ -1,5 +1,7 @@
 'use server';
 
+import { isEmailConfigured, sendContactMessage } from '@/lib/email/send';
+
 export type ContactFormState = {
   status: 'idle' | 'success' | 'error';
   message: string;
@@ -39,19 +41,29 @@ export async function submitContactMessage(
     };
   }
 
-  console.log(
-    'Contact form submission validated (not persisted: no contact_messages migration found)',
-    {
-      name,
-      email,
-      subject,
-      messageLength: message.length,
-    }
-  );
+  // Honest scope (CCR-018): never claim delivery we can't perform. When email
+  // is not configured the form is not rendered (the page shows a mailto
+  // fallback); this guard is defense in depth for a direct action invocation.
+  if (!isEmailConfigured()) {
+    return {
+      status: 'error',
+      message:
+        'Our contact form is temporarily unavailable. Please email us directly at books@mangu-publishers.com.',
+    };
+  }
+
+  const result = await sendContactMessage({ name, email, subject, message });
+
+  if (!result.success) {
+    return {
+      status: 'error',
+      message:
+        'Sorry — we could not send your message just now. Please email us directly at books@mangu-publishers.com.',
+    };
+  }
 
   return {
     status: 'success',
-    message:
-      'Thanks — your message was validated and logged for the support team. We will follow up by email.',
+    message: 'Thanks — your message was sent to our support team. We will follow up by email.',
   };
 }

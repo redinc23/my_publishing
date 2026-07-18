@@ -8,11 +8,12 @@ import {
   FeaturedBooksSection,
   TrendingBooksSection,
   GenreExplorer,
-  StatsBar,
+  StatsBarSection,
   NewsletterCTA,
   AuthorSpotlight,
 } from '@/components/home';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
+import { isEmailConfigured } from '@/lib/email/send';
 
 export const metadata: Metadata = {
   title: 'Digital Publishing Platform',
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   const siteUrl = getSiteUrl();
+  const emailEnabled = isEmailConfigured();
   const pageTitle = 'MANGU Publishers - Digital Publishing Platform';
   const pageDescription =
     'Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime.';
@@ -132,7 +134,7 @@ export default function HomePage() {
       <TrendingBooksSection />
 
       {/* Stats Bar */}
-      <StatsBar />
+      <StatsBarSection />
 
       {/* Genre Explorer */}
       <GenreExplorer />
@@ -141,7 +143,7 @@ export default function HomePage() {
       <AuthorSpotlight />
 
       {/* Newsletter CTA */}
-      <NewsletterCTA />
+      <NewsletterCTA enabled={emailEnabled} />
     </div>
   );
 }
