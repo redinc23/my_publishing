@@ -2,6 +2,17 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## MongoDB Atlas scaffold (ADR-002, operator+agent, 2026-07-18)
+
+**Scope:** Operator mid Atlas setup (cluster, DB user, Network Access, Drivers connection string). Agent scaffolds official `mongodb` driver, `lib/mongodb.ts`, env templates, optional readiness ping. Supabase remains required for GO readiness until auth + query cutover.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | operator | Atlas UI | — | ADR-002 | Deploy free cluster + DB user + Drivers URI | Cluster reachable | IN PROGRESS (Connect → Drivers) | IN PROGRESS | do not paste URI in chat |
+| 2026-07-18 | agent | repo | this branch | ADR-002 | Scaffold Mongo client + env + health ping | Additive path; Supabase still owns ready | `mongodb` + `@vercel/functions`; `lib/mongodb.ts`; `MONGODB_URI` optional; health `checks.mongodb` | PASS (code) | `docs/adr/ADR-002-mongodb-data-platform.md` |
+
+**Notes:** Next operator steps: (1) Network Access allow `0.0.0.0/0` for Vercel, (2) put `MONGODB_URI` in `.env.local` + Vercel Production (password substituted), (3) choose auth replacement (Clerk / Better Auth / Auth.js) before rewriting queries. Full Supabase removal is a later PR.
+
 ## Phase 6 — ADR-001 ACCEPTED Option B (Vercel); dump Cloud Run (P0-003, operator+agent, 2026-07-18)
 
 **Scope:** Operator decision: abandon Cloud Run as production authority; stick with Vercel. Agent records ACCEPTED ADR, retargets monitors to interim canonical `www`, rewrites canonical production checklist. **G9 stays FALSE** until Vercel `ready:true`.

@@ -7,7 +7,7 @@
 
 | Field                        | Value                                                                                                                                                                                |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Authority version**        | 1.2.5                                                                                                                                                                                |
+| **Authority version**        | 1.2.6                                                                                                                                                                                |
 | **Status**                   | **NO-GO / NOT RELEASE-READY**                                                                                                                                                        |
 | **Effective date (UTC)**     | 2026-07-18                                                                                                                                                                           |
 | **Accountable owner**        | Release Manager / Solo Operator                                                                                                                                                      |
@@ -15,7 +15,7 @@
 | **Baseline SHA (refreshed)** | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` (origin/main, PR #185 merged 2026-07-17T23:31:27Z)                                                                                        |
 | **Evidence sink**            | `docs/OPERATOR_QA_LOG.md` (append-only)                                                                                                                                              |
 | **Decision rule**            | **No GO, release tag, or production-ready claim until hard gates G1–G13 are all evidenced and TRUE (CCR-003).**                                                                      |
-| **Established by**           | ADR-001 **ACCEPTED Option B (Vercel)** 2026-07-18 (solo operator Chris). Cloud Run rejected for GO. v1.2.5: monitors → `www`; G9 FALSE until Vercel `ready:true` + apex DNS cutover. |
+| **Established by**           | ADR-001 **ACCEPTED Option B (Vercel)** 2026-07-18. ADR-002 MongoDB Atlas **IN PROGRESS** (scaffold); Supabase still required for readiness until auth + data cutover. v1.2.6.         |
 
 ### Evidence status vocabulary
 
@@ -200,7 +200,8 @@ Single authority (001) · Evidence freshness (002) · All-true release rule (003
 
 ## 10. Environment & Secret Matrix (summary — full text: spec Appendix E)
 
-Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public; safety via RLS), `SUPABASE_SERVICE_ROLE_KEY` (server-only), `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (fail-closed), `NEXT_PUBLIC_SITE_URL` (canonical origin — never localhost/preview in production).
+Required (current GO path): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public; safety via RLS), `SUPABASE_SERVICE_ROLE_KEY` (server-only), `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (fail-closed), `NEXT_PUBLIC_SITE_URL` (canonical origin — never localhost/preview in production).
+Additive (ADR-002 Mongo migration): `MONGODB_URI` (Atlas `mongodb+srv://…`), optional `MONGODB_DB` (default `mangu`). Not yet a readiness hard-fail; becomes required after Supabase cutover.
 Conditional: `RESEND_API_KEY`, `OPENAI_API_KEY` (feature flagged off if absent), `SENTRY_*`, `BASE_URL` (CI/E2E), `TRUSTED_PROXY_COUNT` (after topology fixed).
 **Forbidden in production:** `USE_MOCKS`, `SKIP_EMAILS` — proven absent in Phase 11.
 
