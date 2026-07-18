@@ -2,6 +2,20 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 4 — Tier L local release-SHA verification (agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 4 / Tier L → supports G2 (exact-SHA local evidence). No cloud credentials required. Verified against `origin/main` tip `a0a9cf5` (code tip = #223 `5744794` + subsequent bug-to-issue state chores).
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18T04:19Z | agent | local (Node 22.14 / nvm 22.22) | `a0a9cf59370a14c019a30ca0d69d45da80165470` | Phase 4 / Tier L | `SKIP_NPM_CI=1 bash scripts/pre-launch-verify.sh` | All local gates green | **11/11 PASS**: node/.nvmrc, npm ci (skip — modules present), validate-env, type-check, lint, prettier --check, unit tests **127/127** (24 suites), migration files (25), production build (CI mock env), secret pattern scan, HTML doctype/fence | PASS | `/tmp/tier-l-verify.log` |
+| 2026-07-18T04:21Z | agent | local mock E2E | `a0a9cf5` | Phase 4 / Tier L | `USE_MOCKS=true` Playwright chromium (CI-shaped placeholders) | Smoke suites pass; real-backend suites skip honestly | **36 passed, 35 skipped**, 0 failed (1.2m). Skips = auth-flow/role-gating without real Supabase (CCR-010) | PASS | `/tmp/mock-e2e.log` |
+| 2026-07-18T04:22Z | agent | local `npm run dev` + mock/placeholder env | `a0a9cf5` | Phase 4 / Tier L | Local health probes | Startup/live OK; readiness may fail closed without real backends | `/api/health` → **200** `status:ok` probe=startup; `/api/live` → **200** `alive`; `/api/health?ready=1` → **503** `ready:false` (DB/migrations/stripe fail against placeholders — expected, not G7) | PASS (Tier L) | — |
+| 2026-07-18T03:52Z | agent | GitHub Actions | `574479411261f4fbb36d987c83d1c2ea5b870ac9` (#223) | Phase 5 / G2 (partial) | Confirm main CI after MCP route-export fix | Required workflows green on code tip | **CI / Format Check / CodeQL / Lighthouse / Playwright E2E / Release Please = success**. Run: https://github.com/redinc23/my_publishing/actions/runs/29629590731 | PASS | issue #200 follow-up; G2 still FALSE until release/deploy SHA |
+| 2026-07-18 | agent | repo | this branch | Phase 4 hygiene | Strip UTF-8 BOM from `scripts/pre-launch-verify.sh` | Shebang executes cleanly | BOM caused `#!/usr/bin/env: No such file or directory` before body ran; stripped → `23 21 2f 75 73 72…` | PASS | `scripts/pre-launch-verify.sh` |
+
+**Notes:** Tier L does **not** flip G1/G7 (production deploy/readiness) or G2 (needs green on the eventual release SHA). Readiness 503 under placeholders is honest fail-closed. Observed related CI noise (not blocking Tier L): bug-to-issue state push race on concurrent main updates — tracked by draft PR #225 (`git pull --rebase` before push). Operator next: Phase 6 ADR-001 / monitor retarget, or Phase 7 hosted migration reconcile when Supabase access is available.
+
 ## Phase 5 — preview-E2E BASE_URL / real-target semantics (P0-005, agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 5 / P0-005 → G2. The `E2E against Preview` workflow set `BASE_URL` to the deployment URL, but `playwright.config.ts` hardcoded `baseURL: 'http://localhost:3000'` and unconditionally booted a local dev server — so "preview E2E" silently tested a local mock server, never the deployed preview. It also forced `USE_MOCKS=true` + placeholder Supabase env against a real target, making real-backend suites skip and results dishonest.
