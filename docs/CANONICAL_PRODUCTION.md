@@ -1,146 +1,91 @@
 # Canonical Production Target
 
-**Decision (2026-05-19):** **Google Cloud Run** via [cloudbuild.yaml](../cloudbuild.yaml) is the authoritative production deployment path for MANGU Publishers.
+**Decision (2026-07-18):** **Vercel** is the authoritative production deployment path for MANGU Publishers ([ADR-001](./adr/ADR-001-canonical-platform.md) — **ACCEPTED Option B**).
 
-> **Authority:** Signing ADR is [ADR-001](./adr/ADR-001-canonical-platform.md) (status **RECOMMENDED** Option A until Phase 6 signatures → ACCEPTED / G9). This file remains the operator checklist. Monitors target `https://mangu-publishers.com` (apex). `www` remains on Vercel until Phase 15 DNS cutover.
+> Cloud Run / `cloudbuild.yaml` / GCP Secret Manager launch checklists below the fold are **SUPERSEDED** for GO evidence. Apex may still resolve to Cloud Run until Phase 15 DNS cutover; do not treat that surface as canonical.
 
-## Rationale
+## Rationale (updated)
 
-| Criterion                                        | Cloud Run          | Vercel (ci.yml)  | AWS Amplify             |
-| ------------------------------------------------ | ------------------ | ---------------- | ----------------------- |
-| Documented in README / QUICK_START               | Primary            | Secondary        | Legacy                  |
-| Full pipeline (lint, test, secret audit, Docker) | Yes                | Partial          | No tests in amplify.yml |
-| Secret Manager integration                       | Yes                | Vercel env UI    | Amplify env             |
-| Service name alignment                           | `mangu-publishers` | Separate project | Different stack         |
+| Criterion                         | Vercel (canonical)                               | Cloud Run (retired for GO) |
+| --------------------------------- | ------------------------------------------------ | -------------------------- |
+| Operator decision 2026-07-18      | **Accepted**                                     | Rejected                   |
+| Current `www` host                | Yes (`server: Vercel`)                           | No                         |
+| Current apex host (pre-cutover)   | Not yet                                          | Still Google Frontend      |
+| Production readiness (2026-07-18) | **Not yet** (`ready:false` — Stripe env missing) | Legacy `ready:true`        |
 
-## Operator launch checklist (step-by-step)
+## Constants (Vercel)
 
-**Quick start:** [LAUNCH_NOW.md](./LAUNCH_NOW.md) · **Phase 4 detail:** [PHASE4_OPERATOR_RUNBOOK.md](./PHASE4_OPERATOR_RUNBOOK.md) · **Status:** [deployment_status.md](./reports/deployment/deployment_status.md)
+| Constant                 | Value                                              |
+| ------------------------ | -------------------------------------------------- |
+| Platform                 | Vercel                                             |
+| Project                  | `manguprojectz`                                    |
+| Interim production URL   | `https://www.mangu-publishers.com`                 |
+| Final production URL     | `https://mangu-publishers.com` (after DNS cutover) |
+| Stripe webhook (interim) | `https://www.mangu-publishers.com/api/webhook`     |
+| Monitors / Lighthouse    | `https://www.mangu-publishers.com`                 |
+| Deploy                   | Vercel Git deploy from `main`                      |
 
-| Constant       | Value                                      |
-| -------------- | ------------------------------------------ |
-| GCP account    | `renee@mangu-publishers.com`               |
-| Project        | `delta-wonder-488420-i3`                   |
-| Region         | `us-central1`                              |
-| Service        | `mangu-publishers`                         |
-| Domain         | `https://mangu-publishers.com`             |
-| Stripe webhook | `https://mangu-publishers.com/api/webhook` |
-| Deploy script  | `./scripts/gcloud-build-submit.sh`         |
+## Operator cutover checklist (required for G7 / G9)
 
-Complete these in order after merging the launch-unblock PR to `main`.
-
-### 1. Local environment
+### 1. Local env (unchanged)
 
 ```bash
 cp .env.local.example .env.local
-# Fill placeholders from dashboards (no real values in git):
-#   Supabase → https://app.supabase.com/project/_/settings/api
-#   Stripe   → https://dashboard.stripe.com/apikeys
-#   Upstash  → https://console.upstash.com/
+# Fill from dashboards (never commit secrets)
 npm run validate-env
-bash scripts/launch-readiness.sh
 ```
 
-### 2. GCP authentication and secrets
+### 2. Promote secrets to Vercel Production
+
+In Vercel → Project → Settings → Environment Variables (Production), set at least:
+
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (fail-closed in production)
+- `NEXT_PUBLIC_SITE_URL=https://www.mangu-publishers.com` (switch to apex after DNS cutover)
+- Optional: `RESEND_API_KEY`, `OPENAI_API_KEY`, Sentry vars
+
+**Forbidden in production:** `USE_MOCKS`, `SKIP_EMAILS`.
+
+Redeploy Production after env changes (`NEXT_PUBLIC_*` require rebuild).
+
+### 3. Prove Vercel readiness
 
 ```bash
-gcloud auth login                    # renee@mangu-publishers.com
-gcloud config set project delta-wonder-488420-i3
-./scripts/sync-gcp-secrets-from-env.sh
-./scripts/verify-gcp-production.sh
+curl -sS "https://www.mangu-publishers.com/api/health?ready=1"
+# Expect: HTTP 200 and "ready":true
 ```
 
-Required Secret Manager names (created by sync script when values exist in `.env.local`):
+Until this passes, **G7/G9 stay FALSE** even though ADR-001 is ACCEPTED.
 
-| Secret name                 | Env var                               |
-| --------------------------- | ------------------------------------- |
-| `supabase-service-role-key` | `SUPABASE_SERVICE_ROLE_KEY`           |
-| `stripe-secret-key`         | `STRIPE_SECRET_KEY`                   |
-| `stripe-webhook-secret`     | `STRIPE_WEBHOOK_SECRET`               |
-| `upstash-redis-rest-url`    | `UPSTASH_REDIS_REST_URL` (optional)   |
-| `upstash-redis-rest-token`  | `UPSTASH_REDIS_REST_TOKEN` (optional) |
-| `resend-api-key`            | `RESEND_API_KEY` (optional)           |
-| `openai-api-key`            | `OPENAI_API_KEY` (optional)           |
+### 4. Stripe webhook
 
-### 3. Supabase production migrations
+1. Stripe Dashboard → Webhooks → endpoint  
+   `https://www.mangu-publishers.com/api/webhook` (or apex after cutover)
+2. Copy signing secret → Vercel `STRIPE_WEBHOOK_SECRET` → redeploy
 
-```bash
-# Option A: SQL Editor (recommended for hosted Supabase)
-./scripts/bundle-migrations.sh > /tmp/mangu-migrations.sql
-# Paste into Supabase Dashboard → SQL Editor → Run
+### 5. Apex DNS cutover (Phase 15)
 
-# Option B: Supabase CLI (if project linked)
-supabase link --project-ref YOUR_PROJECT_REF
-supabase db push
-```
+Cloudflare zone `mangu-publishers.com`:
 
-Verify: tables exist, RLS enabled, `npm run verify-rls` passes against prod URL (with `.env.local` pointing at prod).
+1. Export/screenshot current DNS (rollback aid).
+2. Add Vercel’s recommended apex records for the project domain.
+3. Remove Google Cloud Run apex A/AAAA (`216.239.*` / `2001:4860:4802:*`).
+4. Keep `www` on Vercel (already CNAME to `*.vercel-dns-*.com`) or follow Vercel’s www guidance.
+5. Verify cert SAN covers the hostname you serve; then set `NEXT_PUBLIC_SITE_URL` to the final origin and redeploy.
 
-### 4. Stripe production webhook
+### 6. Retire Cloud Run (after Vercel green)
 
-1. Stripe Dashboard → Developers → Webhooks → Add endpoint
-2. URL: `https://mangu-publishers.com/api/webhook`
-3. Events: `checkout.session.completed`, `payment_intent.succeeded`, `payment_intent.payment_failed` (minimum)
-4. Copy signing secret → add to `.env.local` as `STRIPE_WEBHOOK_SECRET`
-5. Re-run `./scripts/sync-gcp-secrets-from-env.sh`
+- Stop treating `./scripts/gcloud-build-submit.sh` as the launch path.
+- Optionally delete/disable Cloud Run service `mangu-publishers` once traffic and webhook are stable on Vercel.
 
-Local testing:
+## SUPERSEDED — Cloud Run path (do not use for GO)
 
-```bash
-stripe listen --forward-to localhost:3000/api/webhook
-```
+Previous checklist (GCP project `delta-wonder-488420-i3`, `gcloud-build-submit.sh`, Secret Manager sync, `verify-gcp-production.sh`) is historical only. See git history pre-ADR-001 Option B acceptance.
 
-### 5. Deploy to Cloud Run
+## Related
 
-```bash
-# Loads NEXT_PUBLIC_* from .env.local and submits cloudbuild.yaml with substitutions:
-./scripts/gcloud-build-submit.sh
-```
-
-Do **not** run raw `gcloud builds submit` without substitutions — the script loads required `_NEXT_PUBLIC_*` values from `.env.local`. Private secrets come from Secret Manager at deploy time.
-
-### 6. Post-deploy verification
-
-```bash
-./scripts/verify-gcp-production.sh
-curl -sfS https://mangu-publishers.com/api/live
-curl -sfS "https://mangu-publishers.com/api/health?ready=1" | jq .
-```
-
-### 7. Browser QA (manual)
-
-| Flow             | Pass criteria                                   |
-| ---------------- | ----------------------------------------------- |
-| Register / login | Auth cookies set, dashboard loads               |
-| Browse books     | `/books`, deep links return 200                 |
-| Checkout         | Stripe test/live session creates                |
-| Admin health     | `/admin/health` shows green checks (admin role) |
-| Webhook          | Test payment updates order in Supabase          |
-
-Log results in [docs/OPERATOR_QA_LOG.md](./OPERATOR_QA_LOG.md).
-
-## What this means operationally
-
-1. **Release:** Merge to `main` → Cloud Build → Cloud Run revision.
-2. **Secrets:** GCP Secret Manager names must match `cloudbuild.yaml` `--set-secrets`.
-3. **Verify:** `./scripts/verify-gcp-production.sh` + `bash scripts/launch-readiness.sh` locally first.
-4. **Vercel:** Retired (Fix C10 + PR #144). The standalone `vercel-deploy.yml` workflow duplicated CI lint/build with dummy credentials and never deployed; it and the optional ci.yml Vercel job have both been removed. Cloud Run is the only deploy target.
-5. **Amplify:** Legacy reference only — do not use for new releases.
-
-## Operator scripts
-
-| Script                                                                                | Purpose                                                   |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [scripts/launch-readiness.sh](../scripts/launch-readiness.sh)                         | Local CI mirror + migration + lockfile gates              |
-| [scripts/ci-local.sh](../scripts/ci-local.sh)                                         | Same gates, npm-based                                     |
-| [scripts/verify-gcp-production.sh](../scripts/verify-gcp-production.sh)               | Secret + Cloud Run health check                           |
-| [scripts/sync-gcp-secrets-from-env.sh](../scripts/sync-gcp-secrets-from-env.sh)       | Push `.env.local` server secrets to GCP                   |
-| [scripts/gcloud-build-submit.sh](../scripts/gcloud-build-submit.sh)                   | Submit Cloud Build with `NEXT_PUBLIC_*` from `.env.local` |
-| [scripts/grant-cloudrun-secret-access.sh](../scripts/grant-cloudrun-secret-access.sh) | IAM bindings for Cloud Run runtime SA                     |
-| [scripts/verify-migrations.sh](../scripts/verify-migrations.sh)                       | Pre-deploy migration file check                           |
-| [scripts/bundle-migrations.sh](../scripts/bundle-migrations.sh)                       | Single SQL bundle for Supabase                            |
-| [blockers/fix-all.sh](../blockers/fix-all.sh)                                         | Full blocker pipeline verification                        |
-
-## Related issues
-
-- Closes [#70 — Decide canonical production target](https://github.com/redinc23/my_publishing/issues/70).
+- Authority: [ADR-001](./adr/ADR-001-canonical-platform.md)
+- Evidence: [OPERATOR_QA_LOG.md](./OPERATOR_QA_LOG.md)
+- Execution: [NEXT_GO.md](./NEXT_GO.md)

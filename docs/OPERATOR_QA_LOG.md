@@ -2,6 +2,20 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 6 — ADR-001 ACCEPTED Option B (Vercel); dump Cloud Run (P0-003, operator+agent, 2026-07-18)
+
+**Scope:** Operator decision: abandon Cloud Run as production authority; stick with Vercel. Agent records ACCEPTED ADR, retargets monitors to interim canonical `www`, rewrites canonical production checklist. **G9 stays FALSE** until Vercel `ready:true`.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18T05:48Z | operator | decision | post-#231 | P0-003 / G9 | Choose platform | One canonical platform | **Accept B — Vercel**; reject A (Cloud Run) | DECIDED | issue #190 |
+| 2026-07-18T05:48Z | agent | public HTTPS | this branch | P0-003 evidence | Probe www vs apex vs vercel.app | Know cutover gap | `www` + `manguprojectz.vercel.app` → **503 ready:false** (missing Stripe keys); apex Cloud Run still **ready:true** (legacy) | VERIFIED | — |
+| 2026-07-18T05:48Z | operator | signature | this branch | P0-003 | Sign ADR-001 | ACCEPTED Option B | Platform / RM / Eng = Chris (Solo Operator), Accept B @ 2026-07-18T05:48:00Z | PASS | `docs/adr/ADR-001-canonical-platform.md` |
+| 2026-07-18 | agent | repo | this branch | P0-007 | Retarget monitors | Vercel interim origin | `health-check.yml` + `lighthouse-ci.yml` → `https://www.mangu-publishers.com` | PASS (code) | expect RED until Vercel env promoted |
+| 2026-07-18 | agent | docs | this branch | Phase 6 | Rewrite CANONICAL_PRODUCTION | Vercel checklist; Cloud Run superseded | Cutover steps: Vercel env → ready:true → webhook → apex DNS → retire Cloud Run | PASS | `docs/CANONICAL_PRODUCTION.md` |
+
+**Notes:** Signing unlocks the *decision* half of G9; evidence half requires Vercel Production secrets + green monitor. Apex DNS currently Cloud Run-only — Phase 15 must point apex at Vercel (re-add Vercel records; remove `216.239.*`). Do not use Cloud Run for GO after this acceptance.
+
 ## Phase 6/15 — health-check SSL flake from apex DNS split (P0-007 follow-up, agent-run, 2026-07-18)
 
 **Scope:** Scheduled `Production Health Check` failed on first run after #227 retarget (run https://github.com/redinc23/my_publishing/actions/runs/29631499360). Soft startup probe aborted the job before readiness.

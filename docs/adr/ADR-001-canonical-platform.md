@@ -1,90 +1,77 @@
 # ADR-001: Canonical Production Platform and DNS Authority
 
-| Field         | Value                                                                                         |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| **Status**    | **RECOMMENDED (Option A — Cloud Run)** — awaiting Phase 6 signatures for ACCEPTED (P0-003/G9) |
-| **Created**   | 2026-07-18 (Phase 1 / P0-019)                                                                 |
-| **Updated**   | 2026-07-18 (Phase 6 agent draft)                                                              |
-| **Deciders**  | Platform, Release Manager, Engineering                                                        |
-| **Hard gate** | G9 (ADR signed + monitors on canonical origin)                                                |
+| Field         | Value                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------- |
+| **Status**    | **ACCEPTED (Option B — Vercel)** — signed Phase 6 (P0-003); G9 pending cutover evidence |
+| **Created**   | 2026-07-18 (Phase 1 / P0-019)                                                           |
+| **Updated**   | 2026-07-18T05:48:00Z (operator decision: dump Cloud Run; stick with Vercel)             |
+| **Deciders**  | Platform, Release Manager, Engineering (solo operator)                                  |
+| **Hard gate** | G9 (ADR signed + monitors on canonical origin with production readiness)                |
 
 ## Context
 
-Two production surfaces exist in project history:
+Two production surfaces existed:
 
-- **Cloud Run** — declared canonical in `docs/CANONICAL_PRODUCTION.md` (GCP project `delta-wonder-488420-i3`, region `us-central1`, service `mangu-publishers`; deploy path `cloudbuild.yaml` via `scripts/gcloud-build-submit.sh`). VERIFIED as a repo claim.
-- **Vercel** — `www.mangu-publishers.com` still served by Vercel (`server: Vercel`, re-verified 2026-07-18). Preview host `manguprojectz.vercel.app` returns readiness `ready:false` (missing Stripe env). Apex `mangu-publishers.com` is served by **Google Frontend** / Cloud Run and returns readiness `ready:true` (all critical checks pass) — VERIFIED 2026-07-18.
+- **Cloud Run** — previously declared canonical in `docs/CANONICAL_PRODUCTION.md`; apex `mangu-publishers.com` still served by Google Frontend with `ready:true` as of 2026-07-18 (legacy surface during cutover).
+- **Vercel** — `www.mangu-publishers.com` served by Vercel; project `manguprojectz`. As of 2026-07-18, Vercel readiness is **`ready:false`** (missing `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` / `STRIPE_SECRET_KEY` and dependent checks). That is a cutover blocker, not a reason to keep Cloud Run as authority.
 
-Exactly one platform must own the canonical origin for `mangu-publishers.com` / `www.mangu-publishers.com`. Monitors (P0-007), the Stripe webhook (G8), DNS/TLS (Phase 15), and the rollback target (G11) all derive from this decision. A split-brain deployment invalidates exact-SHA evidence (CCR-005).
+Exactly one platform must own the canonical origin. Monitors (P0-007), Stripe webhook (G8), DNS/TLS (Phase 15), and rollback (G11) derive from this decision.
 
 ## Options
 
-| Option                      | Description                                                   | Consequence sketch                                                                                                                                 |
-| --------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A — Cloud Run canonical** | Route apex + www to Cloud Run; Vercel retired or preview-only | Matches `docs/CANONICAL_PRODUCTION.md`, `cloudbuild.yaml`, Appendix G scripts; requires GCP secret promotion (Phase 11) and DNS cutover (Phase 15) |
-| **B — Vercel canonical**    | Keep Vercel serving; retire Cloud Run                         | Conflicts with existing runbooks/scripts; full rewrite of deploy + secret path; current Vercel surface is not readiness-green                      |
-| **C — Documented split**    | Different surfaces per host                                   | Rejected unless explicitly justified — violates single-authority and exact-SHA principles for launch                                               |
+| Option                      | Description                                                   | Consequence sketch                                                                                                    |
+| --------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **A — Cloud Run canonical** | Route apex + www to Cloud Run; Vercel preview-only            | Matches prior runbooks; rejected by operator 2026-07-18                                                               |
+| **B — Vercel canonical**    | Keep Vercel serving; retire Cloud Run as production authority | Requires Vercel env promotion, apex DNS to Vercel, webhook/monitor retarget, Cloud Run docs/scripts marked superseded |
+| **C — Documented split**    | Different surfaces per host                                   | Rejected — violates single-authority / exact-SHA (CCR-005)                                                            |
 
-## Decision (RECOMMENDED — not yet ACCEPTED)
+## Decision (ACCEPTED)
 
-**Option A — Cloud Run is the sole canonical production platform.**
+**Option B — Vercel is the sole canonical production platform.**
 
-| Item                     | Value                                                                                         |
-| ------------------------ | --------------------------------------------------------------------------------------------- |
-| Platform                 | Google Cloud Run                                                                              |
-| GCP project              | `delta-wonder-488420-i3`                                                                      |
-| Region                   | `us-central1`                                                                                 |
-| Service                  | `mangu-publishers`                                                                            |
-| Canonical origin         | `https://mangu-publishers.com` (apex; currently Cloud Run / Google Frontend)                  |
-| `www` + apex DNS cutover | Phase 15 — remove Vercel A (`76.76.21.21`) from apex; point `www` at Cloud Run; retire Vercel |
-| Deploy path              | `./scripts/gcloud-build-submit.sh` → `cloudbuild.yaml`                                        |
-| Stripe webhook           | `https://mangu-publishers.com/api/webhook`                                                    |
-| Monitor / Lighthouse URL | `https://mangu-publishers.com` (P0-007)                                                       |
-| Vercel                   | Preview / non-canonical only; not a GO evidence target                                        |
+| Item                     | Value                                                                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Platform                 | Vercel                                                                                                                                             |
+| Vercel project           | `manguprojectz` (team/account owning `www.mangu-publishers.com`)                                                                                   |
+| Interim canonical origin | `https://www.mangu-publishers.com` (already on Vercel)                                                                                             |
+| Final canonical origin   | `https://mangu-publishers.com` after apex DNS points at Vercel (Phase 15)                                                                          |
+| Stripe webhook (target)  | `https://www.mangu-publishers.com/api/webhook` until apex cutover; then apex equivalent                                                            |
+| Monitor / Lighthouse URL | `https://www.mangu-publishers.com` (retargeted with this acceptance)                                                                               |
+| Cloud Run                | **Non-canonical / retire.** May remain live during transition; not a GO evidence target; do not deploy new production revisions there intending GO |
+| Deploy path              | Vercel Git integration / dashboard deploy from `main` (Cloud Build → Cloud Run **superseded** for GO)                                              |
 
-**G9 stays FALSE** until this ADR status → **ACCEPTED** with the signature block below completed.
+**G9 remains FALSE** until: (1) Vercel production has secrets such that `/api/health?ready=1` → `ready:true`, (2) monitors hit that origin green, (3) apex DNS is on Vercel (or interim `www` is explicitly accepted as the only production hostname with apex redirect).
 
 ## Consequences
 
-- Deploy runbooks and scripts (P0-020) remain parameterized to Cloud Run — no rewrite.
-- Health-check and Lighthouse monitors retargeted to `https://mangu-publishers.com` (P0-007).
-- Conflicting deployment docs marked **SUPERSEDED** and linked here:
-  - `docs/AWS_AMPLIFY_DEPLOYMENT.md`, `docs/AWS_AMPLIFY_QUICK_START.md` — legacy Amplify
-  - Vercel standalone deploy workflow already retired (PR #144); preview host is not canonical
-- `docs/CANONICAL_PRODUCTION.md` remains the operational checklist; this ADR is the signed authority once ACCEPTED.
-- Rollback target + command recorded below (CCR-012, G11 rehearsal still Phase 14).
+- `docs/CANONICAL_PRODUCTION.md` rewritten for Vercel; Cloud Run checklist retained only as **SUPERSEDED / retirement** notes.
+- Health-check and Lighthouse retargeted to `https://www.mangu-publishers.com`.
+- Operator must set production env on Vercel (Stripe, Supabase, Upstash, site URL, webhook secret) — **current www is not readiness-green**.
+- Phase 15: point apex A/AAAA/CNAME at Vercel; remove Google `216.239.*` Cloud Run mapping records from apex; optionally decommission Cloud Run service.
+- Scripts `gcloud-build-submit.sh`, `verify-gcp-production.sh`, `grant-cloudrun-secret-access.sh`, `cloudbuild.yaml` are **non-canonical** for launch GO (may remain for historical/emergency use until deleted in a follow-up).
+- Rollback for Vercel: redeploy previous Vercel deployment / promote prior deployment in the Vercel dashboard (CCR-012). Do **not** fail over to Cloud Run for GO evidence after cutover completes.
 
-## Rollback (CCR-012)
+## Rollback (CCR-012) — Vercel
 
-If a Cloud Run revision is bad after a production deploy:
+1. Vercel Dashboard → Project → Deployments → Promote the last known-good deployment to Production.
+2. If DNS was changed and must revert mid-incident: restore prior Cloudflare records from a saved screenshot/export (take that export **before** apex cutover).
 
-```bash
-# List recent revisions, then route 100% traffic to the last known-good revision:
-gcloud run services update-traffic mangu-publishers \
-  --region us-central1 \
-  --to-revisions=<KNOWN_GOOD_REVISION>=100
-```
+## Live evidence snapshot (2026-07-18 UTC)
 
-Record the known-good revision ID in `docs/OPERATOR_QA_LOG.md` at Phase 14 (G11). Do **not** fail over to Vercel for GO evidence — that restores split-brain.
+| Target                                      | Observation                                                                                               |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `https://www.mangu-publishers.com/`         | HTTP 200; `server: Vercel` — **chosen interim canonical host**                                            |
+| `www` `/api/health?ready=1`                 | HTTP 503; `ready:false` — missing Stripe env (and skipped DB/auth/migrations) — **cutover blocker**       |
+| `https://manguprojectz.vercel.app/…ready=1` | Same: `ready:false` (missing Stripe)                                                                      |
+| `https://mangu-publishers.com/…ready=1`     | HTTP 200; `ready:true` on **Cloud Run** — legacy; not authority after this ADR                            |
+| Apex DNS A                                  | Cloud Run Google IPs only (`216.239.*`); Vercel A previously removed — **must re-add for apex on Vercel** |
 
-## Live evidence snapshot (agent, 2026-07-18 UTC — DOC-ONLY until operator re-verifies)
+## Signature Block (Phase 6)
 
-| Target                                      | Observation                                                                                                                                                                                                                       |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `https://mangu-publishers.com/`             | HTTP 200; `server: Google Frontend`; `x-cloud-trace-context` present                                                                                                                                                              |
-| `…/api/health`                              | HTTP 200; `probe: startup`; `status: ok`                                                                                                                                                                                          |
-| `…/api/live`                                | HTTP 200; `status: alive`                                                                                                                                                                                                         |
-| `…/api/health?ready=1`                      | HTTP 200; `ready: true`; environment/database/auth/migrations/stripe all `pass`                                                                                                                                                   |
-| `https://www.mangu-publishers.com/`         | HTTP 200; `server: Vercel` — **non-canonical until Phase 15 cutover**                                                                                                                                                             |
-| `https://manguprojectz.vercel.app/…ready=1` | HTTP 200 body with `ready: false` (missing Stripe env) — **not a production monitor target**                                                                                                                                      |
-| Apex DNS A records (2026-07-18)             | **Split-brain:** Google `216.239.*.21` (Cloud Run; cert SAN=`mangu-publishers.com`) **and** Vercel `76.76.21.21` (cert SAN=`www.mangu-publishers.com` only → intermittent SSL error 60). **Phase 15: remove Vercel A from apex.** |
+| Role            | Name                  | Decision | UTC                  |
+| --------------- | --------------------- | -------- | -------------------- |
+| Platform        | Chris (Solo Operator) | Accept B | 2026-07-18T05:48:00Z |
+| Release Manager | Chris (Solo Operator) | Accept B | 2026-07-18T05:48:00Z |
+| Engineering     | Chris (Solo Operator) | Accept B | 2026-07-18T05:48:00Z |
 
-## Signature Block (Phase 6 — required for ACCEPTED / G9)
-
-| Role            | Name     | Decision (Accept A / Reject) | UTC      |
-| --------------- | -------- | ---------------------------- | -------- |
-| Platform        | \_\_\_\_ | \_\_\_\_                     | \_\_\_\_ |
-| Release Manager | \_\_\_\_ | \_\_\_\_                     | \_\_\_\_ |
-| Engineering     | \_\_\_\_ | \_\_\_\_                     | \_\_\_\_ |
-
-After signing: set **Status** → **ACCEPTED**, append a QA-log row with signers + UTC, and refresh `docs/NEXT_GO.md` G9.
+Signed via operator instruction 2026-07-18 (“dump Cloud Run… stick with Vercel”). Status → **ACCEPTED**. G9 flips TRUE only after Vercel readiness + monitor evidence on the canonical Vercel origin.
