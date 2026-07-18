@@ -85,15 +85,15 @@ resolution Z). Open it as PR #0 (docs only) before starting WS1.
 Branch off `main` per workstream. One PR per workstream (2a–2d may be separate PRs).
 Merge order per Phoenix doc §5.6. Branch naming: `feat/phoenix-ws<N>-<slug>`.
 
-| Order | PR | Workstream | Risk | Doc section |
-|---|---|---|---|---|
-| 0 | docs | Recon report | — | §3 above |
-| 1 | PR #1 | WS1 Auth | 🔴 | §6 below |
-| 2 | PR #2a–d | WS2 Data layer | 🟡 | §7 below |
-| 3 | PR #3 | WS3 Storage (+ legacy file migration script) | 🟡 | §8 below |
-| 4 | PR #4 | WS4 Health/env/cleanup | 🟢 | §9 below |
-| 5 | PR #5 | WS5 Tests | 🟢 | §9 below |
-| 6 | PR #6 | WS6 Observability & rate limiting | 🟡 | §9 below |
+| Order | PR       | Workstream                                   | Risk | Doc section |
+| ----- | -------- | -------------------------------------------- | ---- | ----------- |
+| 0     | docs     | Recon report                                 | —    | §3 above    |
+| 1     | PR #1    | WS1 Auth                                     | 🔴   | §6 below    |
+| 2     | PR #2a–d | WS2 Data layer                               | 🟡   | §7 below    |
+| 3     | PR #3    | WS3 Storage (+ legacy file migration script) | 🟡   | §8 below    |
+| 4     | PR #4    | WS4 Health/env/cleanup                       | 🟢   | §9 below    |
+| 5     | PR #5    | WS5 Tests                                    | 🟢   | §9 below    |
+| 6     | PR #6    | WS6 Observability & rate limiting            | 🟡   | §9 below    |
 
 Every PR body MUST: (a) list the doc Task IDs implemented, (b) paste the doc's
 Verification column for each and show evidence (command output/screenshot), (c) tick the
@@ -124,6 +124,7 @@ Files: `lib/auth.ts`, `lib/auth-client.ts`, `app/api/auth/[...all]/route.ts`,
 `middleware.ts`, auth actions (path per recon), `emails/reset.tsx`, login banner.
 
 `lib/auth.ts` must include:
+
 ```ts
 // better-auth with mongodbAdapter(getDb())
 // emailAndPassword: { enabled: true, requireEmailVerification: true }
@@ -135,6 +136,7 @@ Files: `lib/auth.ts`, `lib/auth-client.ts`, `app/api/auth/[...all]/route.ts`,
 //   { auth_user_id: user.id, display_name: user.name ?? "", role: user.role,
 //     created_at: new Date(), updated_at: new Date() }
 ```
+
 - **1.3** Route: `export const { GET, POST } = toNextJsHandler(auth.handler)` (or
   `auth.handler` export pattern for your better-auth version). Verify `/api/auth/ok` → 200.
 - **1.4** Middleware per §5 guardrail: public matcher list, protected routes
@@ -169,7 +171,7 @@ Files: `lib/auth.ts`, `lib/auth-client.ts`, `app/api/auth/[...all]/route.ts`,
   ```
 - **2c.1 Server actions:** books insert/update; reviews insert THEN atomic recompute:
   aggregate avg+count over reviews for that book → `books.updateOne({ _id }, { $set:
-  { avg_rating, review_count } })`; profiles update. Call `revalidatePath` after every
+{ avg_rating, review_count } })`; profiles update. Call `revalidatePath` after every
   mutation.
 - **2c.2 `lib/audit.ts`:** `recordAudit(actorId, action, target, metadata)` →
   `audit_logs` insert. Wire into admin role-change, suspend, content-approve.
@@ -198,6 +200,7 @@ Files: `lib/auth.ts`, `lib/auth-client.ts`, `app/api/auth/[...all]/route.ts`,
 ## 9. WS4 / WS5 / WS6 — FINALIZATION SPECS
 
 **WS4 (PR #4):**
+
 - `app/api/health/route.ts`: `?ready=1` → ping Mongo (`db.command({ping:1})`), check
   Better Auth config, Stripe key format, Upstash+Blob env presence → composite JSON.
 - `lib/utils/env-validation.ts` (Zod): remove Supabase vars; add the 13 vars from doc
@@ -209,12 +212,14 @@ Files: `lib/auth.ts`, `lib/auth-client.ts`, `app/api/auth/[...all]/route.ts`,
   by migrate-storage + export-delta); it must not appear in code.
 
 **WS5 (PR #5):**
+
 - Unit: replace Supabase mocks with Mongo/Better Auth mocks; add tests for
   mongo-queries, webhook idempotency (deliver twice → 1 order), avg_rating recompute.
 - E2E: auth flows against Better Auth, legacy forced-reset journey,
   purchase→webhook→download. CI: unit+e2e required before merge.
 
 **WS6 (PR #6):**
+
 - `lib/logger.ts`: JSON `{ level, route, requestId, message, stack }`; wrap API
   handlers; document Vercel Log Drain attach step (human gate for the dashboard part).
 - Sentry: verify `sentry.*.config.ts` DSN wiring, add `SENTRY_RELEASE` in CI, source
@@ -256,7 +261,7 @@ Write these; humans execute with real credentials:
    - `user` docs: string `id` = legacy UUID, `emailVerified` from `email_confirmed_at`,
      `name` from `raw_user_meta_data`
    - `account` docs: `{ providerId: "credential", accountId: id, userId: id,
-     password: "!locked:<uuid>" }` — NEVER copy bcrypt hashes
+password: "!locked:<uuid>" }` — NEVER copy bcrypt hashes
    - UUID→ObjectId map persisted to `export/_id_map.json`; authors/books remapped;
      unique slug generation; `avg_rating:0, review_count:0` init
    - orders flattened to embedded `order_items[]`; preserve `stripe_payment_intent_id`
@@ -274,6 +279,7 @@ Write these; humans execute with real credentials:
 ## 12. DEFINITION OF DONE (your engagement ends when)
 
 All 8 North Star boxes (doc §1.2) are certifiable:
+
 1. `npm run build` exit 0, zero warnings
 2. `/api/health?ready=1` → `{"ready":true}`
 3. 22-point QA suite executed with documented results (prod = human runs, you support)
@@ -300,5 +306,5 @@ append your run summary to `POST_MORTEM.md` draft for the human post-mortem.
 
 ---
 
-*Briefing v1.0 — 2026-07-19. Pairs with `docs/PROJECT_PHOENIX.md` v4.0. Execute Phase 0
-recon first. Godspeed. 🔥*
+_Briefing v1.0 — 2026-07-19. Pairs with `docs/PROJECT_PHOENIX.md` v4.0. Execute Phase 0
+recon first. Godspeed. 🔥_
