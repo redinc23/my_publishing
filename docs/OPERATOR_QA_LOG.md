@@ -2,6 +2,18 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 5 (partial) — Format Check repair on main (agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 5 (CI/CD workflow repair) — resolve the only red required check on `main`. Verified via GitHub Actions API that on `main` HEAD `c925aae` (PR #210 merge) **Format Check = FAILURE** while CI, CodeQL, Lighthouse, Release Please = success. Root cause reproduced locally with pinned `prettier@3` + repo `.prettierrc`: 5 files fail `prettier --check .`. This corrects the stale "CI RED / Actions billing-locked" reports — Actions run and only formatting was red.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent (Actions API) | repo | main `c925aae` | Phase 5 / G2 | Read required-check status on main | Identify red checks | **Format Check FAILURE**; CI/CodeQL/Lighthouse/Release-Please success; E2E in_progress | DIAGNOSED | Actions run 29620916491 (format) |
+| 2026-07-18 | agent (local prettier@3) | repo | branch `claude/mangu-phase-1-authority-sv2hyn` (base `c925aae`) | Phase 5 | Reproduce `prettier --check .` | List unformatted files | 5 files: `docs/NEXT_GO.md`, `docs/adr/ADR-001-canonical-platform.md`, `docs/OPERATOR_QA_LOG.md`, `docs/phase2/_sources/litstream_phase2_sec04.md`, `docs/phase2/_sources/litstream_phase2.agent.final.md` (pre-existing since before `16dc1d7`) | REPRODUCED | `.prettierrc` (prettier@3.2.4 pin) |
+| 2026-07-18 | agent | repo | branch base `c925aae` | Phase 5 / CCR-002 | Fix format without rewriting evidence | Format-check green; append-only log untouched | `.prettierignore` += `docs/OPERATOR_QA_LOG.md` (append-only) + `docs/phase2/_sources/` (imported snapshots); `prettier --write` on NEXT_GO.md + ADR-001; `prettier --check` on all md/yaml/json → **"All matched files use Prettier code style!"** | PASS (local); CI confirms on push | this PR |
+
+**Result:** `prettier --check .` passes locally for all plugin-independent files (md/yaml/json). The remaining CI check runs full `npx prettier --check .` including TS/TSX (tailwind plugin) — those were already clean at `16dc1d7` and are untouched here, so CI is expected green. This is a document/config-only change (permitted freeze class 1+2). Supersedes stale cursor autofix vehicles #207/#208, which additionally reformat the authority doc and rewrite the append-only log (CCR-002 violation) — to be closed after this merges. **G2 remains FALSE** until required checks are green on the exact *deployed* release SHA (Phase 14); this only restores a green `main`.
+
 ## Phase 2 (Freeze) + Phase 3 (Recovery) + baseline refresh v1.2.0 (agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 2 (freeze/governance) and Phase 3 Steps 3.4–3.6 (PR closure, branch hygiene, migration triage), executed via GitHub API after authority PR #206 (`0f30649`) and recovery vehicle PR #185 (`16dc1d7`) merged to `main`. Refreshes `docs/NEXT_GO.md` to v1.2.0 / baseline `16dc1d7` per CCR-020/G12. No local/gcloud/supabase/stripe access — external facts remain DOC-ONLY.
