@@ -2,6 +2,19 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 8 — MCP transport security (P0-017, agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 8 / P0-017 → G7. The public `/api/mcp/[transport]` endpoint was open, unauthenticated, and uncapped. Operator decision (2026-07-18): MCP is not a launch-MVP surface → **disabled by default, safe when enabled** (least-privilege / honest-scope; low-maintenance for a solo operator). Verified locally with the repo toolchain.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent | local (Node 22) | branch `claude/mangu-phase-1-authority-sv2hyn` | P0-017 / G7 | Gate MCP behind `MCP_ENABLED` | 404 unless explicitly enabled | `mcpGuard` returns 404 when `MCP_ENABLED!=='true'`; enabled only for exact `'true'`. Endpoint is off by default (CCR-008, CCR-018) | PASS | issue #200; `app/api/mcp/[transport]/route.ts` |
+| 2026-07-18 | agent | local | branch | P0-017 / G7 (CCR-007) | Fail-closed rate limit when enabled | Reject on limiter reject/unavailable | When enabled, each request runs `enforceRateLimit('api', 'mcp:'+clientIp)`; 429 (+`Retry-After`) on `limited` or fail-closed `unavailable` | PASS | shared limiter `lib/rate-limit.ts` |
+| 2026-07-18 | agent | local | branch | P0-017 (input hygiene) | Harden `search_books` filter | No PostgREST `.or()` injection | `sanitizeSearchQuery` strips `,()%*\:` and caps length before the `ilike` pattern; empty-after-sanitize returns `[]` | PASS | — |
+| 2026-07-18 | agent | local | branch | Phase 8 verification | Run toolchain | Green | `tsc --noEmit` clean; `next lint` clean; new `tests/unit/mcp-transport-security.test.ts` (8 cases: gate/limit/sanitize) pass; full suite green | PASS | `tests/unit/mcp-transport-security.test.ts` |
+
+**Notes:** New env `MCP_ENABLED` (default off) — MCP stays dark in production unless the operator opts in, at which point it is rate-limited and input-sanitized. Broader "use Notion/other MCPs as inbound tooling" is a **post-launch** operator initiative, out of launch scope — not a gate dependency. **G7 stays FALSE** pending live readiness/health + P0-011 Upstash confirmation in Phase 14/12.
+
 ## Phase 9 — Product Truth: contact / newsletter / homepage stats (agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 9 (P0-012, P0-013, P0-014 → G6 "no false success"). Removes three false-success surfaces and replaces them with honest, env-gated behavior per the locked launch scope (§7). Verified locally with the repo's real toolchain (Node 22, `npm ci`). No external services called — Resend paths are unit-tested via mocks; operator confirms live behavior in Phase 12.

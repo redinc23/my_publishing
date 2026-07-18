@@ -1,11 +1,63 @@
 /**
  * MCP Server for Mangu Publishers
- * Exposes the app's public APIs as MCP tools at /api/mcp/mcp (Streamable HTTP).
+ * Exposes the app's public catalog as MCP tools at /api/mcp/mcp (Streamable HTTP).
+ *
+ * Security posture (P0-017, G7):
+ *  - DISABLED by default. The endpoint returns 404 unless `MCP_ENABLED=true`,
+ *    so this non-launch surface is never open unless explicitly turned on
+ *    (least privilege / honest scope — CCR-008, CCR-018).
+ *  - When enabled, every request is fail-closed rate limited (CCR-007) via the
+ *    shared `api` bucket, keyed by client IP.
+ *  - Read-only over published+public books only (anon key + RLS). User search
+ *    text is sanitized before it reaches a PostgREST filter (no `.or()`
+ *    injection).
  */
 
 import { createMcpHandler } from 'mcp-handler';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
+
+/** MCP is off unless explicitly enabled — read per-request so it's togglable. */
+export function isMcpEnabled(): boolean {
+  return process.env.MCP_ENABLED === 'true';
+}
+
+/**
+ * Strip characters that are significant in the PostgREST filter grammar so
+ * user-supplied search text cannot break out of an `ilike` pattern or inject
+ * additional `.or()` conditions. Also caps length.
+ */
+export function sanitizeSearchQuery(input: string): string {
+  return input
+    .replace(/[,()%*\\:]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 100);
+}
+
+/**
+ * Gate + rate-limit guard applied before the MCP handler runs. Returns a
+ * Response to short-circuit (404 disabled / 429 limited), or null to proceed.
+ */
+export async function mcpGuard(request: Request): Promise<Response | null> {
+  if (!isMcpEnabled()) {
+    return new Response(JSON.stringify({ error: 'not_found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const result = await enforceRateLimit('api', `mcp:${getClientIdentifier(request)}`);
+  if (!result.success) {
+    return new Response(JSON.stringify({ error: 'rate_limited', reason: result.reason }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', ...result.headers },
+    });
+  }
+
+  return null;
+}
 
 function supabase() {
   return createClient(
@@ -78,6 +130,10 @@ const handler = createMcpHandler(
         limit: z.number().int().min(1).max(50).default(10),
       },
       async ({ query, limit }) => {
+        const safe = sanitizeSearchQuery(query);
+        if (!safe) {
+          return { content: [{ type: 'text' as const, text: JSON.stringify([], null, 2) }] };
+        }
         const { data, error } = await supabase()
           .from('books')
           .select(
@@ -85,7 +141,7 @@ const handler = createMcpHandler(
           )
           .eq('status', 'published')
           .eq('visibility', 'public')
-          .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+          .or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
           .limit(limit);
         if (error) throw new Error(`Search failed: ${error.message}`);
         return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
@@ -156,4 +212,12 @@ const handler = createMcpHandler(
   }
 );
 
-export { handler as GET, handler as POST, handler as DELETE };
+// Apply the gate + rate-limit guard in front of the MCP handler, forwarding
+// all Next.js route arguments (request, context) through unchanged.
+async function guarded(request: Request, ...rest: unknown[]): Promise<Response> {
+  const blocked = await mcpGuard(request);
+  if (blocked) return blocked;
+  return (handler as (req: Request, ...args: unknown[]) => Promise<Response>)(request, ...rest);
+}
+
+export { guarded as GET, guarded as POST, guarded as DELETE };
