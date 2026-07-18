@@ -1,41 +1,4 @@
 {
   "version": 1,
-  "items": {
-    "fa53241269413663af0eb14db61893ca788b1c01": {
-      "consecutiveFails": 0,
-      "consecutiveSuccesses": 3,
-      "issueNumber": null,
-      "lastSeenRunId": 29032032086,
-      "lastSeenAt": "2026-07-09T16:09:07.548Z",
-      "meta": {
-        "workflowName": "CI/CD Pipeline",
-        "jobName": "test",
-        "stepName": "Run npm run build"
-      }
-    },
-    "20f3d87ca53ccc736b3d4f8c31ca2fb59d107b89": {
-      "consecutiveFails": 0,
-      "consecutiveSuccesses": 3,
-      "issueNumber": null,
-      "lastSeenRunId": 29032032086,
-      "lastSeenAt": "2026-07-09T16:09:07.548Z",
-      "meta": {
-        "workflowName": "CI/CD Pipeline",
-        "jobName": "test",
-        "stepName": "Run npm run build"
-      }
-    },
-    "9568756ebcb83709117746807e5799bc0af7b96b": {
-      "consecutiveFails": 1,
-      "consecutiveSuccesses": 0,
-      "issueNumber": null,
-      "lastSeenRunId": 29032180460,
-      "lastSeenAt": "2026-07-09T16:10:40.431Z",
-      "meta": {
-        "workflowName": "CI/CD Pipeline",
-        "jobName": "test",
-        "stepName": "Run npm run lint"
-      }
-    }
-  }
+  "items": {}
 }

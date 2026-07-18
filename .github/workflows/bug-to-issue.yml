@@ -2,7 +2,7 @@ name: Bug to Issue (continuous failures)
 
 on:
   workflow_run:
-    workflows: ['CI/CD Pipeline'] # matches the name of the main CI workflow
+    workflows: ['CI'] # must match the `name:` of ci.yml exactly, else this never fires
     types:
       - completed
 
