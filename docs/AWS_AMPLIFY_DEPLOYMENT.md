@@ -1,6 +1,6 @@
 # AWS Amplify Deployment Guide
 
-> **SUPERSEDED (2026-07-18):** Amplify is not the launch production path. Canonical platform authority is [ADR-001](./adr/ADR-001-canonical-platform.md) (Cloud Run / Option A). Operational checklist: [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md). Keep this file as historical reference only.
+> **SUPERSEDED (2026-07-18):** Amplify is not the launch production path. Canonical platform authority is [ADR-001](./adr/ADR-001-canonical-platform.md) (**Vercel / Option B**). Operational checklist: [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md). Keep this file as historical reference only.
 
 Complete guide for deploying the MANGU platform to AWS Amplify.
 

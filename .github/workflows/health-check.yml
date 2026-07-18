@@ -1,26 +1,25 @@
 name: Production Health Check
 
-# Canonical origin per ADR-001 (Option A — Cloud Run): https://mangu-publishers.com
+# Canonical origin per ADR-001 (ACCEPTED Option B — Vercel):
+#   Interim: https://www.mangu-publishers.com
 # Probe semantics (CCR-013):
-#   /api/live              — liveness (process up); never a GO gate alone
+#   /api/live              — liveness; never a GO gate alone
 #   /api/health            — startup
 #   /api/health?ready=1    — readiness; ONLY GO-relevant probe (G7)
 #
-# DNS note (Phase 15): apex currently returns BOTH Cloud Run (Google) A records
-# and a Vercel A record (76.76.21.21). The Vercel cert is for www only, so curl
-# intermittently fails with SSL error 60 when DNS round-robins there. Soft probes
-# must not abort the job; readiness retries across attempts until Cloud Run wins.
+# Expect RED until Vercel Production has Stripe/Supabase/Upstash env
+# (www was ready:false as of ADR acceptance — operator cutover checklist).
 #
 # Alerting: workflow failure notifies repository watchers / configured routing.
 # Owner: Platform (P0-007 / ADR-001).
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # every 15 minutes
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 env:
-  CANONICAL_ORIGIN: https://mangu-publishers.com
+  CANONICAL_ORIGIN: https://www.mangu-publishers.com
 
 jobs:
   health-check:
@@ -49,14 +48,12 @@ jobs:
           probe_soft "Liveness" "/api/live" /tmp/live.json
           probe_soft "Startup" "/api/health" /tmp/startup.json
 
-      - name: Readiness (/api/health?ready=1) — GO probe with DNS retry
+      - name: Readiness (/api/health?ready=1) — GO probe
         run: |
           set -euo pipefail
           URL="${CANONICAL_ORIGIN}/api/health?ready=1"
           echo "Readiness (GO): ${URL}"
-          echo "Note: apex DNS may round-robin to Vercel (wrong cert) — retrying until Cloud Run answers."
-
-          attempts=8
+          attempts=5
           delay=2
           for i in $(seq 1 "${attempts}"); do
             echo "--- attempt ${i}/${attempts}"
@@ -76,11 +73,11 @@ jobs:
               fi
               echo "::warning::HTTP 200 but ready:true missing — retrying"
             else
-              echo "::warning::TLS/HTTP failure (often Vercel A-record with www-only cert) — retrying"
+              echo "::warning::Readiness not green yet (expect until Vercel Production env is complete)"
             fi
             sleep "${delay}"
           done
 
           echo "❌ Readiness failed after ${attempts} attempts (G7 / P0-007)"
-          echo "Operator: remove Vercel A record from apex DNS so only Cloud Run answers (Phase 15)."
+          echo "Operator: set Stripe/Supabase/Upstash on Vercel Production and redeploy (docs/CANONICAL_PRODUCTION.md)."
           exit 1
