@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1](https://github.com/redinc23/my_publishing/compare/v1.0.0...v1.0.1) (2026-07-18)
+
+
+### Bug Fixes
+
+* apply Prettier formatting to docs/PROJECT_PHOENIX.md ([0ecdfb0](https://github.com/redinc23/my_publishing/commit/0ecdfb0cb47f9c3d486e00baa2000e81ba4d0cc0))
+* **ci:** resolve format check and bug-to-issue rebase race ([d1a0c78](https://github.com/redinc23/my_publishing/commit/d1a0c789e1ed21f3daed1d453107155f1d4c95d0))
+* **ci:** stop Trivy CRITICAL secret false positives in vuln-scan ([33e909f](https://github.com/redinc23/my_publishing/commit/33e909f06d1a8d6a09a33144dc458bf1952565db))
+* **ci:** stop Trivy CRITICAL secret false positives in vuln-scan ([3c82b12](https://github.com/redinc23/my_publishing/commit/3c82b12b2bde067d099c460e8bf27b808cd003a0))
+* **ci:** stop Trivy CRITICAL secret false positives in vuln-scan ([9d692fd](https://github.com/redinc23/my_publishing/commit/9d692fd5f6363905a7ec42959555131e29a525de))
+
 ## 1.0.0 (2026-07-18)
 
 
