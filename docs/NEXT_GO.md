@@ -5,38 +5,38 @@
 
 ## 1. Document Control
 
-| Field | Value |
-| --- | --- |
-| **Authority version** | 1.2.0 |
-| **Status** | **NO-GO / NOT RELEASE-READY** |
-| **Effective date (UTC)** | 2026-07-18 |
-| **Accountable owner** | Release Manager / Solo Operator |
-| **Source specification** | MANGU Master Execution Specification v1.0 (source snapshot 2026-07-17; 16 phases / 115 steps / 9 appendices) |
-| **Baseline SHA (refreshed)** | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` (origin/main, PR #185 merged 2026-07-17T23:31:27Z) |
-| **Evidence sink** | `docs/OPERATOR_QA_LOG.md` (append-only) |
-| **Decision rule** | **No GO, release tag, or production-ready claim until hard gates G1–G13 are all evidenced and TRUE (CCR-003).** |
-| **Established by** | Phase 1 authority PR #206 (`0f30649`) merged to main 2026-07-18 → **G13 TRUE**. This refresh (v1.2.0) records Phase 2 freeze + Phase 3 recovery progress per CCR-020/G12. |
+| Field                        | Value                                                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Authority version**        | 1.2.0                                                                                                                                                                     |
+| **Status**                   | **NO-GO / NOT RELEASE-READY**                                                                                                                                             |
+| **Effective date (UTC)**     | 2026-07-18                                                                                                                                                                |
+| **Accountable owner**        | Release Manager / Solo Operator                                                                                                                                           |
+| **Source specification**     | MANGU Master Execution Specification v1.0 (source snapshot 2026-07-17; 16 phases / 115 steps / 9 appendices)                                                              |
+| **Baseline SHA (refreshed)** | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` (origin/main, PR #185 merged 2026-07-17T23:31:27Z)                                                                             |
+| **Evidence sink**            | `docs/OPERATOR_QA_LOG.md` (append-only)                                                                                                                                   |
+| **Decision rule**            | **No GO, release tag, or production-ready claim until hard gates G1–G13 are all evidenced and TRUE (CCR-003).**                                                           |
+| **Established by**           | Phase 1 authority PR #206 (`0f30649`) merged to main 2026-07-18 → **G13 TRUE**. This refresh (v1.2.0) records Phase 2 freeze + Phase 3 recovery progress per CCR-020/G12. |
 
 ### Evidence status vocabulary
 
-| Status | Meaning | Satisfies a hard gate? |
-| --- | --- | --- |
-| NOT STARTED | No execution evidence exists | No |
-| IN PROGRESS | Actions started; acceptance incomplete | No |
-| BLOCKED | Dependency/access/defect/decision prevents completion | No |
-| FAILED | Observed result violates pass criteria | No |
-| PASSED | Exact-SHA criteria met and evidence reviewed | Yes, if current and complete |
-| SUPERSEDED | Historical result retained but replaced | No |
-| WAIVED | Approved exception, owner + residual risk recorded | Never for an unchanged hard gate |
+| Status      | Meaning                                               | Satisfies a hard gate?           |
+| ----------- | ----------------------------------------------------- | -------------------------------- |
+| NOT STARTED | No execution evidence exists                          | No                               |
+| IN PROGRESS | Actions started; acceptance incomplete                | No                               |
+| BLOCKED     | Dependency/access/defect/decision prevents completion | No                               |
+| FAILED      | Observed result violates pass criteria                | No                               |
+| PASSED      | Exact-SHA criteria met and evidence reviewed          | Yes, if current and complete     |
+| SUPERSEDED  | Historical result retained but replaced               | No                               |
+| WAIVED      | Approved exception, owner + residual risk recorded    | Never for an unchanged hard gate |
 
 ## 2. Evidence Classification (applies to every factual claim)
 
-| Class | Meaning |
-| --- | --- |
-| **VERIFIED (repo)** | Directly confirmed against a named SHA via git/GitHub API |
-| **REPORTED** | Recorded by an operator; not independently queryable |
-| **DOC-ONLY** | External-system claim (GCP, Supabase, Stripe, DNS, Sentry) awaiting live verification |
-| **PROPOSED** | A not-yet-executed action |
+| Class               | Meaning                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| **VERIFIED (repo)** | Directly confirmed against a named SHA via git/GitHub API                             |
+| **REPORTED**        | Recorded by an operator; not independently queryable                                  |
+| **DOC-ONLY**        | External-system claim (GCP, Supabase, Stripe, DNS, Sentry) awaiting live verification |
+| **PROPOSED**        | A not-yet-executed action                                                             |
 
 Every executed test is appended to `docs/OPERATOR_QA_LOG.md` with: UTC timestamp, actor, environment, exact SHA, deployment/revision ID, test/gate ID, action, expected, actual, result, artifact link, follow-up issue. Prior evidence is never replaced — superseded rows are marked and new rows appended (CCR-002, CCR-020). No secrets or PII in evidence (CCR-009, CCR-015).
 
@@ -46,46 +46,46 @@ Every executed test is appended to `docs/OPERATOR_QA_LOG.md` with: UTC timestamp
 
 ### 3.1 Repository facts — VERIFIED (GitHub API, against baseline SHA above)
 
-| Item | Value | Notes |
-| --- | --- | --- |
-| origin/main | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` | "fix(ci): resolve format, migrate, scan, e2e, and Cloud Build failures (#185)"; parent `0f30649` (#206 authority). Was `3d9ea3c` in v1.1.0 — SUPERSEDED |
-| Branch protection | main = **protected** | All changes via PR |
-| Open PRs | 19 → **12** | 8 duplicate autofix PRs closed 2026-07-18 (Step 3.4); 2 new autofix vehicles (#207, #208) opened against `16dc1d7`. Inventory in §3.2 |
-| Open issues | **21** | P0-001…P0-020 (#186–#205) + freeze notice #209; see §5 |
-| Branches | **~96; 26 `cursor/ci-autofix-automation-*`** | Only 2 now carry open PRs (#207 `-709e`, #208 `-609e`); 24 orphaned — prune list in §3.4, blocked on operator (agent push scoped to designated branch) |
-| Tags / Releases | **0 / 0** | No release ever cut; release-please PR #145 (`autorelease: pending`) HELD as 1.0.0 vehicle |
-| Workflows | **19** in `.github/workflows/` | ci, e2e, preview-e2e, deploy, format-check, codeql, container-scan, dependency-review, bug-to-issue, health-check, lighthouse-ci, npm-audit, release-please, rls-check, stale, supabase-migrate, admin-setup, auto-merge, copilot-setup-steps |
-| Local migrations | **25** files in `supabase/migrations/` | Tip: `20260717114300_order_items_select_own.sql` |
-| `docs/NEXT_GO.md` | **present on main** (via #206) | **G13 TRUE** — authority tracked in release tree |
-| `docs/adr/ADR-001-canonical-platform.md` | **present on main** | ADR-001 PROPOSED (P0-019; decision in Phase 6 / P0-003) |
-| `scripts/verify-gcp-production.sh` | **MISSING** | P0-020 — reference implementation in spec Appendix G |
-| `scripts/grant-cloudrun-secret-access.sh` | **MISSING** | P0-020 — reference implementation in spec Appendix G |
-| CI on `16dc1d7` | **RED (reported)** | #207/#208 target format-check + Trivy secret-scan + webkit E2E flake + Cloud Build env residuals; G2 stays FALSE until required checks green on the exact deployed SHA (Phase 5) |
+| Item                                      | Value                                        | Notes                                                                                                                                                                                                                                         |
+| ----------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| origin/main                               | `16dc1d7c3c3b2861efc8b289649b29a3bda56424`   | "fix(ci): resolve format, migrate, scan, e2e, and Cloud Build failures (#185)"; parent `0f30649` (#206 authority). Was `3d9ea3c` in v1.1.0 — SUPERSEDED                                                                                       |
+| Branch protection                         | main = **protected**                         | All changes via PR                                                                                                                                                                                                                            |
+| Open PRs                                  | 19 → **12**                                  | 8 duplicate autofix PRs closed 2026-07-18 (Step 3.4); 2 new autofix vehicles (#207, #208) opened against `16dc1d7`. Inventory in §3.2                                                                                                         |
+| Open issues                               | **21**                                       | P0-001…P0-020 (#186–#205) + freeze notice #209; see §5                                                                                                                                                                                        |
+| Branches                                  | **~96; 26 `cursor/ci-autofix-automation-*`** | Only 2 now carry open PRs (#207 `-709e`, #208 `-609e`); 24 orphaned — prune list in §3.4, blocked on operator (agent push scoped to designated branch)                                                                                        |
+| Tags / Releases                           | **0 / 0**                                    | No release ever cut; release-please PR #145 (`autorelease: pending`) HELD as 1.0.0 vehicle                                                                                                                                                    |
+| Workflows                                 | **19** in `.github/workflows/`               | ci, e2e, preview-e2e, deploy, format-check, codeql, container-scan, dependency-review, bug-to-issue, health-check, lighthouse-ci, npm-audit, release-please, rls-check, stale, supabase-migrate, admin-setup, auto-merge, copilot-setup-steps |
+| Local migrations                          | **25** files in `supabase/migrations/`       | Tip: `20260717114300_order_items_select_own.sql`                                                                                                                                                                                              |
+| `docs/NEXT_GO.md`                         | **present on main** (via #206)               | **G13 TRUE** — authority tracked in release tree                                                                                                                                                                                              |
+| `docs/adr/ADR-001-canonical-platform.md`  | **present on main**                          | ADR-001 PROPOSED (P0-019; decision in Phase 6 / P0-003)                                                                                                                                                                                       |
+| `scripts/verify-gcp-production.sh`        | **MISSING**                                  | P0-020 — reference implementation in spec Appendix G                                                                                                                                                                                          |
+| `scripts/grant-cloudrun-secret-access.sh` | **MISSING**                                  | P0-020 — reference implementation in spec Appendix G                                                                                                                                                                                          |
+| CI on `16dc1d7`                           | **RED (reported)**                           | #207/#208 target format-check + Trivy secret-scan + webkit E2E flake + Cloud Build env residuals; G2 stays FALSE until required checks green on the exact deployed SHA (Phase 5)                                                              |
 
 ### 3.2 Open PR inventory — VERIFIED (2026-07-18, post-recovery)
 
-| PR | Class | Draft | Base | Disposition |
-| --- | --- | --- | --- | --- |
-| ~~#185~~ | Recovery vehicle | — | — | **MERGED** 2026-07-17T23:31:27Z → `16dc1d7` (P0-001 partial: main advanced; deploy READY still Phase 14) |
-| **#207** `fix(ci): format, E2E webkit, Cloud Build env` / **#208** `fix(ci): format + Trivy secret scan` | Recovery vehicles (new) | Yes | `16dc1d7` | Consolidate to **one vehicle per failure signature** (freeze rule 4) before merge; Phase 5 |
-| ~~#183, #182, #181, #180, #179, #178, #174, #173~~ | Duplicate cursor autofix (8) | — | stale | **CLOSED as superseded** 2026-07-18 (Step 3.4 / P0-002) |
-| #184 `reorder migrations` (mislabeled) | Stale mega-branch | Yes | `3d9ea3c` | Triaged 2026-07-18 → **recommend close as superseded** (no migration files in diff; competing NEXT_GO.md; superseded portal edits). Ordering handled by #185 `--include-all` + P0-004/#192 |
-| #145 `chore(main): release 1.0.0` | release-please | No | current | **HOLD until G1–G13 TRUE (Phase 16)** — freeze comment posted |
-| #167 openai 4→6, #160 jest 29→30, #155 react-dom 18→19, #154 tailwind-merge 2→3, #152 react-day-picker 9→10, #133 @types/node 20→26, #129 deploy-cloudrun 2→3 | Dependabot majors (7) | No | mixed | **HELD pre-GO** (Phase 2); freeze comments posted; triage post-GO |
-| #142 Copilot CLI integration | Tooling | Yes | stale | **Deferred** — freeze comment posted; not launch-critical |
+| PR                                                                                                                                                            | Class                        | Draft | Base      | Disposition                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ----- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ~~#185~~                                                                                                                                                      | Recovery vehicle             | —     | —         | **MERGED** 2026-07-17T23:31:27Z → `16dc1d7` (P0-001 partial: main advanced; deploy READY still Phase 14)                                                                                   |
+| **#207** `fix(ci): format, E2E webkit, Cloud Build env` / **#208** `fix(ci): format + Trivy secret scan`                                                      | Recovery vehicles (new)      | Yes   | `16dc1d7` | Consolidate to **one vehicle per failure signature** (freeze rule 4) before merge; Phase 5                                                                                                 |
+| ~~#183, #182, #181, #180, #179, #178, #174, #173~~                                                                                                            | Duplicate cursor autofix (8) | —     | stale     | **CLOSED as superseded** 2026-07-18 (Step 3.4 / P0-002)                                                                                                                                    |
+| #184 `reorder migrations` (mislabeled)                                                                                                                        | Stale mega-branch            | Yes   | `3d9ea3c` | Triaged 2026-07-18 → **recommend close as superseded** (no migration files in diff; competing NEXT_GO.md; superseded portal edits). Ordering handled by #185 `--include-all` + P0-004/#192 |
+| #145 `chore(main): release 1.0.0`                                                                                                                             | release-please               | No    | current   | **HOLD until G1–G13 TRUE (Phase 16)** — freeze comment posted                                                                                                                              |
+| #167 openai 4→6, #160 jest 29→30, #155 react-dom 18→19, #154 tailwind-merge 2→3, #152 react-day-picker 9→10, #133 @types/node 20→26, #129 deploy-cloudrun 2→3 | Dependabot majors (7)        | No    | mixed     | **HELD pre-GO** (Phase 2); freeze comments posted; triage post-GO                                                                                                                          |
+| #142 Copilot CLI integration                                                                                                                                  | Tooling                      | Yes   | stale     | **Deferred** — freeze comment posted; not launch-critical                                                                                                                                  |
 
 ### 3.3 External-system claims — DOC-ONLY / UNVERIFIED (no live access from agent; verify per CCR-017)
 
-| Claim | Last observed | Source |
-| --- | --- | --- |
-| GCP project `delta-wonder-488420-i3`, region `us-central1`, Cloud Run service `mangu-publishers` | DOC-ONLY | spec / `docs/CANONICAL_PRODUCTION.md` |
-| `docs/CANONICAL_PRODUCTION.md` declares Cloud Run canonical | VERIFIED (repo) | file content @ baseline SHA |
-| `www.mangu-publishers.com` served by **Vercel**; apex TLS SAN mismatch; `/api/health?ready=1` → `degraded`, Stripe warn | REPORTED 2026-07-09 (QA log) — stale, re-verify | `docs/OPERATOR_QA_LOG.md` |
-| Supabase project `mangu-publishers` / `tkzvikozrcynhwsqtkqp`; hosted migrations = 22 | DOC-ONLY (25 local VERIFIED) | QA log; spec — Phase 7 export required |
-| GitHub Actions blocked by account billing lock | REPORTED 2026-07-08 (QA log) — re-verify on next run | `docs/OPERATOR_QA_LOG.md` |
-| Unit tests 63/63 PASS; type-check PASS | REPORTED 2026-07-17 (uncommitted working tree vs `326bb60`) — NOT release evidence; rerun on exact SHA in Phase 4 | `docs/OPERATOR_QA_LOG.md` |
-| Stripe production webhook registered; secrets in GCP Secret Manager | DOC-ONLY | Phase 11/13 verification |
-| Manual QA rows 1–10 complete | **FALSE — all rows blank** (VERIFIED repo) | `docs/OPERATOR_QA_LOG.md` → G10 FALSE |
+| Claim                                                                                                                   | Last observed                                                                                                     | Source                                 |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| GCP project `delta-wonder-488420-i3`, region `us-central1`, Cloud Run service `mangu-publishers`                        | DOC-ONLY                                                                                                          | spec / `docs/CANONICAL_PRODUCTION.md`  |
+| `docs/CANONICAL_PRODUCTION.md` declares Cloud Run canonical                                                             | VERIFIED (repo)                                                                                                   | file content @ baseline SHA            |
+| `www.mangu-publishers.com` served by **Vercel**; apex TLS SAN mismatch; `/api/health?ready=1` → `degraded`, Stripe warn | REPORTED 2026-07-09 (QA log) — stale, re-verify                                                                   | `docs/OPERATOR_QA_LOG.md`              |
+| Supabase project `mangu-publishers` / `tkzvikozrcynhwsqtkqp`; hosted migrations = 22                                    | DOC-ONLY (25 local VERIFIED)                                                                                      | QA log; spec — Phase 7 export required |
+| GitHub Actions blocked by account billing lock                                                                          | REPORTED 2026-07-08 (QA log) — re-verify on next run                                                              | `docs/OPERATOR_QA_LOG.md`              |
+| Unit tests 63/63 PASS; type-check PASS                                                                                  | REPORTED 2026-07-17 (uncommitted working tree vs `326bb60`) — NOT release evidence; rerun on exact SHA in Phase 4 | `docs/OPERATOR_QA_LOG.md`              |
+| Stripe production webhook registered; secrets in GCP Secret Manager                                                     | DOC-ONLY                                                                                                          | Phase 11/13 verification               |
+| Manual QA rows 1–10 complete                                                                                            | **FALSE — all rows blank** (VERIFIED repo)                                                                        | `docs/OPERATOR_QA_LOG.md` → G10 FALSE  |
 
 ### 3.4 Branch prune list (Step 3.5 / P0-002) — OPERATOR ACTION REQUIRED
 
@@ -104,49 +104,49 @@ done
 
 ## 4. Program Map — 16 Phases
 
-| # | Phase | Status | Exit summary |
-| --- | --- | --- | --- |
-| 1 | Authority, Baseline, Evidence Control | **COMPLETE** (PR #206 merged; G13 TRUE) | Authority on main; refreshed baseline; evidence model + traceability active |
-| 2 | Launch Freeze & Change Governance | **COMPLETE** | Freeze notice #209; HOLD comments on #145 + 7 dependabot majors; #142 deferred; permitted change classes locked |
-| 3 | Repository Recovery, PR Closure, Branch Hygiene | **IN PROGRESS** | #185 merged (main @ `16dc1d7`); 8 duplicates closed; #184 triaged (recommend close); branch prune handed to operator (§3.4); **remaining:** green main via #207/#208 (Phase 5), deploy READY (Phase 14) |
-| 4 | Local Environment & Release-SHA Verification | NOT STARTED | Tier L: node contract, clean install, pre-launch script, 63/63 unit, mock E2E, local health |
-| 5 | CI/CD Workflow Repair | NOT STARTED | P0-005, P0-006; required checks truthful |
-| 6 | Canonical Platform Decision & Runbooks | NOT STARTED | ADR-001 signed (P0-003); scripts P0-020; monitors P0-007 |
-| 7 | Database Migration, RLS, Recovery Readiness | NOT STARTED | P0-004, P0-015 |
-| 8 | Security, Privacy, Abuse Controls, Secret Hygiene | NOT STARTED | P0-011, P0-017; fail-closed |
-| 9 | Product Truth & Entitlement UX | NOT STARTED | P0-012/013/014; no false success (G6) |
-| 10 | Observability, Sentry, Synthetic Monitoring | NOT STARTED | Sentry release-SHA event; monitors canonical; alert ownership |
-| 11 | Production Env & Secret Promotion | NOT STARTED | P0-016; USE_MOCKS/SKIP_EMAILS proven absent |
-| 12 | Real-Backend Manual QA: Auth/RBAC/Catalog | NOT STARTED | P0-008, P0-009 (G3, G5, G10) |
-| 13 | Payments, Webhooks, Entitlement, Refunds | NOT STARTED | P0-010 (G4, G8) |
-| 14 | Production Deployment, Health, Rollback | NOT STARTED | P0-018 (D1-D8; G1, G2, G7, G11) |
-| 15 | DNS/TLS Cutover & Stabilization | NOT STARTED | Apex+www; TLS; 24h stabilization |
-| 16 | Gates, Release 1.0.0, Post-GO Transition | NOT STARTED | G1–G13 TRUE; sign-off; cut from approved SHA; post-release monitoring; controlled thaw |
+| #   | Phase                                             | Status                                  | Exit summary                                                                                                                                                                                            |
+| --- | ------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Authority, Baseline, Evidence Control             | **COMPLETE** (PR #206 merged; G13 TRUE) | Authority on main; refreshed baseline; evidence model + traceability active                                                                                                                             |
+| 2   | Launch Freeze & Change Governance                 | **COMPLETE**                            | Freeze notice #209; HOLD comments on #145 + 7 dependabot majors; #142 deferred; permitted change classes locked                                                                                         |
+| 3   | Repository Recovery, PR Closure, Branch Hygiene   | **IN PROGRESS**                         | #185 merged (main @ `16dc1d7`); 8 duplicates closed; #184 triaged (recommend close); branch prune handed to operator (§3.4); **remaining:** green main via #207/#208 (Phase 5), deploy READY (Phase 14) |
+| 4   | Local Environment & Release-SHA Verification      | NOT STARTED                             | Tier L: node contract, clean install, pre-launch script, 63/63 unit, mock E2E, local health                                                                                                             |
+| 5   | CI/CD Workflow Repair                             | NOT STARTED                             | P0-005, P0-006; required checks truthful                                                                                                                                                                |
+| 6   | Canonical Platform Decision & Runbooks            | NOT STARTED                             | ADR-001 signed (P0-003); scripts P0-020; monitors P0-007                                                                                                                                                |
+| 7   | Database Migration, RLS, Recovery Readiness       | NOT STARTED                             | P0-004, P0-015                                                                                                                                                                                          |
+| 8   | Security, Privacy, Abuse Controls, Secret Hygiene | NOT STARTED                             | P0-011, P0-017; fail-closed                                                                                                                                                                             |
+| 9   | Product Truth & Entitlement UX                    | NOT STARTED                             | P0-012/013/014; no false success (G6)                                                                                                                                                                   |
+| 10  | Observability, Sentry, Synthetic Monitoring       | NOT STARTED                             | Sentry release-SHA event; monitors canonical; alert ownership                                                                                                                                           |
+| 11  | Production Env & Secret Promotion                 | NOT STARTED                             | P0-016; USE_MOCKS/SKIP_EMAILS proven absent                                                                                                                                                             |
+| 12  | Real-Backend Manual QA: Auth/RBAC/Catalog         | NOT STARTED                             | P0-008, P0-009 (G3, G5, G10)                                                                                                                                                                            |
+| 13  | Payments, Webhooks, Entitlement, Refunds          | NOT STARTED                             | P0-010 (G4, G8)                                                                                                                                                                                         |
+| 14  | Production Deployment, Health, Rollback           | NOT STARTED                             | P0-018 (D1-D8; G1, G2, G7, G11)                                                                                                                                                                         |
+| 15  | DNS/TLS Cutover & Stabilization                   | NOT STARTED                             | Apex+www; TLS; 24h stabilization                                                                                                                                                                        |
+| 16  | Gates, Release 1.0.0, Post-GO Transition          | NOT STARTED                             | G1–G13 TRUE; sign-off; cut from approved SHA; post-release monitoring; controlled thaw                                                                                                                  |
 
 ## 5. P0 Backlog & Traceability (all OPEN; issues created 2026-07-18)
 
-| P0 | Requirement | Phases | Gates | Issue |
-| --- | --- | --- | --- | --- |
-| P0-001 | Merge/replace recovery vehicle and verify main/deploy READY | 3, 14 | G1, G2 | [#187](https://github.com/redinc23/my_publishing/issues/187) |
-| P0-002 | Close duplicate autofix PRs and remove merge noise | 3 | G2 | [#189](https://github.com/redinc23/my_publishing/issues/189) |
-| P0-003 | Lock canonical platform/DNS authority in ADR-001 | 6, 15 | G9 | [#190](https://github.com/redinc23/my_publishing/issues/190) |
-| P0-004 | Reconcile migration history and hosted state | 7 | G7 | [#192](https://github.com/redinc23/my_publishing/issues/192) |
-| P0-005 | Preview E2E honors BASE_URL / real target semantics | 5 | G2 | [#194](https://github.com/redinc23/my_publishing/issues/194) |
-| P0-006 | Repair bug-to-issue workflow trigger | 5 | G2 | [#188](https://github.com/redinc23/my_publishing/issues/188) |
-| P0-007 | Retarget health/Lighthouse monitors to canonical production | 6, 10, 15 | G9 | [#186](https://github.com/redinc23/my_publishing/issues/186) |
-| P0-008 | Complete launch-critical manual QA rows 1–10 | 12, 13 | G3, G4, G5, G10 | [#193](https://github.com/redinc23/my_publishing/issues/193) |
-| P0-009 | Complete Phase 7A auth evidence | 12 | G3 | [#191](https://github.com/redinc23/my_publishing/issues/191) |
-| P0-010 | Stripe purchase → webhook → order → library → reading | 13 | G4, G8 | [#205](https://github.com/redinc23/my_publishing/issues/205) |
-| P0-011 | Production Upstash fail-closed controls | 8, 11, 12 | G3, G7 | [#195](https://github.com/redinc23/my_publishing/issues/195) |
-| P0-012 | Fix or honestly disable contact form | 9 | G6 | [#197](https://github.com/redinc23/my_publishing/issues/197) |
-| P0-013 | Fix or honestly disable newsletter CTA | 9 | G6 | [#201](https://github.com/redinc23/my_publishing/issues/201) |
-| P0-014 | Replace/remove contradictory homepage statistics | 9 | G6 | [#204](https://github.com/redinc23/my_publishing/issues/204) |
-| P0-015 | Apply + verify hosted `order_items` SELECT policy | 7, 13 | G4, G7 | [#199](https://github.com/redinc23/my_publishing/issues/199) |
-| P0-016 | Validate payment/rate-limit production secrets | 11, 13 | G4, G7, G8 | [#203](https://github.com/redinc23/my_publishing/issues/203) |
-| P0-017 | Disable/auth/rate-limit public MCP transport | 8 | G7 | [#200](https://github.com/redinc23/my_publishing/issues/200) |
-| P0-018 | Deploy via canonical path; complete D1–D8 | 14 | G1, G2, G7, G11 | [#198](https://github.com/redinc23/my_publishing/issues/198) |
-| P0-019 | Commit authority document; create ADR directory | 1, 6, 9, 16 | G9, G12, G13 | [#196](https://github.com/redinc23/my_publishing/issues/196) |
-| P0-020 | Create/validate missing production verification + IAM scripts | 6, 11, 14 | G1, G7, G11 | [#202](https://github.com/redinc23/my_publishing/issues/202) |
+| P0     | Requirement                                                   | Phases      | Gates           | Issue                                                        |
+| ------ | ------------------------------------------------------------- | ----------- | --------------- | ------------------------------------------------------------ |
+| P0-001 | Merge/replace recovery vehicle and verify main/deploy READY   | 3, 14       | G1, G2          | [#187](https://github.com/redinc23/my_publishing/issues/187) |
+| P0-002 | Close duplicate autofix PRs and remove merge noise            | 3           | G2              | [#189](https://github.com/redinc23/my_publishing/issues/189) |
+| P0-003 | Lock canonical platform/DNS authority in ADR-001              | 6, 15       | G9              | [#190](https://github.com/redinc23/my_publishing/issues/190) |
+| P0-004 | Reconcile migration history and hosted state                  | 7           | G7              | [#192](https://github.com/redinc23/my_publishing/issues/192) |
+| P0-005 | Preview E2E honors BASE_URL / real target semantics           | 5           | G2              | [#194](https://github.com/redinc23/my_publishing/issues/194) |
+| P0-006 | Repair bug-to-issue workflow trigger                          | 5           | G2              | [#188](https://github.com/redinc23/my_publishing/issues/188) |
+| P0-007 | Retarget health/Lighthouse monitors to canonical production   | 6, 10, 15   | G9              | [#186](https://github.com/redinc23/my_publishing/issues/186) |
+| P0-008 | Complete launch-critical manual QA rows 1–10                  | 12, 13      | G3, G4, G5, G10 | [#193](https://github.com/redinc23/my_publishing/issues/193) |
+| P0-009 | Complete Phase 7A auth evidence                               | 12          | G3              | [#191](https://github.com/redinc23/my_publishing/issues/191) |
+| P0-010 | Stripe purchase → webhook → order → library → reading         | 13          | G4, G8          | [#205](https://github.com/redinc23/my_publishing/issues/205) |
+| P0-011 | Production Upstash fail-closed controls                       | 8, 11, 12   | G3, G7          | [#195](https://github.com/redinc23/my_publishing/issues/195) |
+| P0-012 | Fix or honestly disable contact form                          | 9           | G6              | [#197](https://github.com/redinc23/my_publishing/issues/197) |
+| P0-013 | Fix or honestly disable newsletter CTA                        | 9           | G6              | [#201](https://github.com/redinc23/my_publishing/issues/201) |
+| P0-014 | Replace/remove contradictory homepage statistics              | 9           | G6              | [#204](https://github.com/redinc23/my_publishing/issues/204) |
+| P0-015 | Apply + verify hosted `order_items` SELECT policy             | 7, 13       | G4, G7          | [#199](https://github.com/redinc23/my_publishing/issues/199) |
+| P0-016 | Validate payment/rate-limit production secrets                | 11, 13      | G4, G7, G8      | [#203](https://github.com/redinc23/my_publishing/issues/203) |
+| P0-017 | Disable/auth/rate-limit public MCP transport                  | 8           | G7              | [#200](https://github.com/redinc23/my_publishing/issues/200) |
+| P0-018 | Deploy via canonical path; complete D1–D8                     | 14          | G1, G2, G7, G11 | [#198](https://github.com/redinc23/my_publishing/issues/198) |
+| P0-019 | Commit authority document; create ADR directory               | 1, 6, 9, 16 | G9, G12, G13    | [#196](https://github.com/redinc23/my_publishing/issues/196) |
+| P0-020 | Create/validate missing production verification + IAM scripts | 6, 11, 14   | G1, G7, G11     | [#202](https://github.com/redinc23/my_publishing/issues/202) |
 
 **Priority discipline (CCR-004):** No P1/P2 may displace an open prerequisite P0.
 
@@ -154,30 +154,30 @@ done
 
 > Every gate must be explicitly TRUE with current, accessible, exact-SHA evidence. FALSE, PENDING, UNVERIFIED, or evidence from another SHA ⇒ NO-GO (CCR-003, CCR-005).
 
-| Gate | Requirement | Pass logic | Required evidence | State |
-| --- | --- | --- | --- | --- |
-| G1 | origin/main deployment READY | Platform ready conditions + candidate revision identity | Phase 14 D1/D2 dossier | **FALSE** |
-| G2 | CI green on exact release SHA | All required workflows green on deployed SHA | Actions run URLs + SHA correlation | **FALSE** |
-| G3 | Phase 7A auth evidence complete | Registration, host, PKCE, login/logout, reset, duplicate | Phase 12 signed auth package | **FALSE** |
-| G4 | Stripe purchase → order → library → reading | Signed webhook fulfillment, DB rows, entitlement, refund | Phase 13 correlation package | **FALSE** |
-| G5 | RBAC smokes pass | Non-admin denied; nonpartner export denied; roles succeed | Phase 12 RBAC/portal evidence | **FALSE** |
-| G6 | No false-success public forms/claims | Contact/newsletter/stats/CTA/route truth acceptance | Phase 9 acceptance package | **FALSE** |
-| G7 | Production readiness passes | `/api/health?ready=1` → `ready:true` with critical components | Phase 14/15 curl JSON + logs | **FALSE** |
-| G8 | Production webhook registered + test event | Canonical endpoint, subscriptions, signed event 2xx + side effect | Stripe endpoint/event evidence | **FALSE** |
-| G9 | ADR signed; monitors hit real production | ADR-001 signed; DNS/monitor URLs canonical | ADR commit + monitor run URLs | **FALSE** |
-| G10 | Manual QA rows 1–10 complete with dates | Tester, time, SHA, deploy ID, artifact per row | QA log commit + evidence index | **FALSE** |
-| G11 | Known-good revision recorded; rollback traceable | Verified target + successful rehearsal | Rollback transcript + revision ID | **FALSE** |
-| G12 | Master baseline refreshed with release SHA | Latest source/deploy/DNS/migration facts here | Refresh commit | **PARTIAL** — refreshed to `16dc1d7` (v1.2.0); final release-SHA refresh due at cut (recurs per CCR-020) |
-| G13 | Authority document committed at `docs/NEXT_GO.md` | File tracked in release tree, matches approved version | git tree proof + commit SHA | **TRUE** — `docs/NEXT_GO.md` on main via PR #206 (`0f30649`); tracked in release tree |
+| Gate | Requirement                                       | Pass logic                                                        | Required evidence                  | State                                                                                                    |
+| ---- | ------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| G1   | origin/main deployment READY                      | Platform ready conditions + candidate revision identity           | Phase 14 D1/D2 dossier             | **FALSE**                                                                                                |
+| G2   | CI green on exact release SHA                     | All required workflows green on deployed SHA                      | Actions run URLs + SHA correlation | **FALSE**                                                                                                |
+| G3   | Phase 7A auth evidence complete                   | Registration, host, PKCE, login/logout, reset, duplicate          | Phase 12 signed auth package       | **FALSE**                                                                                                |
+| G4   | Stripe purchase → order → library → reading       | Signed webhook fulfillment, DB rows, entitlement, refund          | Phase 13 correlation package       | **FALSE**                                                                                                |
+| G5   | RBAC smokes pass                                  | Non-admin denied; nonpartner export denied; roles succeed         | Phase 12 RBAC/portal evidence      | **FALSE**                                                                                                |
+| G6   | No false-success public forms/claims              | Contact/newsletter/stats/CTA/route truth acceptance               | Phase 9 acceptance package         | **FALSE**                                                                                                |
+| G7   | Production readiness passes                       | `/api/health?ready=1` → `ready:true` with critical components     | Phase 14/15 curl JSON + logs       | **FALSE**                                                                                                |
+| G8   | Production webhook registered + test event        | Canonical endpoint, subscriptions, signed event 2xx + side effect | Stripe endpoint/event evidence     | **FALSE**                                                                                                |
+| G9   | ADR signed; monitors hit real production          | ADR-001 signed; DNS/monitor URLs canonical                        | ADR commit + monitor run URLs      | **FALSE**                                                                                                |
+| G10  | Manual QA rows 1–10 complete with dates           | Tester, time, SHA, deploy ID, artifact per row                    | QA log commit + evidence index     | **FALSE**                                                                                                |
+| G11  | Known-good revision recorded; rollback traceable  | Verified target + successful rehearsal                            | Rollback transcript + revision ID  | **FALSE**                                                                                                |
+| G12  | Master baseline refreshed with release SHA        | Latest source/deploy/DNS/migration facts here                     | Refresh commit                     | **PARTIAL** — refreshed to `16dc1d7` (v1.2.0); final release-SHA refresh due at cut (recurs per CCR-020) |
+| G13  | Authority document committed at `docs/NEXT_GO.md` | File tracked in release tree, matches approved version            | git tree proof + commit SHA        | **TRUE** — `docs/NEXT_GO.md` on main via PR #206 (`0f30649`); tracked in release tree                    |
 
 ## 7. Launch Scope (Step 1.5 — signed operating rule)
 
-| Class | Items |
-| --- | --- |
-| **Launch-in-MVP** | Catalog/browse/search; auth (register/login/reset/PKCE); Stripe checkout + webhook fulfillment; library + entitlement-gated reading; author portal submission; admin portal; RBAC; RLS; rate limiting (fail-closed); health/readiness probes; Sentry |
-| **Launch-with-flag / honest-unavailable** | AI recommendations (Resonance — requires `OPENAI_API_KEY`, else flagged off); email/newsletter (requires `RESEND_API_KEY`, else disabled honestly); contact form (works verifiably or disabled); audiobooks; reviews/ratings (coming-soon only) |
-| **Post-launch (post-GO)** | Stripe Connect/payouts; major dependency upgrades (#167/#160/#155/#154/#152/#133/#129); Next 16 migration (fixes 17 npm-audit vulns in `next@14.2.35` chain); growth features; k6 load testing rollout |
-| **Out-of-scope for launch** | Any feature merge during freeze outside permitted classes (Phase 2 §8); marketing "production-ready" claims before G1–G13 TRUE |
+| Class                                     | Items                                                                                                                                                                                                                                                |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Launch-in-MVP**                         | Catalog/browse/search; auth (register/login/reset/PKCE); Stripe checkout + webhook fulfillment; library + entitlement-gated reading; author portal submission; admin portal; RBAC; RLS; rate limiting (fail-closed); health/readiness probes; Sentry |
+| **Launch-with-flag / honest-unavailable** | AI recommendations (Resonance — requires `OPENAI_API_KEY`, else flagged off); email/newsletter (requires `RESEND_API_KEY`, else disabled honestly); contact form (works verifiably or disabled); audiobooks; reviews/ratings (coming-soon only)      |
+| **Post-launch (post-GO)**                 | Stripe Connect/payouts; major dependency upgrades (#167/#160/#155/#154/#152/#133/#129); Next 16 migration (fixes 17 npm-audit vulns in `next@14.2.35` chain); growth features; k6 load testing rollout                                               |
+| **Out-of-scope for launch**               | Any feature merge during freeze outside permitted classes (Phase 2 §8); marketing "production-ready" claims before G1–G13 TRUE                                                                                                                       |
 
 Scope changes require change-control approval and a same-PR update to this file.
 
@@ -210,15 +210,15 @@ Conditional: `RESEND_API_KEY`, `OPENAI_API_KEY` (feature flagged off if absent),
 
 ## 12. Go/No-Go Sign-Off (Phase 16 — blank until then)
 
-| Role | Scope | Decision / Signature / UTC |
-| --- | --- | --- |
-| Release Manager | Sequence, gate integrity, version/tag | ____ |
-| Engineering | Source/build correctness | ____ |
-| Platform | Deployment, secrets, monitoring, DNS/TLS, rollback | ____ |
-| QA | Tier L/R/P evidence, defect disposition | ____ |
-| Product | Launch scope, public truth, residual risk | ____ |
-| Security | RBAC/RLS/secret/abuse/privacy | ____ |
-| Finance/Payments | Stripe mode, price mapping, refunds | ____ |
+| Role             | Scope                                              | Decision / Signature / UTC |
+| ---------------- | -------------------------------------------------- | -------------------------- |
+| Release Manager  | Sequence, gate integrity, version/tag              | \_\_\_\_                   |
+| Engineering      | Source/build correctness                           | \_\_\_\_                   |
+| Platform         | Deployment, secrets, monitoring, DNS/TLS, rollback | \_\_\_\_                   |
+| QA               | Tier L/R/P evidence, defect disposition            | \_\_\_\_                   |
+| Product          | Launch scope, public truth, residual risk          | \_\_\_\_                   |
+| Security         | RBAC/RLS/secret/abuse/privacy                      | \_\_\_\_                   |
+| Finance/Payments | Stripe mode, price mapping, refunds                | \_\_\_\_                   |
 
 Rules: any owner NO-GO ⇒ NO-GO; absence is not consent; a signature on a different SHA is invalid.
 
