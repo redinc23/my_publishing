@@ -2,6 +2,22 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 2 (Freeze) + Phase 3 (Recovery) + baseline refresh v1.2.0 (agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 2 (freeze/governance) and Phase 3 Steps 3.4–3.6 (PR closure, branch hygiene, migration triage), executed via GitHub API after authority PR #206 (`0f30649`) and recovery vehicle PR #185 (`16dc1d7`) merged to `main`. Refreshes `docs/NEXT_GO.md` to v1.2.0 / baseline `16dc1d7` per CCR-020/G12. No local/gcloud/supabase/stripe access — external facts remain DOC-ONLY.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent (GitHub API) | repo | main @ `16dc1d7` | G13 | Confirm authority on main | `docs/NEXT_GO.md` tracked in release tree | Present via PR #206 (`0f30649`); ADR-001 present at `docs/adr/ADR-001-canonical-platform.md` | **G13 TRUE** | `docs/NEXT_GO.md` §6 |
+| 2026-07-18 | agent | repo | main @ `16dc1d7` | Step 2.1 | Create launch freeze notice | Freeze issue with permitted change classes + held items | Issue #209 created (permitted classes; #145 + 7 dependabot majors held; #142 deferred) | PASS | issue #209 |
+| 2026-07-18 | agent | repo | — | Step 2.2 | Post HOLD comments on held PRs | #145 + dependabot majors carry HOLD; #142 deferred | HOLD comments posted on #145, #167, #160, #155, #154, #152, #133, #129; defer comment on #142 | PASS | PR comment IDs 5009267082–5009268622 |
+| 2026-07-18 | agent | repo | recovery `16dc1d7` (PR #185 merged 2026-07-17T23:31:27Z) | Step 3.4 / P0-002 | Close 8 duplicate autofix PRs | Closed as superseded, referencing recovery merge, only after #185 merged | #173, #174, #178, #179, #180, #181, #182, #183 closed with superseded comment citing `16dc1d7` | PASS | 8 PRs closed; issue #189 |
+| 2026-07-18 | agent | repo | origin | Step 3.5 / P0-002 | Prune orphaned autofix branches | Delete 24 `cursor/ci-autofix-automation-*` orphans; keep `-709e`/#207, `-609e`/#208 | `git push --delete` → HTTP 403 (sandbox proxy scopes push to designated branch); no MCP delete-branch tool | **BLOCKED — handed to operator** | `docs/NEXT_GO.md` §3.4 (exact command + 24-branch list) |
+| 2026-07-18 | agent | repo | #184 head base `3d9ea3c` | Step 3.6 / P0-004 | Triage migration-reorder PR #184 | Independent decision recorded | Diff touches **no** `supabase/migrations/` files; adds competing 1,465-line `NEXT_GO.md`; portal edits superseded by 2026-07-17 wave → recommend close as superseded; ordering handled by #185 `--include-all` + #192 | TRIAGED (recommend close; left open for operator confirm) | PR #184 comment 5009279483 |
+| 2026-07-18 | agent | repo | main @ `16dc1d7` | CCR-020 / G12 | Refresh authority baseline | v1.1.0 → v1.2.0; baseline `3d9ea3c` → `16dc1d7`; phase/gate states current | §1 version 1.2.0; §3 refreshed (12 open PRs, G13 TRUE); §4 Phases 1–2 COMPLETE, 3 IN PROGRESS; §6 G13 TRUE, G12 PARTIAL | PASS (this PR) | authority refresh PR |
+
+**Notes:** CI on `16dc1d7` is RED (reported) — #207/#208 target format-check, Trivy secret-scan, webkit E2E flake, and Cloud Build env residuals; **G2 stays FALSE** until required checks are green on the exact deployed SHA (Phase 5). Freeze rule 4 requires consolidating #207/#208 to one vehicle per failure signature before merge. Prior rows below preserved verbatim (append-only, CCR-002).
+
 ## Phase 1 — Authority, baseline refresh, traceability (agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 1 (Steps 1.1–1.5). Executed via GitHub API by the agent; no local/gcloud/supabase/stripe access — external-system facts are DOC-ONLY/REPORTED as classified in `docs/NEXT_GO.md` §2.
