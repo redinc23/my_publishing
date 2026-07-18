@@ -9,7 +9,7 @@
  */
 
 import { MongoClient, type Db, type MongoClientOptions } from 'mongodb';
-import { assertMongoUri, getMongoDbName, isMongoConfigured } from '@/lib/mongodb-config';
+import { assertMongoUri, getMongoDbName } from '@/lib/mongodb-config';
 
 export { getMongoDbName, isMongoConfigured } from '@/lib/mongodb-config';
 
