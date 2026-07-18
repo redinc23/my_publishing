@@ -12,6 +12,18 @@
         "jobName": "test",
         "stepName": "Run npm run build"
       }
+    },
+    "7b64a4f685d6a77cc3e90e622bc099ed65ffa385": {
+      "consecutiveFails": 1,
+      "consecutiveSuccesses": 0,
+      "issueNumber": null,
+      "lastSeenRunId": 29629265182,
+      "lastSeenAt": "2026-07-18T03:45:03.046Z",
+      "meta": {
+        "workflowName": "CI",
+        "jobName": "test",
+        "stepName": "Run npm run build"
+      }
     }
   }
 }
