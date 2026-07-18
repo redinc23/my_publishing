@@ -7,7 +7,7 @@
 
 | Field                        | Value                                                                                                                                                                                |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Authority version**        | 1.2.6                                                                                                                                                                                |
+| **Authority version**        | 1.2.7                                                                                                                                                                                |
 | **Status**                   | **NO-GO / NOT RELEASE-READY**                                                                                                                                                        |
 | **Effective date (UTC)**     | 2026-07-18                                                                                                                                                                           |
 | **Accountable owner**        | Release Manager / Solo Operator                                                                                                                                                      |
@@ -15,7 +15,7 @@
 | **Baseline SHA (refreshed)** | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` (origin/main, PR #185 merged 2026-07-17T23:31:27Z)                                                                                        |
 | **Evidence sink**            | `docs/OPERATOR_QA_LOG.md` (append-only)                                                                                                                                              |
 | **Decision rule**            | **No GO, release tag, or production-ready claim until hard gates G1–G13 are all evidenced and TRUE (CCR-003).**                                                                      |
-| **Established by**           | ADR-001 **ACCEPTED Option B (Vercel)** 2026-07-18. ADR-002 MongoDB Atlas **IN PROGRESS** (scaffold); Supabase still required for readiness until auth + data cutover. v1.2.6.         |
+| **Established by**           | ADR-001 Option B (Vercel). ADR-002 Mongo: run `npm run db:mongo:up` (Atlas API keys + optional Vercel token). `DATABASE_PROVIDER=mongodb` hard-gates Atlas ping. Auth cutover still open. v1.2.7. |
 
 ### Evidence status vocabulary
 

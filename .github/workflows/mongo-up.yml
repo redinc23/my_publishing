@@ -1,0 +1,69 @@
+# Optional: run Mongo Atlas bootstrap + ping when secrets are present.
+# Does NOT run on every push — workflow_dispatch / manual only.
+name: Mongo Up
+
+on:
+  workflow_dispatch:
+    inputs:
+      sync_vercel:
+        description: 'Also sync MONGODB_URI to Vercel'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  mongo-up:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Require Atlas API keys
+        env:
+          ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+          ATLAS_PRIVATE_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
+        run: |
+          if [ -z "$ATLAS_PUBLIC_KEY" ] || [ -z "$ATLAS_PRIVATE_KEY" ]; then
+            echo "Add repo secrets ATLAS_PUBLIC_KEY and ATLAS_PRIVATE_KEY, then re-run."
+            exit 1
+          fi
+
+      - name: Bootstrap + ping + indexes
+        env:
+          ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+          ATLAS_PRIVATE_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
+          ATLAS_ORG_ID: ${{ secrets.ATLAS_ORG_ID }}
+          ATLAS_GROUP_ID: ${{ secrets.ATLAS_GROUP_ID }}
+          ATLAS_CLUSTER_NAME: ${{ secrets.ATLAS_CLUSTER_NAME }}
+          ATLAS_DB_USER: ${{ secrets.ATLAS_DB_USER }}
+          ATLAS_DB_PASSWORD: ${{ secrets.ATLAS_DB_PASSWORD }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+          DATABASE_PROVIDER: mongodb
+        run: |
+          npm run db:atlas:bootstrap
+          npm run db:mongo:ping
+          npm run db:mongo:indexes
+
+      - name: Sync to Vercel
+        if: ${{ inputs.sync_vercel == true || inputs.sync_vercel == 'true' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+          DATABASE_PROVIDER: mongodb
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret missing — skip sync"
+            exit 0
+          fi
+          # Bootstrap wrote .env.local in the runner workspace
+          npm run db:mongo:sync-vercel

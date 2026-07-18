@@ -21,6 +21,9 @@ build/
 .env.production
 .env.production.local
 
+# Local secrets from automation (Atlas DB password, etc.)
+.local/
+
 # Deployment platforms
 .vercel
 .amplify-hosting/

@@ -27,6 +27,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isMongoConfigured } from '@/lib/mongodb-config';
 import { pingMongo } from '@/lib/mongodb';
+import { isMongoPrimary } from '@/lib/db/provider';
 import { validateEnvironment } from '@/lib/utils/env-validation';
 import { validateStripeConfig, testStripeConnection } from '@/lib/stripe/validate-config';
 
@@ -362,37 +363,55 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json(health, { status: 503 });
   }
 
+  const mongoPrimary = isMongoPrimary();
+
   // Proceed with connection checks
-  let supabase;
+  let supabase: Awaited<ReturnType<typeof createClient>> | null = null;
+  let supabaseClientError: string | null = null;
   try {
     supabase = await createClient();
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const health: HealthStatus = {
-      status: 'unhealthy',
-      ready: false,
-      probe: 'readiness',
-      timestamp: new Date().toISOString(),
-      uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
-      version: process.env.npm_package_version || '1.0.0',
-      checks: {
-        environment: envCheck,
-        database: { status: 'fail', message: `Failed to create Supabase client: ${errorMessage}` },
-        auth: { status: 'fail', message: `Failed to create Supabase client: ${errorMessage}` },
-        migrations: {
-          status: 'fail',
-          message: `Failed to create Supabase client: ${errorMessage}`,
+    supabaseClientError = error instanceof Error ? error.message : String(error);
+    if (!mongoPrimary) {
+      const health: HealthStatus = {
+        status: 'unhealthy',
+        ready: false,
+        probe: 'readiness',
+        timestamp: new Date().toISOString(),
+        uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
+        version: process.env.npm_package_version || '1.0.0',
+        checks: {
+          environment: envCheck,
+          database: {
+            status: 'fail',
+            message: `Failed to create Supabase client: ${supabaseClientError}`,
+          },
+          auth: {
+            status: 'fail',
+            message: `Failed to create Supabase client: ${supabaseClientError}`,
+          },
+          migrations: {
+            status: 'fail',
+            message: `Failed to create Supabase client: ${supabaseClientError}`,
+          },
+          stripe: { status: 'warn', message: 'Skipped - Supabase connection failed' },
         },
-        stripe: { status: 'warn', message: 'Skipped - Supabase connection failed' },
-      },
-    };
-    return NextResponse.json(health, { status: 503 });
+      };
+      return NextResponse.json(health, { status: 503 });
+    }
   }
 
+  const skippedSupabase: CheckResult = {
+    status: 'warn',
+    message: supabaseClientError
+      ? `Supabase client unavailable during Mongo primary cutover: ${supabaseClientError}`
+      : 'Skipped — DATABASE_PROVIDER=mongodb',
+  };
+
   const [dbCheck, authCheck, migrationsCheck, stripeCheck, mongoCheck] = await Promise.all([
-    checkDatabase(supabase),
-    checkAuth(supabase),
-    checkMigrations(supabase),
+    supabase ? checkDatabase(supabase) : Promise.resolve(skippedSupabase),
+    supabase ? checkAuth(supabase) : Promise.resolve(skippedSupabase),
+    supabase ? checkMigrations(supabase) : Promise.resolve(skippedSupabase),
     checkStripe(),
     checkMongo(),
   ]);
@@ -405,10 +424,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     stripeCheck.status === 'pass' &&
     mongoCheck.status === 'pass';
 
-  // envCheck.status cannot be 'fail' here because we return early if it fails.
-  // Mongo fail is reported but does not block readiness until Supabase cutover completes.
-  const anyFailing =
-    dbCheck.status === 'fail' || authCheck.status === 'fail' || migrationsCheck.status === 'fail';
+  // Mongo primary: Atlas ping is a hard readiness gate. Supabase fails become non-blocking.
+  // Supabase primary: legacy gates; Mongo fail is reported but non-blocking.
+  const anyFailing = mongoPrimary
+    ? mongoCheck.status === 'fail'
+    : dbCheck.status === 'fail' || authCheck.status === 'fail' || migrationsCheck.status === 'fail';
 
   const health: HealthStatus = {
     status: anyFailing ? 'unhealthy' : allPassing ? 'healthy' : 'degraded',

@@ -17,6 +17,12 @@
     "test:e2e": "playwright test",
     "db:seed": "tsx scripts/seed-database.ts",
     "db:migrate": "tsx scripts/run-migrations.ts",
+    "db:atlas:bootstrap": "tsx scripts/atlas-bootstrap.ts",
+    "db:mongo:ping": "tsx scripts/mongo-ping.ts",
+    "db:mongo:indexes": "tsx scripts/mongo-ensure-indexes.ts",
+    "db:mongo:sync-vercel": "tsx scripts/sync-mongodb-to-vercel.ts",
+    "db:mongo:up": "tsx scripts/mongo-up.ts",
+    "db:mongo:import-uri": "tsx scripts/mongo-import-uri.ts",
     "verify-rls": "tsx scripts/verify-rls.ts"
   },
   "dependencies": {
@@ -84,6 +90,7 @@
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "autoprefixer": "^10.5.3",
+    "digest-fetch": "^3.1.1",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.2.35",
     "husky": "^9.1.7",

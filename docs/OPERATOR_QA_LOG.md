@@ -13,6 +13,17 @@ Automated checks from plan execution. Manual browser steps still required for au
 
 **Notes:** Next operator steps: (1) Network Access allow `0.0.0.0/0` for Vercel, (2) put `MONGODB_URI` in `.env.local` + Vercel Production (password substituted), (3) choose auth replacement (Clerk / Better Auth / Auth.js) before rewriting queries. Full Supabase removal is a later PR.
 
+## MongoDB automation — db:mongo:up (ADR-002, agent-run, 2026-07-18)
+
+**Scope:** Replace click-ops (Drivers / whitelist / Vercel paste) with idempotent Atlas Admin API + Vercel env sync. Agent has no Atlas API keys in this environment — operator runs once locally or via Actions secrets.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent | repo | this branch | ADR-002 | Add `npm run db:mongo:up` pipeline | Bootstrap/ping/indexes/Vercel sync | Scripts + `mongo-up.yml` workflow_dispatch; `DATABASE_PROVIDER=mongodb` hard-gates mongo ping | PASS (code) | secrets: `ATLAS_*`, `VERCEL_TOKEN` |
+| 2026-07-18 | agent | cloud agent | this branch | ADR-002 | Execute live bootstrap | Cluster URI written | **BLOCKED** — no `ATLAS_PUBLIC_KEY`/`ATLAS_PRIVATE_KEY` in agent env | BLOCKED | operator: export keys + `npm run db:mongo:up` |
+
+**Notes:** After keys exist, zero Atlas UI clicks required for network access / URI / Vercel. Auth rewrite still blocking for full Supabase removal.
+
 ## Phase 6 — ADR-001 ACCEPTED Option B (Vercel); dump Cloud Run (P0-003, operator+agent, 2026-07-18)
 
 **Scope:** Operator decision: abandon Cloud Run as production authority; stick with Vercel. Agent records ACCEPTED ADR, retargets monitors to interim canonical `www`, rewrites canonical production checklist. **G9 stays FALSE** until Vercel `ready:true`.
