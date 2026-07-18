@@ -10,3 +10,8 @@ package-lock.json
 pnpm-lock.yaml
 .git
 .cursor
+
+# Append-only evidence ledger (CCR-002) — formatting tools must never rewrite historical rows
+docs/OPERATOR_QA_LOG.md
+# Imported source snapshots — kept verbatim, not reformatted
+docs/phase2/_sources/

@@ -1,11 +1,11 @@
 # ADR-001: Canonical Production Platform and DNS Authority
 
-| Field | Value |
-| --- | --- |
-| **Status** | **PROPOSED** — decision and signature due in Phase 6 (P0-003) |
-| **Created** | 2026-07-18 (Phase 1 / P0-019) |
-| **Deciders** | Platform, Release Manager, Engineering |
-| **Hard gate** | G9 (ADR signed + monitors on canonical origin) |
+| Field         | Value                                                         |
+| ------------- | ------------------------------------------------------------- |
+| **Status**    | **PROPOSED** — decision and signature due in Phase 6 (P0-003) |
+| **Created**   | 2026-07-18 (Phase 1 / P0-019)                                 |
+| **Deciders**  | Platform, Release Manager, Engineering                        |
+| **Hard gate** | G9 (ADR signed + monitors on canonical origin)                |
 
 ## Context
 
@@ -18,11 +18,11 @@ Exactly one platform must own the canonical origin for `mangu-publishers.com` / 
 
 ## Options
 
-| Option | Description | Consequence sketch |
-| --- | --- | --- |
+| Option                      | Description                                                   | Consequence sketch                                                                                                                                 |
+| --------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **A — Cloud Run canonical** | Route apex + www to Cloud Run; Vercel retired or preview-only | Matches `docs/CANONICAL_PRODUCTION.md`, `cloudbuild.yaml`, Appendix G scripts; requires GCP secret promotion (Phase 11) and DNS cutover (Phase 15) |
-| **B — Vercel canonical** | Keep Vercel serving; retire Cloud Run | Conflicts with existing runbooks/scripts; full rewrite of deploy + secret path |
-| **C — Documented split** | Different surfaces per host | Rejected unless explicitly justified — violates single-authority and exact-SHA principles for launch |
+| **B — Vercel canonical**    | Keep Vercel serving; retire Cloud Run                         | Conflicts with existing runbooks/scripts; full rewrite of deploy + secret path                                                                     |
+| **C — Documented split**    | Different surfaces per host                                   | Rejected unless explicitly justified — violates single-authority and exact-SHA principles for launch                                               |
 
 ## Decision
 
@@ -37,8 +37,8 @@ Exactly one platform must own the canonical origin for `mangu-publishers.com` / 
 
 ## Signature Block (Phase 6)
 
-| Role | Name | Decision | UTC |
-| --- | --- | --- | --- |
-| Platform | ____ | ____ | ____ |
-| Release Manager | ____ | ____ | ____ |
-| Engineering | ____ | ____ | ____ |
+| Role            | Name | Decision | UTC  |
+| --------------- | ---- | -------- | ---- |
+| Platform        | ____ | ____     | ____ |
+| Release Manager | ____ | ____     | ____ |
+| Engineering     | ____ | ____     | ____ |
