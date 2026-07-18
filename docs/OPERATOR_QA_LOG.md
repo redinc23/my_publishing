@@ -2,6 +2,19 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 6 — ADR-001 Option A recommendation + monitor retarget (P0-003/P0-007, agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 6. Recommend Cloud Run as canonical platform (P0-003) and retarget health/Lighthouse monitors away from stale Vercel preview (P0-007 → G9). Agent cannot sign ADR — G9 stays FALSE until Platform / Release Manager / Engineering complete the signature block.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18T04:31Z | agent | public HTTPS | post-#226 `48b8146` | P0-003 / G9 | Re-verify apex vs www vs Vercel preview | Identify canonical live surface | Apex `mangu-publishers.com`: `server: Google Frontend`, `/api/health?ready=1` → **200 `ready:true`** (env/db/auth/migrations/stripe pass). `www`: still `server: Vercel`. `manguprojectz.vercel.app` readiness → `ready:false` (missing Stripe env) | VERIFIED (live) | issue #190 |
+| 2026-07-18 | agent | repo | this branch | P0-003 | Draft ADR-001 Option A | Decision recorded; signatures blank | Status → **RECOMMENDED (Option A)**; rollback command; superseded Amplify docs; live evidence table; signature block empty | PASS (draft) | `docs/adr/ADR-001-canonical-platform.md` |
+| 2026-07-18 | agent | repo | this branch | P0-007 / G9 | Retarget monitors + probe semantics | Canonical origin; readiness is GO probe | `health-check.yml` → `https://mangu-publishers.com` with live/startup (warn) + readiness hard-fail on `ready:true`; `lighthouse-ci.yml` `TARGET_URL` same. Owner alert = Actions failure → watchers | PASS (code) | issue #186; live confirm on next scheduled run |
+| 2026-07-18 | agent | repo | this branch | Phase 5 close-out | Note #225 merged | Phase 5 CI hygiene landed | #225 merged 2026-07-18T04:29Z (Dockerfile scripts COPY removed; Trivy `--scanners vuln`; bug-to-issue `git pull --rebase`) | PASS | PR #225 |
+
+**Notes:** **G9 remains FALSE** until ADR signatures. Phase 15 must cut `www` DNS to Cloud Run to end split-brain. Operator: sign ADR-001, then close #190/#186 when monitor run URLs confirm production responses.
+
 ## Phase 4 — Tier L local release-SHA verification (agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 4 / Tier L → supports G2 (exact-SHA local evidence). No cloud credentials required. Verified against `origin/main` tip `a0a9cf5` (code tip = #223 `5744794` + subsequent bug-to-issue state chores).
