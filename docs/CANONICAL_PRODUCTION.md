@@ -2,6 +2,8 @@
 
 **Decision (2026-05-19):** **Google Cloud Run** via [cloudbuild.yaml](../cloudbuild.yaml) is the authoritative production deployment path for MANGU Publishers.
 
+> **Authority:** Signing ADR is [ADR-001](./adr/ADR-001-canonical-platform.md) (status **RECOMMENDED** Option A until Phase 6 signatures → ACCEPTED / G9). This file remains the operator checklist. Monitors target `https://mangu-publishers.com` (apex). `www` remains on Vercel until Phase 15 DNS cutover.
+
 ## Rationale
 
 | Criterion                                        | Cloud Run          | Vercel (ci.yml)  | AWS Amplify             |

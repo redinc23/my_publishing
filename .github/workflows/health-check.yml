@@ -1,24 +1,66 @@
 name: Production Health Check
 
+# Canonical origin per ADR-001 (Option A — Cloud Run): https://mangu-publishers.com
+# Probe semantics (CCR-013):
+#   /api/live              — liveness (process up); never a GO gate alone
+#   /api/health            — startup
+#   /api/health?ready=1    — readiness; ONLY GO-relevant probe (G7)
+# Alerting: workflow failure notifies repository watchers / configured routing.
+# Owner: Platform (P0-007 / ADR-001).
+
 on:
   schedule:
-    - cron: '*/15 * * * *' # Runs every 15 minutes
-  workflow_dispatch: # Allows manual trigger
+    - cron: '*/15 * * * *' # every 15 minutes
+  workflow_dispatch:
+
+env:
+  CANONICAL_ORIGIN: https://mangu-publishers.com
 
 jobs:
   health-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping /api/health
+      - name: Liveness (/api/live)
         run: |
-          TARGET_URL="https://manguprojectz.vercel.app/api/health"
-
-          echo "Checking health for $TARGET_URL..."
-          HTTP_STATUS=$(curl --retry 3 -o /dev/null -s -w "%{http_code}\n" $TARGET_URL)
-
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "❌ Health check failed! HTTP Status: $HTTP_STATUS"
-            exit 1
-          else
-            echo "✅ Health check passed. HTTP Status: $HTTP_STATUS"
+          set -euo pipefail
+          URL="${CANONICAL_ORIGIN}/api/live"
+          echo "Liveness: $URL"
+          HTTP_STATUS=$(curl --retry 3 --retry-delay 2 -sS -o /tmp/live.json -w "%{http_code}" "$URL")
+          echo "HTTP $HTTP_STATUS"
+          cat /tmp/live.json
+          echo
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::warning::Liveness failed (HTTP $HTTP_STATUS) — continuing to readiness (GO probe)"
           fi
+
+      - name: Startup (/api/health)
+        run: |
+          set -euo pipefail
+          URL="${CANONICAL_ORIGIN}/api/health"
+          echo "Startup: $URL"
+          HTTP_STATUS=$(curl --retry 3 --retry-delay 2 -sS -o /tmp/startup.json -w "%{http_code}" "$URL")
+          echo "HTTP $HTTP_STATUS"
+          cat /tmp/startup.json
+          echo
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::warning::Startup probe failed (HTTP $HTTP_STATUS) — continuing to readiness (GO probe)"
+          fi
+
+      - name: Readiness (/api/health?ready=1) — GO probe
+        run: |
+          set -euo pipefail
+          URL="${CANONICAL_ORIGIN}/api/health?ready=1"
+          echo "Readiness (GO): $URL"
+          HTTP_STATUS=$(curl --retry 3 --retry-delay 2 -sS -o /tmp/ready.json -w "%{http_code}" "$URL")
+          echo "HTTP $HTTP_STATUS"
+          cat /tmp/ready.json
+          echo
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "❌ Readiness failed — HTTP $HTTP_STATUS (G7 / P0-007)"
+            exit 1
+          fi
+          if ! grep -q '"ready":true' /tmp/ready.json && ! grep -q '"ready": true' /tmp/ready.json; then
+            echo "❌ Readiness body missing ready:true"
+            exit 1
+          fi
+          echo "✅ Readiness passed (ready:true)"

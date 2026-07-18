@@ -1,5 +1,7 @@
 # 🚀 AWS Amplify - Quick Start
 
+> **SUPERSEDED (2026-07-18):** Amplify is not the launch production path. See [ADR-001](./adr/ADR-001-canonical-platform.md) and [CANONICAL_PRODUCTION.md](./CANONICAL_PRODUCTION.md).
+
 This guide gets you up and running on AWS Amplify in under 10 minutes.
 
 ## What You Need
