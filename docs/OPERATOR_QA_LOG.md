@@ -2,6 +2,29 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 7 — migration reconciliation + order_items policy verify (P0-004/P0-015, agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 7. Export hosted migration history, classify vs repo, confirm tip policy for `order_items` SELECT (P0-015 schema). Supabase project `tkzvikozrcynhwsqtkqp` (`mangu-publishers`).
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18T04:47Z | agent | Supabase MCP | main `bad4045` | P0-004 / G7 | Export hosted `schema_migrations` | Version list | **25** hosted rows; tip `20260717114300` / `order_items_select_own` | PASS | issue #192 |
+| 2026-07-18T04:47Z | agent | repo vs hosted | `bad4045` | P0-004 | Classify diff | Applied / pending / remote-only | **Exact match** — 25 local files = 25 hosted; pending=0; remote-only=0. Prior "22 hosted" claim SUPERSEDED | PASS | `docs/MIGRATIONS.md` |
+| 2026-07-18T04:47Z | agent | hosted SQL | `bad4045` | P0-015 / G7 | Verify `order_items` SELECT policy | Policy matches migration | Policy `Users can view own order items` cmd=SELECT; USING joins orders→profiles→`auth.uid()` — matches `20260717114300_order_items_select_own.sql` | PASS (schema) | issue #199; entitled nested-read still Phase 12/13 |
+| 2026-07-18 | agent | docs | this branch | P0-004 | Update MIGRATIONS.md + recommend #184 close | Same-change docs | Reconciliation section + full order list; #184 close-as-superseded (no reorder needed) | PASS | PR #184 |
+
+**Notes:** No forward migration apply required. G7 still FALSE pending production readiness package / Upstash live proof (P0-011). Operator: close #192 when satisfied; leave #199 open until library nested-read evidence in Phase 12/13.
+
+## Phase 6 close-out — monitor live confirm after #227 (P0-007, agent-run, 2026-07-18)
+
+**Scope:** Confirm post-merge monitors hit canonical apex (not Vercel preview).
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18T04:43Z | agent | GitHub Actions | `bad4045` (#227) | P0-007 / G9 | Lighthouse on merge | Target canonical apex | Run https://github.com/redinc23/my_publishing/actions/runs/29631025058 — `TARGET_URL=https://mangu-publishers.com`; collected apex (workflow `\|\| true` so assertion noise non-blocking) | PASS (target) | issue #186 |
+| 2026-07-18T04:47Z | agent | public HTTPS | `bad4045` | P0-007 | Apex readiness/startup | ready:true | `/api/health?ready=1` → 200 `ready:true`; `/api/health` → 200; cert SAN = `mangu-publishers.com` only (www cutover still Phase 15). Scheduled health-check not yet re-run on new YAML (agent cannot `workflow_dispatch` — 403); next cron ≈ :00/:15/:30/:45 | PASS (probe) | operator: confirm next scheduled Health Check run |
+| 2026-07-18T04:43Z | agent | GitHub Actions | `bad4045` | Phase 5/G2 partial | CI on merge | Green | CI success https://github.com/redinc23/my_publishing/actions/runs/29631025037 | PASS | G2 still FALSE until release/deploy SHA |
+
 ## Phase 6 — ADR-001 Option A recommendation + monitor retarget (P0-003/P0-007, agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 6. Recommend Cloud Run as canonical platform (P0-003) and retarget health/Lighthouse monitors away from stale Vercel preview (P0-007 → G9). Agent cannot sign ADR — G9 stays FALSE until Platform / Release Manager / Engineering complete the signature block.
