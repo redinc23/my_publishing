@@ -2,6 +2,18 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 5 — bug-to-issue workflow trigger repair (P0-006, agent-run, 2026-07-18)
+
+**Scope:** Master Execution Specification v1.0 Phase 5 / P0-006 → G2. The `bug-to-issue` automation (opens/closes an issue on continuous CI failure) never ran because its `workflow_run` trigger listened for a workflow named `CI/CD Pipeline`, which does not exist — the CI workflow's `name:` is `CI` (`ci.yml`). Verified via a full scan of `.github/workflows/*` `name:` fields.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18 | agent | repo | branch base `a371831` | P0-006 / G2 | Diagnose dead trigger | Identify why bug-to-issue never fires | `bug-to-issue.yml` `workflow_run.workflows: ['CI/CD Pipeline']`; no workflow has that name (CI = `CI`). `workflow_run` matches by `name`, so the event never fired | DIAGNOSED | `.github/workflows/*` name scan |
+| 2026-07-18 | agent | repo | branch | P0-006 / G2 | Fix trigger + reset stale state | Trigger matches real CI; clean state | Trigger → `workflows: ['CI']`; `.github/bug-to-issue-state.json` reset to empty `items` (3 stale `CI/CD Pipeline` entries, all `issueNumber: null` → nothing lost). Signature hash includes `workflow:<name>`, so no collision with new `CI` runs | PASS | issue #188 |
+| 2026-07-18 | agent | repo | branch | Verification | Validate | Green | YAML parses (trigger `["CI"]`); state JSON valid (0 items); `node --check bug-to-issue.js` OK; no `CI/CD Pipeline` refs remain; prettier clean | PASS | — |
+
+**Notes:** Live proof (an actual failing `CI` run opening an issue, then a passing run closing it) can only be observed once CI next fails on `main` — recorded here as the operator/CI confirmation step. This repair makes the continuous-failure detector actually reachable (G2 truthfulness).
+
 ## Phase 8 — MCP transport security (P0-017, agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 8 / P0-017 → G7. The public `/api/mcp/[transport]` endpoint was open, unauthenticated, and uncapped. Operator decision (2026-07-18): MCP is not a launch-MVP surface → **disabled by default, safe when enabled** (least-privilege / honest-scope; low-maintenance for a solo operator). Verified locally with the repo toolchain.
