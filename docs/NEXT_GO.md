@@ -7,15 +7,15 @@
 
 | Field | Value |
 | --- | --- |
-| **Authority version** | 1.1.0 |
+| **Authority version** | 1.2.0 |
 | **Status** | **NO-GO / NOT RELEASE-READY** |
 | **Effective date (UTC)** | 2026-07-18 |
 | **Accountable owner** | Release Manager / Solo Operator |
 | **Source specification** | MANGU Master Execution Specification v1.0 (source snapshot 2026-07-17; 16 phases / 115 steps / 9 appendices) |
-| **Baseline SHA (refreshed)** | `3d9ea3c77e2829125a950b10a9d2a658d212d58a` (origin/main, committed 2026-07-17T14:52:30Z) |
+| **Baseline SHA (refreshed)** | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` (origin/main, PR #185 merged 2026-07-17T23:31:27Z) |
 | **Evidence sink** | `docs/OPERATOR_QA_LOG.md` (append-only) |
 | **Decision rule** | **No GO, release tag, or production-ready claim until hard gates G1–G13 are all evidenced and TRUE (CCR-003).** |
-| **Established by** | Phase 1 authority PR (branch `release/next-go-authority`) — merges this file to main; G13 flips TRUE on merge |
+| **Established by** | Phase 1 authority PR #206 (`0f30649`) merged to main 2026-07-18 → **G13 TRUE**. This refresh (v1.2.0) records Phase 2 freeze + Phase 3 recovery progress per CCR-020/G12. |
 
 ### Evidence status vocabulary
 
@@ -40,35 +40,39 @@
 
 Every executed test is appended to `docs/OPERATOR_QA_LOG.md` with: UTC timestamp, actor, environment, exact SHA, deployment/revision ID, test/gate ID, action, expected, actual, result, artifact link, follow-up issue. Prior evidence is never replaced — superseded rows are marked and new rows appended (CCR-002, CCR-020). No secrets or PII in evidence (CCR-009, CCR-015).
 
-## 3. Refreshed Baseline — 2026-07-18 (supersedes source snapshot of 2026-07-17)
+## 3. Refreshed Baseline — 2026-07-18 (v1.2.0; supersedes v1.1.0 baseline `3d9ea3c` of earlier 2026-07-18)
+
+> **Refresh trigger (CCR-020):** two material merges since v1.1.0 — authority PR #206 (`0f30649`) and recovery vehicle PR #185 (`16dc1d7`) — plus Phase 2 freeze activation and Phase 3 PR closures. v1.1.0 §3 rows are SUPERSEDED; retained in git history.
 
 ### 3.1 Repository facts — VERIFIED (GitHub API, against baseline SHA above)
 
 | Item | Value | Notes |
 | --- | --- | --- |
-| origin/main | `3d9ea3c77e2829125a950b10a9d2a658d212d58a` | "fix(hardening): reconcile migrations, auth rate limits, and portal follow-ups" — matches source snapshot exactly |
+| origin/main | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` | "fix(ci): resolve format, migrate, scan, e2e, and Cloud Build failures (#185)"; parent `0f30649` (#206 authority). Was `3d9ea3c` in v1.1.0 — SUPERSEDED |
 | Branch protection | main = **protected** | All changes via PR |
-| Open PRs | **19** | Inventory in §3.2 |
-| Open issues | 0 → **20** | P0-001…P0-020 traceability issues created 2026-07-18 (GitHub timestamps 2026-07-17T22:49–22:52Z); see §5 |
-| Branches | **96 total; 25 `cursor/ci-autofix-automation-*`** | 9 autofix branches have open PRs; 16 orphaned — prune under P0-002 only after recovery merge |
-| Tags / Releases | **0 / 0** | No release ever cut; release-please PR #145 (`autorelease: pending`) is the held 1.0.0 vehicle |
+| Open PRs | 19 → **12** | 8 duplicate autofix PRs closed 2026-07-18 (Step 3.4); 2 new autofix vehicles (#207, #208) opened against `16dc1d7`. Inventory in §3.2 |
+| Open issues | **21** | P0-001…P0-020 (#186–#205) + freeze notice #209; see §5 |
+| Branches | **~96; 26 `cursor/ci-autofix-automation-*`** | Only 2 now carry open PRs (#207 `-709e`, #208 `-609e`); 24 orphaned — prune list in §3.4, blocked on operator (agent push scoped to designated branch) |
+| Tags / Releases | **0 / 0** | No release ever cut; release-please PR #145 (`autorelease: pending`) HELD as 1.0.0 vehicle |
 | Workflows | **19** in `.github/workflows/` | ci, e2e, preview-e2e, deploy, format-check, codeql, container-scan, dependency-review, bug-to-issue, health-check, lighthouse-ci, npm-audit, release-please, rls-check, stale, supabase-migrate, admin-setup, auto-merge, copilot-setup-steps |
 | Local migrations | **25** files in `supabase/migrations/` | Tip: `20260717114300_order_items_select_own.sql` |
-| `docs/NEXT_GO.md` | absent → **created by this PR** | G13 |
-| `docs/adr/` | absent → **created by this PR** | ADR-001 PROPOSED (P0-019; decision in Phase 6 / P0-003) |
+| `docs/NEXT_GO.md` | **present on main** (via #206) | **G13 TRUE** — authority tracked in release tree |
+| `docs/adr/ADR-001-canonical-platform.md` | **present on main** | ADR-001 PROPOSED (P0-019; decision in Phase 6 / P0-003) |
 | `scripts/verify-gcp-production.sh` | **MISSING** | P0-020 — reference implementation in spec Appendix G |
 | `scripts/grant-cloudrun-secret-access.sh` | **MISSING** | P0-020 — reference implementation in spec Appendix G |
+| CI on `16dc1d7` | **RED (reported)** | #207/#208 target format-check + Trivy secret-scan + webkit E2E flake + Cloud Build env residuals; G2 stays FALSE until required checks green on the exact deployed SHA (Phase 5) |
 
-### 3.2 Open PR inventory — VERIFIED (2026-07-18)
+### 3.2 Open PR inventory — VERIFIED (2026-07-18, post-recovery)
 
-| PR | Class | Draft | Base currency | Disposition |
+| PR | Class | Draft | Base | Disposition |
 | --- | --- | --- | --- | --- |
-| **#185** `fix(ci): resolve format, migrate, scan, e2e, and Cloud Build failures` | **Recovery vehicle (latest)** | Yes | base = current main ✓ | Verify scope + checks, undraft, merge (P0-001) |
-| #183, #182, #181, #180, #179, #178, #174, #173 | Duplicate cursor autofix (8) | Yes | stale bases (843d7e8, a4051ab, 326bb60, d953f2a, 4b97c76) | Close as superseded AFTER #185 merges (P0-002) |
-| #184 `chore(supabase): reorder migrations` | Migration reorder | Yes | — | Independent file-by-file decision, Phase 3 Step 3.6 / P0-004 |
-| #145 `chore(main): release 1.0.0` | release-please | No | current | **HOLD until G1–G13 TRUE (Phase 16)** |
-| #167 openai 4→6, #160 jest 29→30, #155 react-dom 18→19, #154 tailwind-merge 2→3, #152 react-day-picker 9→10, #133 @types/node 20→26, #129 deploy-cloudrun 2→3 | Dependabot majors (7) | No | mixed | **HOLD pre-GO** (Phase 2 Step 2.2); triage post-GO |
-| #142 Copilot CLI integration | Tooling | Yes | stale | Defer — not launch-critical |
+| ~~#185~~ | Recovery vehicle | — | — | **MERGED** 2026-07-17T23:31:27Z → `16dc1d7` (P0-001 partial: main advanced; deploy READY still Phase 14) |
+| **#207** `fix(ci): format, E2E webkit, Cloud Build env` / **#208** `fix(ci): format + Trivy secret scan` | Recovery vehicles (new) | Yes | `16dc1d7` | Consolidate to **one vehicle per failure signature** (freeze rule 4) before merge; Phase 5 |
+| ~~#183, #182, #181, #180, #179, #178, #174, #173~~ | Duplicate cursor autofix (8) | — | stale | **CLOSED as superseded** 2026-07-18 (Step 3.4 / P0-002) |
+| #184 `reorder migrations` (mislabeled) | Stale mega-branch | Yes | `3d9ea3c` | Triaged 2026-07-18 → **recommend close as superseded** (no migration files in diff; competing NEXT_GO.md; superseded portal edits). Ordering handled by #185 `--include-all` + P0-004/#192 |
+| #145 `chore(main): release 1.0.0` | release-please | No | current | **HOLD until G1–G13 TRUE (Phase 16)** — freeze comment posted |
+| #167 openai 4→6, #160 jest 29→30, #155 react-dom 18→19, #154 tailwind-merge 2→3, #152 react-day-picker 9→10, #133 @types/node 20→26, #129 deploy-cloudrun 2→3 | Dependabot majors (7) | No | mixed | **HELD pre-GO** (Phase 2); freeze comments posted; triage post-GO |
+| #142 Copilot CLI integration | Tooling | Yes | stale | **Deferred** — freeze comment posted; not launch-critical |
 
 ### 3.3 External-system claims — DOC-ONLY / UNVERIFIED (no live access from agent; verify per CCR-017)
 
@@ -83,13 +87,28 @@ Every executed test is appended to `docs/OPERATOR_QA_LOG.md` with: UTC timestamp
 | Stripe production webhook registered; secrets in GCP Secret Manager | DOC-ONLY | Phase 11/13 verification |
 | Manual QA rows 1–10 complete | **FALSE — all rows blank** (VERIFIED repo) | `docs/OPERATOR_QA_LOG.md` → G10 FALSE |
 
+### 3.4 Branch prune list (Step 3.5 / P0-002) — OPERATOR ACTION REQUIRED
+
+Agent push is scoped to the designated branch (`git push --delete` → HTTP 403 from the sandbox proxy), so branch deletion is handed to the operator. The 8 duplicate PRs are closed (Step 3.4); their now-orphaned heads plus other autofix orphans (no open PR) are safe to delete. **Keep** `cursor/ci-autofix-automation-709e` (#207) and `-609e` (#208).
+
+Operator command:
+
+```bash
+for b in 0017 09f1 1378 1427 197b 1c1d 24a2 36be 4505 8647 96e5 99be \
+         9e7c a0f8 b1b2 b9dc c494 ceab d494 db24 dd2a dd48 dfa4 f88c; do
+  git push origin --delete "cursor/ci-autofix-automation-$b"
+done
+```
+
+24 branches. Those tied to the 8 closed PRs (`-0017`/#173, `-b9dc`/#174, `-09f1`/#178, `-36be`/#179, `-a0f8`/#180, `-c494`/#181, `-1378`/#182, `-dd48`/#183) restore from the PR "Restore branch" button if ever needed; the rest are stale autofix orphans with no PR. Non-autofix `cursor/*` branches (seo, launch-readiness, revamp-doc, etc.) are out of scope for this step.
+
 ## 4. Program Map — 16 Phases
 
 | # | Phase | Status | Exit summary |
 | --- | --- | --- | --- |
-| 1 | Authority, Baseline, Evidence Control | **IN PROGRESS** — completes when this PR merges | Authority on main; refreshed baseline; evidence model + traceability active |
-| 2 | Launch Freeze & Change Governance | READY TO START | Freeze notice; hold #145 + dependabot majors; permitted change classes |
-| 3 | Repository Recovery, PR Closure, Branch Hygiene | BLOCKED on Phase 2 | Merge #185; green main; close 8 duplicates; prune 25 autofix branches; decide #184 |
+| 1 | Authority, Baseline, Evidence Control | **COMPLETE** (PR #206 merged; G13 TRUE) | Authority on main; refreshed baseline; evidence model + traceability active |
+| 2 | Launch Freeze & Change Governance | **COMPLETE** | Freeze notice #209; HOLD comments on #145 + 7 dependabot majors; #142 deferred; permitted change classes locked |
+| 3 | Repository Recovery, PR Closure, Branch Hygiene | **IN PROGRESS** | #185 merged (main @ `16dc1d7`); 8 duplicates closed; #184 triaged (recommend close); branch prune handed to operator (§3.4); **remaining:** green main via #207/#208 (Phase 5), deploy READY (Phase 14) |
 | 4 | Local Environment & Release-SHA Verification | NOT STARTED | Tier L: node contract, clean install, pre-launch script, 63/63 unit, mock E2E, local health |
 | 5 | CI/CD Workflow Repair | NOT STARTED | P0-005, P0-006; required checks truthful |
 | 6 | Canonical Platform Decision & Runbooks | NOT STARTED | ADR-001 signed (P0-003); scripts P0-020; monitors P0-007 |
@@ -148,8 +167,8 @@ Every executed test is appended to `docs/OPERATOR_QA_LOG.md` with: UTC timestamp
 | G9 | ADR signed; monitors hit real production | ADR-001 signed; DNS/monitor URLs canonical | ADR commit + monitor run URLs | **FALSE** |
 | G10 | Manual QA rows 1–10 complete with dates | Tester, time, SHA, deploy ID, artifact per row | QA log commit + evidence index | **FALSE** |
 | G11 | Known-good revision recorded; rollback traceable | Verified target + successful rehearsal | Rollback transcript + revision ID | **FALSE** |
-| G12 | Master baseline refreshed with release SHA | Latest source/deploy/DNS/migration facts here | Refresh commit | **FALSE** (this file is the first refresh; recurs per CCR-020) |
-| G13 | Authority document committed at `docs/NEXT_GO.md` | File tracked in release tree, matches approved version | git tree proof + commit SHA | **FALSE** → flips TRUE when this PR merges |
+| G12 | Master baseline refreshed with release SHA | Latest source/deploy/DNS/migration facts here | Refresh commit | **PARTIAL** — refreshed to `16dc1d7` (v1.2.0); final release-SHA refresh due at cut (recurs per CCR-020) |
+| G13 | Authority document committed at `docs/NEXT_GO.md` | File tracked in release tree, matches approved version | git tree proof + commit SHA | **TRUE** — `docs/NEXT_GO.md` on main via PR #206 (`0f30649`); tracked in release tree |
 
 ## 7. Launch Scope (Step 1.5 — signed operating rule)
 
