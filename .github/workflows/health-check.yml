@@ -5,6 +5,12 @@ name: Production Health Check
 #   /api/live              — liveness (process up); never a GO gate alone
 #   /api/health            — startup
 #   /api/health?ready=1    — readiness; ONLY GO-relevant probe (G7)
+#
+# DNS note (Phase 15): apex currently returns BOTH Cloud Run (Google) A records
+# and a Vercel A record (76.76.21.21). The Vercel cert is for www only, so curl
+# intermittently fails with SSL error 60 when DNS round-robins there. Soft probes
+# must not abort the job; readiness retries across attempts until Cloud Run wins.
+#
 # Alerting: workflow failure notifies repository watchers / configured routing.
 # Owner: Platform (P0-007 / ADR-001).
 
@@ -20,47 +26,61 @@ jobs:
   health-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Liveness (/api/live)
+      - name: Soft probes (live + startup) — never abort job
         run: |
-          set -euo pipefail
-          URL="${CANONICAL_ORIGIN}/api/live"
-          echo "Liveness: $URL"
-          HTTP_STATUS=$(curl --retry 3 --retry-delay 2 -sS -o /tmp/live.json -w "%{http_code}" "$URL")
-          echo "HTTP $HTTP_STATUS"
-          cat /tmp/live.json
-          echo
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "::warning::Liveness failed (HTTP $HTTP_STATUS) — continuing to readiness (GO probe)"
-          fi
+          set -uo pipefail
+          probe_soft() {
+            local name="$1"
+            local path="$2"
+            local out="$3"
+            local url="${CANONICAL_ORIGIN}${path}"
+            echo "=== Soft: ${name} → ${url}"
+            local code
+            code=$(curl --retry 2 --retry-delay 1 --retry-all-errors \
+              -sS -o "${out}" -w "%{http_code}" "${url}" 2>/tmp/curl-err.txt || true)
+            if [[ -z "${code}" ]]; then code="000"; fi
+            echo "HTTP ${code}"
+            if [[ -s "${out}" ]]; then cat "${out}"; echo; fi
+            if [[ -s /tmp/curl-err.txt ]]; then cat /tmp/curl-err.txt; fi
+            if [[ "${code}" != "200" ]]; then
+              echo "::warning::${name} soft probe not 200 (HTTP ${code}) — continuing to readiness"
+            fi
+          }
+          probe_soft "Liveness" "/api/live" /tmp/live.json
+          probe_soft "Startup" "/api/health" /tmp/startup.json
 
-      - name: Startup (/api/health)
-        run: |
-          set -euo pipefail
-          URL="${CANONICAL_ORIGIN}/api/health"
-          echo "Startup: $URL"
-          HTTP_STATUS=$(curl --retry 3 --retry-delay 2 -sS -o /tmp/startup.json -w "%{http_code}" "$URL")
-          echo "HTTP $HTTP_STATUS"
-          cat /tmp/startup.json
-          echo
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "::warning::Startup probe failed (HTTP $HTTP_STATUS) — continuing to readiness (GO probe)"
-          fi
-
-      - name: Readiness (/api/health?ready=1) — GO probe
+      - name: Readiness (/api/health?ready=1) — GO probe with DNS retry
         run: |
           set -euo pipefail
           URL="${CANONICAL_ORIGIN}/api/health?ready=1"
-          echo "Readiness (GO): $URL"
-          HTTP_STATUS=$(curl --retry 3 --retry-delay 2 -sS -o /tmp/ready.json -w "%{http_code}" "$URL")
-          echo "HTTP $HTTP_STATUS"
-          cat /tmp/ready.json
-          echo
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "❌ Readiness failed — HTTP $HTTP_STATUS (G7 / P0-007)"
-            exit 1
-          fi
-          if ! grep -q '"ready":true' /tmp/ready.json && ! grep -q '"ready": true' /tmp/ready.json; then
-            echo "❌ Readiness body missing ready:true"
-            exit 1
-          fi
-          echo "✅ Readiness passed (ready:true)"
+          echo "Readiness (GO): ${URL}"
+          echo "Note: apex DNS may round-robin to Vercel (wrong cert) — retrying until Cloud Run answers."
+
+          attempts=8
+          delay=2
+          for i in $(seq 1 "${attempts}"); do
+            echo "--- attempt ${i}/${attempts}"
+            set +e
+            HTTP_STATUS=$(curl --retry 0 -sS -o /tmp/ready.json -w "%{http_code}" "${URL}" 2>/tmp/curl-err.txt)
+            CURL_RC=$?
+            set -e
+            if [[ -z "${HTTP_STATUS}" ]]; then HTTP_STATUS="000"; fi
+            echo "curl_rc=${CURL_RC} HTTP ${HTTP_STATUS}"
+            if [[ -s /tmp/curl-err.txt ]]; then cat /tmp/curl-err.txt; fi
+            if [[ -s /tmp/ready.json ]]; then cat /tmp/ready.json; echo; fi
+
+            if [[ "${CURL_RC}" -eq 0 && "${HTTP_STATUS}" == "200" ]]; then
+              if grep -qE '"ready"[[:space:]]*:[[:space:]]*true' /tmp/ready.json; then
+                echo "✅ Readiness passed (ready:true) on attempt ${i}"
+                exit 0
+              fi
+              echo "::warning::HTTP 200 but ready:true missing — retrying"
+            else
+              echo "::warning::TLS/HTTP failure (often Vercel A-record with www-only cert) — retrying"
+            fi
+            sleep "${delay}"
+          done
+
+          echo "❌ Readiness failed after ${attempts} attempts (G7 / P0-007)"
+          echo "Operator: remove Vercel A record from apex DNS so only Cloud Run answers (Phase 15)."
+          exit 1

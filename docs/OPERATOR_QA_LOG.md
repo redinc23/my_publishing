@@ -2,6 +2,19 @@
 
 Automated checks from plan execution. Manual browser steps still required for auth/checkout.
 
+## Phase 6/15 — health-check SSL flake from apex DNS split (P0-007 follow-up, agent-run, 2026-07-18)
+
+**Scope:** Scheduled `Production Health Check` failed on first run after #227 retarget (run https://github.com/redinc23/my_publishing/actions/runs/29631499360). Soft startup probe aborted the job before readiness.
+
+| UTC | Actor | Env | SHA / ref | Test-Gate | Action | Expected | Actual | Result | Artifact / follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-18T05:00Z | agent | Actions schedule | `c71689b` | P0-007 | Diagnose failed health-check | Find root cause | Live step 200; Startup step **curl exit 60** SSL SAN mismatch → `set -e` aborted job; readiness skipped | DIAGNOSED | run 29631499360 |
+| 2026-07-18T05:03Z | agent | DNS/TLS | `c71689b` | Phase 15 / G9 | Inspect apex A + certs | Identify dual target | Apex A = Google `216.239.*.21` (cert `mangu-publishers.com`) **+** Vercel `76.76.21.21` (cert `www.mangu-publishers.com` only). Round-robin → intermittent SSL 60 | VERIFIED | ADR-001 evidence row |
+| 2026-07-18 | agent | repo | this branch | P0-007 | Harden health-check.yml | Soft probes never abort; readiness retries | Soft live/startup capture curl failures; readiness 8 attempts with backoff; documents Phase 15 DNS fix | PASS (code) | `.github/workflows/health-check.yml` |
+| 2026-07-18 | agent | repo | this branch | Phase 5 | Bug-to-issue dirty-tree fix | Rebase push reliable | `npm i --no-save` + `git pull --rebase --autostash` (supersedes draft #228/#230) | PASS | `.github/workflows/bug-to-issue.yml` |
+
+**Notes:** Monitor can stay on canonical apex with retries. Permanent fix is operator DNS: delete Vercel A from apex (Phase 15). Do not use `curl -k` (hides real TLS defects).
+
 ## Phase 7 — migration reconciliation + order_items policy verify (P0-004/P0-015, agent-run, 2026-07-18)
 
 **Scope:** Master Execution Specification v1.0 Phase 7. Export hosted migration history, classify vs repo, confirm tip policy for `order_items` SELECT (P0-015 schema). Supabase project `tkzvikozrcynhwsqtkqp` (`mangu-publishers`).

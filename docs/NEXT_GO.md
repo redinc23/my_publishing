@@ -5,17 +5,17 @@
 
 ## 1. Document Control
 
-| Field                        | Value                                                                                                                                                                                                                         |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Authority version**        | 1.2.3                                                                                                                                                                                                                         |
-| **Status**                   | **NO-GO / NOT RELEASE-READY**                                                                                                                                                                                                 |
-| **Effective date (UTC)**     | 2026-07-18                                                                                                                                                                                                                    |
-| **Accountable owner**        | Release Manager / Solo Operator                                                                                                                                                                                               |
-| **Source specification**     | MANGU Master Execution Specification v1.0 (source snapshot 2026-07-17; 16 phases / 115 steps / 9 appendices)                                                                                                                  |
-| **Baseline SHA (refreshed)** | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` (origin/main, PR #185 merged 2026-07-17T23:31:27Z)                                                                                                                                 |
-| **Evidence sink**            | `docs/OPERATOR_QA_LOG.md` (append-only)                                                                                                                                                                                       |
-| **Decision rule**            | **No GO, release tag, or production-ready claim until hard gates G1–G13 are all evidenced and TRUE (CCR-003).**                                                                                                               |
-| **Established by**           | Phase 1 authority PR #206 → **G13 TRUE**. v1.2.3: Phase 6 monitors live-confirmed on apex (#227); Phase 7 hosted↔repo migrations **exact match 25/25** (P0-004); `order_items` SELECT policy verified hosted (P0-015 schema). |
+| Field                        | Value                                                                                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Authority version**        | 1.2.4                                                                                                                                                                                            |
+| **Status**                   | **NO-GO / NOT RELEASE-READY**                                                                                                                                                                    |
+| **Effective date (UTC)**     | 2026-07-18                                                                                                                                                                                       |
+| **Accountable owner**        | Release Manager / Solo Operator                                                                                                                                                                  |
+| **Source specification**     | MANGU Master Execution Specification v1.0 (source snapshot 2026-07-17; 16 phases / 115 steps / 9 appendices)                                                                                     |
+| **Baseline SHA (refreshed)** | `16dc1d7c3c3b2861efc8b289649b29a3bda56424` (origin/main, PR #185 merged 2026-07-17T23:31:27Z)                                                                                                    |
+| **Evidence sink**            | `docs/OPERATOR_QA_LOG.md` (append-only)                                                                                                                                                          |
+| **Decision rule**            | **No GO, release tag, or production-ready claim until hard gates G1–G13 are all evidenced and TRUE (CCR-003).**                                                                                  |
+| **Established by**           | Phase 1 → **G13 TRUE**. v1.2.4: health-check hardened for apex DNS split (Vercel+Cloud Run A records); bug-to-issue `--no-save`/`--autostash`; prior v1.2.3 migration/monitor evidence retained. |
 
 ### Evidence status vocabulary
 
@@ -40,9 +40,9 @@
 
 Every executed test is appended to `docs/OPERATOR_QA_LOG.md` with: UTC timestamp, actor, environment, exact SHA, deployment/revision ID, test/gate ID, action, expected, actual, result, artifact link, follow-up issue. Prior evidence is never replaced — superseded rows are marked and new rows appended (CCR-002, CCR-020). No secrets or PII in evidence (CCR-009, CCR-015).
 
-## 3. Refreshed Baseline — 2026-07-18 (v1.2.3; tip `bad4045`)
+## 3. Refreshed Baseline — 2026-07-18 (v1.2.4; tip `c71689b` + this PR)
 
-> **Refresh trigger (CCR-020):** Phase 6 ADR/monitors (#227) + Phase 7 hosted migration export (P0-004 exact match). Prior tip `16dc1d7` / v1.2.0 rows SUPERSEDED where replaced; retained in git history.
+> **Refresh trigger (CCR-020):** Phase 7 migration match (#229) + apex DNS split diagnosis (Vercel A on apex). Prior tips SUPERSEDED where replaced; retained in git history.
 
 ### 3.1 Repository facts — VERIFIED (GitHub API, against baseline SHA above)
 
@@ -80,7 +80,7 @@ Every executed test is appended to `docs/OPERATOR_QA_LOG.md` with: UTC timestamp
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------- |
 | GCP project `delta-wonder-488420-i3`, region `us-central1`, Cloud Run service `mangu-publishers` | DOC-ONLY                                                                                    | spec / `docs/CANONICAL_PRODUCTION.md` |
 | `docs/CANONICAL_PRODUCTION.md` declares Cloud Run canonical                                      | VERIFIED (repo)                                                                             | file content @ baseline SHA           |
-| Apex `mangu-publishers.com` = Cloud Run (`Google Frontend`); `ready:true`; `www` still Vercel    | VERIFIED 2026-07-18 (agent curl) — supersedes 2026-07-09 degraded report                    | `docs/OPERATOR_QA_LOG.md` / ADR-001   |
+| Apex DNS split: Cloud Run + Vercel A; `www` Vercel; readiness OK when Cloud Run wins             | VERIFIED 2026-07-18 (dig/openssl + health-check fail 29631499360)                           | `docs/OPERATOR_QA_LOG.md` / ADR-001   |
 | Supabase project `mangu-publishers` / `tkzvikozrcynhwsqtkqp`; hosted migrations = **25**         | VERIFIED 2026-07-18 (exact match to repo) — supersedes "22 hosted"                          | `docs/MIGRATIONS.md` / QA log         |
 | GitHub Actions blocked by account billing lock                                                   | REPORTED 2026-07-08 (QA log) — re-verify on next run                                        | `docs/OPERATOR_QA_LOG.md`             |
 | Unit tests 127/127 PASS; type-check PASS; Tier L 11/11                                           | VERIFIED 2026-07-18 on `a0a9cf5` (Phase 4) — see QA log; supersedes 2026-07-17 63/63 report | `docs/OPERATOR_QA_LOG.md`             |
@@ -120,7 +120,7 @@ done
 | 12  | Real-Backend Manual QA: Auth/RBAC/Catalog         | NOT STARTED                             | P0-008, P0-009 (G3, G5, G10)                                                                                                                                                                                                          |
 | 13  | Payments, Webhooks, Entitlement, Refunds          | NOT STARTED                             | P0-010 (G4, G8)                                                                                                                                                                                                                       |
 | 14  | Production Deployment, Health, Rollback           | NOT STARTED                             | P0-018 (D1-D8; G1, G2, G7, G11)                                                                                                                                                                                                       |
-| 15  | DNS/TLS Cutover & Stabilization                   | NOT STARTED                             | Apex+www; TLS; 24h stabilization                                                                                                                                                                                                      |
+| 15  | DNS/TLS Cutover & Stabilization                   | **IN PROGRESS** (diagnosed)             | Apex DNS **split-brain** VERIFIED: remove Vercel A `76.76.21.21` from apex; point `www` at Cloud Run; cert SAN currently apex-only vs www-only depending on A record. Health-check retries until cutover                              |
 | 16  | Gates, Release 1.0.0, Post-GO Transition          | NOT STARTED                             | G1–G13 TRUE; sign-off; cut from approved SHA; post-release monitoring; controlled thaw                                                                                                                                                |
 
 ## 5. P0 Backlog & Traceability (all OPEN; issues created 2026-07-18)
