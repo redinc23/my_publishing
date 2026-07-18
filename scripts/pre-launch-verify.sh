@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # Unified pre-launch verification â€” all local gates in one command.
 # Windows Git Bash: bash scripts/pre-launch-verify.sh
 # No gcloud auth or real secrets required (uses CI mock env when .env.local is absent).
