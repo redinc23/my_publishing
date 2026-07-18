@@ -29,18 +29,18 @@ Exactly one platform must own the canonical origin for `mangu-publishers.com` / 
 
 **Option A — Cloud Run is the sole canonical production platform.**
 
-| Item                     | Value                                                                                    |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| Platform                 | Google Cloud Run                                                                         |
-| GCP project              | `delta-wonder-488420-i3`                                                                 |
-| Region                   | `us-central1`                                                                            |
-| Service                  | `mangu-publishers`                                                                       |
-| Canonical origin         | `https://mangu-publishers.com` (apex; currently Cloud Run / Google Frontend)             |
-| `www` cutover            | Phase 15 — point `www.mangu-publishers.com` at the same Cloud Run service; retire Vercel |
-| Deploy path              | `./scripts/gcloud-build-submit.sh` → `cloudbuild.yaml`                                   |
-| Stripe webhook           | `https://mangu-publishers.com/api/webhook`                                               |
-| Monitor / Lighthouse URL | `https://mangu-publishers.com` (P0-007)                                                  |
-| Vercel                   | Preview / non-canonical only; not a GO evidence target                                   |
+| Item                     | Value                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| Platform                 | Google Cloud Run                                                                              |
+| GCP project              | `delta-wonder-488420-i3`                                                                      |
+| Region                   | `us-central1`                                                                                 |
+| Service                  | `mangu-publishers`                                                                            |
+| Canonical origin         | `https://mangu-publishers.com` (apex; currently Cloud Run / Google Frontend)                  |
+| `www` + apex DNS cutover | Phase 15 — remove Vercel A (`76.76.21.21`) from apex; point `www` at Cloud Run; retire Vercel |
+| Deploy path              | `./scripts/gcloud-build-submit.sh` → `cloudbuild.yaml`                                        |
+| Stripe webhook           | `https://mangu-publishers.com/api/webhook`                                                    |
+| Monitor / Lighthouse URL | `https://mangu-publishers.com` (P0-007)                                                       |
+| Vercel                   | Preview / non-canonical only; not a GO evidence target                                        |
 
 **G9 stays FALSE** until this ADR status → **ACCEPTED** with the signature block below completed.
 
@@ -69,14 +69,15 @@ Record the known-good revision ID in `docs/OPERATOR_QA_LOG.md` at Phase 14 (G11)
 
 ## Live evidence snapshot (agent, 2026-07-18 UTC — DOC-ONLY until operator re-verifies)
 
-| Target                                      | Observation                                                                                  |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `https://mangu-publishers.com/`             | HTTP 200; `server: Google Frontend`; `x-cloud-trace-context` present                         |
-| `…/api/health`                              | HTTP 200; `probe: startup`; `status: ok`                                                     |
-| `…/api/live`                                | HTTP 200; `status: alive`                                                                    |
-| `…/api/health?ready=1`                      | HTTP 200; `ready: true`; environment/database/auth/migrations/stripe all `pass`              |
-| `https://www.mangu-publishers.com/`         | HTTP 200; `server: Vercel` — **non-canonical until Phase 15 cutover**                        |
-| `https://manguprojectz.vercel.app/…ready=1` | HTTP 200 body with `ready: false` (missing Stripe env) — **not a production monitor target** |
+| Target                                      | Observation                                                                                                                                                                                                                       |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `https://mangu-publishers.com/`             | HTTP 200; `server: Google Frontend`; `x-cloud-trace-context` present                                                                                                                                                              |
+| `…/api/health`                              | HTTP 200; `probe: startup`; `status: ok`                                                                                                                                                                                          |
+| `…/api/live`                                | HTTP 200; `status: alive`                                                                                                                                                                                                         |
+| `…/api/health?ready=1`                      | HTTP 200; `ready: true`; environment/database/auth/migrations/stripe all `pass`                                                                                                                                                   |
+| `https://www.mangu-publishers.com/`         | HTTP 200; `server: Vercel` — **non-canonical until Phase 15 cutover**                                                                                                                                                             |
+| `https://manguprojectz.vercel.app/…ready=1` | HTTP 200 body with `ready: false` (missing Stripe env) — **not a production monitor target**                                                                                                                                      |
+| Apex DNS A records (2026-07-18)             | **Split-brain:** Google `216.239.*.21` (Cloud Run; cert SAN=`mangu-publishers.com`) **and** Vercel `76.76.21.21` (cert SAN=`www.mangu-publishers.com` only → intermittent SSL error 60). **Phase 15: remove Vercel A from apex.** |
 
 ## Signature Block (Phase 6 — required for ACCEPTED / G9)
 
