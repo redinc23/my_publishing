@@ -129,7 +129,7 @@ Files: `lib/auth.ts`, `lib/auth-client.ts`, `app/api/auth/[...all]/route.ts`,
 // better-auth with mongodbAdapter(getDb())
 // emailAndPassword: { enabled: true, requireEmailVerification: true }
 // user.additionalFields: { role: { type: "string", defaultValue: "reader",
-//   input: false } }  // reader|author|editor|admin
+//   input: false } }  // reader|author|partner|admin  (NOT editor — see Phoenix v4.0.1)
 // emailVerification: { sendVerificationEmail: via Resend, autoSignInAfterVerification: true }
 // emailAndPassword.sendResetPassword: via Resend (branded template emails/reset.tsx)
 // databaseHooks.user.create.after: insert profiles doc
