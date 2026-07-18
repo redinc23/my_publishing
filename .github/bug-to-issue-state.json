@@ -1,4 +1,17 @@
 {
   "version": 1,
-  "items": {}
+  "items": {
+    "ef81a14fd1447d4edc40b88d3f9d86b480e5c1da": {
+      "consecutiveFails": 1,
+      "consecutiveSuccesses": 0,
+      "issueNumber": null,
+      "lastSeenRunId": 29628986870,
+      "lastSeenAt": "2026-07-18T03:35:22.640Z",
+      "meta": {
+        "workflowName": "CI",
+        "jobName": "test",
+        "stepName": "Run npm run build"
+      }
+    }
+  }
 }
