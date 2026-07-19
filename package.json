@@ -8,6 +8,7 @@
   "scripts": {
     "prepare": "husky || true",
     "validate-env": "tsx scripts/validate-env.ts",
+    "validate-env:production": "tsx scripts/validate-env.ts --production",
     "dev": "npm run validate-env && next dev",
     "build": "next build",
     "start": "NODE_ENV=production next start",
