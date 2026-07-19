@@ -42,12 +42,6 @@ The local gcloud session is expired; run `gcloud auth login`, then verify that
 
 ## P1 — release governance
 
-### H1.1 Enable branch protection on `main`
-
-Require the `test` and `format` status checks + 1 review. This single setting
-prevents most of the damage class seen this week (broken Dependabot major merged
-on red CI).
-
 ### H1.3 Vercel environment audit
 
 - `NEXT_PUBLIC_SITE_URL` must be `https://www.mangu-publishers.com` in Production
@@ -64,6 +58,8 @@ Advisor.
 
 - H0.4 workflow hardening: cache-backed bug state, no direct state commits,
   protected production secrets, PR-safe CI credentials, label-gated auto-merge.
+- H1.1 branch protection: one approval, strict `test` + `format` checks, linear
+  history, conversation resolution, and no force-pushes or branch deletion.
 - H1.2 Phoenix decision: root `CLAUDE.md` now marks Phoenix paused; Supabase is
   the production system until the owner explicitly reactivates the migration.
 - Reader-engagement, newsletter, listening-progress, and security migrations
