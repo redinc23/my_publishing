@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Container } from '@/components/layout/Container';
-import { BookOpen, Users, Globe, FileText } from 'lucide-react';
+import { BookOpen, Users } from 'lucide-react';
 
 export interface Stat {
   value: number;
@@ -14,8 +14,6 @@ export interface Stat {
 const ICONS: Record<string, React.ReactNode> = {
   Books: <BookOpen className="h-5 w-5" />,
   Authors: <Users className="h-5 w-5" />,
-  Readers: <Globe className="h-5 w-5" />,
-  'Pages Read': <FileText className="h-5 w-5" />,
 };
 
 function AnimatedCounter({
