@@ -36,12 +36,7 @@ describe('slugifyGenre', () => {
 
 describe('getGenreCounts', () => {
   it('returns real per-genre counts', async () => {
-    defineRows([
-      { genre: 'Fiction' },
-      { genre: 'fiction' },
-      { genre: 'Sci-Fi' },
-      { genre: null },
-    ]);
+    defineRows([{ genre: 'Fiction' }, { genre: 'fiction' }, { genre: 'Sci-Fi' }, { genre: null }]);
     const counts = await getGenreCounts();
     expect(counts).toEqual({ fiction: 2, 'sci-fi': 1 });
   });
