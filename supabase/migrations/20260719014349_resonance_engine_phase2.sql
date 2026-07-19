@@ -1,4 +1,4 @@
--- 20260719120000_resonance_engine_phase2.sql
+-- 20260719014349_resonance_engine_phase2.sql
 -- Phase 2 — Resonance Engine: rail analytics events, one-vector-per-book
 -- upsert support, and an arbitrary-embedding match RPC for taste vectors.
 -- Idempotent: safe to re-run.

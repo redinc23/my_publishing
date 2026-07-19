@@ -5,7 +5,7 @@ import { GET as getSimilarBooks } from '@/app/api/resonance/similar/route';
 import { POST as uploadFile } from '@/app/api/upload/route';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
-import { createPublicCatalogClient } from '@/lib/supabase/public-queries';
+import { getResonanceSimilarBooks } from '@/lib/resonance/recommendations';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import type { NextRequest } from 'next/server';
 
@@ -20,10 +20,7 @@ jest.mock('next/server', () => ({
 }));
 jest.mock('@/lib/supabase/server', () => ({ createClient: jest.fn() }));
 jest.mock('@/lib/supabase/admin', () => ({ createClient: jest.fn() }));
-jest.mock('@/lib/supabase/public-queries', () => ({
-  createPublicCatalogClient: jest.fn(),
-  PUBLIC_BOOK_SELECT: 'id,title',
-}));
+jest.mock('@/lib/resonance/recommendations', () => ({ getResonanceSimilarBooks: jest.fn() }));
 jest.mock('@/lib/rate-limit', () => ({
   enforceRateLimit: jest.fn(),
   getClientIdentifier: jest.fn(() => 'test-client'),
@@ -31,8 +28,8 @@ jest.mock('@/lib/rate-limit', () => ({
 
 const mockedCreateClient = createClient as jest.MockedFunction<typeof createClient>;
 const mockedCreateAdminClient = createAdminClient as jest.MockedFunction<typeof createAdminClient>;
-const mockedCreatePublicClient = createPublicCatalogClient as jest.MockedFunction<
-  typeof createPublicCatalogClient
+const mockedGetResonanceSimilarBooks = getResonanceSimilarBooks as jest.MockedFunction<
+  typeof getResonanceSimilarBooks
 >;
 const mockedEnforceRateLimit = enforceRateLimit as jest.MockedFunction<typeof enforceRateLimit>;
 
@@ -54,6 +51,7 @@ describe('API route hardening', () => {
       reset: Date.now() + 60_000,
       headers: { 'X-RateLimit-Remaining': '29' },
     });
+    mockedGetResonanceSimilarBooks.mockResolvedValue({ items: [], algorithm: 'cold_start' });
   });
 
   it('rejects malformed resonance events before database access', async () => {
@@ -101,12 +99,12 @@ describe('API route hardening', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(insert).toHaveBeenCalledWith(
+    expect(insert).toHaveBeenCalledWith([
       expect.objectContaining({
         book_id: '550e8400-e29b-41d4-a716-446655440000',
         event_type: 'view',
-      })
-    );
+      }),
+    ]);
   });
 
   it('rejects a spoofed user_id when no user is authenticated', async () => {
@@ -148,12 +146,19 @@ describe('API route hardening', () => {
     expect(mockedCreateAdminClient).not.toHaveBeenCalled();
   });
 
-  it('accepts a user_id that matches the authenticated user and inserts it verbatim', async () => {
+  it('accepts a matching authenticated user and stores the related profile id', async () => {
     const authedId = '22222222-2222-4222-8222-222222222222';
+    const profileId = '33333333-3333-4333-8333-333333333333';
+    const profileQuery = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: { id: profileId }, error: null }),
+    };
     mockedCreateClient.mockResolvedValue({
       auth: {
         getUser: jest.fn().mockResolvedValue({ data: { user: { id: authedId } } }),
       },
+      from: jest.fn(() => profileQuery),
     } as never);
     const insert = jest.fn().mockResolvedValue({ error: null });
     mockedCreateAdminClient.mockReturnValue({
@@ -169,7 +174,7 @@ describe('API route hardening', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ user_id: authedId }));
+    expect(insert).toHaveBeenCalledWith([expect.objectContaining({ user_id: profileId })]);
   });
 
   it('rejects unsupported upload MIME types before storage access', async () => {
@@ -194,24 +199,9 @@ describe('API route hardening', () => {
   });
 
   it('does not expose database errors from similar-books queries', async () => {
-    const bookQuery = {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { genre: 'Fantasy' }, error: null }),
-    };
-    const similarQuery = {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      neq: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockResolvedValue({
-        data: null,
-        error: { message: 'secret database connection details' },
-      }),
-    };
-    mockedCreatePublicClient.mockReturnValue({
-      from: jest.fn().mockReturnValueOnce(bookQuery).mockReturnValueOnce(similarQuery),
-    } as never);
+    mockedGetResonanceSimilarBooks.mockRejectedValueOnce(
+      new Error('secret database connection details')
+    );
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const request = {
       nextUrl: {

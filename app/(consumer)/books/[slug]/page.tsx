@@ -103,7 +103,10 @@ function emptyReviewData(isAuthenticated = false): ReviewDataResult {
   };
 }
 
-async function getReviewData(bookId: string, bookAuthorId?: string | null): Promise<ReviewDataResult> {
+async function getReviewData(
+  bookId: string,
+  bookAuthorId?: string | null
+): Promise<ReviewDataResult> {
   const emptyStats = { sum: 0, total: 0, distribution: {} as Record<number, number> };
 
   try {

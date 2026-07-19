@@ -127,9 +127,7 @@ export function AudioPlayer({
     const isEditableTarget = (target: EventTarget | null): boolean => {
       if (!(target instanceof HTMLElement)) return false;
       const tag = target.tagName;
-      return (
-        tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable
-      );
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -235,9 +233,7 @@ export function AudioPlayer({
       {/* Resume prompt */}
       {resumePosition !== null && (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-primary/40 bg-primary/10 px-4 py-3">
-          <span className="text-sm">
-            Pick up where you left off — {formatTime(resumePosition)}
-          </span>
+          <span className="text-sm">Pick up where you left off — {formatTime(resumePosition)}</span>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => engine.applyResume(true)}>
               Resume
@@ -289,9 +285,7 @@ export function AudioPlayer({
                 </span>
               )}
               {isActiveTrack && bufferedFraction > 0 && bufferedFraction < 0.999 && (
-                <span title="Downloaded">
-                  {Math.round(bufferedFraction * 100)}% buffered
-                </span>
+                <span title="Downloaded">{Math.round(bufferedFraction * 100)}% buffered</span>
               )}
               <span>{shownDuration > 0 ? formatTime(shownDuration) : '--:--'}</span>
             </span>

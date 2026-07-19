@@ -1,8 +1,14 @@
-# CLAUDE CODE EXECUTION BRIEFING — PROJECT PHOENIX
+# CLAUDE CODE EXECUTION BRIEFING — PROJECT PHOENIX (PAUSED)
 
-**Mission:** Implement the complete Supabase → Better Auth / MongoDB Atlas / Vercel Blob
-migration for Mangu Publishers ("Project Phoenix") and carry it through production cutover
-support. You own ALL remaining code. Humans own consoles, credentials, and DNS.
+> **Status — paused 2026-07-19:** Supabase remains the production data and auth
+> platform. Do not start Phoenix implementation work, create Phoenix branches, or
+> open Phoenix pull requests unless the repository owner explicitly reactivates the
+> migration. Existing Phoenix documents and branches are retained as reference only.
+
+**Conditional mission (only after explicit reactivation):** Implement the complete
+Supabase → Better Auth / MongoDB Atlas / Vercel Blob migration for Mangu Publishers
+("Project Phoenix") and carry it through production cutover support. Humans own
+consoles, credentials, and DNS.
 
 **Canonical contract:** `docs/PROJECT_PHOENIX.md` (v4.0, on `main`). That document is the
 single source of truth. THIS briefing is your execution wrapper around it. Where they

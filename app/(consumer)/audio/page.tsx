@@ -56,8 +56,7 @@ function toEntry(book: BookWithAuthor): AudiobookEntry | null {
     if (last?.end) durationSec = last.end;
   }
 
-  const author =
-    book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author';
+  const author = book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author';
 
   return {
     id: book.id,

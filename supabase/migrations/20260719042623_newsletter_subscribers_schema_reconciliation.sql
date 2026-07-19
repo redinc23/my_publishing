@@ -1,4 +1,4 @@
--- 20260719120100_newsletter_subscribers.sql
+-- 20260719042623_newsletter_subscribers_schema_reconciliation.sql
 -- Transactional email system (feat/topdog-comms): double opt-in newsletter
 -- subscriptions. Idempotent: safe to run more than once.
 
@@ -31,3 +31,5 @@ ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
 -- No anon/authenticated policies: subscriptions are managed exclusively by
 -- the API routes via the service role. RLS enabled = denied by default.
+REVOKE ALL ON public.newsletter_subscribers FROM PUBLIC, anon, authenticated;
+GRANT ALL ON public.newsletter_subscribers TO service_role;

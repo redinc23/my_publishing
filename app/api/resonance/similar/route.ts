@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[Resonance Similar] Unexpected error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to load similar books' },
       { status: 500, headers: rateLimitResult.headers }
     );
   }

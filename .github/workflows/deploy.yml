@@ -7,14 +7,19 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production-cloud-run
+  cancel-in-progress: false
+
 jobs:
   deploy:
     if: ${{ ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || github.event.workflow_run.conclusion == 'success') && vars.GCP_PROJECT_ID != '' }}
     runs-on: ubuntu-latest
-    # Only runs when GCP is configured and CI passed. NOTE: the `secrets` context is not
-    # available in `if:` expressions (job- or step-level) — referencing it
-    # there invalidates the whole workflow file. Gate the job on a repository
-    # variable, and expose secret presence via job env for step-level checks.
+    environment: production
+    timeout-minutes: 30
     env:
       HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY != '' }}
 
@@ -56,7 +61,10 @@ jobs:
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
-            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
-            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
             NODE_ENV=production
+          # Privileged values are mounted from Secret Manager, never copied into
+          # the workflow's plaintext environment-variable input.
+          secrets: |
+            SUPABASE_SERVICE_ROLE_KEY=supabase-service-role-key:latest
+            STRIPE_SECRET_KEY=stripe-secret-key:latest
+            STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest

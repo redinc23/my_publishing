@@ -19,7 +19,12 @@ import {
   Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { voteOnReview, reportReview, replyToReview, deleteAuthorReply } from '@/lib/actions/reviews';
+import {
+  voteOnReview,
+  reportReview,
+  replyToReview,
+  deleteAuthorReply,
+} from '@/lib/actions/reviews';
 import { formatDistanceToNow } from 'date-fns';
 import {
   DropdownMenu,

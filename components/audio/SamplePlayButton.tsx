@@ -118,7 +118,7 @@ export function SamplePlayButton({
       aria-label={isPlaying ? `Pause ${title ?? 'sample'}` : `Play ${title ?? 'sample'}`}
       className={cn(
         'flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white shadow-lg',
-        'transition-all hover:scale-105 hover:bg-primary-hover focus-visible:outline-none',
+        'hover:bg-primary-hover transition-all hover:scale-105 focus-visible:outline-none',
         'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
         className
       )}

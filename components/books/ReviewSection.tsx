@@ -239,9 +239,7 @@ export function ReviewSection({
               .slice(0, 5);
             return top.length ? (
               <div className="space-y-6">
-                <p className="text-sm text-gray-600">
-                  The reviews readers found most helpful.
-                </p>
+                <p className="text-sm text-gray-600">The reviews readers found most helpful.</p>
                 {top.map((review) => (
                   <ReviewCard
                     key={`helpful-${review.id}`}

@@ -1,4 +1,4 @@
--- 20260719120000_email_preferences.sql
+-- 20260719021959_email_preferences.sql
 -- Transactional email system (feat/topdog-comms): per-user email preferences.
 -- Idempotent: safe to run more than once.
 

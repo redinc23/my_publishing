@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import type { DateRange } from '@/types/analytics';
 import type { BookStats, HeatmapData, GeographyData, LiveReader } from '@/types/analytics';
 import { getCache, setCache } from '@/lib/services/cache-service';
@@ -129,15 +130,18 @@ export async function getLiveReaders(bookId: string): Promise<{
 
     const profilesByUserId = new Map<string, { name?: string }>();
     if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('public_profiles')
-        .select('user_id, name')
+      // Ownership has already been verified above. Use the server-only client
+      // for the narrow display-name lookup so public_profiles does not need to
+      // bypass profiles RLS as a SECURITY DEFINER view.
+      const { data: profiles, error: profilesError } = await createAdminClient()
+        .from('profiles')
+        .select('user_id, full_name')
         .in('user_id', userIds);
 
       if (profilesError) throw profilesError;
 
       for (const profile of profiles || []) {
-        profilesByUserId.set(profile.user_id, { name: profile.name ?? undefined });
+        profilesByUserId.set(profile.user_id, { name: profile.full_name ?? undefined });
       }
     }
 

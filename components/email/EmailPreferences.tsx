@@ -168,7 +168,9 @@ export function EmailPreferences() {
                 <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
               </div>
               <div className="flex items-center gap-2 pt-1">
-                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /> : null}
+                {saving ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                ) : null}
                 <Checkbox
                   id={`email-pref-${key}`}
                   checked={prefs[key]}

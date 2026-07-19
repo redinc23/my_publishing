@@ -13,10 +13,7 @@
 
 import { isEmailConfigured, sendEmail } from './send';
 import { WelcomeEmail } from '@/emails/welcome-email';
-import {
-  PurchaseReceiptEmail,
-  type ReceiptItem,
-} from '@/emails/purchase-receipt-email';
+import { PurchaseReceiptEmail, type ReceiptItem } from '@/emails/purchase-receipt-email';
 import { AuthorPayoutEmail } from '@/emails/author-payout-email';
 import { NewReviewAlertEmail } from '@/emails/new-review-alert-email';
 import { NewsletterConfirmEmail } from '@/emails/newsletter-confirm-email';

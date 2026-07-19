@@ -3,10 +3,15 @@
 import { getBookAnalytics, getLiveReaders } from '@/lib/actions/analytics';
 import { getBookRevenue } from '@/lib/actions/revenue';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { requireAuthorOwnedBook } from '@/lib/supabase/author-ownership';
 import { getCache, setCache } from '@/lib/services/cache-service';
 
 jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(),
+}));
+
+jest.mock('@/lib/supabase/admin', () => ({
   createClient: jest.fn(),
 }));
 
@@ -20,6 +25,7 @@ jest.mock('@/lib/services/cache-service', () => ({
 }));
 
 const mockedCreateClient = createClient as jest.MockedFunction<typeof createClient>;
+const mockedCreateAdminClient = createAdminClient as jest.MockedFunction<typeof createAdminClient>;
 const mockedRequireAuthorOwnedBook = requireAuthorOwnedBook as jest.MockedFunction<
   typeof requireAuthorOwnedBook
 >;
@@ -89,7 +95,7 @@ describe('analytics and revenue ownership actions', () => {
     expect(result.total).toBe(2.5);
   });
 
-  it('getLiveReaders joins public_profiles instead of users and checks ownership', async () => {
+  it('getLiveReaders reads safe profile fields with the server client after ownership', async () => {
     mockedRequireAuthorOwnedBook.mockResolvedValue({
       author: { id: 'author-1' },
       book: { id: 'book-1', author_id: 'author-1' },
@@ -115,22 +121,22 @@ describe('analytics and revenue ownership actions', () => {
     const profilesChain = {
       select: jest.fn().mockReturnThis(),
       in: jest.fn().mockResolvedValue({
-        data: [{ user_id: 'auth-reader-1', name: 'Reader One' }],
+        data: [{ user_id: 'auth-reader-1', full_name: 'Reader One' }],
         error: null,
       }),
     };
 
-    mockAuthedClient((table) => {
-      if (table === 'analytics_sessions') return sessionsChain;
-      if (table === 'public_profiles') return profilesChain;
-      return null;
-    });
+    mockedCreateAdminClient.mockReturnValue({
+      from: jest.fn((table: string) => (table === 'profiles' ? profilesChain : null)),
+    } as never);
+
+    mockAuthedClient((table) => (table === 'analytics_sessions' ? sessionsChain : null));
 
     const result = await getLiveReaders('book-1');
 
     expect(mockedRequireAuthorOwnedBook).toHaveBeenCalledWith('auth-user-1', 'book-1');
     expect(sessionsChain.select).toHaveBeenCalledWith('*');
-    expect(profilesChain.select).toHaveBeenCalledWith('user_id, name');
+    expect(profilesChain.select).toHaveBeenCalledWith('user_id, full_name');
     expect(result.total).toBe(1);
     expect(result.readers[0]?.user).toEqual({ name: 'Reader One' });
     expect(result.readers[0]?.reading_progress).toBe(42);

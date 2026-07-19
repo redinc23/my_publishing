@@ -2,7 +2,7 @@
  * Newsletter subscription management — double opt-in flow.
  *
  * Storage: newsletter_subscribers table (service-role only; see migration
- * 20260719120100_newsletter_subscribers.sql). Flow:
+ * 20260719042623_newsletter_subscribers_schema_reconciliation.sql). Flow:
  *
  *   1. POST /api/newsletter        → startNewsletterSubscription(email)
  *      creates/refreshes a 'pending' row and emails a one-time confirm link.
@@ -52,9 +52,7 @@ function tokenExpiry(): string {
 
 /** True when the service-role Supabase client has the env it needs. */
 function isSupabaseAdminConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 /**
@@ -68,9 +66,7 @@ async function subscribeViaLegacyProvider(email: string): Promise<SubscribeOutco
     '[newsletter] DB-backed double opt-in unavailable — falling back to provider-only subscribe'
   );
   const result = await subscribeToNewsletter(email);
-  return result.success
-    ? { status: 'legacy' }
-    : { status: 'error', error: result.error };
+  return result.success ? { status: 'legacy' } : { status: 'error', error: result.error };
 }
 
 /**

@@ -8,10 +8,7 @@ import {
   migrationMissingResponse,
   type WishlistRow,
 } from '@/lib/reading/engagement';
-import {
-  WishlistMutationSchema,
-  WishlistQuerySchema,
-} from '@/lib/validations/reader-engagement';
+import { WishlistMutationSchema, WishlistQuerySchema } from '@/lib/validations/reader-engagement';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,12 +107,14 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (profile?.id) {
       const { createClient: createAdminClient } = await import('@/lib/supabase/admin');
-      await createAdminClient().from('engagement_events').insert({
-        user_id: profile.id,
-        book_id,
-        event_type: 'wishlist',
-        event_value: { source: 'wishlist_button' },
-      });
+      await createAdminClient()
+        .from('engagement_events')
+        .insert({
+          user_id: profile.id,
+          book_id,
+          event_type: 'wishlist',
+          event_value: { source: 'wishlist_button' },
+        });
     }
   } catch (eventError) {
     console.warn('[wishlist] engagement event skipped:', eventError);
