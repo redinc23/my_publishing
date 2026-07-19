@@ -1,4 +1,11 @@
-'use server';
+/**
+ * Server-side cache helpers (Supabase `cache` table).
+ *
+ * This is intentionally a PLAIN server module, not a `'use server'` action
+ * module: the generic get/set/invalidate operations must not be client-callable
+ * (audit finding — arbitrary cache reads/writes/deletes from any client).
+ * Only server code (server actions, route handlers, RSC) may import this.
+ */
 
 import { createClient } from '@/lib/supabase/server';
 

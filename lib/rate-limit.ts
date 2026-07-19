@@ -280,16 +280,81 @@ export function getGeneralLimiter(): Ratelimit | null {
 
 // ── Identifier extraction ────────────────────────────────────────────────────
 
-/** Extract the client identifier (IP) from a request. */
+const IPV4_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
+const IPV6_RE = /^[0-9a-fA-F:.]{3,45}$/;
+
+/**
+ * IP candidate validation. Accepts dotted-quad IPv4 with octets 0–255 and
+ * IPv6 / IPv4-mapped forms (hex groups, optional dots, `::` compression).
+ * Rejects hostnames, arbitrary strings, and attacker-crafted suffixes.
+ */
+export function isValidIp(value: string): boolean {
+  if (IPV4_RE.test(value)) {
+    return value.split('.').every((octet) => Number(octet) <= 255);
+  }
+  return IPV6_RE.test(value) && value.includes(':');
+}
+
+/** FNV-1a 32-bit — tiny non-crypto hash for ephemeral limiter identities. */
+function hashString(input: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16);
+}
+
+/**
+ * Spoof-resistant client IP extraction (directive Phase 6.3–6.4).
+ *
+ * Trust order:
+ *  1. `cf-connecting-ip` — only present when traffic actually transits
+ *     Cloudflare, which overwrites client-supplied values.
+ *  2. `x-real-ip` — set by a trusted front proxy (single value).
+ *  3. `x-forwarded-for` — the RIGHTMOST valid hop. Every hop left of the
+ *     outermost trusted edge is client-supplied and trivially forged (the old
+ *     leftmost-trust let attackers rotate forged IPs for unlimited buckets);
+ *     the rightmost hop is appended by the platform edge (Vercel / Google
+ *     Front End for Cloud Run) and cannot be influenced by the client.
+ *
+ * Returns 'unknown' when no valid candidate exists — callers that persist the
+ * IP (e.g. analytics_events.ip_address inet) rely on this sentinel.
+ */
 export function getClientIdentifier(request: Request): string {
   const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  if (cfConnectingIp) return cfConnectingIp;
+  if (cfConnectingIp && isValidIp(cfConnectingIp.trim())) return cfConnectingIp.trim();
 
   const realIp = request.headers.get('x-real-ip');
-  if (realIp) return realIp;
+  if (realIp && isValidIp(realIp.trim())) return realIp.trim();
 
   const forwardedFor = request.headers.get('x-forwarded-for');
-  if (forwardedFor) return forwardedFor.split(',')[0].trim();
+  if (forwardedFor) {
+    const hops = forwardedFor
+      .split(',')
+      .map((hop) => hop.trim())
+      .filter(isValidIp);
+    if (hops.length > 0) return hops[hops.length - 1];
+  }
 
   return 'unknown';
+}
+
+/**
+ * Rate-limit identity (directive Phase 6.5–6.6): the trusted client IP when
+ * one exists, otherwise a privacy-preserving ephemeral identity derived from
+ * the User-Agent, Accept-Language, and UTC date. Unidentified clients are
+ * NEVER collapsed into one shared bucket, and the identity rotates daily so
+ * it cannot be used for long-term tracking.
+ */
+export function getRateLimitIdentity(request: Request): string {
+  const ip = getClientIdentifier(request);
+  if (ip !== 'unknown') return ip;
+
+  const material = [
+    request.headers.get('user-agent') ?? '',
+    request.headers.get('accept-language') ?? '',
+    new Date().toISOString().slice(0, 10),
+  ].join('|');
+  return `anon-${hashString(material)}`;
 }
