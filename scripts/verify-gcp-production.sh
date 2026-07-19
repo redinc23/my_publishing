@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# LEGACY / NON-CANONICAL (ADR-001): Vercel is the sole canonical production
+# platform. This script verifies the legacy Cloud Run surface, which may still
+# serve the apex until the Phase 15 DNS cutover, and remains the emergency /
+# compatibility verification path. Do NOT use it as GO-path evidence.
+#
 # Verify the deployed Cloud Run production service against the launch gates.
 #
 # P0-020 reference implementation. Covers the Phase 14 deploy dossier (D1–D8):
@@ -18,11 +23,17 @@
 #
 # Usage:
 #   ./scripts/verify-gcp-production.sh
-#   BASE_URL=https://www.mangu-publishers.com ./scripts/verify-gcp-production.sh
+#   PROD_BASE_URL=https://www.mangu-publishers.com ./scripts/verify-gcp-production.sh
 #   EXPECT_SHA=16dc1d7 ./scripts/verify-gcp-production.sh   # assert revision SHA
 #
-# Overrides (see scripts/gcp-config.sh): PROJECT_ID, REGION, SERVICE_NAME.
-set -uo pipefail
+# Overrides (P0-020 canonical env names; see scripts/gcp-config.sh):
+#   GCP_PROJECT_ID     GCP project (default: delta-wonder-488420-i3)
+#   GCP_REGION         Cloud Run region (default: us-central1)
+#   CLOUD_RUN_SERVICE  Cloud Run service name (default: mangu-publishers)
+#   PROD_BASE_URL      Target base URL (alias: BASE_URL; else resolved from
+#                      NEXT_PUBLIC_SITE_URL in .env.local or the service URL)
+# Legacy aliases PROJECT_ID, REGION, SERVICE_NAME are still honored.
+set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=scripts/gcp-config.sh
@@ -46,11 +57,12 @@ command -v curl >/dev/null 2>&1 || {
 }
 
 # ---------------------------------------------------------------------------
-# Resolve target URL: BASE_URL → NEXT_PUBLIC_SITE_URL (.env.local) → Cloud Run
+# Resolve target URL: PROD_BASE_URL → BASE_URL → NEXT_PUBLIC_SITE_URL
+# (.env.local) → Cloud Run service URL.
 # ---------------------------------------------------------------------------
-BASE_URL="${BASE_URL:-}"
+BASE_URL="${PROD_BASE_URL:-${BASE_URL:-}}"
 if [[ -z "${BASE_URL}" && -f "${ROOT}/.env.local" ]]; then
-  BASE_URL="$(grep -E '^NEXT_PUBLIC_SITE_URL=' "${ROOT}/.env.local" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"'"'"'' )"
+  BASE_URL="$(grep -E '^NEXT_PUBLIC_SITE_URL=' "${ROOT}/.env.local" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"'"'"'' || true)"
 fi
 
 SERVICE_READY_CHECKED=0
@@ -104,7 +116,7 @@ else
 fi
 
 if [[ -z "${BASE_URL}" ]]; then
-  echo "ERROR: could not resolve a target URL. Set BASE_URL or NEXT_PUBLIC_SITE_URL." >&2
+  echo "ERROR: could not resolve a target URL. Set PROD_BASE_URL or NEXT_PUBLIC_SITE_URL." >&2
   exit 1
 fi
 BASE_URL="${BASE_URL%/}"
@@ -116,11 +128,11 @@ echo
 # curl helpers ---------------------------------------------------------------
 http_code() { curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$1" 2>/dev/null || echo "000"; }
 
-echo "== D3  Startup probe =="
+echo "== D3  Startup probe (liveness) =="
 code="$(http_code "${BASE_URL}/api/health")"
 [[ "${code}" == "200" ]] && pass "/api/health → 200" || fail "/api/health → ${code} (expected 200)"
 
-echo "== D4  Readiness probe (G7) =="
+echo "== D4  Readiness probe (G7: ready:true required) =="
 READY_BODY="$(curl -s --max-time 25 "${BASE_URL}/api/health?ready=1" 2>/dev/null || true)"
 READY_CODE="$(http_code "${BASE_URL}/api/health?ready=1")"
 if [[ "${READY_CODE}" == "200" ]] && printf '%s' "${READY_BODY}" | grep -q '"ready":[[:space:]]*true'; then
@@ -130,7 +142,7 @@ else
 fi
 # Per-component truth (extract each check's status without a JSON parser dep).
 for comp in environment database auth migrations stripe; do
-  st="$(printf '%s' "${READY_BODY}" | grep -oE "\"${comp}\"[^}]*\"status\":[[:space:]]*\"[a-z]+\"" | grep -oE '"status":[[:space:]]*"[a-z]+"' | grep -oE '[a-z]+"$' | tr -d '"' | head -1)"
+  st="$(printf '%s' "${READY_BODY}" | grep -oE "\"${comp}\"[^}]*\"status\":[[:space:]]*\"[a-z]+\"" | grep -oE '"status":[[:space:]]*"[a-z]+"' | grep -oE '[a-z]+"$' | tr -d '"' | head -1 || true)"
   case "${st}" in
     pass) pass "check ${comp}: pass" ;;
     warn) warn "check ${comp}: warn" ;;
@@ -154,7 +166,7 @@ done
 echo "== D6/D7  Served-asset env bake + secret hygiene =="
 HOME_HTML="$(curl -s --max-time 25 "${BASE_URL}/" 2>/dev/null || true)"
 # Collect a few served JS bundles referenced by the homepage.
-JS_URLS="$(printf '%s' "${HOME_HTML}" | grep -oE '/_next/static/[^"'"'"']+\.js' | sort -u | head -12)"
+JS_URLS="$(printf '%s' "${HOME_HTML}" | grep -oE '/_next/static/[^"'"'"']+\.js' | sort -u | head -12 || true)"
 ASSETS="${HOME_HTML}"
 for j in ${JS_URLS}; do
   ASSETS+="$(curl -s --max-time 20 "${BASE_URL}${j}" 2>/dev/null || true)"
