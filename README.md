@@ -122,7 +122,7 @@ npm install -g supabase
 supabase link --project-ref your-project-ref
 
 # Apply all migrations
-npm run db push
+supabase db push
 ```
 
 **Verification:**

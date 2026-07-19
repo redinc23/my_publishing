@@ -6,6 +6,7 @@
  * - Environment variables are configured
  * - Supabase database connection (requires 'profiles' table from migrations)
  * - Supabase auth service availability
+ * - MongoDB Atlas ping when MONGODB_URI is set (ADR-002; additive until cutover)
  *
  * Migration Order (apply in this sequence):
  * 1. 20260116000000_initial_schema.sql - Creates profiles table and core schema
@@ -24,6 +25,8 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isMongoConfigured } from '@/lib/mongodb-config';
+import { pingMongo } from '@/lib/mongodb';
 import { validateEnvironment } from '@/lib/utils/env-validation';
 
 // PHASE-7 — Health/readiness probes must never be statically cached.
@@ -42,6 +45,7 @@ interface HealthStatus {
     auth: CheckResult;
     migrations?: CheckResult;
     stripe?: CheckResult;
+    mongodb?: CheckResult;
   };
 }
 
@@ -158,6 +162,30 @@ async function checkAuth(supabase: Awaited<ReturnType<typeof createClient>>): Pr
 
     return { status: 'fail', latency_ms: latency, message: errorMessage };
   }
+}
+
+async function checkMongo(): Promise<CheckResult> {
+  if (!isMongoConfigured()) {
+    return {
+      status: 'warn',
+      message: 'MONGODB_URI not set (ADR-002 migration; Supabase still owns readiness)',
+    };
+  }
+
+  const result = await pingMongo();
+  if (!result.ok) {
+    return {
+      status: 'fail',
+      latency_ms: result.latency_ms,
+      message: result.message || 'MongoDB ping failed',
+    };
+  }
+
+  return {
+    status: result.latency_ms > 1000 ? 'warn' : 'pass',
+    latency_ms: result.latency_ms,
+    message: result.message,
+  };
 }
 
 // PHASE-7 — Config-only Stripe readiness check. The readiness probe must never
@@ -332,11 +360,12 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json(health, { status: 503, headers: NO_STORE_HEADERS });
   }
 
-  const [dbCheck, authCheck, migrationsCheck, stripeCheck] = await Promise.all([
+  const [dbCheck, authCheck, migrationsCheck, stripeCheck, mongoCheck] = await Promise.all([
     checkDatabase(supabase),
     checkAuth(supabase),
     checkMigrations(supabase),
     checkStripe(),
+    checkMongo(),
   ]);
 
   const allPassing =
@@ -344,9 +373,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     dbCheck.status === 'pass' &&
     authCheck.status === 'pass' &&
     migrationsCheck.status === 'pass' &&
-    stripeCheck.status === 'pass';
+    stripeCheck.status === 'pass' &&
+    mongoCheck.status === 'pass';
 
-  // envCheck.status cannot be 'fail' here because we return early if it fails
+  // envCheck.status cannot be 'fail' here because we return early if it fails.
+  // Mongo fail is reported but does not block readiness until Supabase cutover completes.
   const anyFailing =
     dbCheck.status === 'fail' || authCheck.status === 'fail' || migrationsCheck.status === 'fail';
 
@@ -363,6 +394,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       auth: authCheck,
       migrations: migrationsCheck,
       stripe: stripeCheck,
+      mongodb: mongoCheck,
     },
   };
 
