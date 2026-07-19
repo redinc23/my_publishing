@@ -2,35 +2,39 @@
 
 This document describes the database migration system and the correct order for applying migrations.
 
-## Hosted reconciliation (P0-004) — VERIFIED 2026-07-18
+## Hosted reconciliation (P0-004) — repo inventory refreshed 2026-07-20
 
-| Field       | Value                                                                                                               |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| Project     | `mangu-publishers` / `tkzvikozrcynhwsqtkqp` (us-west-1)                                                             |
-| Source      | Supabase MCP `list_migrations` + `SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version` |
-| Local files | **25** in `supabase/migrations/`                                                                                    |
-| Hosted rows | **25**                                                                                                              |
-| Diff        | **Exact match** — every local version is applied; no pending; no remote-only                                        |
-| Tip         | `20260717114300_order_items_select_own` (`order_items` SELECT policy)                                               |
-| PR #184     | **Close as superseded** — no reorder needed; history already consistent                                             |
+| Field       | Value                                                                                                                                                                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project     | `mangu-publishers` / `tkzvikozrcynhwsqtkqp` (us-west-1)                                                                                                                                                                                        |
+| Source      | Supabase MCP `list_migrations` + `SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version`                                                                                                                            |
+| Local files | **33** in `supabase/migrations/` (tip: `20260719042627_listening_progress_schema_reconciliation`)                                                                                                                                               |
+| Hosted rows | **25** at the last recorded export (2026-07-18). Re-export **PENDING** (owner) — see classification below                                                                                                                                       |
+| Diff        | 2026-07-18 export: exact match (25/25; no pending; no remote-only). Since then 8 migrations (`20260719005815` … `20260719042627`) landed repo-side. `20260719005815` records in its header that it was applied to production via Supabase MCP on 2026-07-19 (notes in PR #251) — confirm via fresh export |
+| PR #184     | **Closed unmerged 2026-07-19** — superseded; no reorder needed, history is strictly ordered and forward-fix only. Filenames remain frozen                                                                                                       |
 
 ### Classification
 
-| Class                     | Versions                        |
-| ------------------------- | ------------------------------- |
-| Applied (repo ∩ hosted)   | All 25 (see ordered list below) |
-| Pending (repo only)       | _(none)_                        |
-| Remote-only (hosted only) | _(none)_                        |
+| Class                                                 | Versions                                                                                                                                                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Applied (repo ∩ hosted)                               | 25 versions up to `20260717114300_order_items_select_own` (per the 2026-07-18 export)                                                                                  |
+| Pending hosted confirmation (repo-side since 2026-07-19) | `20260719005815`, `20260719014244`, `20260719014349`, `20260719021959`, `20260719042247`, `20260719042254`, `20260719042623`, `20260719042627` (8 files)              |
+| Remote-only (hosted only)                             | _(none in the 2026-07-18 export; re-export PENDING)_                                                                                                                   |
 
 ### `order_items` SELECT policy (P0-015 schema verify)
 
-Hosted policy present and matches repo intent:
+Policy recorded on 2026-07-18 as present hosted and matching repo intent (owner re-confirmation PENDING — see #199):
 
 - name: `Users can view own order items`
 - cmd: `SELECT` (`r`)
 - USING: `order_id IN (SELECT orders.id FROM orders WHERE orders.user_id IN (SELECT profiles.id FROM profiles WHERE profiles.user_id = auth.uid()))`
 
-Live entitled nested-read / `verify-rls` browser confirmation remains Phase 12/13.
+The repo migration now guards the create with `DROP POLICY IF EXISTS` (Postgres has no
+`CREATE POLICY IF NOT EXISTS`), matching the convention used across the `20260719*`
+migrations. Same policy name and definition, so environments that already applied it
+converge to the identical state. `scripts/verify-rls.ts` now includes an anonymous
+`order_items` denial check; live entitled nested-read / authenticated `verify-rls`
+confirmation remains hosted-side (Phase 12/13).
 
 ## Migration Order
 
@@ -139,10 +143,42 @@ Migrations **must be applied in this exact order** due to dependencies between t
     - **Dependencies**: `reading_progress`
 
 23. **20260717114300_order_items_select_own.sql**
-    - Buyer SELECT on own `order_items` (P0-015)
+    - Buyer SELECT on own `order_items` (P0-015); idempotent via `DROP POLICY IF EXISTS` + `CREATE POLICY`
     - **Dependencies**: `orders`, `order_items`, `profiles`
 
-Also present (early sequence): **20260116000001_create_books_table.sql**, **20260117000007_storage_policies.sql** — both applied hosted; keep filenames stable.
+24. **20260719005815_security_hardening_rls_exec.sql**
+    - Revokes `book_stats_summary` from anon/authenticated; repairs dead `books.author_id = auth.uid()` policies (correct join: books → authors → profiles); column-level `authors` grants (hides `royalty_rate`); pins `search_path` on definer functions; restricts `get_recommendations` to own user; restores `engagement_events` insert policy
+    - **Dependencies**: prior books/authors/analytics schema
+
+25. **20260719014244_review_enhancements.sql**
+    - `reviews.verified_purchase` + author-reply columns; `review_votes` table guard; RLS for `reviews`/`review_votes`; `helpful_count` sync trigger
+    - **Dependencies**: `reviews` (social_features)
+
+26. **20260719014349_resonance_engine_phase2.sql**
+    - Adds `impression`/`click` engagement event types; dedupes + unique-indexes `resonance_vectors` per book; `match_resonance_vector` RPC (authenticated/service_role)
+    - **Dependencies**: `engagement_events`, `resonance_vectors`
+
+27. **20260719021959_email_preferences.sql**
+    - `email_preferences` table + RLS (users manage only their own rows; no DELETE policy)
+    - **Dependencies**: `auth.users`, `update_updated_at_column()`
+
+28. **20260719042247_reader_engagement_schema_reconciliation.sql**
+    - Records out-of-band production schema for `bookmarks`, `highlights`, `wishlist`, `author_follows` + RLS and grants
+    - **Dependencies**: `books`, `authors`, `auth.users`
+
+29. **20260719042254_security_advisor_hardening.sql**
+    - `security_invoker` on `book_overview`/`public_profiles` views; pins remaining function `search_path`s; restricts `engagement_events` inserts to service_role; drops broad storage listing policy
+    - **Dependencies**: prior schema (incl. #24–#28)
+
+30. **20260719042623_newsletter_subscribers_schema_reconciliation.sql**
+    - `newsletter_subscribers` table (double opt-in), service-role-only access
+    - **Dependencies**: `update_updated_at_column()`
+
+31. **20260719042627_listening_progress_schema_reconciliation.sql**
+    - `listening_progress` table (composite PK per listener/book) + RLS mirroring the `reading_progress` ownership pattern
+    - **Dependencies**: `profiles`, `books`
+
+Also present (early sequence): **20260116000001_create_books_table.sql**, **20260117000007_storage_policies.sql** — both applied hosted; keep filenames stable. (`20260117000007` is a recorded `SELECT 1;` stub so remote `supabase_migrations` history matches the local directory.)
 
 > **Note — duplicate `content_type` migrations (Fix C3):** `20260619124500` and
 > `20260619162409` intentionally overlap. Both are written with
