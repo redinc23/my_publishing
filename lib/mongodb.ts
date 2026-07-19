@@ -51,7 +51,7 @@ export function getMongoClientPromise(): Promise<MongoClient> {
   if (!globalForMongo._mongoClientPromise) {
     globalForMongo._mongoClientPromise = createClientPromise().catch((error) => {
       delete globalForMongo._mongoClientPromise;
-      delete globalForMongo._mongoPoolAttached = false;
+      globalForMongo._mongoPoolAttached = false;
       throw error;
     });
   }
