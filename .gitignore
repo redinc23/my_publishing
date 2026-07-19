@@ -1,1 +1,1 @@
-# probe2 file2
+probe: ${{ secrets.FOO }} and ${{ inputs.x == true }}
