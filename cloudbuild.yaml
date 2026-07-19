@@ -7,11 +7,15 @@ substitutions:
   _PORT: '3000'
   _MEMORY: 512Mi
   _NEXT_PUBLIC_SUPABASE_URL: 'https://tkzvikozrcynhwsqtkqp.supabase.co'
-  _NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrenZpa296cmN5bmh3c3F0a3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MzU4MzYsImV4cCI6MjA5NDIxMTgzNn0.mf8wC6KEzkw9K2d_H9VzG9rzFPSPWpgQUL0b5kMruDI'
+  # No key defaults — a real production anon JWT and a service-role fixture used
+  # to be committed here (removed 2026-07-19; the anon key must still be rotated,
+  # see HUMAN_TASKS.md H0.1). Provide values via trigger substitutions or
+  # ./scripts/gcloud-build-submit.sh. Empty values fail closed at next-build.
+  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
   _NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_ci_build_only'
-  _NEXT_PUBLIC_SITE_URL: 'https://mypublishing-redinc23s-projects.vercel.app'
+  _NEXT_PUBLIC_SITE_URL: 'https://www.mangu-publishers.com'
   _NEXT_PUBLIC_SENTRY_DSN: ''
-  _SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrenZpa296cmN5bmh3c3F0a3FwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODYzNTgzNiwiZXhwIjoyMDk0MjExODM2fQ.ci-build-only-not-for-production'
+  _SUPABASE_SERVICE_ROLE_KEY: ''
 
 steps:
   - id: npm-ci
