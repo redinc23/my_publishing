@@ -7,10 +7,11 @@ substitutions:
   _PORT: '3000'
   _MEMORY: 512Mi
   _NEXT_PUBLIC_SUPABASE_URL: 'https://tkzvikozrcynhwsqtkqp.supabase.co'
-  # No key defaults — a real production anon JWT and a service-role fixture used
-  # to be committed here (removed 2026-07-19; the anon key must still be rotated,
-  # see HUMAN_TASKS.md H0.1). Provide values via trigger substitutions or
-  # ./scripts/gcloud-build-submit.sh. Empty values fail closed at next-build.
+  # No production key defaults — real JWTs were removed 2026-07-19 (rotate per
+  # HUMAN_TASKS.md H0.1). Empty here enables CI build-only mode on the GitHub
+  # trigger (compile + lint gates with mock NEXT_PUBLIC_*; deploy steps skipped).
+  # Production deploys must pass real values via trigger substitutions or
+  # ./scripts/gcloud-build-submit.sh.
   _NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
   _NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_ci_build_only'
   _NEXT_PUBLIC_SITE_URL: 'https://www.mangu-publishers.com'
@@ -52,10 +53,19 @@ steps:
       - -c
       - |
         set -euo pipefail
-        # Fail closed: never bake placeholder NEXT_PUBLIC_* into a deployable image.
-        # Production submits must pass real substitutions via ./scripts/gcloud-build-submit.sh
-        # (or a Cloud Build trigger with the same _NEXT_PUBLIC_* values).
-        # Do NOT add silent placeholder fallbacks here — that would ship mock URLs to Cloud Run.
+        # GitHub trigger runs without _NEXT_PUBLIC_SUPABASE_ANON_KEY — compile with
+        # CI mocks and skip deploy (see docker-build+). Production submits must
+        # pass real substitutions via ./scripts/gcloud-build-submit.sh.
+        CI_BUILD_ONLY=false
+        if [ -z "$${NEXT_PUBLIC_SUPABASE_ANON_KEY}" ]; then
+          CI_BUILD_ONLY=true
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key-for-ci"
+          export SUPABASE_SERVICE_ROLE_KEY="$${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY0NTI2NDAwMCwiZXhwIjoxOTYwODQwMDAwfQ.ci-build-only}"
+          echo "CI build-only mode: no _NEXT_PUBLIC_SUPABASE_ANON_KEY substitution."
+          echo "Deploy skipped — use ./scripts/gcloud-build-submit.sh for production."
+        fi
+        echo "$${CI_BUILD_ONLY}" > /workspace/.ci-build-only
+
         require_pub() {
           local name="$1"
           local val="$2"
@@ -109,55 +119,74 @@ steps:
 
   - id: docker-build
     name: gcr.io/cloud-builders/docker
+    entrypoint: bash
     args:
-      - build
-      - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA
-      - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:main
-      - --build-arg
-      - NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL}
-      - --build-arg
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      - --build-arg
-      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      - --build-arg
-      - NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL}
-      - --build-arg
-      - NEXT_PUBLIC_SENTRY_DSN=${_NEXT_PUBLIC_SENTRY_DSN}
-      - --build-arg
-      - SENTRY_RELEASE=$SHORT_SHA
-      - --build-arg
-      - SUPABASE_SERVICE_ROLE_KEY=${_SUPABASE_SERVICE_ROLE_KEY}
-      - .
+      - -c
+      - |
+        set -euo pipefail
+        if [ "$(cat /workspace/.ci-build-only 2>/dev/null || echo false)" = "true" ]; then
+          echo "Skipping docker-build: CI build-only mode (no production anon key)."
+          exit 0
+        fi
+        docker build \
+          -t ${_REGION}-docker.pkg.dev/$$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$$SHORT_SHA \
+          -t ${_REGION}-docker.pkg.dev/$$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:main \
+          --build-arg NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL} \
+          --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY} \
+          --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${_NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY} \
+          --build-arg NEXT_PUBLIC_SITE_URL=${_NEXT_PUBLIC_SITE_URL} \
+          --build-arg NEXT_PUBLIC_SENTRY_DSN=${_NEXT_PUBLIC_SENTRY_DSN} \
+          --build-arg SENTRY_RELEASE=$$SHORT_SHA \
+          --build-arg SUPABASE_SERVICE_ROLE_KEY=${_SUPABASE_SERVICE_ROLE_KEY} \
+          .
 
   - id: docker-push
     name: gcr.io/cloud-builders/docker
+    entrypoint: bash
     args:
-      - push
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA
+      - -c
+      - |
+        set -euo pipefail
+        if [ "$(cat /workspace/.ci-build-only 2>/dev/null || echo false)" = "true" ]; then
+          echo "Skipping docker-push: CI build-only mode."
+          exit 0
+        fi
+        docker push ${_REGION}-docker.pkg.dev/$$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$$SHORT_SHA
 
   - id: docker-push-main
     name: gcr.io/cloud-builders/docker
+    entrypoint: bash
     args:
-      - push
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:main
+      - -c
+      - |
+        set -euo pipefail
+        if [ "$(cat /workspace/.ci-build-only 2>/dev/null || echo false)" = "true" ]; then
+          echo "Skipping docker-push-main: CI build-only mode."
+          exit 0
+        fi
+        docker push ${_REGION}-docker.pkg.dev/$$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:main
 
   # Scan the pushed image for OS-level and language CVEs using Trivy.
   # The build fails on any CRITICAL severity vulnerabilities, blocking
   # insecure images from reaching Cloud Run (supply-chain security gate P0-1).
   - id: vuln-scan
     name: aquasec/trivy:latest
-    entrypoint: trivy
+    entrypoint: sh
     args:
-      - image
-      - --scanners
-      - vuln
-      - --exit-code=1
-      - --severity=CRITICAL
-      - --no-progress
-      - --ignore-unfixed
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA
+      - -c
+      - |
+        set -eu
+        if [ "$(cat /workspace/.ci-build-only 2>/dev/null || echo false)" = "true" ]; then
+          echo "Skipping vuln-scan: CI build-only mode."
+          exit 0
+        fi
+        exec trivy image \
+          --scanners vuln \
+          --exit-code=1 \
+          --severity=CRITICAL \
+          --no-progress \
+          --ignore-unfixed \
+          ${_REGION}-docker.pkg.dev/$$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$$SHORT_SHA
 
   - id: deploy-cloud-run
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -166,6 +195,10 @@ steps:
       - -c
       - |
         set -euo pipefail
+        if [ "$(cat /workspace/.ci-build-only 2>/dev/null || echo false)" = "true" ]; then
+          echo "Skipping deploy-cloud-run: CI build-only mode."
+          exit 0
+        fi
         REQUIRED_SECRETS="SUPABASE_SERVICE_ROLE_KEY=supabase-service-role-key:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest"
         OPTIONAL_SECRETS=""
 
@@ -205,14 +238,18 @@ steps:
       - -c
       - |
         set -euo pipefail
+        if [ "$(cat /workspace/.ci-build-only 2>/dev/null || echo false)" = "true" ]; then
+          echo "Skipping verify-deploy: CI build-only mode."
+          exit 0
+        fi
         gcloud run services describe "${_SERVICE_NAME}" \
           --region="${_REGION}" \
           --project="$PROJECT_ID" \
           --format='yaml(metadata.name,status.traffic,spec.template.spec.containers[0].image,spec.template.spec.containers[0].ports,spec.template.spec.containers[0].resources,spec.template.spec.containers[0].env,spec.template.metadata.annotations)'
 
-images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:main
+# Images are pushed explicitly in docker-push / docker-push-main steps so CI
+# build-only mode (GitHub trigger without anon key) can skip container phases
+# without Cloud Build failing on a top-level images: block.
 
 options:
   logging: CLOUD_LOGGING_ONLY
