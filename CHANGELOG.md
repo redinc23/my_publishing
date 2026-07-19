@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/redinc23/my_publishing/compare/v1.1.0...v1.1.1) (2026-07-19)
+
+
+### Bug Fixes
+
+* **ci:** clear PR backlog — unblock main CI, land GHA majors + cowork guard ([#291](https://github.com/redinc23/my_publishing/issues/291)) ([efd06fc](https://github.com/redinc23/my_publishing/commit/efd06fc198a0f51f22879119c07b2d2d4a0f8423))
+
 ## [1.1.0](https://github.com/redinc23/my_publishing/compare/v1.0.1...v1.1.0) (2026-07-19)
 
 
