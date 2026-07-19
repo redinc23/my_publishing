@@ -123,7 +123,12 @@ fix/P0.2-node-version
 fix/P0.3-upstash-env
 fix/P0.4-rate-limit-tests
 fix/P1-launch-hardening
-chore/repo-detox
+```
+
+**Squash-merged PR branches** (not in `git branch --merged` but safe to delete after merge):
+
+```
+chore/repo-detox   # merged via #261
 ```
 
 ### 3.3 Stale Unmerged Branches (>30 days, no open PR)
@@ -190,8 +195,37 @@ for b in \
   fix/P0.2-node-version \
   fix/P0.3-upstash-env \
   fix/P0.4-rate-limit-tests \
-  fix/P1-launch-hardening \
-  chore/repo-detox
+  fix/P1-launch-hardening
+do
+  git push origin --delete "$b" 2>/dev/null && echo "deleted origin/$b" || echo "skip origin/$b"
+done
+
+# Squash-merged PR branches
+git push origin --delete chore/repo-detox 2>/dev/null && echo "deleted origin/chore/repo-detox" || echo "skip origin/chore/repo-detox"
+```
+
+### 4.4 Delete Orphan CI-Autofix Branches (34)
+
+```bash
+git fetch origin --prune
+for b in \
+  cursor/ci-autofix-automation-0017 cursor/ci-autofix-automation-09f1 \
+  cursor/ci-autofix-automation-1378 cursor/ci-autofix-automation-1427 \
+  cursor/ci-autofix-automation-197b cursor/ci-autofix-automation-1c1d \
+  cursor/ci-autofix-automation-24a2 cursor/ci-autofix-automation-2529 \
+  cursor/ci-autofix-automation-2797 cursor/ci-autofix-automation-36be \
+  cursor/ci-autofix-automation-4505 cursor/ci-autofix-automation-5300 \
+  cursor/ci-autofix-automation-609e cursor/ci-autofix-automation-709e \
+  cursor/ci-autofix-automation-8647 cursor/ci-autofix-automation-96e5 \
+  cursor/ci-autofix-automation-99be cursor/ci-autofix-automation-9e07 \
+  cursor/ci-autofix-automation-9e7c cursor/ci-autofix-automation-a0f8 \
+  cursor/ci-autofix-automation-ad57 cursor/ci-autofix-automation-b1b2 \
+  cursor/ci-autofix-automation-b9dc cursor/ci-autofix-automation-c494 \
+  cursor/ci-autofix-automation-ceab cursor/ci-autofix-automation-d2bd \
+  cursor/ci-autofix-automation-d494 cursor/ci-autofix-automation-db24 \
+  cursor/ci-autofix-automation-dd2a cursor/ci-autofix-automation-dd48 \
+  cursor/ci-autofix-automation-dfa4 cursor/ci-autofix-automation-f6dc \
+  cursor/ci-autofix-automation-f88c cursor/ci-autofix-automation-fc78
 do
   git push origin --delete "$b" 2>/dev/null && echo "deleted origin/$b" || echo "skip origin/$b"
 done
