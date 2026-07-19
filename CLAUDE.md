@@ -306,5 +306,18 @@ append your run summary to `POST_MORTEM.md` draft for the human post-mortem.
 
 ---
 
-_Briefing v1.0 — 2026-07-19. Pairs with `docs/PROJECT_PHOENIX.md` v4.0. Execute Phase 0
+## 14. AGENT SKILLS (procedural packs)
+
+Repo-owned skills live under `.claude/skills/` (index: `.claude/skills/README.md`).
+Specialized reviewers live under `.claude/agents/`.
+
+Skills encode Phoenix + ops procedures for agents. They do **not** replace human gates
+(consoles, credentials, DNS). When a skill applies, read its `SKILL.md` before acting.
+
+Priority packs: `phoenix-contract`, `mangu-env-and-secrets`, `mcp-catalog-ops`,
+`better-auth-mangu`, `mongodb-atlas-mangu`, `mangu-ops-runbook`, `phoenix-data-migration`.
+
+---
+
+_Briefing v1.1 — 2026-07-19. Pairs with `docs/PROJECT_PHOENIX.md` v4.0. Execute Phase 0
 recon first. Godspeed. 🔥_
