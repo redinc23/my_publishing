@@ -1,11 +1,13 @@
+export { FeaturedBooksSection } from './FeaturedBooksSection';
+export { TrendingBooksSection } from './TrendingBooksSection';
+export { GenreExplorer } from './GenreExplorer';
+export { StatsBar } from './StatsBar';
+export { StatsBarSection } from './StatsBarSection';
+export { NewsletterCTA } from './NewsletterCTA';
+export { AuthorSpotlight } from './AuthorSpotlight';
 export {
-  FeaturedBooksSection,
-  TrendingBooksSection,
-  GenreExplorer,
-  StatsBarSection,
-  NewsletterCTA,
-  AuthorSpotlight,
-} from './sections';
-export { BookCarousel } from './BookCarousel';
-export { RecommendationsRail } from './RecommendationsRail';
+  RecommendationsRail,
+  RecommendationsRailView,
+  RecommendationsRailSkeleton,
+} from './RecommendationsRail';
 export { BecauseYouReadRail } from './BecauseYouReadRail';
