@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# LEGACY / NON-CANONICAL (ADR-001): Vercel is the sole canonical production
+# platform. This script maintains the legacy Cloud Run runtime service
+# account's secret bindings for the compatibility/emergency path only
+# (apex may still resolve to Cloud Run until the Phase 15 DNS cutover).
+#
 # Grant the Cloud Run runtime service account read access to the production
 # secrets it mounts at deploy time (--set-secrets in cloudbuild.yaml).
 #
@@ -12,7 +17,9 @@
 #   SERVICE_ACCOUNT=svc@proj.iam.gserviceaccount.com \
 #     ./scripts/grant-cloudrun-secret-access.sh            # override runtime SA
 #
-# Overrides (see scripts/gcp-config.sh): PROJECT_ID, REGION, SERVICE_NAME.
+# Overrides (P0-020 canonical env names; see scripts/gcp-config.sh):
+#   GCP_PROJECT_ID, GCP_REGION, CLOUD_RUN_SERVICE
+# (legacy aliases PROJECT_ID, REGION, SERVICE_NAME still honored).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -28,7 +35,7 @@ command -v gcloud >/dev/null 2>&1 || {
 }
 
 if [[ -z "${PROJECT_ID}" ]]; then
-  echo "ERROR: Set PROJECT_ID or run: gcloud config set project YOUR_ID" >&2
+  echo "ERROR: Set GCP_PROJECT_ID or run: gcloud config set project YOUR_ID" >&2
   exit 1
 fi
 

@@ -1,5 +1,7 @@
 # Stripe Webhook — Production Setup
 
+> **ADR-001 note (2026-07-20):** Vercel is the canonical production platform — the production webhook endpoint is `https://www.mangu-publishers.com/api/webhook` and `STRIPE_WEBHOOK_SECRET` is stored in Vercel Production env (see [SECRET_INVENTORY.md](./SECRET_INVENTORY.md)). The Cloud Run instructions below are retained for the legacy/emergency path only.
+
 After Cloud Run is live with a public URL or custom domain:
 
 ## 1. Create endpoint (Stripe Dashboard)

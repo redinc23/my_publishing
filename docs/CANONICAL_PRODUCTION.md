@@ -49,6 +49,12 @@ In Vercel → Project → Settings → Environment Variables (Production), set a
 
 **Forbidden in production:** `USE_MOCKS`, `SKIP_EMAILS`.
 
+Repo-side check of the production-shaped config (names + formats only, never values — CCR-009):
+
+```bash
+npm run validate-env -- --production   # see docs/SECRET_INVENTORY.md
+```
+
 Redeploy Production after env changes (`NEXT_PUBLIC_*` require rebuild).
 
 ### 3. Prove Vercel readiness
@@ -83,10 +89,31 @@ Cloudflare zone `mangu-publishers.com`:
 
 ## SUPERSEDED — Cloud Run path (do not use for GO)
 
-Previous checklist (GCP project `delta-wonder-488420-i3`, `gcloud-build-submit.sh`, Secret Manager sync, `verify-gcp-production.sh`) is historical only. See git history pre-ADR-001 Option B acceptance.
+Previous checklist (GCP project `delta-wonder-488420-i3`, `gcloud-build-submit.sh`, Secret Manager sync) is historical only. See git history pre-ADR-001 Option B acceptance.
+
+### Legacy operations scripts (compatibility/emergency path only — non-canonical per ADR-001)
+
+The apex may still resolve to Cloud Run until the Phase 15 DNS cutover. Keep that legacy surface healthy — and retain an emergency verification path — with:
+
+```bash
+# Least-privilege secretAccessor bindings for the Cloud Run runtime SA (CCR-008)
+DRY_RUN=1 ./scripts/grant-cloudrun-secret-access.sh   # preview, change nothing
+./scripts/grant-cloudrun-secret-access.sh             # apply (idempotent)
+
+# Liveness (/api/health → 200) + readiness (/api/health?ready=1 → ready:true)
+# non-zero exit = NOT GO on that surface
+./scripts/verify-gcp-production.sh
+```
+
+Overrides: `GCP_PROJECT_ID`, `GCP_REGION`, `CLOUD_RUN_SERVICE`, `PROD_BASE_URL`
+(defaults: `delta-wonder-488420-i3` / `us-central1` / `mangu-publishers`).
+Secret names, store-of-record IDs, and accessor bindings: [SECRET_INVENTORY.md](./SECRET_INVENTORY.md).
+
+> Output of these scripts is evidence for the legacy surface only — never GO evidence. Canonical readiness proof is step 3 above (Vercel).
 
 ## Related
 
 - Authority: [ADR-001](./adr/ADR-001-canonical-platform.md)
+- Secrets: [SECRET_INVENTORY.md](./SECRET_INVENTORY.md)
 - Evidence: [OPERATOR_QA_LOG.md](./OPERATOR_QA_LOG.md)
 - Execution: [NEXT_GO.md](./NEXT_GO.md)
