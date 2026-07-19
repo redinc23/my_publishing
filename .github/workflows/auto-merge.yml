@@ -80,10 +80,14 @@ jobs:
 
               if (!allPassed) {
                 core.warning(`PR #${pr.number}: CI failed — not merging`);
+                const hasAutoMergeLabel = labels.includes('auto-merge');
+                const fixLoopHint = hasAutoMergeLabel
+                  ? ' If `CURSOR_API_KEY` is configured, **ci-fix-loop.yml** dispatches a Cursor agent to fix and push; auto-merge retries when CI goes green.'
+                  : '';
                 await github.rest.issues.createComment({
                   owner, repo,
                   issue_number: pr.number,
-                  body: '❌ **Auto-merge skipped** — CI checks failed. Fix the failures and this will retry automatically.'
+                  body: `❌ **Auto-merge skipped** — CI checks failed.${fixLoopHint}`
                 });
                 continue;
               }
