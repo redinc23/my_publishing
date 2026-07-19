@@ -5,6 +5,7 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BookCard } from '@/components/cards/BookCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { FollowAuthorButton } from '@/components/reader/FollowAuthorButton';
 import type { Author, BookWithAuthor, Profile } from '@/types';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
 
@@ -95,6 +96,7 @@ export default async function AuthorPage({ params }: { params: { id: string } })
                 <span>{author.total_books} published books</span>
                 {author.is_verified && <span className="text-primary">Verified author</span>}
               </div>
+              <FollowAuthorButton authorId={author.id} className="mt-4" />
             </div>
           </div>
         </Container>
