@@ -2,12 +2,15 @@
  * MCP Server for Mangu Publishers
  * Exposes the app's public catalog as MCP tools at /api/mcp/mcp (Streamable HTTP).
  *
- * Security posture (P0-017, G7):
+ * Security posture (P0-017, G7 — decision recorded in docs/MCP_SERVER.md):
  *  - DISABLED by default. The endpoint returns 404 unless `MCP_ENABLED=true`,
  *    so this non-launch surface is never open unless explicitly turned on
  *    (least privilege / honest scope — CCR-008, CCR-018).
  *  - When enabled, every request is fail-closed rate limited (CCR-007) via the
- *    shared `api` bucket, keyed by client IP.
+ *    shared `api` bucket, keyed by client IP, and must present
+ *    `Authorization: Bearer ${MCP_API_KEY}` (401 otherwise). If
+ *    `MCP_ENABLED=true` but no key is configured, the endpoint fails closed
+ *    as if disabled — it can never be open unauthenticated.
  *  - Read-only over published+public books only (anon key + RLS). User search
  *    text is sanitized before it reaches a PostgREST filter (no `.or()`
  *    injection).
