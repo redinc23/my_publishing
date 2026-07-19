@@ -6,6 +6,18 @@ updates:
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 10
+    ignore:
+      # React majors must be manual: #155 bumped react-dom to 19 while react
+      # stayed 18 and broke all CI (npm ci ERESOLVE). React 19 migration is a
+      # deliberate, separately planned effort.
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: 'github-actions'
