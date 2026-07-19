@@ -1,12 +1,12 @@
 # ADR-002: MongoDB Atlas as Application Data Platform (Supabase Retirement)
 
-| Field         | Value                                                                                          |
-| ------------- | ---------------------------------------------------------------------------------------------- |
-| **Status**    | **ACCEPTED (direction)** — automation path live; query/auth cutover still IN PROGRESS          |
-| **Created**   | 2026-07-18                                                                                     |
-| **Updated**   | 2026-07-18 (db:mongo:up automation: Atlas API → .env.local → Vercel → ping → indexes)          |
-| **Deciders**  | Solo Operator (Chris)                                                                          |
-| **Hard gate** | G7 (data/auth readiness) — remains FALSE until Mongo + replacement auth prove `ready:true`     |
+| Field         | Value                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| **Status**    | **ACCEPTED (direction)** — automation path live; query/auth cutover still IN PROGRESS      |
+| **Created**   | 2026-07-18                                                                                 |
+| **Updated**   | 2026-07-18 (db:mongo:up automation: Atlas API → .env.local → Vercel → ping → indexes)      |
+| **Deciders**  | Solo Operator (Chris)                                                                      |
+| **Hard gate** | G7 (data/auth readiness) — remains FALSE until Mongo + replacement auth prove `ready:true` |
 
 ## Context
 
@@ -18,24 +18,24 @@ MongoDB replaces the **database** only. Auth, file storage, and auto-generated R
 
 ## Options
 
-| Option                         | Description                                      | Notes                                                                 |
-| ------------------------------ | ------------------------------------------------ | --------------------------------------------------------------------- |
-| **A — Stay on Supabase**       | Keep Postgres + Auth + Storage                   | Rejected by operator                                                  |
-| **B — MongoDB Atlas + apps**   | Atlas for documents; separate auth + storage     | Chosen direction                                                      |
-| **C — Dual-write transition**  | Write both engines during cutover                | Higher complexity; optional later if downtime must be near-zero       |
+| Option                        | Description                                  | Notes                                                           |
+| ----------------------------- | -------------------------------------------- | --------------------------------------------------------------- |
+| **A — Stay on Supabase**      | Keep Postgres + Auth + Storage               | Rejected by operator                                            |
+| **B — MongoDB Atlas + apps**  | Atlas for documents; separate auth + storage | Chosen direction                                                |
+| **C — Dual-write transition** | Write both engines during cutover            | Higher complexity; optional later if downtime must be near-zero |
 
 ## Decision (direction)
 
 **Option B — MongoDB Atlas is the target application database.**
 
-| Item              | Value                                                                 |
-| ----------------- | --------------------------------------------------------------------- |
-| Database          | MongoDB Atlas (`MONGODB_URI`, optional `MONGODB_DB`, default `mangu`) |
-| Driver            | Official `mongodb` Node driver (`lib/mongodb.ts`)                     |
-| Hosting           | Vercel (ADR-001); use `attachDatabasePool` where available            |
-| Auth (TBD)        | **Not** MongoDB — choose Clerk, Better Auth, or Auth.js before rewrite |
-| File storage (TBD)| Vercel Blob or S3 (not Supabase Storage)                              |
-| Supabase          | Retain until feature cutover; then remove keys and `@supabase/*`      |
+| Item               | Value                                                                  |
+| ------------------ | ---------------------------------------------------------------------- |
+| Database           | MongoDB Atlas (`MONGODB_URI`, optional `MONGODB_DB`, default `mangu`)  |
+| Driver             | Official `mongodb` Node driver (`lib/mongodb.ts`)                      |
+| Hosting            | Vercel (ADR-001); use `attachDatabasePool` where available             |
+| Auth (TBD)         | **Not** MongoDB — choose Clerk, Better Auth, or Auth.js before rewrite |
+| File storage (TBD) | Vercel Blob or S3 (not Supabase Storage)                               |
+| Supabase           | Retain until feature cutover; then remove keys and `@supabase/*`       |
 
 ### Automation (preferred — do not click Drivers by hand)
 

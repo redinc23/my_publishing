@@ -23,31 +23,37 @@ const options: MongoClientOptions = {
   serverSelectionTimeoutMS: 5000,
 };
 
-function createClientPromise(): Promise<MongoClient> {
+async function createClientPromise(): Promise<MongoClient> {
   const client = new MongoClient(assertMongoUri(), options);
 
   // Soft-attach for Fluid Compute when @vercel/functions is available.
-  // Dynamic import keeps local/unit paths working without a Vercel runtime.
+  // Await the import so the pool is registered before connect(); the dynamic
+  // import keeps local/unit paths working without a Vercel runtime.
   if (!globalForMongo._mongoPoolAttached) {
     globalForMongo._mongoPoolAttached = true;
-    void import('@vercel/functions')
-      .then(({ attachDatabasePool }) => {
-        attachDatabasePool(client);
-      })
-      .catch(() => {
-        // Non-Vercel / missing package — connection still works.
-      });
+    try {
+      const { attachDatabasePool } = await import('@vercel/functions');
+      attachDatabasePool(client);
+    } catch {
+      // Non-Vercel / missing package — connection still works.
+    }
   }
 
   return client.connect();
 }
 
 /**
- * Shared MongoClient promise (one per process).
+ * Shared MongoClient promise (one per process). A failed connection is not
+ * cached — the next call retries instead of replaying the rejection until
+ * the container restarts.
  */
 export function getMongoClientPromise(): Promise<MongoClient> {
   if (!globalForMongo._mongoClientPromise) {
-    globalForMongo._mongoClientPromise = createClientPromise();
+    globalForMongo._mongoClientPromise = createClientPromise().catch((error) => {
+      delete globalForMongo._mongoClientPromise;
+      globalForMongo._mongoPoolAttached = false;
+      throw error;
+    });
   }
   return globalForMongo._mongoClientPromise;
 }
