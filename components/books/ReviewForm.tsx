@@ -41,7 +41,7 @@ export function ReviewForm({ bookId, existingReview, onClose }: ReviewFormProps)
     setValue,
     watch,
     formState: { errors },
-  } = useForm<ReviewFormData>({
+  } = useForm<z.input<typeof reviewSchema>, unknown, z.output<typeof reviewSchema>>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
       rating: existingReview?.rating || 5,
