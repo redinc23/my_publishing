@@ -1,152 +1,182 @@
 /**
- * GET/PUT /api/audio/progress — audiobook listening position sync.
+ * Listening Progress Sync API (audiobooks)
  *
- * Auth: Supabase session required for every method.
- * Table: listening_progress (migration 20260719130000). When the migration
- * is missing the route returns 503 so the player can silently fall back to
- * localStorage-only persistence.
+ * GET  /api/audio/progress?book_id=<uuid>  → caller's saved position (or null)
+ * PUT  /api/audio/progress                 → upsert caller's position
+ *
+ * Honest-scope contract:
+ *   - Not signed in                → 401 { status: 'unauthenticated' }
+ *     (client silently falls back to localStorage-only persistence).
+ *   - listening_progress missing   → 503 { status: 'disabled' }
+ *     (migration not applied yet — feature no-ops, never 500s the client).
+ *   - Validation failure           → 400 { status: 'invalid' }.
+ *
+ * The user id is ALWAYS taken from the verified session, never from the body.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { validateSafe, getFirstError } from '@/lib/validations/schemas';
+import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import {
   ListeningProgressGetSchema,
   ListeningProgressPutSchema,
+  type ListeningProgressPut,
 } from '@/lib/validations/audio';
+import { validateSafe, getFirstError } from '@/lib/validations/schemas';
 
-export const dynamic = 'force-dynamic';
+type Status = 'ok' | 'unauthenticated' | 'invalid' | 'disabled' | 'error' | 'limited';
 
-/** Detects "table does not exist" / schema-cache errors from PostgREST. */
-function isMissingTableError(error: { code?: string; message?: string }): boolean {
-  return (
-    error.code === '42P01' ||
-    /listening_progress.*does not exist/i.test(error.message ?? '')
-  );
+interface ProgressRow {
+  book_id: string;
+  position_seconds: number;
+  duration_seconds: number;
+  updated_at: string;
 }
 
-function tableMissingResponse() {
-  return NextResponse.json(
-    { status: 'disabled', reason: 'listening_progress table missing' },
-    { status: 503 }
-  );
+function json(
+  body: { status: Status; message?: string; progress?: ProgressRow | null; updated_at?: string },
+  status: number,
+  headers?: Record<string, string>
+): NextResponse {
+  return NextResponse.json(body, { status, headers });
 }
 
-/** Resolve the caller's profiles.id (listening_progress.user_id FK target). */
-async function getProfileId(supabase: Awaited<ReturnType<typeof createClient>>, authUserId: string) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('user_id', authUserId)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.id ?? null;
+/** Postgres/PostgREST "table does not exist" signals (migration not applied). */
+function isMissingTable(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  if (error.code === '42P01' || error.code === 'PGRST205') return true;
+  return /listening_progress.*does not exist/i.test(error.message ?? '');
 }
 
-export async function GET(request: NextRequest) {
+/**
+ * Resolve the caller's internal profile id (listening_progress.user_id
+ * references profiles.id, matching reading_progress conventions).
+ * Returns null when signed out or when no profile row exists.
+ */
+async function getProfileId(): Promise<{
+  profileId: string | null;
+  client: Awaited<ReturnType<typeof createClient>>;
+}> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
+
+  if (!user) return { profileId: null, client: supabase };
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  return { profileId: profile?.id ?? null, client: supabase };
+}
+
+async function rateLimit(request: NextRequest, key: string | null) {
+  const identifier = key ?? getClientIdentifier(request);
+  return enforceRateLimit('api', identifier);
+}
+
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const { searchParams } = new URL(request.url);
+  const parsed = validateSafe(ListeningProgressGetSchema, { book_id: searchParams.get('book_id') });
+  if (!parsed.success) {
+    return json({ status: 'invalid', message: getFirstError(parsed.error) }, 400);
   }
 
-  const parsed = validateSafe(ListeningProgressGetSchema, {
-    book_id: request.nextUrl.searchParams.get('book_id') ?? undefined,
-  });
-  if (!parsed.success) {
-    return NextResponse.json(
-      { status: 'error', message: getFirstError(parsed.error) },
-      { status: 400 }
+  const rl = await rateLimit(request, null);
+  if (!rl.success) {
+    return json(
+      {
+        status: 'limited',
+        message:
+          rl.reason === 'unavailable'
+            ? 'Rate limiter unavailable. Please try again shortly.'
+            : 'Rate limit exceeded. Please slow down.',
+      },
+      rl.reason === 'unavailable' ? 503 : 429,
+      rl.headers
     );
   }
 
-  try {
-    const profileId = await getProfileId(supabase, user.id);
-    if (!profileId) {
-      return NextResponse.json({ status: 'ok', progress: null });
-    }
-
-    const { data, error } = await supabase
-      .from('listening_progress')
-      .select('position_seconds, duration_seconds, updated_at')
-      .eq('user_id', profileId)
-      .eq('book_id', parsed.data.book_id)
-      .maybeSingle();
-
-    if (error) {
-      if (isMissingTableError(error)) return tableMissingResponse();
-      console.error('[audio/progress] GET failed:', error);
-      return NextResponse.json(
-        { status: 'error', message: 'Failed to load progress' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ status: 'ok', progress: data ?? null });
-  } catch (error) {
-    console.error('[audio/progress] GET unexpected:', error);
-    return NextResponse.json({ status: 'error', message: 'Internal error' }, { status: 500 });
+  const { profileId, client } = await getProfileId();
+  if (!profileId) {
+    return json({ status: 'unauthenticated', message: 'Sign in to sync listening progress.' }, 401);
   }
+
+  const { data, error } = await client
+    .from('listening_progress')
+    .select('book_id, position_seconds, duration_seconds, updated_at')
+    .eq('user_id', profileId)
+    .eq('book_id', parsed.data.book_id)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTable(error)) {
+      return json({ status: 'disabled', message: 'Listening sync is not enabled yet.' }, 503);
+    }
+    console.error('[audio/progress] GET failed:', error);
+    return json({ status: 'error', message: 'Could not load listening progress.' }, 500);
+  }
+
+  return json({ status: 'ok', progress: (data as ProgressRow | null) ?? null }, 200);
 }
 
-export async function PUT(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ status: 'error', message: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function PUT(request: NextRequest): Promise<NextResponse> {
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ status: 'error', message: 'Invalid JSON body' }, { status: 400 });
+    return json({ status: 'invalid', message: 'Invalid JSON body.' }, 400);
   }
 
   const parsed = validateSafe(ListeningProgressPutSchema, body);
   if (!parsed.success) {
-    return NextResponse.json(
-      { status: 'error', message: getFirstError(parsed.error) },
-      { status: 400 }
-    );
+    return json({ status: 'invalid', message: getFirstError(parsed.error) }, 400);
   }
 
-  try {
-    const profileId = await getProfileId(supabase, user.id);
-    if (!profileId) {
-      return NextResponse.json(
-        { status: 'error', message: 'Profile not found' },
-        { status: 404 }
-      );
-    }
+  const { profileId, client } = await getProfileId();
+  if (!profileId) {
+    return json({ status: 'unauthenticated', message: 'Sign in to sync listening progress.' }, 401);
+  }
 
-    const { error } = await supabase.from('listening_progress').upsert(
+  const rl = await rateLimit(request, profileId);
+  if (!rl.success) {
+    return json(
       {
-        user_id: profileId,
-        book_id: parsed.data.book_id,
-        position_seconds: parsed.data.position_seconds,
-        duration_seconds: parsed.data.duration_seconds,
-        updated_at: new Date().toISOString(),
+        status: 'limited',
+        message:
+          rl.reason === 'unavailable'
+            ? 'Rate limiter unavailable. Please try again shortly.'
+            : 'Rate limit exceeded. Please slow down.',
       },
-      { onConflict: 'user_id,book_id' }
+      rl.reason === 'unavailable' ? 503 : 429,
+      rl.headers
     );
-
-    if (error) {
-      if (isMissingTableError(error)) return tableMissingResponse();
-      console.error('[audio/progress] PUT failed:', error);
-      return NextResponse.json(
-        { status: 'error', message: 'Failed to save progress' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ status: 'ok' });
-  } catch (error) {
-    console.error('[audio/progress] PUT unexpected:', error);
-    return NextResponse.json({ status: 'error', message: 'Internal error' }, { status: 500 });
   }
+
+  const payload: ListeningProgressPut = parsed.data;
+  const updatedAt = new Date().toISOString();
+
+  const { error } = await client.from('listening_progress').upsert(
+    {
+      user_id: profileId,
+      book_id: payload.book_id,
+      position_seconds: payload.position_seconds,
+      duration_seconds: payload.duration_seconds,
+      updated_at: updatedAt,
+    },
+    { onConflict: 'user_id,book_id' }
+  );
+
+  if (error) {
+    if (isMissingTable(error)) {
+      return json({ status: 'disabled', message: 'Listening sync is not enabled yet.' }, 503);
+    }
+    console.error('[audio/progress] PUT failed:', error);
+    return json({ status: 'error', message: 'Could not save listening progress.' }, 500);
+  }
+
+  return json({ status: 'ok', updated_at: updatedAt }, 200);
 }

@@ -1,174 +1,114 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import { BookCard } from '@/components/cards/BookCard';
 import { Container } from '@/components/layout/Container';
-import { Section } from '@/components/layout/Section';
-import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils/cn';
 import type { BookWithAuthor } from '@/types';
+
+/**
+ * Resonance Engine — Netflix-style horizontal recommendation rail.
+ *
+ * Contract:
+ *  - Self-fetching rails render a skeleton while loading and NOTHING when the
+ *    endpoint errors or returns no items (empty-state suppression).
+ *  - Impressions (batched, once per session per rail) and clicks are tracked
+ *    via /api/resonance/track. Tracking is fire-and-forget and can never
+ *    break rendering.
+ */
 
 export interface RailBookItem {
   book: BookWithAuthor;
   reason?: string;
 }
 
-interface TrackedWindow {
-  ids: string[];
-  visibleSince: number;
-  scrolled: boolean;
+const TRACK_URL = '/api/resonance/track';
+
+interface TrackEvent {
+  book_id: string;
+  event_type: 'impression' | 'click';
+  event_value: Record<string, unknown>;
 }
 
-/** Impressions only count after this much on-screen dwell (ms). */
-const IMPRESSION_DWELL_MS = 800;
-/** Capped payload sent to /api/resonance/track per flush. */
-const MAX_IMPRESSIONS_PER_FLUSH = 20;
+function sendTrackEvents(events: TrackEvent[], keepalive = false): void {
+  if (events.length === 0 || typeof window === 'undefined') return;
+  try {
+    const payload = events.length === 1 ? events[0] : events;
+    void fetch(TRACK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive,
+    }).catch(() => {
+      /* analytics must never surface */
+    });
+  } catch {
+    /* noop */
+  }
+}
 
-/**
- * Batched impression/click analytics for recommendation rails.
- * Events buffer in memory and flush on an interval + pagehide (keepalive).
- */
-function useRailAnalytics(railId: string | undefined) {
-  const bufferRef = useRef<Array<Record<string, unknown>>>([]);
-  const seenRef = useRef<Set<string>>(new Set());
-  const windowRef = useRef<TrackedWindow | null>(null);
+function impressionSentThisSession(railId: string): boolean {
+  try {
+    return window.sessionStorage.getItem(`resonance:imp:${railId}`) === '1';
+  } catch {
+    return false;
+  }
+}
 
-  const flush = useCallback(
-    (keepalive = false) => {
-      if (!railId || bufferRef.current.length === 0) return;
-      const events = bufferRef.current.splice(0, MAX_IMPRESSIONS_PER_FLUSH);
-      try {
-        void fetch('/api/resonance/track', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(events),
-          keepalive,
-        }).catch(() => {
-          // Analytics must never break the UI.
-        });
-      } catch {
-        // Ignore.
-      }
-    },
-    [railId]
-  );
+function markImpressionSent(railId: string): void {
+  try {
+    window.sessionStorage.setItem(`resonance:imp:${railId}`, '1');
+  } catch {
+    /* private mode etc. */
+  }
+}
 
+/** Fires one batched impression event set when the rail scrolls into view. */
+function useImpressionTracking(
+  containerRef: RefObject<HTMLElement | null>,
+  railId: string,
+  items: RailBookItem[]
+): void {
   useEffect(() => {
-    if (!railId) return;
-    const interval = window.setInterval(() => flush(false), 5000);
-    const onHide = () => flush(true);
-    window.addEventListener('pagehide', onHide);
-    document.addEventListener('visibilitychange', onHide);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('pagehide', onHide);
-      document.removeEventListener('visibilitychange', onHide);
-      flush(true);
-    };
-  }, [railId, flush]);
+    const node = containerRef.current;
+    if (!node || items.length === 0) return;
+    if (typeof IntersectionObserver === 'undefined') return;
+    if (impressionSentThisSession(railId)) return;
 
-  const trackImpressions = useCallback(
-    (ids: string[], viaScroll: boolean) => {
-      if (!railId || ids.length === 0) return;
-      const now = Date.now();
-      const pending = windowRef.current;
-      if (
-        !pending ||
-        pending.ids.join(',') !== ids.join(',') ||
-        (viaScroll && !pending.scrolled)
-      ) {
-        windowRef.current = { ids, visibleSince: now, scrolled: viaScroll };
-        return; // dwell first; the next interval tick fires the impression
-      }
-      if (now - pending.visibleSince < IMPRESSION_DWELL_MS) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((entry) => entry.isIntersecting);
+        if (!visible) return;
+        observer.disconnect();
+        markImpressionSent(railId);
+        sendTrackEvents(
+          items.map((item, index) => ({
+            book_id: item.book.id,
+            event_type: 'impression',
+            event_value: { rail: railId, position: index, reason: item.reason ?? null },
+          }))
+        );
+      },
+      { threshold: 0.35 }
+    );
 
-      const fresh = ids.filter((id) => !seenRef.current.has(`resonance:imp:${railId}:${id}`));
-      if (fresh.length === 0) return;
-      for (const id of fresh) {
-        seenRef.current.add(`resonance:imp:${railId}:${id}`);
-        bufferRef.current.push({
-          book_id: id,
-          event_type: 'impression',
-          event_value: { rail: railId, via_scroll: viaScroll },
-        });
-      }
-    },
-    [railId]
-  );
-
-  const trackClick = useCallback(
-    (bookId: string) => {
-      if (!railId) return;
-      bufferRef.current.push({
-        book_id: bookId,
-        event_type: 'click',
-        event_value: { rail: railId },
-      });
-      flush(false);
-    },
-    [railId, flush]
-  );
-
-  return { trackImpressions, trackClick };
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [containerRef, railId, items]);
 }
 
-// ── Presentation ─────────────────────────────────────────────────────────────
-
-function RailBookCard({
-  item,
-  showReason,
-  onClick,
-}: {
-  item: RailBookItem;
-  showReason: boolean;
-  onClick?: () => void;
-}) {
-  const { book } = item;
-  const href = `/books/${book.slug ?? book.id}`;
-  const author = book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author';
-  const rating =
-    typeof book.average_rating === 'number' && book.average_rating > 0
-      ? book.average_rating
-      : null;
-
-  return (
-    <li className="w-[150px] flex-shrink-0 snap-start sm:w-[170px]">
-      <Link
-        href={href}
-        onClick={onClick}
-        className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-      >
-        <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-muted">
-          {book.cover_url ? (
-            <Image
-              src={book.cover_url}
-              alt={`Cover of ${book.title}`}
-              fill
-              sizes="(max-width: 640px) 150px, 170px"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-              No cover
-            </div>
-          )}
-        </div>
-        <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug">{book.title}</p>
-        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{author}</p>
-        {rating !== null && (
-          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            {rating.toFixed(1)}
-          </p>
-        )}
-        {showReason && item.reason && (
-          <p className="mt-1 line-clamp-1 text-[11px] italic text-muted-foreground/80">
-            {item.reason}
-          </p>
-        )}
-      </Link>
-    </li>
+function trackClick(railId: string, item: RailBookItem, position: number): void {
+  sendTrackEvents(
+    [
+      {
+        book_id: item.book.id,
+        event_type: 'click',
+        event_value: { rail: railId, position, reason: item.reason ?? null },
+      },
+    ],
+    true
   );
 }
 
@@ -176,12 +116,12 @@ export interface RecommendationsRailViewProps {
   title: string;
   subtitle?: string;
   items: RailBookItem[];
-  railId?: string;
+  railId: string;
   className?: string;
   showReasons?: boolean;
 }
 
-/** Shared horizontal rail UI (also used by BecauseYouReadRail). */
+/** Presentational rail: header + horizontal snap row + tracking. */
 export function RecommendationsRailView({
   title,
   subtitle,
@@ -190,130 +130,125 @@ export function RecommendationsRailView({
   className,
   showReasons = true,
 }: RecommendationsRailViewProps) {
-  const listRef = useRef<HTMLUListElement>(null);
-  const { trackImpressions, trackClick } = useRailAnalytics(railId);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const scrollerRef = useRef<HTMLUListElement | null>(null);
+  useImpressionTracking(sectionRef, railId, items);
 
-  // Impression tracking: fire for the visible window on mount and after scrolls.
-  useEffect(() => {
-    if (!railId || items.length === 0) return;
-    const list = listRef.current;
-    if (!list) return;
+  if (items.length === 0) return null;
 
-    const visibleIds = () =>
-      Array.from(list.querySelectorAll('li'))
-        .filter((el) => {
-          const rect = el.getBoundingClientRect();
-          return rect.right > 0 && rect.left < window.innerWidth;
-        })
-        .map((el, index) => items[index]?.book.id)
-        .filter((id): id is string => typeof id === 'string');
-
-    const initial = window.setTimeout(() => trackImpressions(visibleIds(), false), 600);
-    let scrollTimer: number | null = null;
-    const onScroll = () => {
-      if (scrollTimer) window.clearTimeout(scrollTimer);
-      scrollTimer = window.setTimeout(() => trackImpressions(visibleIds(), true), 400);
-    };
-    list.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.clearTimeout(initial);
-      if (scrollTimer) window.clearTimeout(scrollTimer);
-      list.removeEventListener('scroll', onScroll);
-    };
-  }, [railId, items, trackImpressions]);
-
-  const scrollBy = (dir: 1 | -1) => {
-    const list = listRef.current;
-    if (!list) return;
-    list.scrollBy({ left: dir * Math.round(list.clientWidth * 0.8), behavior: 'smooth' });
+  const scrollByAmount = (direction: -1 | 1) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    scroller.scrollBy({ left: direction * scroller.clientWidth * 0.8, behavior: 'smooth' });
   };
 
   return (
-    <Section className={className}>
+    <section ref={sectionRef} aria-label={title} className={cn('py-10', className)}>
       <Container>
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-light tracking-tight sm:text-3xl">{title}</h2>
-            {subtitle && <p className="mt-1 text-sm text-secondary">{subtitle}</p>}
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
+            <div>
+              <h2 className="text-xl font-light tracking-tight sm:text-2xl">{title}</h2>
+              {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
+            </div>
           </div>
-          <div className="hidden gap-2 sm:flex">
-            <Button
+          <div className="hidden gap-2 md:flex">
+            <button
               type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => scrollBy(-1)}
-              aria-label="Scroll recommendations left"
+              aria-label={`Scroll ${title} left`}
+              onClick={() => scrollByAmount(-1)}
+              className="rounded-full border border-border/60 bg-background/60 p-2 text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => scrollBy(1)}
-              aria-label="Scroll recommendations right"
+              aria-label={`Scroll ${title} right`}
+              onClick={() => scrollByAmount(1)}
+              className="rounded-full border border-border/60 bg-background/60 p-2 text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
         </div>
+
         <ul
-          ref={listRef}
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={scrollerRef}
+          className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2"
         >
-          {items.map((item) => (
-            <RailBookCard
+          {items.map((item, index) => (
+            <li
               key={item.book.id}
-              item={item}
-              showReason={showReasons}
-              onClick={() => trackClick(item.book.id)}
-            />
+              className="w-[150px] shrink-0 snap-start sm:w-[170px] lg:w-[190px]"
+            >
+              <div onClickCapture={() => trackClick(railId, item, index)}>
+                <BookCard book={item.book} variant="compact" />
+              </div>
+              {showReasons && item.reason && (
+                <p className="mt-1.5 line-clamp-1 text-xs text-primary/80">{item.reason}</p>
+              )}
+            </li>
           ))}
         </ul>
       </Container>
-    </Section>
+    </section>
   );
 }
 
 export function RecommendationsRailSkeleton({ className }: { className?: string }) {
   return (
-    <Section className={className}>
+    <section aria-hidden="true" className={cn('py-10', className)}>
       <Container>
-        <div className="mb-6 h-8 w-56 animate-pulse rounded bg-muted" />
-        <div className="flex gap-4 overflow-hidden">
-          {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="w-[150px] flex-shrink-0 sm:w-[170px]">
-              <div className="aspect-[2/3] animate-pulse rounded-lg bg-muted" />
-              <div className="mt-2 h-4 w-3/4 animate-pulse rounded bg-muted" />
-              <div className="mt-1 h-3 w-1/2 animate-pulse rounded bg-muted" />
+        <div className="mb-5 flex items-center gap-3">
+          <Skeleton className="h-5 w-5 rounded-full" />
+          <Skeleton className="h-7 w-44" />
+        </div>
+        <div className="scrollbar-hide flex gap-4 overflow-hidden pb-2">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="w-[150px] shrink-0 sm:w-[170px] lg:w-[190px]">
+              <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+              <Skeleton className="mt-2 h-4 w-3/4" />
+              <Skeleton className="mt-1 h-3 w-1/2" />
             </div>
           ))}
         </div>
       </Container>
-    </Section>
+    </section>
   );
 }
 
-// ── Data-driven rail (default export pattern used on the homepage) ──────────
-
-export interface RecommendationsRailProps {
-  title: string;
-  subtitle?: string;
-  /** Absolute path to a resonance API returning { items: [{ book, reason? }] }. */
-  endpoint: string;
-  railId?: string;
-  className?: string;
-}
-
-interface ApiRailItem {
+interface RecommendApiItem {
   book: BookWithAuthor;
   reason?: string;
 }
 
+/** Extract rail items from a Resonance Engine API payload. */
+export function mapRecommendResponse(json: unknown): RailBookItem[] {
+  try {
+    const data = (json as { data?: { items?: RecommendApiItem[] } } | null)?.data;
+    if (!data?.items || !Array.isArray(data.items)) return [];
+    return data.items
+      .filter((item) => item && item.book && typeof item.book.id === 'string')
+      .map((item) => ({ book: item.book, reason: item.reason }));
+  } catch {
+    return [];
+  }
+}
+
+export interface RecommendationsRailProps {
+  title: string;
+  subtitle?: string;
+  /** Absolute path + query of a Resonance recommend-shaped endpoint. */
+  endpoint: string;
+  railId: string;
+  className?: string;
+  showReasons?: boolean;
+}
+
 /**
- * Client-side rail that fetches a resonance endpoint and renders books.
- * Self-suppressing: renders nothing (not even a heading) when the API errors,
- * returns an unexpected payload, or yields zero books.
+ * Self-fetching rail bound to /api/resonance/recommend. Renders nothing when
+ * the request fails or yields no items.
  */
 export function RecommendationsRail({
   title,
@@ -321,6 +256,7 @@ export function RecommendationsRail({
   endpoint,
   railId,
   className,
+  showReasons = true,
 }: RecommendationsRailProps) {
   const [items, setItems] = useState<RailBookItem[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -334,16 +270,11 @@ export function RecommendationsRail({
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (controller.signal.aborted) return;
-        const rawItems = (json as { data?: { items?: ApiRailItem[] } } | null)?.data?.items;
-        if (!Array.isArray(rawItems)) {
+        if (!json) {
           setFailed(true);
           return;
         }
-        setItems(
-          rawItems
-            .filter((item) => item && item.book && typeof item.book.id === 'string')
-            .map((item) => ({ book: item.book, reason: item.reason }))
-        );
+        setItems(mapRecommendResponse(json));
       })
       .catch(() => {
         if (!controller.signal.aborted) setFailed(true);
@@ -363,6 +294,7 @@ export function RecommendationsRail({
       items={items}
       railId={railId}
       className={className}
+      showReasons={showReasons}
     />
   );
 }
