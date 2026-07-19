@@ -1,4 +1,11 @@
-name: 'Copilot Setup Steps'
+# Copilot Setup Steps
+#
+# Bootstrap environment for GitHub Copilot coding agent sessions.
+# Project instructions: AGENTS.md (repo root)
+# Custom agents: .github/agents/*.agent.md
+# Operator guide: docs/COPILOT_CLI.md
+
+name: "Copilot Setup Steps"
 
 on:
   workflow_dispatch:
@@ -23,20 +30,32 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
+
+      - name: Verify Copilot agent profiles
+        run: |
+          set -euo pipefail
+          echo "Listing .github/agents/*.agent.md"
+          ls -1 .github/agents/*.agent.md
+          test -f AGENTS.md
+          echo "AGENTS.md present"
+          for required in explore task code-review research plan my-agent; do
+            test -f ".github/agents/${required}.agent.md"
+            echo "OK: ${required}.agent.md"
+          done
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
         env:
-          USE_MOCKS: 'true'
-          NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-anon-key'
-          SUPABASE_SERVICE_ROLE_KEY: 'placeholder-service-role-key'
-          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_placeholder'
-          NEXT_PUBLIC_SITE_URL: 'http://localhost:3000'
+          USE_MOCKS: "true"
+          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key"
+          SUPABASE_SERVICE_ROLE_KEY: "placeholder-service-role-key"
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_placeholder"
+          NEXT_PUBLIC_SITE_URL: "http://localhost:3000"

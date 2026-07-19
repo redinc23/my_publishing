@@ -1,3 +1,8 @@
+---
+name: my-agent
+description: Maintenance task catalog for MANGU Publishers. Pick low-risk hygiene, quality, docs, CI, security, or release prep tasks from the list.
+---
+
 # GitHub AI Agent Tasks for Repository Maintenance
 
 This file lists tasks you can hand to a GitHub AI agent for this repository.
