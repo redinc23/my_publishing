@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.1.0](https://github.com/redinc23/my_publishing/compare/v1.0.1...v1.1.0) (2026-07-19)
+
+
+### Features
+
+* **launch:** audio player UI, reviews API, highlights & wishlist components — batch 4/7 ([8425afd](https://github.com/redinc23/my_publishing/commit/8425afde619add6dfbfe938fd8f2d5f46c41f1ba))
+* **launch:** book page reviews wiring, notes panel, review migration & engagement APIs — batch 5/7 ([b13332d](https://github.com/redinc23/my_publishing/commit/b13332d575a0b87415aecf02f898bde1583d7fa3))
+* **launch:** mini-player, resonance tracking, audio catalog & home exports — batch 7/12 ([8117c60](https://github.com/redinc23/my_publishing/commit/8117c6046d6a555f290488b54b43e42dc164928e))
+* **launch:** Phase 2 delta — webhook receipts, double opt-in newsletter, email prefs, embed route, tests ([#285](https://github.com/redinc23/my_publishing/issues/285)) ([ff0dd6f](https://github.com/redinc23/my_publishing/commit/ff0dd6f0a9d7d8ef4bd9ec1c5ec040d6284b7058))
+* **launch:** readers hub tabs, recommend API & review card — batch 6/8 ([944ca6a](https://github.com/redinc23/my_publishing/commit/944ca6a6da2f9c2ff0f695ecd211d163185a6e6d))
+* **launch:** sample play button, email layout, receipt template & audio types — batch 8/12 ([130b25e](https://github.com/redinc23/my_publishing/commit/130b25e396a889a654125dbe0529aa3373728636))
+* **platform:** production verify/IAM scripts + redacted secret inventory (P0-020, P0-016) ([#298](https://github.com/redinc23/my_publishing/issues/298)) ([266691b](https://github.com/redinc23/my_publishing/commit/266691b057803fd1cae72755c047721bc1dc70e9))
+
+
+### Bug Fixes
+
+* **ci:** align react-dom with react 18 to resolve npm ci peer conflict ([#245](https://github.com/redinc23/my_publishing/issues/245)) ([8d556a1](https://github.com/redinc23/my_publishing/commit/8d556a1af5b2a674d8a3cd11db54ead340f255e9))
+* **ci:** allow Cloud Build CI validation without production anon key ([#280](https://github.com/redinc23/my_publishing/issues/280)) ([a05af05](https://github.com/redinc23/my_publishing/commit/a05af05b984a0be9e3698aa8515a57b2f3c43dbe))
+* **ci:** format CHANGELOG.md for Prettier check ([#243](https://github.com/redinc23/my_publishing/issues/243)) ([900830f](https://github.com/redinc23/my_publishing/commit/900830fe8311b6bd3018962ec75bdc446a2ff7bb))
+* complete launch recovery and harden repository ([4eb5f75](https://github.com/redinc23/my_publishing/commit/4eb5f7594ce937b18def71cdcbf90b11ee94651f))
+* **home:** replace fabricated genre counts with real published+public counts (Phase 10) ([#263](https://github.com/redinc23/my_publishing/issues/263)) ([56ba08d](https://github.com/redinc23/my_publishing/commit/56ba08d981c86b4114c0765a388114e887999e7f))
+* **security:** fail-closed MCP transport gate (P0-017) ([#297](https://github.com/redinc23/my_publishing/issues/297)) ([ae7b926](https://github.com/redinc23/my_publishing/commit/ae7b92628d2079fe83632a5abc5b7383d7df11c1))
+* **stats,health:** cache platform stats, no-store health, config-only Stripe readiness ([#260](https://github.com/redinc23/my_publishing/issues/260)) ([6fdb9d2](https://github.com/redinc23/my_publishing/commit/6fdb9d29dd1896e5733ffad4e5843b4410ec6254))
+
 ## [1.0.1](https://github.com/redinc23/my_publishing/compare/v1.0.0...v1.0.1) (2026-07-18)
 
 ### Bug Fixes
