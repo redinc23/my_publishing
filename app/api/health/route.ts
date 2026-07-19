@@ -25,7 +25,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { validateEnvironment } from '@/lib/utils/env-validation';
-import { validateStripeConfig, testStripeConnection } from '@/lib/stripe/validate-config';
+
+// PHASE-7 — Health/readiness probes must never be statically cached.
+export const dynamic = 'force-dynamic';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -50,6 +52,10 @@ interface CheckResult {
 }
 
 const startTime = Date.now();
+
+// PHASE-7 — Health responses must never be cached by browsers, CDNs, or
+// load-balancer probe infrastructure.
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store, max-age=0' };
 
 function checkEnvironment(): CheckResult {
   const validation = validateEnvironment();
@@ -154,58 +160,23 @@ async function checkAuth(supabase: Awaited<ReturnType<typeof createClient>>): Pr
   }
 }
 
-async function checkStripe(): Promise<CheckResult> {
-  const start = Date.now();
-  const validation = validateStripeConfig();
+// PHASE-7 — Config-only Stripe readiness check. The readiness probe must never
+// call the live Stripe API: a Stripe outage or network blip must not flap
+// deploys. Stripe is optional for core serving, so this check can at most
+// degrade readiness — it never reports 'fail'.
+function checkStripe(): CheckResult {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
 
-  // If Stripe is not configured at all, return warn (not fail) since it's optional
-  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !process.env.STRIPE_SECRET_KEY) {
+  if (secretKey && secretKey.startsWith('sk_')) {
     return {
-      status: 'warn',
-      latency_ms: Date.now() - start,
-      message: 'Stripe not configured (payments will not work)',
-    };
-  }
-
-  if (!validation.valid) {
-    return {
-      status: 'fail',
-      latency_ms: Date.now() - start,
-      message: `Stripe configuration errors: ${validation.errors.join('; ')}`,
-    };
-  }
-
-  // Test actual API connection if secret key is available
-  if (validation.secretKeyValid) {
-    const connectionTest = await testStripeConnection();
-    const latency = Date.now() - start;
-
-    if (!connectionTest.success) {
-      return {
-        status: 'fail',
-        latency_ms: latency,
-        message: `Stripe API connection failed: ${connectionTest.error}`,
-      };
-    }
-
-    if (validation.warnings.length > 0) {
-      return {
-        status: 'warn',
-        latency_ms: latency,
-        message: `Stripe configured but has warnings: ${validation.warnings.join('; ')}`,
-      };
-    }
-
-    return {
-      status: latency > 1000 ? 'warn' : 'pass',
-      latency_ms: latency,
+      status: 'pass',
+      message: 'Stripe configured (config-only check; no live API call)',
     };
   }
 
   return {
-    status: validation.warnings.length > 0 ? 'warn' : 'pass',
-    latency_ms: Date.now() - start,
-    message: validation.warnings.length > 0 ? validation.warnings.join('; ') : undefined,
+    status: 'warn',
+    message: 'Stripe not_configured (payments will not work)',
   };
 }
 
@@ -307,7 +278,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         timestamp: new Date().toISOString(),
         uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
       },
-      { status: 200 }
+      { status: 200, headers: NO_STORE_HEADERS }
     );
   }
 
@@ -331,7 +302,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         migrations: { status: 'fail', message: 'Skipped - environment not configured' },
       },
     };
-    return NextResponse.json(health, { status: 503 });
+    return NextResponse.json(health, { status: 503, headers: NO_STORE_HEADERS });
   }
 
   // Proceed with connection checks
@@ -358,7 +329,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         stripe: { status: 'warn', message: 'Skipped - Supabase connection failed' },
       },
     };
-    return NextResponse.json(health, { status: 503 });
+    return NextResponse.json(health, { status: 503, headers: NO_STORE_HEADERS });
   }
 
   const [dbCheck, authCheck, migrationsCheck, stripeCheck] = await Promise.all([
@@ -395,5 +366,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     },
   };
 
-  return NextResponse.json(health, { status: anyFailing ? 503 : 200 });
+  return NextResponse.json(health, { status: anyFailing ? 503 : 200, headers: NO_STORE_HEADERS });
 }
