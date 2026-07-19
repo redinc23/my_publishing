@@ -68,18 +68,17 @@ const validContact = {
   message: 'I would like to ask about availability of a specific book.',
 };
 
-const rateLimitOk = {
-  success: true as const,
-  reason: 'ok' as const,
-  limit: 30,
-  remaining: 29,
-  reset: Date.now() + 60_000,
-  headers: {},
-};
-
 beforeEach(() => {
   jest.clearAllMocks();
-  mockedEnforceRateLimit.mockResolvedValue(rateLimitOk);
+  // Fresh reset timestamp per test — avoid module-load Date.now() going stale.
+  mockedEnforceRateLimit.mockResolvedValue({
+    success: true,
+    reason: 'ok',
+    limit: 30,
+    remaining: 29,
+    reset: Date.now() + 60_000,
+    headers: {},
+  });
 });
 
 describe('newsletter route (P0-013)', () => {
@@ -114,6 +113,38 @@ describe('newsletter route (P0-013)', () => {
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe('success');
     expect(mockedStartSubscribe).toHaveBeenCalledWith('reader@example.com');
+  });
+
+  it('returns 429 when rate limited', async () => {
+    mockedIsConfigured.mockReturnValue(true);
+    mockedEnforceRateLimit.mockResolvedValue({
+      success: false,
+      reason: 'limited',
+      limit: 30,
+      remaining: 0,
+      reset: Date.now() + 60_000,
+      headers: { 'Retry-After': '60' },
+    });
+    const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
+    expect(res.status).toBe(429);
+    expect((await res.json()).status).toBe('error');
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
+  });
+
+  it('returns 503 when rate limiter is unavailable', async () => {
+    mockedIsConfigured.mockReturnValue(true);
+    mockedEnforceRateLimit.mockResolvedValue({
+      success: false,
+      reason: 'unavailable',
+      limit: 30,
+      remaining: 0,
+      reset: Date.now() + 30_000,
+      headers: { 'Retry-After': '30' },
+    });
+    const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
+    expect(res.status).toBe(503);
+    expect((await res.json()).status).toBe('disabled');
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
   });
 });
 
