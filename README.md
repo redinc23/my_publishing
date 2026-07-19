@@ -1,110 +1,199 @@
-# 📚 Mangu Publishing Platform
+# MANGU Publishers
 
-A Netflix-style digital publishing platform for books, audiobooks, comics, and papers. Built with Next.js 14, Supabase, Stripe, and Tailwind CSS.
+A Netflix-inspired digital publishing platform built with Next.js 14.
 
-## 🚀 Quick Start
+## Deployment Status
+
+> **Release authority: [docs/NEXT_GO.md](docs/NEXT_GO.md)** governs launch status, the hard gates (G1–G13), and the Go/No-Go decision.
+> Current status: **NO-GO / NOT RELEASE-READY** until all 13 gates are evidenced TRUE. This README is a subordinate snapshot (CCR-001).
+
+**Full project documentation:** [docs/MANGU_PUBLISHERS_END_TO_END.md](docs/MANGU_PUBLISHERS_END_TO_END.md) — business, architecture, env, deploy, migrations, Phase 2, and operator roadmap in one place.
+
+Cloud Run via `cloudbuild.yaml` is the canonical production path.
+Vercel and AWS Amplify configs are retained for compatibility and testing, but production release coordination should follow Cloud Build + Cloud Run.
+
+## Core Features (Phase 1 - Ready for Launch)
+
+- 📚 Book marketplace with browsing and search
+- 📖 Reading interface with progress tracking
+- ✍️ Author portal for manuscript submission
+- 💳 Stripe payment integration
+- 🔐 Authentication with Supabase
+- 📊 Analytics and engagement tracking
+- 📱 Responsive design and mobile support
+
+## Phase 2 Features (shipped — `feature/top-dog-launch`)
+
+- ⭐ Reviews & ratings — verified-purchase badges, helpful votes, author replies, sortable/paginated review API
+- 🤖 AI-powered recommendations (Resonance Engine) — personalized "Because you read…" rails with trending/editorial fallback; works with or without OpenAI
+- 🎧 Audiobook experience — speed control, sleep timer, ±15s skip, resume position, chapters, persistent mini-player
+- 📧 Transactional email (Resend) — welcome, purchase receipts, author payout + new-review alerts, double opt-in newsletter, preference center
+- 🔖 Reader engagement — bookmarks, highlights & notes, wishlist, author follows, Readers Hub
+- 📊 Enhanced analytics and engagement tracking (impressions/clicks on all recommendation rails)
+
+## Tech Stack
+
+- **Frontend:** Next.js 14.2.3, React 18.3.1, TypeScript, Tailwind CSS
+- **Backend:** Supabase (PostgreSQL + Auth + Storage)
+- **Payments:** Stripe
+- **AI:** OpenAI (embeddings)
+- **UI Components:** Radix UI, Framer Motion
+
+## Getting Started
+
+1. Install dependencies:
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in Supabase + Stripe keys
-npm run dev                  # http://localhost:3001
 ```
 
-**Database setup:** apply the migrations in `supabase/migrations/` in order via the Supabase SQL editor or CLI. All launch migrations are idempotent.
-
-**Embed backfill (optional):** with `OPENAI_API_KEY` + service-role env set, run
+2. Set up environment variables:
 
 ```bash
-npx tsx scripts/backfill-resonance-embeddings.ts
+cp .env.local.example .env.local
 ```
 
-to vectorize the catalog. The Resonance Engine works without it — it simply falls back to SQL trending/editorial ranking.
+3. Configure your environment variables:
 
-## ✍️ Author Portal
+- `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
+- `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
+- `STRIPE_SECRET_KEY` - Your Stripe secret key
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Your Stripe publishable key
+- `STRIPE_WEBHOOK_SECRET` - Your Stripe webhook secret
+- `OPENAI_API_KEY` - Your OpenAI API key
 
-Self-service publishing for authors: upload manuscripts/covers, track review readiness, see sales. Route code lives in `app/author/`, server actions in `lib/actions/`, with RLS policies guarding every table.
-
----
-
-## 🧪 Smoke Test Matrix (Feature Branches)
-
-Run these after checking out each feature branch; all are designed to pass without breaking main.
-
-| Branch | Feature | Happy-path smoke | Degradation smoke |
-| --- | --- | --- | --- |
-| `feat/topdog-reviews` | Reviews & ratings | Book page → write review → appears with verified badge when purchased | Migrations absent → section hides gracefully, page still renders |
-| `feat/topdog-resonance` | Resonance engine | Home → "For You" rail loads (vector or fallback) | No `OPENAI_API_KEY` → falls back to trending/editorial SQL |
-| `feat/topdog-audio` | Audiobook player | `/audio` catalog → play → pause → reopen → resume prompt | No audio URL → card hidden; 401 → localStorage-only progress |
-| `feat/topdog-comms` | Transactional email | Sign up → welcome email (if `RESEND_API_KEY`) | Missing key → no-op logs; preference UI shows "unavailable" |
-| `feat/topdog-engagement` | Reader engagement | Readers Hub tabs, wishlist & follow buttons work | Tables missing → APIs return 503 JSON, UI toasts "coming soon" |
-
----
-
-## 🌟 Features
-
-### ⭐ Reviews & Ratings
-- Public API: `GET/POST /api/reviews` (pagination, sorting, stats) and `POST /api/reviews/[id]/helpful`.
-- One review per reader per book; verified-purchase badges via server-side order lookup; author replies; helpful votes recounted by a DB trigger.
-- `ReviewSection` on book pages with pagination, spoiler filtering, and tabs; `lib/actions/reviews.ts` server actions for votes/replies.
-
-### 🤖 Resonance Engine (AI recommendations)
-- Fallback chain **user-vector → similar-to-recent → trending → editorial** keeps rails populated even without embeddings.
-- APIs: `GET /api/resonance/recommend`, `GET /api/resonance/similar`, `POST /api/resonance/track` (batched impression/click analytics), `POST /api/resonance/embed` (admin).
-- `RecommendationsRail` + `BecauseYouReadRail` on the home page and `/recommendations`.
-- `scripts/backfill-resonance-embeddings.ts` backfills pgvector embeddings when `OPENAI_API_KEY` is present (no-op otherwise).
-
-### 📧 Transactional Email
-- Resend + react-email; five branded templates: welcome, purchase receipt, author payout, new-review alert, newsletter double opt-in.
-- Welcome on signup (never blocks registration); receipt in the Stripe webhook (never blocks fulfillment); new-review alerts fire-and-forget from review creation.
-- Double opt-in newsletter at `POST /api/newsletter` with confirm/unsubscribe routes; preference center at `/dashboard/settings`.
-- Every send degrades gracefully: missing `RESEND_API_KEY` → logged skip; opted-out users are respected via the `email_preferences` table.
-
-### 🎧 Audiobook Experience
-- Player: 0.5–3x speed, ±15s skip, sleep timer (minutes / end-of-chapter), keyboard shortcuts, chapters, buffered indicator, resume prompt, Media Session metadata.
-- Global engine + persistent `MiniPlayer` (wired in `app/providers.tsx`) keeps playback alive across navigation; `/audio` catalog + `/audio/[id]` player pages.
-- Progress syncs to `listening_progress` when signed in, localStorage otherwise.
-
-### 🔖 Reader Engagement
-- Bookmarks, highlights + notes (5 colors), wishlist, and author follows — APIs (`/api/bookmarks`, `/api/highlights`, `/api/wishlist`, `/api/follows`) plus `HighlightPopover`, `NotesPanel`, `WishlistButton`, `FollowAuthorButton`.
-- Readers Hub (`/readers-hub`) aggregates highlights, notes, wishlist, and followed authors in tabs.
-- Every route returns a uniform 503 when the engagement migration is missing, so the UI can degrade quietly.
-
-### 📊 Analytics Dashboard
-- Author-facing stats (views, purchases, revenue) built on Supabase tables with cached aggregations.
-
----
-
-## 🛠️ Tech Stack
-
-- **Framework:** Next.js 14 (App Router, server components)
-- **Database / Auth / Storage:** Supabase (Postgres + RLS + pgvector)
-- **Payments:** Stripe Checkout + webhooks
-- **Email:** Resend + react-email
-- **AI:** OpenAI embeddings (`text-embedding-3-small`, 384-d) for the Resonance Engine
-- **UI:** Tailwind CSS, Radix primitives, lucide-react icons, sonner toasts
-
----
-
-## 🧪 Development
+4. Run the development server:
 
 ```bash
-npm run dev        # develop on http://localhost:3001
-npm run build      # production build
-npm run lint       # eslint
-npm run typecheck  # tsc --noEmit
-npm run test       # unit tests (vitest)
-npm run test:e2e   # playwright e2e
+npm run dev
 ```
 
-### Testing
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- Unit: `tests/unit/` (Vitest). Reviews API coverage: `tests/unit/reviews-api.test.ts` (9 tests).
-- E2E: `e2e/` (Playwright) — public catalog flows stay green with feature flags off.
+## Database Setup
 
-### Rate limiting posture
+The platform uses Supabase with PostgreSQL. You'll need to:
 
-Site-wide fail-closed when Upstash env vars are absent (pre-existing behavior). All new API routes call `enforceRateLimit('api', …)` and honor its 503/429 semantics.
+1. **Create a Supabase project** at https://supabase.com
+2. **Run database migrations in order** (see migration order below)
+3. **Set up Row Level Security (RLS) policies** (included in migrations)
+4. **Enable pgvector extension** for embeddings (handled by migrations)
+5. **Set up storage buckets** for file uploads (policies in migrations)
 
-### Environment variables
+### Migration Order
 
-See `.env.example`. Launch-critical: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`; optional-but-recommended: `RESEND_API_KEY`, `OPENAI_API_KEY`, `UPSTASH_REDIS_REST_URL/TOKEN`.
+Migrations are located in `supabase/migrations/` and **must be applied in this exact order**:
+
+1. `20260116000000_initial_schema.sql` - Creates `profiles` table and core schema (required for health check)
+2. `20260117000000_analytics_events.sql` - Analytics event tracking
+3. `20260117000001_analytics_sessions.sql` - Session tracking
+4. `20260117000002_book_stats_materialized.sql` - Materialized views for performance
+5. `20260117000003_revenue_tracking.sql` - Revenue and payment tracking
+6. `20260117000004_author_payouts.sql` - Author payout system
+7. `20260117000005_book_pricing.sql` - Pricing logic and discounts
+8. `20260117000006_storage_policies.sql` - Storage bucket policies
+9. `20260118000000_critical_fixes.sql` - Bug fixes and corrections
+10. `20260120000006_performance_optimizations.sql` - Performance indexes
+11. `20260121000000_profile_trigger.sql` - Profile trigger consistency fixes
+12. `20260122000000_social_features.sql` - Social features schema
+13. `20260619124500_add_content_type_to_books.sql` - Adds `content_type` to books (idempotent)
+14. `20260619162409_add_content_type.sql` - `content_type` follow-up (idempotent, safe re-run)
+15. `20260619170000_add_retailer_urls.sql` - Retailer URL fields
+
+**To apply migrations:**
+
+**Option 1: Using Supabase Dashboard (Recommended for first-time setup)**
+
+1. Go to your Supabase project dashboard
+2. Navigate to SQL Editor
+3. Copy and paste each migration file's contents in order
+4. Run each migration sequentially
+
+**Option 2: Using Supabase CLI**
+
+```bash
+# Install Supabase CLI if you haven't already
+npm install -g supabase
+
+# Link your project
+supabase link --project-ref your-project-ref
+
+# Apply all migrations
+supabase db push
+```
+
+**Verification:**
+After running migrations, verify the setup by checking:
+
+- `/api/health` endpoint should return `"status": "healthy"` with database check passing
+- The `profiles` table should exist (required for authentication)
+
+## Project Structure
+
+```
+/app
+  /(auth)          - Authentication pages
+  /(consumer)      - Public-facing pages
+  /(portals)       - Author and partner portals
+  /api             - API routes
+/components        - React components
+/lib               - Utilities and business logic
+/types             - TypeScript type definitions
+```
+
+## Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run type-check` - Run TypeScript type checking
+
+## Local CI Checks
+
+Run the same quality checks as CI (quality-checks + unit-tests + build-test):
+
+```bash
+./scripts/ci-local.sh
+```
+
+## Deployment
+
+### Cloud Run (Canonical Production Path)
+
+Production deploys should use Google Cloud Build and Cloud Run:
+
+1. Trigger `cloudbuild.yaml` from `main`
+2. Verify build + deploy steps complete successfully
+3. Validate `/api/health` and critical smoke routes on the custom domain
+
+### Vercel (Secondary / compatibility)
+
+```bash
+vercel deploy --prod
+```
+
+### Docker
+
+```bash
+docker build -t mangu-publishers .
+docker run -p 3000:3000 mangu-publishers
+```
+
+## Documentation
+
+- **[Release Authority (NEXT_GO)](./docs/NEXT_GO.md)** — launch status, hard gates G1–G13, P0 backlog, Go/No-Go sign-off
+- **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
+- **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
+- [Cloud Build + Cloud Run Config](./cloudbuild.yaml) - Canonical production deployment pipeline
+- [AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md) - Legacy/secondary deployment path
+- [AWS Amplify Deployment](./docs/AWS_AMPLIFY_DEPLOYMENT.md) - Legacy/secondary deployment path
+- [Vercel Deployment](./docs/DEPLOYMENT.md) - Vercel deployment guide
+- [API Documentation](./docs/API.md) - API reference
+- [Development Guide](./docs/DEVELOPMENT.md) - Development setup and guidelines
+- [Migrations Guide](./docs/MIGRATIONS.md) - Database migration instructions
+
+## License
+
+MIT

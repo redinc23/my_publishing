@@ -1,347 +1,253 @@
-/**
- * @jest-environment node
- */
-/**
- * Reviews API — unit tests (Fix D4).
- *
- * Covers:
- *   1. GET /api/reviews rejects invalid bookId (400)
- *   2. GET /api/reviews paginates (range applied from page/limit)
- *   3. POST /api/reviews rejects unauthenticated (401)
- *   4. POST /api/reviews rejects rating outside 1-5 (400)
- *   5. POST /api/reviews rejects content < 10 chars (400)
- *   6. POST /api/reviews rejects spoofed verified_purchase (400 strict schema)
- *   7. POST /api/reviews happy path (201/200, server-side verified_purchase)
- *   8. POST /api/reviews/[id]/helpful rejects unauthenticated (401)
- *   9. POST /api/reviews/[id]/helpful happy path (helpful_count recount)
- */
+/** @jest-environment node */
 
-import { NextRequest } from 'next/server';
+import { GET as getReviews, POST as postReview } from '@/app/api/reviews/route';
+import { POST as postHelpful } from '@/app/api/reviews/[id]/helpful/route';
+import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { enforceRateLimit } from '@/lib/rate-limit';
+import type { NextRequest } from 'next/server';
 
-// ---------------------------------------------------------------------------
-// Supabase mock — fluent query builder, resolved per-call
-// ---------------------------------------------------------------------------
-
-interface MockResult {
-  data?: unknown;
-  error?: unknown;
-  count?: number | null;
-}
-
-class QueryMock {
-  private result: MockResult;
-  private filters: Array<{ column: string; value: unknown }> = [];
-  rangeArgs: [number, number] | null = null;
-
-  constructor(result: MockResult) {
-    this.result = result;
-  }
-
-  select(..._args: unknown[]): this {
-    return this;
-  }
-  eq(column: string, value: unknown): this {
-    this.filters.push({ column, value });
-    return this;
-  }
-  in(..._args: unknown[]): this {
-    return this;
-  }
-  order(..._args: unknown[]): this {
-    return this;
-  }
-  range(from: number, to: number): this {
-    this.rangeArgs = [from, to];
-    return this;
-  }
-  limit(..._args: unknown[]): this {
-    return this;
-  }
-  maybeSingle(): Promise<MockResult> {
-    const data = Array.isArray(this.result.data) ? (this.result.data[0] ?? null) : this.result.data;
-    return Promise.resolve({ ...this.result, data });
-  }
-  single(): Promise<MockResult> {
-    const data = Array.isArray(this.result.data) ? (this.result.data[0] ?? null) : this.result.data;
-    return Promise.resolve({ ...this.result, data });
-  }
-  delete(): this {
-    return this;
-  }
-  insert(): this {
-    return this;
-  }
-  update(): this {
-    return this;
-  }
-  upsert(): this {
-    return this;
-  }
-  then<TResult1 = MockResult, TResult2 = never>(
-    onfulfilled?: ((value: MockResult) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
-  ): Promise<TResult1 | TResult2> {
-    return Promise.resolve(this.result).then(onfulfilled, onrejected);
-  }
-}
-
-const adminResults = new Map<string, MockResult[]>();
-let rangeSpy: Array<[number, number]> = [];
-let insertedPayload: Record<string, unknown> | null = null;
-
-function enqueue(table: string, result: MockResult): void {
-  const queue = adminResults.get(table) ?? [];
-  queue.push(result);
-  adminResults.set(table, queue);
-}
-
-function nextResult(table: string): MockResult {
-  const queue = adminResults.get(table) ?? [];
-  return queue.length > 1 ? queue.shift()! : (queue[0] ?? { data: null, error: null, count: 0 });
-}
-
-const adminFromMock = jest.fn((table: string) => {
-  const result = nextResult(table);
-  const query = new QueryMock(result);
-  if (table === 'reviews' && result.rangeArgs) {
-    rangeSpy.push(result.rangeArgs);
-  }
-  if (table === 'reviews' && result.insertedPayload) {
-    insertedPayload = result.insertedPayload;
-  }
-  return query;
-});
-
-jest.mock('@/lib/supabase/admin', () => ({
-  createClient: jest.fn(() => ({ from: adminFromMock })),
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: (body: unknown, init: { status?: number; headers?: HeadersInit } = {}) => ({
+      status: init.status ?? 200,
+      headers: new Headers(init.headers),
+      json: async () => body,
+    }),
+  },
 }));
-
-const authGetUserMock = jest.fn();
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(async () => ({
-    auth: { getUser: authGetUserMock },
-  })),
-}));
-
+jest.mock('@/lib/supabase/server', () => ({ createClient: jest.fn() }));
+jest.mock('@/lib/supabase/admin', () => ({ createClient: jest.fn() }));
 jest.mock('@/lib/rate-limit', () => ({
-  enforceRateLimit: jest.fn(async () => ({ success: true, headers: {} })),
+  enforceRateLimit: jest.fn(),
   getClientIdentifier: jest.fn(() => 'test-client'),
 }));
 
-const completedOrderMock = jest.fn();
-jest.mock('@/lib/reading/entitlement', () => ({
-  hasCompletedOrderForBook: (...args: unknown[]) => completedOrderMock(...args),
-  getCompletedOrderBookIds: jest.fn(async () => []),
-}));
-
-const notifyMock = jest.fn();
-jest.mock('@/lib/email/triggers', () => ({
-  notifyAuthorOfNewReview: (...args: unknown[]) => notifyMock(...args),
-}));
-
-// Import AFTER mocks are registered.
-import { GET, POST } from '@/app/api/reviews/route';
-import { POST as HelpfulPOST } from '@/app/api/reviews/[id]/helpful/route';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const mockedCreateClient = createClient as jest.MockedFunction<typeof createClient>;
+const mockedCreateAdminClient = createAdminClient as jest.MockedFunction<typeof createAdminClient>;
+const mockedEnforceRateLimit = enforceRateLimit as jest.MockedFunction<typeof enforceRateLimit>;
 
 const BOOK_ID = '550e8400-e29b-41d4-a716-446655440000';
 const REVIEW_ID = '660e8400-e29b-41d4-a716-446655440000';
-const USER_ID = '770e8400-e29b-41d4-a716-446655440000';
-const PROFILE_ID = '880e8400-e29b-41d4-a716-446655440000';
+const USER_ID = '11111111-1111-4111-8111-111111111111';
 
-function jsonRequest(url: string, init?: { method?: string; body?: unknown }): NextRequest {
-  return new NextRequest(url, {
-    method: init?.method ?? 'GET',
-    body: init?.body === undefined ? undefined : JSON.stringify(init.body),
-    headers: { 'Content-Type': 'application/json' },
-  });
+function getRequest(url: string): NextRequest {
+  return { headers: new Headers(), nextUrl: new URL(url) } as unknown as NextRequest;
 }
 
-function mockSignedIn(): void {
-  authGetUserMock.mockResolvedValue({
-    data: { user: { id: USER_ID, email: 'reader@example.com', user_metadata: {} } },
-  });
+function jsonRequest(body: unknown): NextRequest {
+  return {
+    headers: new Headers(),
+    json: jest.fn().mockResolvedValue(body),
+  } as unknown as NextRequest;
 }
 
-function mockSignedOut(): void {
-  authGetUserMock.mockResolvedValue({ data: { user: null } });
+function mockAuthUser(user: { id: string } | null) {
+  mockedCreateClient.mockResolvedValue({
+    auth: { getUser: jest.fn().mockResolvedValue({ data: { user } }) },
+  } as never);
 }
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  adminResults.clear();
-  rangeSpy = [];
-  insertedPayload = null;
-  completedOrderMock.mockResolvedValue(false);
-  notifyMock.mockResolvedValue(undefined);
-});
+/**
+ * Chainable-thenable query mock: every builder method returns itself and the
+ * chain resolves to `resolved` whether awaited directly or via .single().
+ */
+function makeQuery(resolved: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const q: any = {};
+  for (const method of [
+    'select',
+    'eq',
+    'neq',
+    'in',
+    'order',
+    'range',
+    'limit',
+    'insert',
+    'update',
+    'upsert',
+    'delete',
+  ]) {
+    q[method] = jest.fn(() => q);
+  }
+  q.single = jest.fn().mockResolvedValue(resolved);
+  q.maybeSingle = jest.fn().mockResolvedValue(resolved);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  q.then = (onFulfilled: any, onRejected: any) =>
+    Promise.resolve(resolved).then(onFulfilled, onRejected);
+  return q;
+}
 
-// ---------------------------------------------------------------------------
-// GET /api/reviews
-// ---------------------------------------------------------------------------
+function mockAdminByTable(tables: Record<string, unknown>) {
+  mockedCreateAdminClient.mockReturnValue({
+    from: jest.fn((table: string) => makeQuery(tables[table] ?? { data: null, error: null })),
+  } as never);
+}
 
-describe('GET /api/reviews', () => {
-  it('rejects an invalid bookId with 400', async () => {
-    const res = await GET(jsonRequest('https://x.test/api/reviews?bookId=not-a-uuid'));
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.success).toBe(false);
-  });
-
-  it('paginates using page and limit (range from/to)', async () => {
-    enqueue('reviews', {
-      data: [],
-      error: null,
-      count: 0,
-      rangeArgs: [10, 19],
+describe('reviews API', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedEnforceRateLimit.mockResolvedValue({
+      success: true,
+      reason: 'ok',
+      limit: 30,
+      remaining: 29,
+      reset: Date.now() + 60_000,
+      headers: {},
     });
-    enqueue('reviews', { data: [], error: null }); // stats query
-
-    const res = await GET(
-      jsonRequest(`https://x.test/api/reviews?bookId=${BOOK_ID}&page=2&limit=10`)
-    );
-    expect(res.status).toBe(200);
-    expect(rangeSpy).toContainEqual([10, 19]);
-    const body = await res.json();
-    expect(body.success).toBe(true);
-    expect(body.data.page).toBe(2);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// POST /api/reviews
-// ---------------------------------------------------------------------------
-
-describe('POST /api/reviews', () => {
-  it('rejects unauthenticated users with 401', async () => {
-    mockSignedOut();
-    const res = await POST(
-      jsonRequest('https://x.test/api/reviews', {
-        method: 'POST',
-        body: { book_id: BOOK_ID, rating: 5, content: 'A wonderful book, highly recommended.' },
-      })
-    );
-    expect(res.status).toBe(401);
+    mockAuthUser(null);
   });
 
-  it('rejects rating outside 1-5 with 400', async () => {
-    mockSignedIn();
-    const res = await POST(
-      jsonRequest('https://x.test/api/reviews', {
-        method: 'POST',
-        body: { book_id: BOOK_ID, rating: 6, content: 'A wonderful book, highly recommended.' },
-      })
-    );
-    expect(res.status).toBe(400);
-  });
+  describe('GET /api/reviews', () => {
+    it('rejects when the rate limiter says no', async () => {
+      mockedEnforceRateLimit.mockResolvedValue({
+        success: false,
+        reason: 'limited',
+        limit: 30,
+        remaining: 0,
+        reset: Date.now() + 30_000,
+        headers: { 'Retry-After': '30' },
+      });
 
-  it('rejects content shorter than 10 characters with 400', async () => {
-    mockSignedIn();
-    const res = await POST(
-      jsonRequest('https://x.test/api/reviews', {
-        method: 'POST',
-        body: { book_id: BOOK_ID, rating: 4, content: 'Too short' },
-      })
-    );
-    expect(res.status).toBe(400);
-  });
+      const response = await getReviews(getRequest(`https://x.test/api/reviews?bookId=${BOOK_ID}`));
 
-  it('rejects a client-spoofed verified_purchase field with 400', async () => {
-    mockSignedIn();
-    const res = await POST(
-      jsonRequest('https://x.test/api/reviews', {
-        method: 'POST',
-        body: {
-          book_id: BOOK_ID,
-          rating: 5,
-          content: 'A wonderful book, highly recommended.',
-          verified_purchase: true,
-        },
-      })
-    );
-    expect(res.status).toBe(400);
-  });
+      expect(response.status).toBe(429);
+      expect(mockedCreateAdminClient).not.toHaveBeenCalled();
+    });
 
-  it('creates a review with server-side verified_purchase detection', async () => {
-    mockSignedIn();
-    completedOrderMock.mockResolvedValue(true);
+    it('rejects an invalid bookId', async () => {
+      const response = await getReviews(getRequest('https://x.test/api/reviews?bookId=nope'));
 
-    enqueue('books', { data: { id: BOOK_ID }, error: null }); // book exists
-    enqueue('profiles', { data: { id: PROFILE_ID }, error: null }); // user profile
-    enqueue('reviews', { data: null, error: null }); // no existing review
-    enqueue('reviews', {
-      data: { id: REVIEW_ID },
-      error: null,
-      insertedPayload: {
-        user_id: USER_ID,
+      expect(response.status).toBe(400);
+      expect(mockedCreateAdminClient).not.toHaveBeenCalled();
+    });
+
+    it('returns paginated reviews with stats', async () => {
+      const reviewRow = {
+        id: REVIEW_ID,
         book_id: BOOK_ID,
+        user_id: USER_ID,
         rating: 5,
-        content: 'A wonderful book, highly recommended.',
+        title: 'Great',
+        content: 'Loved it, highly recommended.',
+        is_spoiler: false,
+        helpful_count: 2,
         verified_purchase: true,
-      },
+        author_reply: null,
+        author_reply_at: null,
+        created_at: '2026-07-01T00:00:00Z',
+        updated_at: '2026-07-01T00:00:00Z',
+      };
+      mockAdminByTable({
+        reviews: { data: [reviewRow], error: null, count: 1 },
+        profiles: { data: [{ user_id: USER_ID, full_name: 'Reader One' }], error: null },
+      });
+
+      const response = await getReviews(
+        getRequest(`https://x.test/api/reviews?bookId=${BOOK_ID}&sort=recent&page=1&limit=10`)
+      );
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.data.reviews).toHaveLength(1);
+      expect(body.data.reviews[0].verified_purchase).toBe(true);
+      expect(body.data.reviews[0].user.full_name).toBe('Reader One');
+      expect(body.data.stats.distribution[5]).toBe(1);
+      expect(body.data.stats.verifiedCount).toBe(1);
+      expect(body.data.totalPages).toBe(1);
     });
+  });
 
-    const res = await POST(
-      jsonRequest('https://x.test/api/reviews', {
-        method: 'POST',
-        body: { book_id: BOOK_ID, rating: 5, content: 'A wonderful book, highly recommended.' },
-      })
-    );
-
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.success).toBe(true);
-    expect(body.data.verified_purchase).toBe(true);
-    expect(insertedPayload).toMatchObject({
-      user_id: USER_ID,
+  describe('POST /api/reviews', () => {
+    const validBody = {
       book_id: BOOK_ID,
-      verified_purchase: true,
+      rating: 4,
+      title: 'Solid read',
+      content: 'Really enjoyed this one, would read again.',
+      is_spoiler: false,
+    };
+
+    it('rejects unauthenticated callers', async () => {
+      const response = await postReview(jsonRequest(validBody));
+
+      expect(response.status).toBe(401);
+      expect(mockedCreateAdminClient).not.toHaveBeenCalled();
     });
-    expect(notifyMock).toHaveBeenCalledWith(
-      expect.objectContaining({ bookId: BOOK_ID, rating: 5 })
-    );
+
+    it('rejects invalid payloads before auth/database work', async () => {
+      const response = await postReview(jsonRequest({ book_id: 'nope', rating: 9 }));
+
+      expect(response.status).toBe(400);
+    });
+
+    it('updates an existing review and flags verified purchases', async () => {
+      mockAuthUser({ id: USER_ID });
+      mockAdminByTable({
+        books: { data: { id: BOOK_ID }, error: null },
+        profiles: { data: { id: 'profile-1' }, error: null },
+        orders: { data: { id: 'order-1', items: [{ book_id: BOOK_ID }] }, error: null },
+        reviews: { data: { id: REVIEW_ID }, error: null },
+      });
+
+      const response = await postReview(jsonRequest(validBody));
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.data.verified_purchase).toBe(true);
+    });
+
+    it('still posts when the purchase lookup finds no order', async () => {
+      mockAuthUser({ id: USER_ID });
+      mockAdminByTable({
+        books: { data: { id: BOOK_ID }, error: null },
+        profiles: { data: { id: 'profile-1' }, error: null },
+        orders: { data: null, error: null },
+        reviews: { data: { id: REVIEW_ID }, error: null },
+      });
+
+      const response = await postReview(jsonRequest(validBody));
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data.verified_purchase).toBe(false);
+    });
   });
-});
 
-// ---------------------------------------------------------------------------
-// POST /api/reviews/[id]/helpful
-// ---------------------------------------------------------------------------
+  describe('POST /api/reviews/[id]/helpful', () => {
+    it('rejects an invalid review id', async () => {
+      const response = await postHelpful(jsonRequest({ helpful: true }), {
+        params: { id: 'not-a-uuid' },
+      });
 
-describe('POST /api/reviews/[id]/helpful', () => {
-  it('rejects unauthenticated users with 401', async () => {
-    mockSignedOut();
-    const res = await HelpfulPOST(
-      jsonRequest(`https://x.test/api/reviews/${REVIEW_ID}/helpful`, {
-        method: 'POST',
-        body: { helpful: true },
-      }),
-      { params: { id: REVIEW_ID } }
-    );
-    expect(res.status).toBe(401);
-  });
+      expect(response.status).toBe(400);
+    });
 
-  it('upserts the vote and recounts helpful_count', async () => {
-    mockSignedIn();
-    enqueue('reviews', { data: { id: REVIEW_ID }, error: null }); // review exists
-    enqueue('review_votes', { data: null, error: null }); // upsert
-    enqueue('review_votes', { data: null, error: null, count: 7 }); // recount
-    enqueue('reviews', { data: null, error: null }); // update helpful_count
+    it('rejects unauthenticated voters', async () => {
+      const response = await postHelpful(jsonRequest({ helpful: true }), {
+        params: { id: REVIEW_ID },
+      });
 
-    const res = await HelpfulPOST(
-      jsonRequest(`https://x.test/api/reviews/${REVIEW_ID}/helpful`, {
-        method: 'POST',
-        body: { helpful: true },
-      }),
-      { params: { id: REVIEW_ID } }
-    );
+      expect(response.status).toBe(401);
+      expect(mockedCreateAdminClient).not.toHaveBeenCalled();
+    });
 
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.success).toBe(true);
-    expect(body.data.helpful_count).toBe(7);
-    expect(body.data.user_vote).toBe(true);
+    it('records a helpful vote and returns the recount', async () => {
+      mockAuthUser({ id: USER_ID });
+      mockAdminByTable({
+        reviews: { data: { id: REVIEW_ID }, error: null },
+        review_votes: { data: null, error: null, count: 3 },
+      });
+
+      const response = await postHelpful(jsonRequest({ helpful: true }), {
+        params: { id: REVIEW_ID },
+      });
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.data.helpful_count).toBe(3);
+      expect(body.data.user_vote).toBe(true);
+    });
   });
 });
