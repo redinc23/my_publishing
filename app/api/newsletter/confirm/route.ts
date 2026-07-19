@@ -16,8 +16,10 @@ function redirect(flag: string): NextResponse {
  * site with a `?newsletter=<flag>` query the frontend can toast on.
  */
 export async function GET(request: NextRequest) {
-  // Token-gated: a soft rate limit is enough; when the limiter itself is
-  // unavailable we allow rather than break email links.
+  // Fail-closed (CCR-007): when the limiter itself is unavailable the request
+  // is rejected (503 + Retry-After) instead of proceeding unthrottled.
+  // Confirm tokens live 7 days, so reopening the email link after a brief
+  // outage still completes the double opt-in.
   let clientId = 'unknown';
   try {
     clientId = getClientIdentifier(request);
@@ -25,10 +27,16 @@ export async function GET(request: NextRequest) {
     // Non-standard request object — treat as a single bucket.
   }
   const rateLimitResult = await enforceRateLimit('api', clientId);
-  if (!rateLimitResult.success && rateLimitResult.reason === 'limited') {
+  if (!rateLimitResult.success) {
+    const unavailable = rateLimitResult.reason === 'unavailable';
     return NextResponse.json(
-      { status: 'error', message: 'Too many attempts. Please try again in a minute.' },
-      { status: 429, headers: rateLimitResult.headers }
+      {
+        status: 'error',
+        message: unavailable
+          ? 'Confirmation is temporarily unavailable. Please reopen the link in a moment.'
+          : 'Too many attempts. Please try again in a minute.',
+      },
+      { status: unavailable ? 503 : 429, headers: rateLimitResult.headers }
     );
   }
 

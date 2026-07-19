@@ -15,6 +15,9 @@ function redirect(flag: string): NextResponse {
  * Idempotent: unsubscribing twice still lands on the success state.
  */
 export async function GET(request: NextRequest) {
+  // Fail-closed (CCR-007): when the limiter itself is unavailable the request
+  // is rejected (503 + Retry-After) instead of proceeding unthrottled; the
+  // tokenized link stays valid and can simply be reopened.
   let clientId = 'unknown';
   try {
     clientId = getClientIdentifier(request);
@@ -22,10 +25,16 @@ export async function GET(request: NextRequest) {
     // Non-standard request object — treat as a single bucket.
   }
   const rateLimitResult = await enforceRateLimit('api', clientId);
-  if (!rateLimitResult.success && rateLimitResult.reason === 'limited') {
+  if (!rateLimitResult.success) {
+    const unavailable = rateLimitResult.reason === 'unavailable';
     return NextResponse.json(
-      { status: 'error', message: 'Too many attempts. Please try again in a minute.' },
-      { status: 429, headers: rateLimitResult.headers }
+      {
+        status: 'error',
+        message: unavailable
+          ? 'Unsubscribe is temporarily unavailable. Please reopen the link in a moment.'
+          : 'Too many attempts. Please try again in a minute.',
+      },
+      { status: unavailable ? 503 : 429, headers: rateLimitResult.headers }
     );
   }
 

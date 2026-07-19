@@ -72,10 +72,17 @@ export async function PUT(request: NextRequest) {
     // Non-standard request object — treat as a single bucket.
   }
   const rateLimitResult = await enforceRateLimit('api', clientId);
-  if (!rateLimitResult.success && rateLimitResult.reason === 'limited') {
+  // Fail-closed (CCR-007): a limiter outage rejects with 503 + Retry-After
+  // instead of silently allowing the write through unthrottled.
+  if (!rateLimitResult.success) {
+    const unavailable = rateLimitResult.reason === 'unavailable';
     return NextResponse.json(
-      { error: 'Too many attempts. Please try again in a minute.' },
-      { status: 429, headers: rateLimitResult.headers }
+      {
+        error: unavailable
+          ? 'Email preferences are temporarily unavailable. Please try again shortly.'
+          : 'Too many attempts. Please try again in a minute.',
+      },
+      { status: unavailable ? 503 : 429, headers: rateLimitResult.headers }
     );
   }
 
