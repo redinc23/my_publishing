@@ -1,3 +1,4 @@
+import '@/lib/server-only-guard';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 /**

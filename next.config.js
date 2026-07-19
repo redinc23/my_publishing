@@ -5,18 +5,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
 
-// Public client configuration must exist while Next.js prerenders pages on Vercel.
-// These fallbacks are intentionally limited to browser-safe values. Never add
-// service-role, Stripe secret, webhook, Redis, or other private credentials here.
-const publicEnv = {
-  NEXT_PUBLIC_SUPABASE_URL:
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tkzvikozrcynhwsqtkqp.supabase.co',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY:
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrenZpa296cmN5bmh3c3F0a3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MzU4MzYsImV4cCI6MjA5NDIxMTgzNn0.mf8wC6KEzkw9K2d_H9VzG9rzFPSPWpgQUL0b5kMruDI',
-  NEXT_PUBLIC_SITE_URL:
-    process.env.NEXT_PUBLIC_SITE_URL || 'https://mypublishing-redinc23s-projects.vercel.app',
-};
+// NOTE: NEXT_PUBLIC_* values are inlined into client bundles by Next.js at build
+// time and are read from the real environment. No fallbacks are defined here —
+// missing values must fail the build/deploy loudly (never silently point the app
+// at the wrong backend). See scripts/validate-env.ts and instrumentation.ts.
 
 // Build a Content-Security-Policy that covers all required third-party origins.
 // 'unsafe-inline' / 'unsafe-eval' are required by Next.js 14 until nonce-based
@@ -49,7 +41,6 @@ const ContentSecurityPolicy = [
 ].join('; ');
 
 const nextConfig = {
-  env: publicEnv,
   output: process.platform === 'win32' ? undefined : 'standalone',
   async headers() {
     const securityHeaders = [

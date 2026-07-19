@@ -16,10 +16,18 @@ build/
 .env
 .env.local
 .env*.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
 .env.production
 .env.production.local
+setup.env.keys
+secrets.*
+
+# Key material
+*.pem
+*.key
 
 # Deployment platforms
 .vercel
@@ -59,4 +67,3 @@ node_modules.trash*/
 .SERVER_RESTORE_LOCK
 SERVER_PID.txt
 .tmp-audit-report.txt
-
