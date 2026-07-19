@@ -15,3 +15,5 @@ pnpm-lock.yaml
 docs/OPERATOR_QA_LOG.md
 # Imported source snapshots — kept verbatim, not reformatted
 docs/phase2/_sources/
+# release-please output; ends the CHANGELOG prettier ping-pong
+CHANGELOG.md
