@@ -551,19 +551,32 @@ export async function updateProfile(
  * omits the whole section when there is nothing real to show.
  */
 export async function getPlatformStats(): Promise<{ books: number; authors: number }> {
-  const admin = createAdminClient();
+  // PHASE-10 — Cached platform stats (1h TTL, tag: platform-stats), using the
+  // same unstable_cache calling convention as getFeaturedBooks above.
+  return unstable_cache(
+    async () => {
+      // Admin client: the cookie-based server client cannot be used inside
+      // unstable_cache (Next.js forbids dynamic data sources in cache scope).
+      const admin = createAdminClient();
 
-  const [booksRes, authorsRes] = await Promise.all([
-    admin
-      .from('books')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'published')
-      .eq('visibility', 'public'),
-    admin.from('authors').select('*', { count: 'exact', head: true }),
-  ]);
+      const [booksRes, authorsRes] = await Promise.all([
+        admin
+          .from('books')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'published')
+          .eq('visibility', 'public'),
+        // PHASE-10.5 metric semantics — Books = published+public head-count.
+        // Authors = ALL author rows (unfiltered — includes zero-book/unverified
+        // authors); change here requires a StatsBar label update.
+        admin.from('authors').select('*', { count: 'exact', head: true }),
+      ]);
 
-  return {
-    books: booksRes.count ?? 0,
-    authors: authorsRes.count ?? 0,
-  };
+      return {
+        books: booksRes.count ?? 0,
+        authors: authorsRes.count ?? 0,
+      };
+    },
+    ['platform-stats'],
+    { tags: ['platform-stats'], revalidate: 3600 }
+  )();
 }
