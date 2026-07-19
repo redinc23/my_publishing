@@ -293,6 +293,38 @@ async function testRLS(): Promise<TestResult[]> {
     });
   }
 
+  // Test 7: Order items are user-specific (P0-015). The buyer-only SELECT
+  // policy "Users can view own order items" scopes rows through
+  // orders → profiles ownership, so anonymous clients must see zero rows.
+  try {
+    const { data, error } = await withRetry(() =>
+      supabaseAnon.from('order_items').select('id').limit(1)
+    );
+    // RLS filters rows rather than raising errors for SELECTs, so an empty
+    // result set means the policy is working; only returned rows are a leak.
+    if (data && data.length > 0) {
+      results.push({
+        name: 'Order items are not publicly accessible',
+        passed: false,
+        error: 'Anonymous user was able to access order items',
+      });
+    } else if (error && !error.message.includes('permission denied')) {
+      results.push({
+        name: 'Order items are not publicly accessible',
+        passed: false,
+        error: error.message,
+      });
+    } else {
+      results.push({ name: 'Order items are not publicly accessible', passed: true });
+    }
+  } catch (error) {
+    results.push({
+      name: 'Order items are not publicly accessible',
+      passed: false,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
   return results;
 }
 
