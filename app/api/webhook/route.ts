@@ -1,350 +1,55 @@
-/**
- * Stripe Webhook Handler
- * Production-grade webhook processing with idempotency and retry logic
- */
-
+import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
-import { getStripe } from '@/lib/stripe/server';
-import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
+import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
 
-// Webhook secret for signature verification
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Vercel serverless function configuration
+export const runtime = 'nodejs';
+export const maxDuration = 30; // 30 seconds timeout
 
-/**
- * Verify Stripe webhook signature
- */
-function verifySignature(
-  payload: string,
-  signature: string
-): { valid: boolean; event?: Stripe.Event; error?: string } {
-  try {
-    const stripe = getStripe();
-    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-    return { valid: true, event };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[Webhook] Signature verification failed:', message);
-    return { valid: false, error: message };
+// Lazy-initialize Stripe client to avoid build-time errors
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not configured');
   }
+  return new Stripe(process.env.STRIPE_SECRET_KEY);
 }
 
 /**
- * Check if event was already processed (idempotency)
+ * Idempotency guard: Stripe retries webhooks on any non-2xx response, so the
+ * same event can arrive more than once. Before doing any work we check for a
+ * completed order carrying this session id; if one exists we acknowledge
+ * without side effects.
  */
-async function checkIdempotency(
+async function findOrderBySessionId(
   supabase: ReturnType<typeof createAdminClient>,
-  eventId: string
-): Promise<{ processed: boolean; recordId?: string }> {
-  const { data: existing } = await supabase
-    .from('webhook_events')
-    .select('id, processed')
-    .eq('event_id', eventId)
-    .single();
-
-  if (existing?.processed) {
-    return { processed: true, recordId: existing.id };
-  }
-
-  return { processed: false, recordId: existing?.id };
-}
-
-/**
- * Record webhook event for idempotency tracking
- */
-async function recordWebhookEvent(
-  supabase: ReturnType<typeof createAdminClient>,
-  event: Stripe.Event
-): Promise<void> {
-  await supabase.from('webhook_events').upsert(
-    {
-      event_id: event.id,
-      event_type: event.type,
-      payload: event as unknown as Record<string, unknown>,
-      processed: false,
-    },
-    { onConflict: 'event_id' }
-  );
-}
-
-/**
- * Mark webhook event as processed
- */
-async function markEventProcessed(
-  supabase: ReturnType<typeof createAdminClient>,
-  eventId: string,
-  error?: string
-): Promise<void> {
-  await supabase
-    .from('webhook_events')
-    .update({
-      processed: !error,
-      error_message: error || null,
-      processed_at: new Date().toISOString(),
-    })
-    .eq('event_id', eventId);
-}
-
-/**
- * Handle checkout.session.completed event
- */
-async function handleCheckoutCompleted(
-  supabase: ReturnType<typeof createAdminClient>,
-  session: Stripe.Checkout.Session
-): Promise<WebhookProcessingResult> {
-  const metadata = session.metadata as CheckoutMetadata | null;
-  const paymentIntentId =
-    typeof session.payment_intent === 'string' ? session.payment_intent : null;
-  const orderNumber = `STRIPE-${session.id}`;
-
-  // Validate required metadata
-  if (!metadata?.book_id || !metadata?.user_id) {
-    console.error('[Webhook] Missing required metadata in checkout session:', session.id);
-    return {
-      success: false,
-      error: 'Missing required metadata (book_id or user_id)',
-      event_id: session.id,
-      event_type: 'checkout.session.completed',
-    };
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('user_id', metadata.user_id)
-    .single();
-
-  if (profileError || !profile) {
-    console.error('[Webhook] Failed to resolve purchasing profile:', profileError);
-    return {
-      success: false,
-      error: `Failed to resolve purchasing profile: ${profileError?.message || 'Profile not found'}`,
-      event_id: session.id,
-      event_type: 'checkout.session.completed',
-      should_retry: true,
-    };
-  }
-
-  // Check for duplicate order (additional idempotency check)
-  let existingOrderQuery = supabase.from('orders').select('id').limit(1);
-
-  existingOrderQuery = paymentIntentId
-    ? existingOrderQuery.eq('payment_intent_id', paymentIntentId)
-    : existingOrderQuery.eq('order_number', orderNumber);
-
-  const { data: existingOrders } = await existingOrderQuery;
-  const existingOrder = existingOrders?.[0];
-
-  if (existingOrder) {
-    console.log('[Webhook] Order already exists for session:', session.id);
-    const { data: existingItems } = await supabase
-      .from('order_items')
-      .select('id')
-      .eq('order_id', existingOrder.id)
-      .eq('book_id', metadata.book_id)
-      .limit(1);
-
-    if (!existingItems?.length) {
-      const { error: itemError } = await supabase.from('order_items').insert({
-        order_id: existingOrder.id,
-        book_id: metadata.book_id,
-        unit_price: session.amount_total ? session.amount_total / 100 : 0,
-        license_key: `LIC-${Date.now()}-${metadata.book_id}`,
-      });
-
-      if (itemError) {
-        console.error('[Webhook] Failed to repair missing order item:', itemError);
-        return {
-          success: false,
-          error: `Failed to repair missing order item: ${itemError.message}`,
-          event_id: session.id,
-          event_type: 'checkout.session.completed',
-          should_retry: true,
-        };
-      }
-    }
-
-    return {
-      success: true,
-      event_id: session.id,
-      event_type: 'checkout.session.completed',
-      action_taken: 'Order already exists, ensured order item exists',
-    };
-  }
-
-  // Create the order
-  const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      order_number: orderNumber,
-      user_id: profile.id,
-      total_amount: totalAmount,
-      payment_intent_id: paymentIntentId,
-      status: 'completed',
-    })
-    .select('id')
-    .single();
-
-  if (orderError || !order) {
-    console.error('[Webhook] Failed to create order:', orderError);
-    return {
-      success: false,
-      error: `Failed to create order: ${orderError?.message || 'No order returned'}`,
-      event_id: session.id,
-      event_type: 'checkout.session.completed',
-      should_retry: true,
-    };
-  }
-
-  const { error: itemError } = await supabase.from('order_items').insert({
-    order_id: order.id,
-    book_id: metadata.book_id,
-    unit_price: totalAmount,
-    license_key: `LIC-${Date.now()}-${metadata.book_id}`,
-  });
-
-  if (itemError) {
-    console.error('[Webhook] Failed to create order item:', itemError);
-    return {
-      success: false,
-      error: `Failed to create order item: ${itemError.message}`,
-      event_id: session.id,
-      event_type: 'checkout.session.completed',
-      should_retry: true,
-    };
-  }
-
-  // Track analytics event
-  await supabase.from('analytics_events').insert({
-    book_id: metadata.book_id,
-    user_id: metadata.user_id,
-    event_type: 'purchase',
-    session_id: session.id,
-    event_data: {
-      amount: totalAmount,
-      currency: session.currency?.toUpperCase() || 'USD',
-    },
-  });
-
-  console.log('[Webhook] Order created successfully:', session.id);
-
-  return {
-    success: true,
-    event_id: session.id,
-    event_type: 'checkout.session.completed',
-    action_taken: 'Order created successfully',
-  };
-}
-
-/**
- * Handle checkout.session.expired event
- */
-async function handleCheckoutExpired(
-  session: Stripe.Checkout.Session
-): Promise<WebhookProcessingResult> {
-  console.log('[Webhook] Checkout session expired:', session.id);
-
-  // Optionally track abandoned checkout
-  return {
-    success: true,
-    event_id: session.id,
-    event_type: 'checkout.session.expired',
-    action_taken: 'Logged expired session',
-  };
-}
-
-/**
- * Handle charge.refunded event
- */
-async function handleChargeRefunded(
-  supabase: ReturnType<typeof createAdminClient>,
-  charge: Stripe.Charge
-): Promise<WebhookProcessingResult> {
-  const paymentIntentId = charge.payment_intent as string;
-
-  // Find the order by payment intent (orders stores it as payment_intent_id)
-  const { data: order, error: findError } = await supabase
+  sessionId: string
+) {
+  const { data, error } = await supabase
     .from('orders')
     .select('id, status')
-    .eq('payment_intent_id', paymentIntentId)
-    .single();
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
 
-  if (findError || !order) {
-    console.warn('[Webhook] Order not found for refund:', paymentIntentId);
-    return {
-      success: true,
-      event_id: charge.id,
-      event_type: 'charge.refunded',
-      action_taken: 'Order not found, logged for review',
-    };
+  if (error) {
+    console.error('Error checking order by session id:', error);
+    return null;
   }
-
-  // Update order status (orders has no refund_reason column; that lives on book_sales)
-  const { error: updateError } = await supabase
-    .from('orders')
-    .update({ status: 'refunded' })
-    .eq('id', order.id);
-
-  if (updateError) {
-    console.error('[Webhook] Failed to update order status:', updateError);
-    return {
-      success: false,
-      error: `Failed to update order: ${updateError.message}`,
-      event_id: charge.id,
-      event_type: 'charge.refunded',
-      should_retry: true,
-    };
-  }
-
-  return {
-    success: true,
-    event_id: charge.id,
-    event_type: 'charge.refunded',
-    action_taken: 'Order marked as refunded',
-  };
+  return data;
 }
 
-/**
- * Handle payment_intent.payment_failed event
- */
-async function handlePaymentFailed(charge: Stripe.PaymentIntent): Promise<WebhookProcessingResult> {
-  console.warn('[Webhook] Payment failed:', charge.id, charge.last_payment_error?.message);
-
-  // Could trigger email notification here
-
-  return {
-    success: true,
-    event_id: charge.id,
-    event_type: 'payment_intent.payment_failed',
-    action_taken: 'Logged payment failure',
-  };
-}
-
-/**
- * Main webhook handler
- */
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  const startTime = Date.now();
-
-  // Rate limiting
-  const clientId = getClientIdentifier(request);
-  if (!webhookSecret) {
-    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 503 });
-  }
-
-  const rateLimitResult = await enforceRateLimit('webhook', clientId);
+export async function POST(request: NextRequest) {
+  // Rate limiting (fail-closed, Fix C8)
+  const rateLimitResult = await enforceRateLimit('api', getClientIdentifier(request));
   if (!rateLimitResult.success) {
-    // Fail-closed: 503 lets Stripe retry the event; 429 signals real overload.
-    console.warn('[Webhook] Rate limit rejection for:', clientId, rateLimitResult.reason);
     return NextResponse.json(
       {
         error:
           rateLimitResult.reason === 'unavailable'
-            ? 'Rate limiter unavailable'
-            : 'Rate limit exceeded',
+            ? 'Rate limiter unavailable. Please try again shortly.'
+            : 'Rate limit exceeded. Please slow down.',
       },
       {
         status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
@@ -353,113 +58,196 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Get raw body for signature verification
-  const body = await request.text();
-  const signature = request.headers.get('stripe-signature');
-
-  if (!signature) {
-    console.error('[Webhook] Missing stripe-signature header');
-    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
-  }
-
-  // Verify signature
-  const verification = verifySignature(body, signature);
-  if (!verification.valid || !verification.event) {
+  let stripe: Stripe;
+  try {
+    stripe = getStripe();
+  } catch (error) {
+    console.error('Stripe client initialization failed:', error);
     return NextResponse.json(
-      { error: `Webhook signature verification failed: ${verification.error}` },
-      { status: 400 }
+      { error: 'Payment system not configured' },
+      { status: 503, headers: rateLimitResult.headers }
     );
   }
 
-  const event = verification.event;
-  console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
+  const body = await request.text();
+  const headersList = await headers();
+  const signature = headersList.get('stripe-signature');
 
-  // Initialize Supabase client
-  const supabase = createAdminClient();
-
-  // Check idempotency
-  const idempotencyCheck = await checkIdempotency(supabase, event.id);
-  if (idempotencyCheck.processed) {
-    console.log(`[Webhook] Event already processed: ${event.id}`);
-    return NextResponse.json({
-      received: true,
-      message: 'Event already processed',
-    });
+  if (!signature) {
+    return NextResponse.json(
+      { error: 'Missing stripe-signature header' },
+      { status: 400, headers: rateLimitResult.headers }
+    );
   }
 
-  // Record the event
-  await recordWebhookEvent(supabase, event);
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not configured');
+    return NextResponse.json(
+      { error: 'Webhook not configured' },
+      { status: 503, headers: rateLimitResult.headers }
+    );
+  }
 
-  // Process the event
-  let result: WebhookProcessingResult;
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch (error) {
+    console.error('Webhook signature verification failed:', error);
+    return NextResponse.json(
+      { error: 'Webhook signature verification failed' },
+      { status: 400, headers: rateLimitResult.headers }
+    );
+  }
+
+  const supabase = createAdminClient();
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        result = await handleCheckoutCompleted(supabase, session);
+        const { book_id, user_id } = session.metadata as {
+          book_id?: string;
+          user_id?: string;
+        };
+
+        if (!book_id || !user_id) {
+          console.error('Missing metadata in checkout session', session.id);
+          break;
+        }
+
+        // Idempotency: skip if a completed order already exists
+        const existingOrder = await findOrderBySessionId(supabase, session.id);
+        if (existingOrder && existingOrder.status === 'completed') {
+          console.log('Order already fulfilled for session', session.id);
+          break;
+        }
+
+        // Resolve profile for orders.user_id (metadata carries the AUTH id)
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user_id)
+          .maybeSingle();
+
+        if (profileError || !profile) {
+          console.error(
+            'Profile not found for auth user',
+            user_id,
+            profileError?.message
+          );
+          break;
+        }
+
+        const amount = session.amount_total ? session.amount_total / 100 : 0;
+        const currency = (session.currency || 'usd').toLowerCase();
+
+        if (existingOrder) {
+          // Upgrade a pending order to completed
+          const { error: updateError } = await supabase
+            .from('orders')
+            .update({
+              status: 'completed',
+              amount,
+              currency,
+              stripe_payment_intent_id:
+                typeof session.payment_intent === 'string' ? session.payment_intent : null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingOrder.id);
+
+          if (updateError) {
+            console.error('Failed to complete order:', updateError);
+            throw updateError;
+          }
+        } else {
+          const { error: insertError } = await supabase.from('orders').insert({
+            user_id: profile.id,
+            book_id,
+            amount,
+            currency,
+            status: 'completed',
+            stripe_session_id: session.id,
+            stripe_payment_intent_id:
+              typeof session.payment_intent === 'string' ? session.payment_intent : null,
+          });
+
+          if (insertError) {
+            // Unique-violation on stripe_session_id = concurrent delivery; safe to ignore
+            if (insertError.code === '23505') {
+              console.log('Concurrent webhook delivery ignored for session', session.id);
+            } else {
+              console.error('Failed to create order:', insertError);
+              throw insertError;
+            }
+          }
+        }
+
+        // Grant reading access (upsert keeps it idempotent)
+        const { error: progressError } = await supabase.from('reading_progress').upsert(
+          {
+            user_id: profile.id,
+            book_id,
+            current_position: 0,
+            is_finished: false,
+          },
+          { onConflict: 'user_id,book_id', ignoreDuplicates: true }
+        );
+
+        if (progressError) {
+          // Non-fatal: the reader can still access the book via order check
+          console.error('Failed to seed reading progress:', progressError);
+        }
+
+        // Purchase receipt email (feat/topdog-comms). Fire-and-forget: the
+        // trigger resolves the recipient, checks the 'receipts' preference,
+        // and never throws — so fulfillment can never be blocked or retried
+        // because of an email hiccup. Do NOT await on the hot path.
+        void sendPurchaseReceiptForCheckoutSession(session);
+
+        console.log('Checkout fulfilled', {
+          sessionId: session.id,
+          bookId: book_id,
+          userId: user_id,
+        });
         break;
       }
 
       case 'checkout.session.expired': {
         const session = event.data.object as Stripe.Checkout.Session;
-        result = await handleCheckoutExpired(session);
-        break;
-      }
-
-      case 'charge.refunded': {
-        const charge = event.data.object as Stripe.Charge;
-        result = await handleChargeRefunded(supabase, charge);
+        const existingOrder = await findOrderBySessionId(supabase, session.id);
+        if (existingOrder && existingOrder.status === 'pending') {
+          await supabase
+            .from('orders')
+            .update({ status: 'expired', updated_at: new Date().toISOString() })
+            .eq('id', existingOrder.id);
+        }
         break;
       }
 
       case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        result = await handlePaymentFailed(paymentIntent);
+        const intent = event.data.object as Stripe.PaymentIntent;
+        console.warn('Payment failed', {
+          paymentIntentId: intent.id,
+          lastPaymentError: intent.last_payment_error?.message,
+        });
         break;
       }
 
-      default: {
-        console.log(`[Webhook] Unhandled event type: ${event.type}`);
-        result = {
-          success: true,
-          event_id: event.id,
-          event_type: event.type,
-          action_taken: 'Event type not handled',
-        };
-      }
+      default:
+        console.log('Unhandled webhook event type:', event.type);
     }
 
-    // Mark as processed
-    await markEventProcessed(supabase, event.id, result.success ? undefined : result.error);
-
-    const duration = Date.now() - startTime;
-    console.log(`[Webhook] Processed ${event.type} in ${duration}ms:`, result);
-
-    if (!result.success && result.should_retry) {
-      // Return 500 to trigger Stripe retry
-      return NextResponse.json({ error: result.error }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      received: true,
-      result,
-    });
+    return NextResponse.json(
+      { received: true },
+      { status: 200, headers: rateLimitResult.headers }
+    );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[Webhook] Error processing ${event.type}:`, error);
-
-    // Mark as failed
-    await markEventProcessed(supabase, event.id, errorMessage);
-
-    // Return 500 to trigger retry for unexpected errors
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Webhook handler failed:', error);
+    return NextResponse.json(
+      { error: 'Webhook handler failed' },
+      { status: 500, headers: rateLimitResult.headers }
+    );
   }
-}
-
-/**
- * Reject non-POST requests
- */
-export async function GET(): Promise<NextResponse> {
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }
