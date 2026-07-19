@@ -113,6 +113,9 @@ export const CreateBookSchema = z.object({
   description: z.string().max(5000).optional(),
   language: LanguageSchema.default('en'),
   isbn: ISBNSchema.optional(),
+  cover_url: z.string().url().optional(),
+  epub_url: z.string().url().optional(),
+  manuscript_url: z.string().url().optional(),
   categories: z.array(z.string()).max(10).optional(),
   tags: z.array(z.string()).max(20).optional(),
   metadata: z
