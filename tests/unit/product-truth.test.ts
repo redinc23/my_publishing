@@ -7,18 +7,23 @@
  * action we cannot actually perform. When the provider is unconfigured the
  * newsletter route returns 503 (disabled) and the contact action returns an
  * honest error pointing at a real address — never a fake "success".
+ *
+ * Newsletter route (post Phase-2 double opt-in) calls:
+ *   isEmailConfigured → enforceRateLimit → startNewsletterSubscription
+ * Mocks must cover all three so CI with real SUPABASE_* env does not hang on
+ * network I/O.
  */
 
 jest.mock('next/server', () => ({
   NextResponse: {
-    json: (body: unknown, init: { status?: number } = {}) => ({
+    json: (body: unknown, init: { status?: number; headers?: HeadersInit } = {}) => ({
       status: init.status ?? 200,
+      headers: new Headers(init.headers),
       json: async () => body,
     }),
   },
 }));
 
-// The email layer is mocked per-test so we can toggle "configured" vs not.
 jest.mock('@/lib/email/send', () => ({
   isEmailConfigured: jest.fn(),
   subscribeToNewsletter: jest.fn(),
@@ -26,13 +31,27 @@ jest.mock('@/lib/email/send', () => ({
   CONTACT_INBOX: 'books@mangu-publishers.com',
 }));
 
+jest.mock('@/lib/email/newsletter', () => ({
+  startNewsletterSubscription: jest.fn(),
+}));
+
+jest.mock('@/lib/rate-limit', () => ({
+  enforceRateLimit: jest.fn(),
+  getClientIdentifier: jest.fn(() => 'test-client'),
+}));
+
 import { POST as newsletterPOST } from '@/app/api/newsletter/route';
 import { submitContactMessage } from '@/app/(consumer)/contact/actions';
-import { isEmailConfigured, subscribeToNewsletter, sendContactMessage } from '@/lib/email/send';
+import { isEmailConfigured, sendContactMessage } from '@/lib/email/send';
+import { startNewsletterSubscription } from '@/lib/email/newsletter';
+import { enforceRateLimit } from '@/lib/rate-limit';
 
 const mockedIsConfigured = isEmailConfigured as jest.MockedFunction<typeof isEmailConfigured>;
-const mockedSubscribe = subscribeToNewsletter as jest.MockedFunction<typeof subscribeToNewsletter>;
+const mockedStartSubscribe = startNewsletterSubscription as jest.MockedFunction<
+  typeof startNewsletterSubscription
+>;
 const mockedSendContact = sendContactMessage as jest.MockedFunction<typeof sendContactMessage>;
+const mockedEnforceRateLimit = enforceRateLimit as jest.MockedFunction<typeof enforceRateLimit>;
 
 function newsletterRequest(body: unknown): Request {
   return { json: async () => body } as unknown as Request;
@@ -44,6 +63,15 @@ function contactForm(fields: Record<string, string>): FormData {
   return fd;
 }
 
+const allowRateLimit = {
+  success: true,
+  reason: 'ok' as const,
+  limit: 30,
+  remaining: 29,
+  reset: Date.now() + 60_000,
+  headers: {},
+};
+
 const validContact = {
   name: 'Ada Lovelace',
   email: 'ada@example.com',
@@ -51,7 +79,10 @@ const validContact = {
   message: 'I would like to ask about availability of a specific book.',
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockedEnforceRateLimit.mockResolvedValue(allowRateLimit);
+});
 
 describe('newsletter route (P0-013)', () => {
   it('returns 503 disabled and never subscribes when email is not configured', async () => {
@@ -59,19 +90,20 @@ describe('newsletter route (P0-013)', () => {
     const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
     expect(res.status).toBe(503);
     expect((await res.json()).status).toBe('disabled');
-    expect(mockedSubscribe).not.toHaveBeenCalled();
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
+    expect(mockedEnforceRateLimit).not.toHaveBeenCalled();
   });
 
   it('rejects an invalid email with 400 when configured', async () => {
     mockedIsConfigured.mockReturnValue(true);
     const res = await newsletterPOST(newsletterRequest({ email: 'not-an-email' }));
     expect(res.status).toBe(400);
-    expect(mockedSubscribe).not.toHaveBeenCalled();
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
   });
 
   it('returns 502 (not success) when the provider fails', async () => {
     mockedIsConfigured.mockReturnValue(true);
-    mockedSubscribe.mockResolvedValue({ success: false, error: new Error('boom') });
+    mockedStartSubscribe.mockResolvedValue({ status: 'error', error: new Error('boom') });
     const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
     expect(res.status).toBe(502);
     expect((await res.json()).status).toBe('error');
@@ -79,7 +111,7 @@ describe('newsletter route (P0-013)', () => {
 
   it('returns 200 success only on a real subscribe', async () => {
     mockedIsConfigured.mockReturnValue(true);
-    mockedSubscribe.mockResolvedValue({ success: true });
+    mockedStartSubscribe.mockResolvedValue({ status: 'sent' });
     const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe('success');

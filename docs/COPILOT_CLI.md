@@ -55,14 +55,14 @@ copilot --agent task --prompt "Give me the exact commands to run unit tests and 
 
 ### Mode mapping (from `cursorrules`)
 
-| Shortcut / intent | Agent |
-|-------------------|--------|
-| Explore / orient | `explore` |
-| `/task [goal]` | `task` |
-| `/review` | `code-review` |
-| `/research [topic]` | `research` |
-| `/plan` / Plan Mode | `plan` (or CLI built-in plan mode) |
-| Maintenance checklist | `my-agent` |
+| Shortcut / intent     | Agent                              |
+| --------------------- | ---------------------------------- |
+| Explore / orient      | `explore`                          |
+| `/task [goal]`        | `task`                             |
+| `/review`             | `code-review`                      |
+| `/research [topic]`   | `research`                         |
+| `/plan` / Plan Mode   | `plan` (or CLI built-in plan mode) |
+| Maintenance checklist | `my-agent`                         |
 
 ## Related tooling
 
