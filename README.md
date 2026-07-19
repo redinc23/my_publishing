@@ -22,12 +22,14 @@ Vercel and AWS Amplify configs are retained for compatibility and testing, but p
 - 📊 Analytics and engagement tracking
 - 📱 Responsive design and mobile support
 
-## Future Features (Phase 2+)
+## Phase 2 Features (shipped)
 
-- 🤖 AI-powered recommendations (Resonance Engine) - _Requires OpenAI API_
-- 🎧 Audiobook support - _Coming soon_
-- 📧 Email notifications - _Requires Resend_
-- ⭐ User reviews and ratings - _Coming soon_
+- ⭐ Reviews & ratings — verified-purchase badges, helpful votes, author replies, sortable/paginated review API
+- 🤖 AI-powered recommendations (Resonance Engine) — personalized "Because you read…" rails with trending/editorial fallback; works with or without OpenAI
+- 🎧 Audiobook experience — speed control, sleep timer, ±15s skip, resume position, chapters, persistent mini-player
+- 📧 Transactional email (Resend) — welcome, purchase receipts, author payout + new-review alerts, double opt-in newsletter, preference center
+- 🔖 Reader engagement — bookmarks, highlights & notes, wishlist, author follows, Readers Hub
+- 📊 Enhanced analytics and engagement tracking (impressions/clicks on all recommendation rails)
 
 ## Tech Stack
 
