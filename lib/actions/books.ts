@@ -269,6 +269,8 @@ export async function updateBookAdmin(
     page_count?: number;
     word_count?: number;
     status?: 'draft' | 'published' | 'archived';
+    cover_url?: string | null;
+    epub_url?: string | null;
     amazon_url?: string | null;
     kindle_url?: string | null;
     apple_books_url?: string | null;
@@ -338,6 +340,8 @@ export async function updateBookAdmin(
     if (input.page_count !== undefined) updates.page_count = input.page_count;
     if (input.word_count !== undefined) updates.word_count = input.word_count;
     if (input.status !== undefined) updates.status = input.status;
+    if (input.cover_url !== undefined) updates.cover_url = url(input.cover_url);
+    if (input.epub_url !== undefined) updates.epub_url = url(input.epub_url);
     if (input.amazon_url !== undefined) updates.amazon_url = url(input.amazon_url);
     if (input.kindle_url !== undefined) updates.kindle_url = url(input.kindle_url);
     if (input.apple_books_url !== undefined) updates.apple_books_url = url(input.apple_books_url);
@@ -411,6 +415,8 @@ export async function createBookAdmin(input: {
   status?: 'draft' | 'published';
   content_type?: 'book' | 'comic' | 'paper';
   author_id?: string | null;
+  cover_url?: string | null;
+  epub_url?: string | null;
 }) {
   try {
     const supabase = await createClient();
@@ -479,6 +485,8 @@ export async function createBookAdmin(input: {
         status,
         content_type: input.content_type || 'book',
         author_id: input.author_id || null,
+        cover_url: input.cover_url?.trim() || null,
+        epub_url: input.epub_url?.trim() || null,
         published_at: status === 'published' ? new Date().toISOString() : null,
       })
       .select()

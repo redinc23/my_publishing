@@ -56,10 +56,16 @@ export interface UploadOptions {
 
 export const UPLOAD_CONFIGS: Record<string, FileUploadConfig> = {
   cover: {
+    // Mirrors the book-covers bucket (supabase/migrations/20260117000006_storage_policies.sql):
+    // file_size_limit = 5242880 (5MB), allowed_mime_types = jpeg/png/webp/gif.
+    // Keep client + server validation aligned with the bucket or uploads fail at storage time.
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp'],
+      'image/gif': ['.gif'],
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 5 * 1024 * 1024, // 5MB — authoritative (matches bucket file_size_limit)
     maxFiles: 1,
     bucket: 'book-covers',
     autoProcess: true,
@@ -81,9 +87,10 @@ export const UPLOAD_CONFIGS: Record<string, FileUploadConfig> = {
     autoProcess: false,
   },
   epub: {
+    // Mirrors the published-epubs bucket: allowed_mime_types = {application/epub+zip},
+    // file_size_limit = 52428800 (50MB). (.fb2 removed — the bucket rejects it.)
     accept: {
       'application/epub+zip': ['.epub'],
-      'application/x-fictionbook+xml': ['.fb2'],
     },
     maxSize: 50 * 1024 * 1024, // 50MB
     maxFiles: 1,
