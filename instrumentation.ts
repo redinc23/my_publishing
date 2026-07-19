@@ -18,9 +18,8 @@ export async function register() {
 
       // Non-fatal surface: log validator warnings (format issues, optional
       // integrations) without taking down an otherwise functional deployment.
-      const { validateEnvironment, printValidationResults } = await import(
-        './lib/utils/env-validation'
-      );
+      const { validateEnvironment, printValidationResults } =
+        await import('./lib/utils/env-validation');
       const result = validateEnvironment();
       if (result.warnings.length > 0) {
         printValidationResults(result);
