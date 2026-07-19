@@ -67,3 +67,21 @@ copilot --agent code-review --prompt "Review the latest diff for security issues
 - Prefer `@`-referenced files and paths the user names.
 - Briefly explain *why* before large code or command blocks.
 - Keep changes scoped; update docs only when behavior or operator workflow changes.
+
+## Continuous cowork entrypoint (from PR #281)
+
+Before any work:
+
+1. Read `docs/COWORK_OPERATOR.md` (path + storm guards).
+2. Read `CLAUDE.md` and `docs/PROJECT_PHOENIX.md` for Phoenix slices.
+3. Load skills from `.claude/skills/README.md` as needed.
+4. Run `./scripts/cowork-status.sh` when diagnosing prod/PRs.
+5. Log console-only blockers in `HUMAN_TASKS.md`.
+
+**Prompts for continuous cowork:** `.cursor/automations/*.prompt.md`
+**Cowork branch convention:** `cursor/<slug>-c5d8`. One PR per run.
+
+> **Integration note:** PR #281 records "Default path: Phoenix (B)". Main's newer record
+> (`CLAUDE.md` header "PROJECT PHOENIX (PAUSED)"; `HUMAN_TASKS.md` recovery log, commit
+> `841a57e`, 2026-07-19 04:40 UTC) marks Phoenix paused until explicit owner reactivation.
+> The paused record governs unless the owner reactivates.

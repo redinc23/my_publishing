@@ -323,7 +323,16 @@ Skills encode Phoenix + ops procedures for agents. They do **not** replace human
 Priority packs: `phoenix-contract`, `mangu-env-and-secrets`, `mcp-catalog-ops`,
 `better-auth-mangu`, `mongodb-atlas-mangu`, `mangu-ops-runbook`, `phoenix-data-migration`.
 
+## 15. CONTINUOUS COWORK
+
+- Entry: `AGENTS.md` + `docs/COWORK_OPERATOR.md`
+- Paste prompts: `.cursor/automations/*.prompt.md`
+- Status script: `./scripts/cowork-status.sh`
+- Storm automations must stay **disabled** (IDs in `HUMAN_TASKS.md` C0.1). Agents cannot
+  toggle Cursor Automations via API — only the human can.
+- Default path: **Phoenix (B)**. One PR per run.
+
 ---
 
-_Briefing v1.1 — 2026-07-19. Pairs with `docs/PROJECT_PHOENIX.md` v4.0. Execute Phase 0
+_Briefing v1.2 — 2026-07-19. Pairs with `docs/PROJECT_PHOENIX.md` v4.0. Execute Phase 0
 recon first. Godspeed. 🔥_
