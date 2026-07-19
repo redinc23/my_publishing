@@ -11,10 +11,10 @@ A Netflix-inspired digital publishing platform built with Next.js 14.
 
 **GitHub Copilot CLI:** [docs/COPILOT_CLI.md](docs/COPILOT_CLI.md) — install, auth, and custom agents (`AGENTS.md`, `.github/agents/`).
 
-Cloud Run via `cloudbuild.yaml` is the canonical production path.
-Vercel and AWS Amplify configs are retained for compatibility and testing, but production release coordination should follow Cloud Build + Cloud Run.
+Vercel is the canonical production platform ([ADR-001, Option B — ACCEPTED](docs/adr/ADR-001-canonical-platform.md)).
+Cloud Run (`cloudbuild.yaml`) and AWS Amplify configs are retained for compatibility and emergency use only — they are not GO evidence targets.
 
-## Core Features (Phase 1 - Ready for Launch)
+## Core Features (Phase 1)
 
 - 📚 Book marketplace with browsing and search
 - 📖 Reading interface with progress tracking
@@ -162,19 +162,23 @@ Run the same quality checks as CI (quality-checks + unit-tests + build-test):
 
 ## Deployment
 
-### Cloud Run (Canonical Production Path)
+### Vercel (Canonical Production Path — ADR-001 Option B)
 
-Production deploys should use Google Cloud Build and Cloud Run:
-
-1. Trigger `cloudbuild.yaml` from `main`
-2. Verify build + deploy steps complete successfully
-3. Validate `/api/health` and critical smoke routes on the custom domain
-
-### Vercel (Secondary / compatibility)
+Production deploys use Vercel (Git integration or CLI) from `main`:
 
 ```bash
 vercel deploy --prod
 ```
+
+Validate `/api/health?ready=1` and critical smoke routes on the canonical origin after deploy.
+
+### Cloud Run (Legacy — superseded for GO per ADR-001)
+
+Google Cloud Build + Cloud Run (`cloudbuild.yaml`) is retained for compatibility and emergency use only; it is not a GO evidence target:
+
+1. Trigger `cloudbuild.yaml` from `main`
+2. Verify build + deploy steps complete successfully
+3. Validate `/api/health` and critical smoke routes on the custom domain
 
 ### Docker
 
@@ -186,9 +190,10 @@ docker run -p 3000:3000 mangu-publishers
 ## Documentation
 
 - **[Release Authority (NEXT_GO)](./docs/NEXT_GO.md)** — launch status, hard gates G1–G13, P0 backlog, Go/No-Go sign-off
+- **[ADR-001: Canonical Production Platform](./docs/adr/ADR-001-canonical-platform.md)** — Vercel canonical (Option B, ACCEPTED); Cloud Run superseded for GO
 - **[Launch Checklist](./docs/LAUNCH_CHECKLIST.md)** - Complete pre-launch verification checklist
-- **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 (ready now) vs Phase 2+ features
-- [Cloud Build + Cloud Run Config](./cloudbuild.yaml) - Canonical production deployment pipeline
+- **[Feature Phases](./docs/FEATURE_PHASES.md)** - Phase 1 vs Phase 2+ features
+- [Cloud Build + Cloud Run Config](./cloudbuild.yaml) - Legacy deployment pipeline (non-canonical for GO per ADR-001)
 - [AWS Amplify Quick Start](./docs/AWS_AMPLIFY_QUICK_START.md) - Legacy/secondary deployment path
 - [AWS Amplify Deployment](./docs/AWS_AMPLIFY_DEPLOYMENT.md) - Legacy/secondary deployment path
 - [Vercel Deployment](./docs/DEPLOYMENT.md) - Vercel deployment guide
