@@ -11,6 +11,8 @@ import {
   StatsBarSection,
   NewsletterCTA,
   AuthorSpotlight,
+  RecommendationsRail,
+  BecauseYouReadRail,
 } from '@/components/home';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
 import { isEmailConfigured } from '@/lib/email/send';
@@ -132,6 +134,17 @@ export default function HomePage() {
 
       {/* Trending Books Grid */}
       <TrendingBooksSection />
+
+      {/* Resonance Engine rails (Phase 2) — client-side, self-suppressing:
+          personalized for signed-in readers, trending/editorial otherwise. */}
+      <RecommendationsRail
+        title="Recommended for You"
+        subtitle="Picked by the Resonance Engine"
+        endpoint="/api/resonance/recommend?mode=auto&limit=12"
+        railId="home-for-you"
+        className="border-b border-border/50 bg-muted/10"
+      />
+      <BecauseYouReadRail railId="home-because-you-read" />
 
       {/* Stats Bar */}
       <StatsBarSection />

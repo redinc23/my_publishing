@@ -3,6 +3,72 @@
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { enforceRateLimit } from '@/lib/rate-limit';
+import { hasCompletedOrderForBook } from '@/lib/reading/entitlement';
+import { AuthorReplySchema } from '@/lib/validations/reviews';
+
+/** Throws when the caller has exceeded the shared API rate bucket. */
+async function enforceReviewRateLimit(userId: string) {
+  const result = await enforceRateLimit('api', `reviews:${userId}`);
+  if (!result.success) {
+    throw new Error(
+      result.reason === 'unavailable'
+        ? 'Service temporarily unavailable. Please try again shortly.'
+        : 'Too many requests. Please slow down and try again.'
+    );
+  }
+}
+
+/**
+ * True when the auth user has a completed order for the book.
+ * Best-effort: returns false on any lookup failure so review flows never break.
+ */
+async function detectVerifiedPurchase(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  bookId: string
+): Promise<boolean> {
+  try {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!profile) return false;
+    return await hasCompletedOrderForBook(admin, profile.id, bookId);
+  } catch (error) {
+    console.warn('[reviews] verified-purchase lookup failed:', error);
+    return false;
+  }
+}
+
+/** True when the auth user is an author of the given book. */
+async function isBookAuthor(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  bookId: string
+): Promise<boolean> {
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (!profile) return false;
+
+  const { data: authorRows } = await admin
+    .from('authors')
+    .select('id')
+    .eq('profile_id', profile.id);
+  const authorIds = (authorRows ?? []).map((row) => row.id);
+  if (!authorIds.length) return false;
+
+  const { data: book } = await admin
+    .from('books')
+    .select('author_id')
+    .eq('id', bookId)
+    .maybeSingle();
+  return !!book?.author_id && authorIds.includes(book.author_id);
+}
 
 async function updateBookReviewStats(bookId: string) {
   const admin = createAdminClient();
@@ -58,6 +124,8 @@ export async function voteOnReview(reviewId: string, helpful: boolean | null) {
   if (!user) {
     throw new Error('You must be logged in to vote');
   }
+
+  await enforceReviewRateLimit(user.id);
 
   const { data: review } = await admin
     .from('reviews')
@@ -123,13 +191,18 @@ export async function createReview(reviewData: {
     throw new Error('You must be logged in to write reviews');
   }
 
+  await enforceReviewRateLimit(user.id);
+
+  // Detect verified purchase server-side (never trust the client)
+  const verifiedPurchase = await detectVerifiedPurchase(admin, user.id, reviewData.book_id);
+
   // Check if user already has a review for this book
   const { data: existingReview } = await admin
     .from('reviews')
     .select('id')
     .eq('user_id', user.id)
     .eq('book_id', reviewData.book_id)
-    .single();
+    .maybeSingle();
 
   if (existingReview) {
     // Update existing review
@@ -141,6 +214,7 @@ export async function createReview(reviewData: {
         content: reviewData.content,
         is_spoiler: reviewData.is_spoiler,
         is_public: reviewData.is_public,
+        verified_purchase: verifiedPurchase,
         updated_at: new Date().toISOString(),
       })
       .eq('id', existingReview.id);
@@ -156,6 +230,7 @@ export async function createReview(reviewData: {
       content: reviewData.content,
       is_spoiler: reviewData.is_spoiler,
       is_public: reviewData.is_public,
+      verified_purchase: verifiedPurchase,
     });
 
     if (error) throw error;
@@ -197,5 +272,94 @@ export async function deleteReview(reviewId: string) {
 
   await updateBookReviewStats(review.book_id);
   revalidatePath('/dashboard/my-reviews');
+  return { success: true };
+}
+
+/**
+ * Post (or replace) the public author reply on a review.
+ * Only an author of the reviewed book may reply.
+ */
+export async function replyToReview(reviewId: string, reply: string) {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('You must be logged in to reply');
+  }
+
+  await enforceReviewRateLimit(user.id);
+
+  const parsed = AuthorReplySchema.safeParse({ reply });
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors[0]?.message ?? 'Invalid reply');
+  }
+
+  const { data: review } = await admin
+    .from('reviews')
+    .select('id, book_id')
+    .eq('id', reviewId)
+    .maybeSingle();
+  if (!review) {
+    throw new Error('Review not found');
+  }
+
+  if (!(await isBookAuthor(admin, user.id, review.book_id))) {
+    throw new Error('Only the author of this book can reply to its reviews');
+  }
+
+  const { error } = await admin
+    .from('reviews')
+    .update({
+      author_reply: parsed.data.reply,
+      author_reply_at: new Date().toISOString(),
+    })
+    .eq('id', reviewId);
+
+  if (error) {
+    throw new Error('Failed to save reply');
+  }
+
+  revalidatePath('/');
+  return { success: true };
+}
+
+/** Remove the author reply from a review (book author only). */
+export async function deleteAuthorReply(reviewId: string) {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('You must be logged in');
+  }
+
+  const { data: review } = await admin
+    .from('reviews')
+    .select('id, book_id')
+    .eq('id', reviewId)
+    .maybeSingle();
+  if (!review) {
+    throw new Error('Review not found');
+  }
+
+  if (!(await isBookAuthor(admin, user.id, review.book_id))) {
+    throw new Error('Only the author of this book can manage replies');
+  }
+
+  const { error } = await admin
+    .from('reviews')
+    .update({ author_reply: null, author_reply_at: null })
+    .eq('id', reviewId);
+
+  if (error) {
+    throw new Error('Failed to remove reply');
+  }
+
+  revalidatePath('/');
   return { success: true };
 }
