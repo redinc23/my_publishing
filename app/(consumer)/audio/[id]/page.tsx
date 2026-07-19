@@ -102,8 +102,7 @@ export default async function AudiobookPage({ params }: { params: { id: string }
   }
 
   const { book, audioUrl, chapters, narrator, durationSec } = data;
-  const authorName =
-    book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author';
+  const authorName = book.author?.profile?.full_name || book.author?.pen_name || 'Unknown Author';
   const durationLabel = durationSec ? formatDurationLong(durationSec) : '';
 
   return (

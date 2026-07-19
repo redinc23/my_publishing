@@ -34,7 +34,9 @@ async function loadHighlights(userId: string): Promise<HubHighlight[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('highlights')
-      .select('id, book_id, selected_text, position, color, note, created_at, book:books(id, title, slug)')
+      .select(
+        'id, book_id, selected_text, position, color, note, created_at, book:books(id, title, slug)'
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(200);
@@ -81,9 +83,7 @@ async function loadWishlist(userId: string): Promise<HubWishlistItem[]> {
       .map((row): HubWishlistItem => {
         const r = row as Record<string, unknown>;
         const rawBook = normalizeOne(r.book as RawBook | RawBook[] | null);
-        const book = rawBook
-          ? { ...rawBook, author: normalizeOne(rawBook.author) }
-          : null;
+        const book = rawBook ? { ...rawBook, author: normalizeOne(rawBook.author) } : null;
         return {
           id: r.id as string,
           book_id: r.book_id as string,
@@ -103,7 +103,9 @@ async function loadFollows(userId: string): Promise<HubFollowedAuthor[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('author_follows')
-      .select('id, author_id, created_at, author:authors(id, pen_name, photo_url, bio, is_verified)')
+      .select(
+        'id, author_id, created_at, author:authors(id, pen_name, photo_url, bio, is_verified)'
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(100);

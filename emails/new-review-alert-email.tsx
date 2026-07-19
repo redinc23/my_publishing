@@ -67,9 +67,7 @@ export function NewReviewAlertEmail({
           </Text>
         ) : null}
         {reviewExcerpt ? (
-          <Text style={{ ...emailStyles.mutedText, margin: 0 }}>
-            &ldquo;{reviewExcerpt}&rdquo;
-          </Text>
+          <Text style={{ ...emailStyles.mutedText, margin: 0 }}>&ldquo;{reviewExcerpt}&rdquo;</Text>
         ) : null}
       </Section>
       <Button href={reviewUrl ?? getEmailUrl('/dashboard/my-reviews')} style={emailStyles.button}>

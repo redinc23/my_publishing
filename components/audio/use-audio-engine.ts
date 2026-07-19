@@ -205,7 +205,11 @@ export function useAudioEngine(): AudioEngine {
 
       // Same track already loaded → merge metadata, don't disturb playback.
       if (trackRef.current?.src === next.src) {
-        setTrack({ ...trackRef.current, ...next, chapters: next.chapters ?? trackRef.current.chapters });
+        setTrack({
+          ...trackRef.current,
+          ...next,
+          chapters: next.chapters ?? trackRef.current.chapters,
+        });
         if (opts?.autoplay) play();
         return;
       }
@@ -316,20 +320,17 @@ export function useAudioEngine(): AudioEngine {
     setIsMuted(nextMuted);
   }, []);
 
-  const setSleepTimerMinutes = useCallback(
-    (minutes: number) => {
-      const endsAt = Date.now() + minutes * 60_000;
-      const state: SleepTimerState = {
-        mode: 'minutes',
-        endsAt,
-        remainingSec: minutes * 60,
-      };
-      sleepTimerRef.current = state;
-      setSleepTimer(state);
-      toast({ title: `Sleep timer set for ${minutes} minutes` });
-    },
-    []
-  );
+  const setSleepTimerMinutes = useCallback((minutes: number) => {
+    const endsAt = Date.now() + minutes * 60_000;
+    const state: SleepTimerState = {
+      mode: 'minutes',
+      endsAt,
+      remainingSec: minutes * 60,
+    };
+    sleepTimerRef.current = state;
+    setSleepTimer(state);
+    toast({ title: `Sleep timer set for ${minutes} minutes` });
+  }, []);
 
   const setSleepTimerEndOfChapter = useCallback(() => {
     const chapters = trackRef.current?.chapters ?? [];

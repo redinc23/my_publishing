@@ -173,10 +173,7 @@ async function hydrateBooks(
  * Collect everything this profile has engaged with: reading progress,
  * completed purchases and engagement events. Best-effort per source.
  */
-async function gatherUserSignals(
-  admin: SupabaseClient,
-  profileId: string
-): Promise<UserSignals> {
+async function gatherUserSignals(admin: SupabaseClient, profileId: string): Promise<UserSignals> {
   const weights = new Map<string, number>();
   const recency = new Map<string, number>();
   const exclusions = new Set<string>();
@@ -248,10 +245,7 @@ async function gatherUserSignals(
       .eq('profile_id', profileId);
     const authorIds = (authorRows ?? []).map((row: { id: string }) => row.id);
     if (authorIds.length > 0) {
-      const { data: ownBooks } = await admin
-        .from('books')
-        .select('id')
-        .in('author_id', authorIds);
+      const { data: ownBooks } = await admin.from('books').select('id').in('author_id', authorIds);
       for (const row of ownBooks ?? []) exclusions.add(row.id);
     }
   } catch (error) {
@@ -395,9 +389,7 @@ function getTrendingRanked(limit: number, genre?: string): Promise<ScoredBook[]>
   return unstable_cache(
     async (): Promise<ScoredBook[]> => {
       const admin = createAdminClient();
-      const since = new Date(
-        Date.now() - TRENDING_WINDOW_DAYS * 24 * 60 * 60 * 1000
-      ).toISOString();
+      const since = new Date(Date.now() - TRENDING_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
       const { data: events, error } = await admin
         .from('engagement_events')

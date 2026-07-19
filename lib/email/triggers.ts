@@ -138,9 +138,7 @@ export interface NotifyAuthorOfNewReviewInput {
  * authors. Respects the author's 'author_alerts' email preference.
  * Never throws.
  */
-export async function notifyAuthorOfNewReview(
-  input: NotifyAuthorOfNewReviewInput
-): Promise<void> {
+export async function notifyAuthorOfNewReview(input: NotifyAuthorOfNewReviewInput): Promise<void> {
   if (!isEmailConfigured()) {
     console.warn('[email] RESEND_API_KEY not set — skipping new-review alert for', input.bookId);
     return;

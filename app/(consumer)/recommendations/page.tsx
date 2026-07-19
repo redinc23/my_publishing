@@ -39,8 +39,8 @@ export default async function RecommendationsPage() {
         <Container>
           <h1 className="mb-4 text-4xl font-bold">Recommended for You</h1>
           <p className="max-w-2xl text-secondary">
-            Picks tuned to your reading taste by the Resonance Engine — plus what the rest of
-            MANGU is loving right now.
+            Picks tuned to your reading taste by the Resonance Engine — plus what the rest of MANGU
+            is loving right now.
           </p>
         </Container>
       </Section>
