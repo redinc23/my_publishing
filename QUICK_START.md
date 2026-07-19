@@ -123,6 +123,7 @@ npm run db:seed      # Seed database
 ## 📚 Documentation
 
 - [Release Authority (NEXT_GO)](./docs/NEXT_GO.md) — launch status, gates G1–G13, P0 backlog
+- [ADR-001: Canonical Production Platform](./docs/adr/ADR-001-canonical-platform.md) — Vercel canonical (Option B, ACCEPTED)
 - [Deployment Guide](./docs/DEPLOYMENT.md)
 - [API Documentation](./docs/API.md)
 - [Development Guide](./docs/DEVELOPMENT.md)
@@ -130,15 +131,15 @@ npm run db:seed      # Seed database
 
 ## 🚀 Deployment
 
-### Cloud Run (Canonical Production)
-
-Use Cloud Build with `cloudbuild.yaml` from `main`.
-
-### Vercel (Secondary)
+### Vercel (Canonical Production — ADR-001 Option B)
 
 ```bash
 vercel deploy --prod
 ```
+
+### Cloud Run (Legacy — superseded for GO per ADR-001)
+
+Use Cloud Build with `cloudbuild.yaml` from `main` (compatibility/emergency use only).
 
 ### Docker
 
