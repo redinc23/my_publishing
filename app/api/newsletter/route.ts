@@ -55,7 +55,10 @@ export async function POST(request: NextRequest) {
             ? 'Newsletter signups are temporarily unavailable.'
             : 'Too many attempts. Please try again in a minute.',
       },
-      { status: rateLimitResult.reason === 'unavailable' ? 503 : 429, headers: rateLimitResult.headers }
+      {
+        status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
+        headers: rateLimitResult.headers,
+      }
     );
   }
 

@@ -66,7 +66,7 @@ disable or throttle it at cursor.com/automations. Also disable the health-sweep
 automation (id `ab582f50-7ba7-11f1-ba66-0e7d0216e441`), which creates a second class of
 noisy PRs.
 
-**Sequencing warning (PR #283):** disable the legacy automation above *before* enabling
+**Sequencing warning (PR #283):** disable the legacy automation above _before_ enabling
 the in-repo loop (`.github/workflows/ci-fix-loop.yml`), or both may fire and recreate
 the storm.
 
@@ -132,7 +132,6 @@ on red CI).
 **DONE — Path B (Phoenix).** See Cowork control C0.3. Legacy Supabase remains until
 WS4/Phase 14 per Phoenix doc; agents must not pause Phoenix unless this is reopened.
 
-
 > **Integration reconciliation (2026-07-19):** main's newer record (commit `841a57e`,
 > 2026-07-19 04:40 UTC — ~2h after this PR's commit) lists H1.2 under "Completed by the
 > repository recovery" with the opposite outcome — "Phoenix paused; Supabase is the
@@ -140,6 +139,7 @@ WS4/Phase 14 per Phoenix doc; agents must not pause Phoenix unless this is reope
 > `CLAUDE.md` is titled "PROJECT PHOENIX (PAUSED)". Both records are preserved (see also
 > C0.3 above, from the same PR). **The owner must confirm current status; until then the
 > paused record on main governs.**
+
 ### H1.3 Vercel environment audit
 
 - `NEXT_PUBLIC_SITE_URL` must be `https://www.mangu-publishers.com` in Production
@@ -195,53 +195,53 @@ Click-paths reference `docs/PROJECT_PHOENIX.md` unless noted.
 
 ## Immediate (unblocks local / scaffold)
 
-| ID | Task | Status | Notes |
-| -- | ---- | ------ | ----- |
-| H-RECON-1 | Provide local Supabase + Stripe secrets (or confirm CI-only e2e) so Playwright can establish a local baseline | ⬜ | Recon D7 — `npm run dev` → `validate-env` |
-| H-P5.2 | Run `npm run db:mongo:up` with Atlas API keys once scaffold lands on a WS branch | ⬜ | Doc P5.2 — agent writes scripts; human runs |
-| H-P5.3 | `npm run db:mongo:ping` | ⬜ | |
-| H-P5.4 | `npm run db:mongo:indexes` | ⬜ | |
+| ID        | Task                                                                                                          | Status | Notes                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------- |
+| H-RECON-1 | Provide local Supabase + Stripe secrets (or confirm CI-only e2e) so Playwright can establish a local baseline | ⬜     | Recon D7 — `npm run dev` → `validate-env`   |
+| H-P5.2    | Run `npm run db:mongo:up` with Atlas API keys once scaffold lands on a WS branch                              | ⬜     | Doc P5.2 — agent writes scripts; human runs |
+| H-P5.3    | `npm run db:mongo:ping`                                                                                       | ⬜     |                                             |
+| H-P5.4    | `npm run db:mongo:indexes`                                                                                    | ⬜     |                                             |
 
 ## Phase 1 — prep (from Phoenix §5)
 
-| ID | Task | Status |
-| -- | ---- | ------ |
-| P1.4 | Create MongoDB Atlas API key | ⬜ |
-| P1.5 | Create Vercel token (env sync) | ⬜ |
-| P1.7 | Feature-freeze communications to stakeholders | ⬜ |
-| P1.8 | Full Supabase `pg_dump` + storage snapshot (restore-tested) | ⬜ |
+| ID   | Task                                                        | Status |
+| ---- | ----------------------------------------------------------- | ------ |
+| P1.4 | Create MongoDB Atlas API key                                | ⬜     |
+| P1.5 | Create Vercel token (env sync)                              | ⬜     |
+| P1.7 | Feature-freeze communications to stakeholders               | ⬜     |
+| P1.8 | Full Supabase `pg_dump` + storage snapshot (restore-tested) | ⬜     |
 
 ## Phase 8 — Vercel env / Stripe
 
-| ID | Task | Status |
-| -- | ---- | ------ |
-| P8.x | Load all Phoenix §9.1 (+ amended SITE_URL / extras) into Vercel Production + Preview | ⬜ |
-| P8.x | Point Stripe webhook at Vercel `/api/webhook` (keep Cloud Run standby) | ⬜ |
+| ID   | Task                                                                                 | Status |
+| ---- | ------------------------------------------------------------------------------------ | ------ |
+| P8.x | Load all Phoenix §9.1 (+ amended SITE_URL / extras) into Vercel Production + Preview | ⬜     |
+| P8.x | Point Stripe webhook at Vercel `/api/webhook` (keep Cloud Run standby)               | ⬜     |
 
 ## Phase 11 — data cutover
 
-| ID | Task | Status |
-| -- | ---- | ------ |
-| P11.1 | Run `scripts/export-supabase.sh` with `SUPABASE_DB_URL` | ⬜ |
-| P11.4 | Production `mongoimport` | ⬜ |
-| P11.5 | `mongosh` verification script sign-off | ⬜ |
-| P11.6 | Human sign-off on transform report | ⬜ |
-| — | Trigger `scripts/send-forced-resets.ts` in prod (rate-limited) | ⬜ |
+| ID    | Task                                                           | Status |
+| ----- | -------------------------------------------------------------- | ------ |
+| P11.1 | Run `scripts/export-supabase.sh` with `SUPABASE_DB_URL`        | ⬜     |
+| P11.4 | Production `mongoimport`                                       | ⬜     |
+| P11.5 | `mongosh` verification script sign-off                         | ⬜     |
+| P11.6 | Human sign-off on transform report                             | ⬜     |
+| —     | Trigger `scripts/send-forced-resets.ts` in prod (rate-limited) | ⬜     |
 
 ## Phase 13–15 — cutover / teardown
 
-| ID | Task | Status |
-| -- | ---- | ------ |
-| P13 | Cloudflare DNS → Vercel; Cloud Run standby 48h | ⬜ |
-| P14 | Prod QA matrix, mongodump to cloud storage, token revocation, Supabase pause | ⬜ |
-| P15 | Post-mortem | ⬜ |
+| ID  | Task                                                                         | Status |
+| --- | ---------------------------------------------------------------------------- | ------ |
+| P13 | Cloudflare DNS → Vercel; Cloud Run standby 48h                               | ⬜     |
+| P14 | Prod QA matrix, mongodump to cloud storage, token revocation, Supabase pause | ⬜     |
+| P15 | Post-mortem                                                                  | ⬜     |
 
 ## Doc decisions needed from humans (recon §10)
 
-| ID | Decision | Status |
-| -- | -------- | ------ |
-| D8 | Confirm manuscripts stay non-public (proxy-only) even if Blob `put` uses path obscurity | ⬜ |
-| D12 | Confirm feature freeze: resonance/MCP/social-beyond-reviews/payouts deferred post-Phoenix unless listed in §1.4 | ⬜ |
+| ID  | Decision                                                                                                        | Status |
+| --- | --------------------------------------------------------------------------------------------------------------- | ------ |
+| D8  | Confirm manuscripts stay non-public (proxy-only) even if Blob `put` uses path obscurity                         | ⬜     |
+| D12 | Confirm feature freeze: resonance/MCP/social-beyond-reviews/payouts deferred post-Phoenix unless listed in §1.4 | ⬜     |
 
 ---
 

@@ -66,6 +66,26 @@ jobs:
               const failed = required.filter((run) => run.conclusion !== 'success');
               if (failed.length > 0) {
                 core.warning(`PR #${pr.number}: required checks failed — not merging`);
+                // Hint once per failing head SHA when the closed-loop dispatcher is armed.
+                const marker = `<!-- auto-merge-ci-fail:${pr.head.sha} -->`;
+                const { data: comments } = await github.rest.issues.listComments({
+                  owner, repo,
+                  issue_number: pr.number,
+                  per_page: 100
+                });
+                const alreadyHinted = comments.some((c) => (c.body || '').includes(marker));
+                if (!alreadyHinted) {
+                  await github.rest.issues.createComment({
+                    owner, repo,
+                    issue_number: pr.number,
+                    body: [
+                      marker,
+                      '❌ **Auto-merge skipped** — required CI checks failed.',
+                      'If `CURSOR_API_KEY` is configured, **ci-fix-loop.yml** can dispatch a Cursor agent to fix and push; auto-merge retries when CI goes green.',
+                      'Pause dispatches with the `ci-fix-loop-paused` label.'
+                    ].join(' ')
+                  });
+                }
                 continue;
               }
 

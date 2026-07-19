@@ -14,15 +14,15 @@ MANGU Publishers is a Netflix-inspired digital publishing platform: book marketp
 - **AI (product):** OpenAI embeddings for Resonance; heuristic AI insights elsewhere
 - **Production path:** Google Cloud Build → Cloud Run (`cloudbuild.yaml`). Vercel/Amplify configs are secondary.
 
-| Path | Role |
-|------|------|
-| `app/` | App Router pages and API routes |
-| `lib/` | Business logic, server actions, services |
-| `components/` | UI and feature components |
-| `supabase/migrations/` | Ordered SQL migrations |
-| `scripts/` | Setup, seed, bootstrap, CI helpers |
-| `tools/` | Dev tooling (e.g. Copilot deep-dive packet) |
-| `docs/` | Ops, deploy, Phase 2, standards |
+| Path                   | Role                                        |
+| ---------------------- | ------------------------------------------- |
+| `app/`                 | App Router pages and API routes             |
+| `lib/`                 | Business logic, server actions, services    |
+| `components/`          | UI and feature components                   |
+| `supabase/migrations/` | Ordered SQL migrations                      |
+| `scripts/`             | Setup, seed, bootstrap, CI helpers          |
+| `tools/`               | Dev tooling (e.g. Copilot deep-dive packet) |
+| `docs/`                | Ops, deploy, Phase 2, standards             |
 
 ## Hard constraints
 
@@ -38,13 +38,13 @@ MANGU Publishers is a Netflix-inspired digital publishing platform: book marketp
 
 When the user asks for a mode—or you select a matching custom agent—behave accordingly:
 
-| Mode | Agent profile | Behavior |
-|------|---------------|----------|
-| **Explore** | `explore` | Quick codebase analysis; clear answers; no context bloat; cite files |
-| **Task** | `task` | Scripts, tests, automations; brief success summary; full verbose output on failure |
-| **Code Review** | `code-review` | Real bugs, security, regressions; minimize stylistic noise |
-| **Research** | `research` | Deep dive with a citation report and file paths |
-| **Plan Mode** | `plan` | Collaborate on an implementation plan first; wait for approval before writing code |
+| Mode            | Agent profile | Behavior                                                                           |
+| --------------- | ------------- | ---------------------------------------------------------------------------------- |
+| **Explore**     | `explore`     | Quick codebase analysis; clear answers; no context bloat; cite files               |
+| **Task**        | `task`        | Scripts, tests, automations; brief success summary; full verbose output on failure |
+| **Code Review** | `code-review` | Real bugs, security, regressions; minimize stylistic noise                         |
+| **Research**    | `research`    | Deep dive with a citation report and file paths                                    |
+| **Plan Mode**   | `plan`        | Collaborate on an implementation plan first; wait for approval before writing code |
 
 ## Slash-command mapping (Copilot CLI)
 
@@ -65,7 +65,7 @@ copilot --agent code-review --prompt "Review the latest diff for security issues
 ## Tool and file rules
 
 - Prefer `@`-referenced files and paths the user names.
-- Briefly explain *why* before large code or command blocks.
+- Briefly explain _why_ before large code or command blocks.
 - Keep changes scoped; update docs only when behavior or operator workflow changes.
 
 ## Continuous cowork entrypoint (from PR #281)

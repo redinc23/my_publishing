@@ -11,8 +11,9 @@
 
 jest.mock('next/server', () => ({
   NextResponse: {
-    json: (body: unknown, init: { status?: number } = {}) => ({
+    json: (body: unknown, init: { status?: number; headers?: HeadersInit } = {}) => ({
       status: init.status ?? 200,
+      headers: new Headers(init.headers),
       json: async () => body,
     }),
   },
@@ -26,13 +27,29 @@ jest.mock('@/lib/email/send', () => ({
   CONTACT_INBOX: 'books@mangu-publishers.com',
 }));
 
+// Newsletter route now uses double opt-in + rate limiting — mock both so CI
+// with real-looking Upstash/Supabase placeholders cannot hang the suite.
+jest.mock('@/lib/email/newsletter', () => ({
+  startNewsletterSubscription: jest.fn(),
+}));
+
+jest.mock('@/lib/rate-limit', () => ({
+  enforceRateLimit: jest.fn(),
+  getClientIdentifier: jest.fn(() => 'test-client'),
+}));
+
 import { POST as newsletterPOST } from '@/app/api/newsletter/route';
 import { submitContactMessage } from '@/app/(consumer)/contact/actions';
-import { isEmailConfigured, subscribeToNewsletter, sendContactMessage } from '@/lib/email/send';
+import { isEmailConfigured, sendContactMessage } from '@/lib/email/send';
+import { startNewsletterSubscription } from '@/lib/email/newsletter';
+import { enforceRateLimit } from '@/lib/rate-limit';
 
 const mockedIsConfigured = isEmailConfigured as jest.MockedFunction<typeof isEmailConfigured>;
-const mockedSubscribe = subscribeToNewsletter as jest.MockedFunction<typeof subscribeToNewsletter>;
+const mockedStartSubscribe = startNewsletterSubscription as jest.MockedFunction<
+  typeof startNewsletterSubscription
+>;
 const mockedSendContact = sendContactMessage as jest.MockedFunction<typeof sendContactMessage>;
+const mockedEnforceRateLimit = enforceRateLimit as jest.MockedFunction<typeof enforceRateLimit>;
 
 function newsletterRequest(body: unknown): Request {
   return { json: async () => body } as unknown as Request;
@@ -51,7 +68,18 @@ const validContact = {
   message: 'I would like to ask about availability of a specific book.',
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Fresh reset timestamp per test — avoid module-load Date.now() going stale.
+  mockedEnforceRateLimit.mockResolvedValue({
+    success: true,
+    reason: 'ok',
+    limit: 30,
+    remaining: 29,
+    reset: Date.now() + 60_000,
+    headers: {},
+  });
+});
 
 describe('newsletter route (P0-013)', () => {
   it('returns 503 disabled and never subscribes when email is not configured', async () => {
@@ -59,19 +87,20 @@ describe('newsletter route (P0-013)', () => {
     const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
     expect(res.status).toBe(503);
     expect((await res.json()).status).toBe('disabled');
-    expect(mockedSubscribe).not.toHaveBeenCalled();
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
+    expect(mockedEnforceRateLimit).not.toHaveBeenCalled();
   });
 
   it('rejects an invalid email with 400 when configured', async () => {
     mockedIsConfigured.mockReturnValue(true);
     const res = await newsletterPOST(newsletterRequest({ email: 'not-an-email' }));
     expect(res.status).toBe(400);
-    expect(mockedSubscribe).not.toHaveBeenCalled();
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
   });
 
   it('returns 502 (not success) when the provider fails', async () => {
     mockedIsConfigured.mockReturnValue(true);
-    mockedSubscribe.mockResolvedValue({ success: false, error: new Error('boom') });
+    mockedStartSubscribe.mockResolvedValue({ status: 'error', error: new Error('boom') });
     const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
     expect(res.status).toBe(502);
     expect((await res.json()).status).toBe('error');
@@ -79,10 +108,43 @@ describe('newsletter route (P0-013)', () => {
 
   it('returns 200 success only on a real subscribe', async () => {
     mockedIsConfigured.mockReturnValue(true);
-    mockedSubscribe.mockResolvedValue({ success: true });
+    mockedStartSubscribe.mockResolvedValue({ status: 'sent' });
     const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe('success');
+    expect(mockedStartSubscribe).toHaveBeenCalledWith('reader@example.com');
+  });
+
+  it('returns 429 when rate limited', async () => {
+    mockedIsConfigured.mockReturnValue(true);
+    mockedEnforceRateLimit.mockResolvedValue({
+      success: false,
+      reason: 'limited',
+      limit: 30,
+      remaining: 0,
+      reset: Date.now() + 60_000,
+      headers: { 'Retry-After': '60' },
+    });
+    const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
+    expect(res.status).toBe(429);
+    expect((await res.json()).status).toBe('error');
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
+  });
+
+  it('returns 503 when rate limiter is unavailable', async () => {
+    mockedIsConfigured.mockReturnValue(true);
+    mockedEnforceRateLimit.mockResolvedValue({
+      success: false,
+      reason: 'unavailable',
+      limit: 30,
+      remaining: 0,
+      reset: Date.now() + 30_000,
+      headers: { 'Retry-After': '30' },
+    });
+    const res = await newsletterPOST(newsletterRequest({ email: 'reader@example.com' }));
+    expect(res.status).toBe(503);
+    expect((await res.json()).status).toBe('disabled');
+    expect(mockedStartSubscribe).not.toHaveBeenCalled();
   });
 });
 
