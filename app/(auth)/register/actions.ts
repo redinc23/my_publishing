@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { authRateLimit, getAuthIdentifier } from '@/lib/utils/auth-rate-limit';
 import { toFriendlyRegisterError } from '@/lib/auth/register-errors';
+import { sendWelcomeEmail } from '@/lib/email/messages';
 import { headers } from 'next/headers';
 
 function normalizeOrigin(value: string | null | undefined) {
@@ -147,6 +148,14 @@ export async function registerUser(formData: FormData) {
         console.error('Profile creation error:', profileError);
         // Don't fail registration if profile creation fails - user can complete setup later
       }
+    }
+
+    // Welcome email (feat/topdog-comms): best-effort, no-ops when RESEND_API_KEY
+    // is absent, and never fails registration.
+    try {
+      await sendWelcomeEmail({ to: normalizedEmail, userName: fullName.trim() });
+    } catch (welcomeError) {
+      console.error('Welcome email failed (registration unaffected):', welcomeError);
     }
 
     revalidatePath('/', 'layout');
