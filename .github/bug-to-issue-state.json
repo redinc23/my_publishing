@@ -168,6 +168,18 @@
         "jobName": "test",
         "stepName": "Run npm run type-check"
       }
+    },
+    "cd3a27254e1392ab7c3ccad0261dab27a1bd2f9d": {
+      "consecutiveFails": 1,
+      "consecutiveSuccesses": 0,
+      "issueNumber": null,
+      "lastSeenRunId": 29671148385,
+      "lastSeenAt": "2026-07-19T03:05:43.690Z",
+      "meta": {
+        "workflowName": "CI",
+        "jobName": "test",
+        "stepName": "Run npm run type-check"
+      }
     }
   }
 }
