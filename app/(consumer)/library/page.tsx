@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createPublicCatalogClient, PUBLIC_BOOK_SELECT } from '@/lib/supabase/public-queries';
-import { Container } from '@/components/layout/Container';
-import { Section } from '@/components/layout/Section';
-import { BookCard } from '@/components/cards/BookCard';
+import { LibraryExperience } from '@/components/library/LibraryExperience';
+import { LibraryError } from '@/components/library/LibraryError';
+import type { LibraryItem } from '@/components/library/types';
 import type { BookWithAuthor } from '@/types';
 
 interface OrderItem {
@@ -19,12 +19,24 @@ interface OrderWithItems {
   items: OrderItem[];
 }
 
+interface ReadingProgressRow {
+  book_id: string;
+  current_position: number;
+  is_finished: boolean;
+  last_accessed?: string | null;
+}
+
+interface LibraryData {
+  orders: OrderWithItems[];
+  progress: ReadingProgressRow[];
+}
+
 function normalizeBook(book: OrderItem['book']): BookWithAuthor | null {
   if (!book) return null;
   return Array.isArray(book) ? (book[0] ?? null) : book;
 }
 
-async function getLibraryItems(): Promise<OrderWithItems[]> {
+async function getLibraryData(): Promise<LibraryData> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -50,7 +62,7 @@ async function getLibraryItems(): Promise<OrderWithItems[]> {
   }
 
   if (!profile) {
-    return [];
+    return { orders: [], progress: [] };
   }
 
   const { data, error: ordersError } = await adminClient
@@ -66,13 +78,57 @@ async function getLibraryItems(): Promise<OrderWithItems[]> {
     throw new Error(`Failed to load library orders: ${ordersError.message}`);
   }
 
-  return (data as OrderWithItems[]) || [];
+  // Reading progress is an enhancement, not a gate: on failure, log it and
+  // degrade gracefully to zero progress rows rather than failing the page.
+  const { data: progressRows, error: progressError } = await adminClient
+    .from('reading_progress')
+    .select('book_id, current_position, is_finished, last_accessed')
+    .eq('user_id', profile.id);
+
+  if (progressError) {
+    console.error(`Failed to load reading progress: ${progressError.message}`);
+  }
+
+  return {
+    orders: (data as OrderWithItems[]) || [],
+    progress: progressError ? [] : (progressRows as ReadingProgressRow[]) || [],
+  };
+}
+
+function buildLibraryItems({ orders, progress }: LibraryData): LibraryItem[] {
+  const progressByBookId = new Map<string, ReadingProgressRow>();
+  for (const row of progress) {
+    progressByBookId.set(row.book_id, row);
+  }
+
+  return orders.flatMap((order) =>
+    (order.items || []).reduce<LibraryItem[]>((acc, item) => {
+      const book = normalizeBook(item.book);
+      if (!book) return acc;
+      const progressRow = progressByBookId.get(book.id);
+      acc.push({
+        book,
+        orderNumber: order.order_number,
+        purchasedAt: order.created_at,
+        ...(progressRow
+          ? {
+              progress: {
+                currentPosition: progressRow.current_position,
+                isFinished: progressRow.is_finished,
+                ...(progressRow.last_accessed ? { lastAccessed: progressRow.last_accessed } : {}),
+              },
+            }
+          : {}),
+      });
+      return acc;
+    }, [])
+  );
 }
 
 export default async function LibraryPage() {
-  let orders: OrderWithItems[];
+  let libraryData: LibraryData;
   try {
-    orders = await getLibraryItems();
+    libraryData = await getLibraryData();
   } catch (error) {
     if (
       typeof error === 'object' &&
@@ -85,62 +141,14 @@ export default async function LibraryPage() {
     }
     const message = error instanceof Error ? error.message : 'Failed to load your library.';
     return (
-      <Section>
-        <Container>
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold">Your Library</h1>
-            <p className="mt-2 text-secondary">Access every book you&apos;ve purchased.</p>
-          </div>
-          <div className="py-16 text-center">
-            <p className="text-secondary" role="alert">
-              {message}
-            </p>
-          </div>
-        </Container>
-      </Section>
+      <div className="min-h-screen bg-[#12100e] text-[#f5f1ea]">
+        <h1 className="sr-only">Your Library</h1>
+        <LibraryError message={message} />
+      </div>
     );
   }
 
-  const purchasedItems = orders.flatMap((order) =>
-    (order.items || []).reduce<Array<OrderItem & { book: BookWithAuthor; order: OrderWithItems }>>(
-      (acc, item) => {
-        const book = normalizeBook(item.book);
-        if (!book) return acc;
-        acc.push({ ...item, book, order });
-        return acc;
-      },
-      []
-    )
-  );
+  const items = buildLibraryItems(libraryData);
 
-  return (
-    <Section>
-      <Container>
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold">Your Library</h1>
-            <p className="mt-2 text-secondary">Access every book you&apos;ve purchased.</p>
-          </div>
-        </div>
-
-        {purchasedItems.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-secondary">Your library is empty. Purchase a book to get started.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {purchasedItems.map((item) => (
-              <div key={item.id} className="space-y-3">
-                <BookCard book={item.book} />
-                <div className="text-sm text-secondary">
-                  Order {item.order.order_number} •{' '}
-                  {new Date(item.order.created_at).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Container>
-    </Section>
-  );
+  return <LibraryExperience items={items} />;
 }
