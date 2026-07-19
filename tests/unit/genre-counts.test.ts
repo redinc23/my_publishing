@@ -8,15 +8,12 @@ jest.mock('next/cache', () => ({
   unstable_cache: (fn: unknown) => fn,
 }));
 
-const mockEq = jest.fn();
 const mockSelect = jest.fn();
 jest.mock('@/lib/supabase/admin', () => ({
   createClient: jest.fn(() => ({
     from: jest.fn(() => ({ select: mockSelect })),
   })),
 }));
-
-defineRows([]);
 
 function defineRows(rows: { genre: string | null }[] | null, error: unknown = null) {
   const terminal = { data: rows, error };
