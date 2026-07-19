@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const core = require('@actions/core');
-const github = require('@actions/github');
 
 const STATE_PATH = path.join(process.cwd(), '.github', 'bug-to-issue-state.json');
 const FINGERPRINT_PREFIX = 'bug-to-issue:fingerprint=';
@@ -34,10 +32,16 @@ function scrubSecrets(text) {
   if (!text) return text;
   let out = String(text);
   // KEY=value style assignments, preserving the variable name for debugging.
+  // The name may be the bare keyword itself (TOKEN=..., SECRET=...), and the
+  // value may be quoted and contain spaces (PASSWORD="my secret pass").
+  // Values already masked by the runner (TOKEN=***) are left untouched.
   out = out.replace(
-    /\b([A-Z0-9_]{2,}(?:SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|API[_-]?KEY|PRIVATE[_-]?KEY|SERVICE[_-]?ROLE)[A-Z0-9_]*)[ \t]*=[ \t]*["']?[^\s"']{3,}["']?/g,
+    /\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|API[_-]?KEY|PRIVATE[_-]?KEY|SERVICE[_-]?ROLE)[A-Z0-9_]*)[ \t]*=[ \t]*(?!["']?\*+["']?(?:\s|$))(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s"']{3,})/g,
     '$1=[REDACTED]'
   );
+  // Credential URIs (scheme://user:password@host): strip the userinfo but
+  // keep scheme/host so the log line stays debuggable.
+  out = out.replace(/\b([a-z][a-z0-9+.-]*:\/\/)[^\s:/@]*:[^\s/@]+@/gi, '$1[REDACTED]@');
   const patterns = [
     /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g,
     /\beyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{3,}\b/g, // JWTs
@@ -47,7 +51,10 @@ function scrubSecrets(text) {
     /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{8,}\b/g, // Stripe secret/restricted keys
     /\bwhsec_[A-Za-z0-9]{8,}\b/g, // webhook signing secrets
     /\bsb_secret_[A-Za-z0-9_-]{8,}\b/g, // Supabase secret keys
-    /\bBearer[ \t]+[A-Za-z0-9._~+/=-]{8,}\b/gi, // Authorization headers
+    // Authorization headers. The value must look token-like (at least one
+    // letter AND at least one digit or token punctuation) so prose such as
+    // "Bearer authentication" is not over-redacted.
+    /\bBearer[ \t]+(?=[A-Za-z0-9._~+/=-]*[0-9._~+/=])(?=[A-Za-z0-9._~+/=-]*[A-Za-z])[A-Za-z0-9._~+/=-]{8,}\b/gi,
     /\b[0-9a-f]{64,}\b/gi, // long hex blobs (raw keys/hashes)
   ];
   for (const re of patterns) {
@@ -92,6 +99,12 @@ function pickTopErrorLine(logText) {
 }
 
 async function main() {
+  // Required inside main() (not at module load) so the pure helpers above stay
+  // unit-testable without the workflow-only @actions/* packages, which the
+  // workflow installs ad hoc (npm i --no-save @actions/core @actions/github).
+  const core = require('@actions/core');
+  const github = require('@actions/github');
+
   const token = process.env.GITHUB_TOKEN;
   const owner = process.env.OWNER;
   const repo = process.env.REPO;
@@ -381,6 +394,24 @@ async function main() {
   core.info(`State written to ${STATE_PATH}`);
 }
 
-main().catch((err) => {
-  core.setFailed(err.message);
-});
+// Run only when executed directly (`node .github/scripts/bug-to-issue.js`) so
+// unit tests can require the pure helpers without side effects.
+if (require.main === module) {
+  main().catch((err) => {
+    // Report via @actions/core when available (it is, in the workflow);
+    // otherwise fall back to stderr with a non-zero exit code.
+    try {
+      require('@actions/core').setFailed(err.message);
+    } catch {
+      console.error(err);
+      process.exitCode = 1;
+    }
+  });
+}
+
+module.exports = {
+  scrubSecrets,
+  normalizeSignature,
+  formatIssueTitle,
+  pickTopErrorLine,
+};
