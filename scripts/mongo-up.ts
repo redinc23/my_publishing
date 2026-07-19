@@ -41,16 +41,25 @@ Mongo automation needs Atlas API keys (one-time, ~60s in Atlas UI):
   1. https://cloud.mongodb.com → Organization → Access Manager → API Keys
   2. Create API Key with Organization Project Creator (or Project Owner)
   3. Copy public + private key
+  4. cd into the repo (must see package.json), THEN set env + run
 
-  PowerShell:
-    $env:ATLAS_PUBLIC_KEY="..."
-    $env:ATLAS_PRIVATE_KEY="..."
-    $env:VERCEL_TOKEN="..."   # https://vercel.com/account/tokens
+  Git Bash / MINGW64 / WSL (use this on your machine):
+    cd /c/Users/chris/path/to/my_publishing
+    export ATLAS_PUBLIC_KEY='paste_public_key'
+    export ATLAS_PRIVATE_KEY='paste_private_key'
+    export VERCEL_TOKEN='paste_vercel_token'
     npm run db:mongo:up
 
-  Bash:
-    export ATLAS_PUBLIC_KEY=... ATLAS_PRIVATE_KEY=... VERCEL_TOKEN=...
+  PowerShell ONLY (do not paste $env: lines into Git Bash):
+    cd C:\\Users\\chris\\path\\to\\my_publishing
+    $env:ATLAS_PUBLIC_KEY="paste_public_key"
+    $env:ATLAS_PRIVATE_KEY="paste_private_key"
+    $env:VERCEL_TOKEN="paste_vercel_token"
     npm run db:mongo:up
+
+  Already have a Drivers URI? Skip Atlas API keys:
+    export VERCEL_TOKEN='...'
+    npm run db:mongo:import-uri -- 'mongodb+srv://USER:PASS@cluster...'
 `);
     process.exit(1);
   }
