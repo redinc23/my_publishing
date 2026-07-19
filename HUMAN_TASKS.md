@@ -66,7 +66,28 @@ disable or throttle it at cursor.com/automations. Also disable the health-sweep
 automation (id `ab582f50-7ba7-11f1-ba66-0e7d0216e441`), which creates a second class of
 noisy PRs.
 
-### H0.3 Re-authenticate gcloud and verify Secret Manager entries
+**Sequencing warning (PR #283):** disable the legacy automation above *before* enabling
+the in-repo loop (`.github/workflows/ci-fix-loop.yml`), or both may fire and recreate
+the storm.
+
+### H0.2b Enable the in-repo CI fix loop (closed loop)
+
+One-time setup so PRs with `auto-merge` get: CI fail → Cursor agent fixes → CI
+re-run → auto-merge on green.
+
+1. **Cursor Dashboard → API Keys** — create a key; add as GitHub repo secret
+   `CURSOR_API_KEY` (Settings → Secrets → Actions).
+2. **Cursor Dashboard → Cloud Agents** — connect GitHub; grant this repo access.
+3. **Disable** the legacy automation (H0.2 above).
+4. On any PR you want in the loop: add label **`auto-merge`**.
+5. Optional: add **`ci-fix-loop-paused`** to stop further dispatches (max 5 attempts
+   per PR otherwise).
+
+Workflows involved: `ci-fix-loop.yml` (dispatch on CI / Format Check failure),
+`auto-merge.yml` (merge when green). E2E / preview failures are **not** auto-fixed
+yet — fix those manually or extend the workflow list later.
+
+### H0.3 Re-authenticate gcloud and verify Secret Manager entries (before first hardened deploy run)
 
 The local gcloud session is expired; run `gcloud auth login`, then verify that
 `cloudbuild.yaml` mounts these via `--set-secrets`:
