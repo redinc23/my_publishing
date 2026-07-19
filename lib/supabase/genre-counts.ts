@@ -4,13 +4,15 @@ import { createClient as createAdminClient } from '@/lib/supabase/admin';
 /**
  * Normalize a stored books.genre value to the slug used by genre tiles and
  * /genres/[genre] routes ('Sci-Fi' -> 'sci-fi', "Children's" -> 'childrens',
- * 'Non Fiction' -> 'non-fiction').
+ * 'Non Fiction' -> 'non-fiction'). Apostrophes are dropped (not hyphenated)
+ * to match the existing route slugs.
  */
 export function slugifyGenre(value: string): string {
   return value
     .toLowerCase()
     .trim()
     .replace(/&/g, 'and')
+    .replace(/['’]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
