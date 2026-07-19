@@ -41,6 +41,7 @@ In Vercel → Project → Settings → Environment Variables (Production), set a
 
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `MONGODB_URI` (ADR-002 Atlas; additive until Supabase cutover), optional `MONGODB_DB=mangu`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (fail-closed in production)
 - `NEXT_PUBLIC_SITE_URL=https://www.mangu-publishers.com` (switch to apex after DNS cutover)

@@ -148,6 +148,26 @@ const envConfigs: EnvConfig[] = [
     },
   },
   {
+    name: 'MONGODB_URI',
+    required: false,
+    description:
+      'MongoDB Atlas connection string (ADR-002; optional until Supabase cutover). Format: mongodb+srv://...)',
+    validate: (value) => {
+      if (!value.startsWith('mongodb://') && !value.startsWith('mongodb+srv://')) {
+        return 'Must start with mongodb:// or mongodb+srv://';
+      }
+      if (value.includes('<password>') || value.includes('<db_password>')) {
+        return 'Replace <password> with the Atlas database user password';
+      }
+      return true;
+    },
+  },
+  {
+    name: 'MONGODB_DB',
+    required: false,
+    description: 'MongoDB database name (default: mangu)',
+  },
+  {
     name: 'NEXT_PUBLIC_SENTRY_DSN',
     required: false,
     description: 'Sentry DSN for client and server error tracking (optional)',
@@ -220,6 +240,17 @@ export function validateEnvironment(): EnvValidationResult {
   ) {
     warnings.push(
       'Upstash Redis not configured — distributed rate limiting disabled in production'
+    );
+  }
+
+  // ADR-002: Mongo is additive until cutover; warn in production if unset.
+  if (
+    !process.env.MONGODB_URI &&
+    process.env.NODE_ENV === 'production' &&
+    process.env.USE_MOCKS !== 'true'
+  ) {
+    warnings.push(
+      'MONGODB_URI not set — MongoDB Atlas not connected (ADR-002 migration in progress; Supabase still required)'
     );
   }
 
