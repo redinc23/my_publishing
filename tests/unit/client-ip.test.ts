@@ -4,7 +4,11 @@
 import { getClientIdentifier, getRateLimitIdentity, isValidIp } from '@/lib/rate-limit';
 
 function req(headers: Record<string, string>): Request {
-  return new Request('https://example.com/api/x', { headers });
+  // jsdom lacks the fetch-API Request global; the resolver only needs headers.get().
+  const map = new Map(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
+  return {
+    headers: { get: (name: string) => map.get(name.toLowerCase()) ?? null },
+  } as unknown as Request;
 }
 
 describe('isValidIp', () => {
