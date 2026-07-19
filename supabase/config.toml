@@ -1,0 +1,3 @@
+# Minimal Supabase CLI config for GitHub Preview / db push parity checks.
+# Full local-dev settings live in Supabase docs; only project_id is required here.
+project_id = "tkzvikozrcynhwsqtkqp"
