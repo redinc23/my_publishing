@@ -132,6 +132,18 @@
         "jobName": "test",
         "stepName": "Run npm run validate-env"
       }
+    },
+    "9f9c1b6e443a463cb209ace27cf6e97bb2a14419": {
+      "consecutiveFails": 1,
+      "consecutiveSuccesses": 0,
+      "issueNumber": null,
+      "lastSeenRunId": 29669951155,
+      "lastSeenAt": "2026-07-19T02:21:16.659Z",
+      "meta": {
+        "workflowName": "CI",
+        "jobName": "test",
+        "stepName": "Run npm ci"
+      }
     }
   }
 }
