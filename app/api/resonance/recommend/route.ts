@@ -8,7 +8,35 @@ import { createClient } from '@/lib/supabase/server';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { RecommendRequestSchema, validateSafe, getFirstError } from '@/lib/validations/schemas';
 import { getCompletedOrderBookIds } from '@/lib/reading/entitlement';
-import type { BookWithStats, ApiResponse } from '@/types';
+import { getResonanceRecommendations } from '@/lib/resonance/recommendations';
+import type { RecommendationMode } from '@/lib/resonance/recommendations';
+import type { BookWithStats, BookWithAuthor, ApiResponse } from '@/types';
+
+// Personalized responses must never be cached across users.
+export const dynamic = 'force-dynamic';
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const RECOMMEND_MODES: ReadonlyArray<RecommendationMode> = [
+  'auto',
+  'personal',
+  'trending',
+  'editorial',
+];
+
+interface RecommendationItemPayload {
+  book: BookWithAuthor;
+  reason: string;
+  score: number;
+  algorithm: string;
+}
+
+interface GetRecommendationResult {
+  books: BookWithStats[];
+  items: RecommendationItemPayload[];
+  total: number;
+  algorithm: string;
+  anchor: { id: string; title: string } | null;
+}
 
 interface RecommendationResult {
   books: BookWithStats[];
@@ -214,25 +242,136 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 /**
- * Get recommendations via GET (simpler usage)
+ * Personalized recommendations via the Resonance Engine fallback chain:
+ * user_vector → similar_to_recent → trending → editorial.
+ *
+ * GET /api/resonance/recommend?limit=10&mode=auto&genre=...&exclude=id1,id2
+ *
+ * Identity always comes from the session cookie — client-sent user ids are
+ * never trusted. Works without OPENAI_API_KEY (vector stages no-op and the
+ * SQL trending/editorial stages answer instead). Never crashes: on failure
+ * the chain degrades to an empty cold_start result.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url);
+  // Rate limiting (fail-closed, Fix C8)
+  const clientId = getClientIdentifier(request);
+  const rateLimitResult = await enforceRateLimit('api', clientId);
+  const rateLimitHeaders = rateLimitResult.headers;
 
-  const body = {
-    limit: parseInt(searchParams.get('limit') || '10'),
-    genre: searchParams.get('genre') || undefined,
-    exclude_book_ids: searchParams.get('exclude')?.split(',').filter(Boolean) || [],
-  };
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          rateLimitResult.reason === 'unavailable'
+            ? 'Rate limiter unavailable. Please try again shortly.'
+            : 'Rate limit exceeded. Please try again later.',
+      } satisfies ApiResponse,
+      {
+        status: rateLimitResult.reason === 'unavailable' ? 503 : 429,
+        headers: rateLimitHeaders,
+      }
+    );
+  }
 
-  // Convert to POST request internally
-  const postRequest = new NextRequest(request.url, {
-    method: 'POST',
-    headers: request.headers,
-    body: JSON.stringify(body),
-  });
+  try {
+    const { searchParams } = new URL(request.url);
 
-  return POST(postRequest);
+    const limitParam = Number.parseInt(searchParams.get('limit') ?? '', 10);
+    const limit = Number.isFinite(limitParam) ? limitParam : undefined;
+
+    const modeParam = searchParams.get('mode');
+    const mode: RecommendationMode = RECOMMEND_MODES.includes(modeParam as RecommendationMode)
+      ? (modeParam as RecommendationMode)
+      : 'auto';
+
+    const genreRaw = searchParams.get('genre');
+    const genre = genreRaw && genreRaw.length <= 50 ? genreRaw : undefined;
+
+    const excludeBookIds = (searchParams.get('exclude')?.split(',') ?? [])
+      .map((id) => id.trim())
+      .filter((id) => UUID_PATTERN.test(id))
+      .slice(0, 100);
+
+    // Resolve session → profile id (profiles.id, not auth.users.id).
+    let profileId: string | null = null;
+    let cacheControl = 'public, s-maxage=60, stale-while-revalidate=300';
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        profileId = profile?.id ?? null;
+        // Any signed-in request may receive personalized content.
+        cacheControl = 'private, no-store';
+      }
+    } catch (authError) {
+      // Auth hiccup → serve anonymous fallbacks rather than failing.
+      console.warn('[Recommend GET] session resolution failed:', authError);
+    }
+
+    const result = await getResonanceRecommendations({
+      profileId,
+      limit,
+      genre,
+      excludeBookIds,
+      mode,
+    });
+
+    const items: RecommendationItemPayload[] = result.items.map((item) => ({
+      book: item.book,
+      reason: item.reason,
+      score: item.score,
+      algorithm: item.algorithm,
+    }));
+
+    // Back-compat: BookWithStats[] shape previously returned by this route.
+    const books: BookWithStats[] = result.items.map((item) => ({
+      ...item.book,
+      stats: {
+        views: (item.book as { total_reads?: number }).total_reads ?? 0,
+        purchases: 0,
+        revenue: 0,
+      },
+    }));
+
+    const payload: GetRecommendationResult = {
+      books,
+      items,
+      total: items.length,
+      algorithm: result.algorithm,
+      anchor: result.anchor,
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: payload,
+      } satisfies ApiResponse<GetRecommendationResult>,
+      {
+        status: 200,
+        headers: {
+          ...rateLimitHeaders,
+          'Cache-Control': cacheControl,
+        },
+      }
+    );
+  } catch (error) {
+    console.error('[Recommend GET] Unexpected error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Internal server error',
+      } satisfies ApiResponse,
+      { status: 500, headers: rateLimitHeaders }
+    );
+  }
 }
 
 /**
