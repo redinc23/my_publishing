@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { enforceRateLimit } from '@/lib/rate-limit';
+import { enforceRateLimit, getRateLimitIdentity } from '@/lib/rate-limit';
 import { getEdgeAuthUser, getEdgeUserRole } from '@/lib/supabase/edge-auth';
 
 /** Reject a request per rate-limit result: 429 when limited, 503 when the limiter is unavailable (fail-closed). */
@@ -23,6 +23,9 @@ export async function middleware(request: NextRequest) {
   // ── Rate limiting (fail-closed, Fix C8) ────────────────────────────────────
   // Apply to /api/auth/* endpoints AND to server-action POSTs on auth pages.
   // Next.js server actions POST to the page URL itself (with next-action header).
+  // Identity: platform-verified request.ip first, then the spoof-resistant
+  // resolver (rightmost valid XFF hop / ephemeral identity) — client-supplied
+  // XFF chains are never trusted directly (directive Phase 6).
   const isAuthApiPath = pathname.startsWith('/api/auth/');
   const isAuthPageAction =
     method === 'POST' &&
@@ -32,7 +35,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/verify-email'));
 
   if (isAuthApiPath || isAuthPageAction) {
-    const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = request.ip ?? getRateLimitIdentity(request);
     const result = await enforceRateLimit('auth', ip);
 
     if (!result.success) {
@@ -40,10 +43,26 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Apply rate limiting to upload endpoints
-  if (pathname.startsWith('/api/upload') || pathname.includes('/upload')) {
-    const ip = request.ip ?? request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+  // Apply rate limiting to upload endpoints (exact API prefix only — a loose
+  // substring match previously rate-limited any URL containing "upload").
+  if (pathname.startsWith('/api/upload')) {
+    const ip = request.ip ?? getRateLimitIdentity(request);
     const result = await enforceRateLimit('upload', ip);
+
+    if (!result.success) {
+      return rateLimitRejection(result);
+    }
+  }
+
+  // Abuse-sensitive public POST endpoints without their own limiter:
+  // newsletter signup (email spam via Resend) and checkout session creation.
+  const isAbusablePublicPost =
+    method === 'POST' &&
+    (pathname.startsWith('/api/newsletter') || pathname.startsWith('/api/checkout'));
+
+  if (isAbusablePublicPost) {
+    const ip = request.ip ?? getRateLimitIdentity(request);
+    const result = await enforceRateLimit('api', ip);
 
     if (!result.success) {
       return rateLimitRejection(result);
