@@ -5,6 +5,8 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 
 const STATE_PATH = path.join(process.cwd(), '.github', 'bug-to-issue-state.json');
+const FINGERPRINT_PREFIX = 'bug-to-issue:fingerprint=';
+const MAX_TOP_LINE_LEN = 300;
 
 function readJsonSafe(p, fallback) {
   try {
@@ -21,6 +23,37 @@ function writeJson(p, data) {
 
 function sha1(s) {
   return crypto.createHash('sha1').update(s).digest('hex');
+}
+
+// CCR-009: never publish credential material in generated issue bodies.
+// GitHub masks *registered* secrets in workflow logs, but unregistered or
+// derived values (JWTs, API keys printed by failing tests, Authorization
+// headers, private keys) are NOT masked. Scrub known secret shapes from any
+// log-derived text before it is hashed, stored, or published to an issue.
+function scrubSecrets(text) {
+  if (!text) return text;
+  let out = String(text);
+  // KEY=value style assignments, preserving the variable name for debugging.
+  out = out.replace(
+    /\b([A-Z0-9_]{2,}(?:SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|API[_-]?KEY|PRIVATE[_-]?KEY|SERVICE[_-]?ROLE)[A-Z0-9_]*)[ \t]*=[ \t]*["']?[^\s"']{3,}["']?/g,
+    '$1=[REDACTED]'
+  );
+  const patterns = [
+    /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g,
+    /\beyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{3,}\b/g, // JWTs
+    /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g, // fine-grained PATs
+    /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g, // GitHub tokens
+    /\bglpat-[A-Za-z0-9_-]{15,}\b/g, // GitLab PATs
+    /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{8,}\b/g, // Stripe secret/restricted keys
+    /\bwhsec_[A-Za-z0-9]{8,}\b/g, // webhook signing secrets
+    /\bsb_secret_[A-Za-z0-9_-]{8,}\b/g, // Supabase secret keys
+    /\bBearer[ \t]+[A-Za-z0-9._~+/=-]{8,}\b/gi, // Authorization headers
+    /\b[0-9a-f]{64,}\b/gi, // long hex blobs (raw keys/hashes)
+  ];
+  for (const re of patterns) {
+    out = out.replace(re, '[REDACTED]');
+  }
+  return out;
 }
 
 function normalizeSignature({ workflowName, jobName, stepName, topLine }) {
@@ -101,19 +134,64 @@ async function main() {
   // We'll do both: handle failures per job, and handle global "success" to close previously opened issues.
   const now = new Date().toISOString();
 
+  // Dedupe: find an existing OPEN issue carrying this failure fingerprint.
+  // The actions/cache state file is best-effort (evictable, not guaranteed);
+  // the issue tracker is the source of truth for "does this issue already
+  // exist", so always search before creating a new issue.
+  async function findOpenIssueByFingerprint(sig) {
+    try {
+      const q = `repo:${owner}/${repo} is:issue is:open "${FINGERPRINT_PREFIX}${sig}"`;
+      const resp = await octokit.rest.search.issuesAndPullRequests({ q, per_page: 10 });
+      const items = resp.data.items || [];
+      // Client-side verification: search tokenizes, so confirm the exact marker.
+      return items.find((it) => (it.body || '').includes(`${FINGERPRINT_PREFIX}${sig}`)) || null;
+    } catch (e) {
+      core.warning(`Open-issue search failed for fingerprint ${sig}: ${e.message}`);
+      return null;
+    }
+  }
+
   // Helper: find or create an issue per signature
   async function ensureIssueForSignature(sig, meta, body, labels) {
-    const existing = state.items[sig]?.issueNumber;
+    const tracked = state.items[sig]?.issueNumber;
 
+    if (tracked) {
+      // Verify the tracked issue is still open before re-using it. A human may
+      // have closed it; commenting on a closed issue would silently drop the
+      // signal, so fall through to search/create instead.
+      try {
+        const { data: trackedIssue } = await octokit.rest.issues.get({
+          owner,
+          repo,
+          issue_number: tracked,
+        });
+        if (trackedIssue.state === 'open') {
+          await octokit.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: tracked,
+            body,
+          });
+          return tracked;
+        }
+        core.info(
+          `Tracked issue #${tracked} is ${trackedIssue.state}; looking for an open match before creating a new issue.`
+        );
+      } catch (e) {
+        core.warning(`Could not verify tracked issue #${tracked}: ${e.message}`);
+      }
+    }
+
+    const existing = await findOpenIssueByFingerprint(sig);
     if (existing) {
-      // Update by commenting
       await octokit.rest.issues.createComment({
         owner,
         repo,
-        issue_number: existing,
+        issue_number: existing.number,
         body,
       });
-      return existing;
+      core.info(`Adopted existing open issue #${existing.number} for fingerprint ${sig}.`);
+      return existing.number;
     }
 
     // Create new issue
@@ -193,9 +271,12 @@ async function main() {
     // Pick failing step name if available
     const failedStep = (job.steps || []).find((s) => s.conclusion === 'failure');
     const stepName = failedStep?.name || 'unknown-step';
-    const topLine = logText
-      ? pickTopErrorLine(logText)
-      : 'Job logs unavailable (zip/binary or fetch failed)';
+    // Scrub before any log-derived text is hashed, cached, or published (CCR-009).
+    const topLine = scrubSecrets(
+      logText
+        ? pickTopErrorLine(logText)
+        : 'Job logs unavailable (zip/binary or fetch failed)'
+    ).slice(0, MAX_TOP_LINE_LEN);
 
     const meta = {
       workflowName: runName,
@@ -232,6 +313,7 @@ async function main() {
     if (prev.consecutiveFails >= thresholdFails) {
       const labels = ['ci', 'bug', 'auto-created'];
       const body = [
+        `<!-- ${FINGERPRINT_PREFIX}${sig} -->`,
         `Automated report: **continuous CI failure** detected.`,
         ``,
         `- Workflow: **${runName}**`,
