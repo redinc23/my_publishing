@@ -2,9 +2,9 @@
 
 | Field         | Value                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------- |
-| **Status**    | **PROPOSED → operator-accepted direction (IN PROGRESS)** — scaffold only; cutover not complete |
+| **Status**    | **ACCEPTED (direction)** — automation path live; query/auth cutover still IN PROGRESS          |
 | **Created**   | 2026-07-18                                                                                     |
-| **Updated**   | 2026-07-18 (Atlas cluster + Drivers connection string in progress)                             |
+| **Updated**   | 2026-07-18 (db:mongo:up automation: Atlas API → .env.local → Vercel → ping → indexes)          |
 | **Deciders**  | Solo Operator (Chris)                                                                          |
 | **Hard gate** | G7 (data/auth readiness) — remains FALSE until Mongo + replacement auth prove `ready:true`     |
 
@@ -37,13 +37,27 @@ MongoDB replaces the **database** only. Auth, file storage, and auto-generated R
 | File storage (TBD)| Vercel Blob or S3 (not Supabase Storage)                              |
 | Supabase          | Retain until feature cutover; then remove keys and `@supabase/*`      |
 
+### Automation (preferred — do not click Drivers by hand)
+
+```bash
+export ATLAS_PUBLIC_KEY=...   # Atlas Org → Access Manager → API Keys
+export ATLAS_PRIVATE_KEY=...
+export VERCEL_TOKEN=...       # vercel.com/account/tokens
+npm run db:mongo:up           # bootstrap + ping + indexes + Vercel sync
+```
+
+Scripts: `scripts/mongo-up.ts`, `atlas-bootstrap.ts`, `mongo-ping.ts`, `mongo-ensure-indexes.ts`, `sync-mongodb-to-vercel.ts`.  
+CI: `.github/workflows/mongo-up.yml` (`workflow_dispatch` + repo secrets).
+
+`DATABASE_PROVIDER=mongodb` makes Atlas ping a hard readiness gate; Supabase checks become non-blocking.
+
 ### Phased cutover (required)
 
-1. **Scaffold (this PR):** `mongodb` dependency, `lib/mongodb.ts`, env template, optional health ping, ADR.
-2. **Operator Atlas:** Network Access allows Vercel (`0.0.0.0/0` or Atlas guidance); `MONGODB_URI` in `.env.local` + Vercel Production (never commit).
+1. **Scaffold + automation (this PR):** driver, `lib/mongodb.ts`, `db:mongo:up`, health provider switch, ADR.
+2. **Operator:** create Atlas API key + Vercel token once; run `npm run db:mongo:up` (or Actions).
 3. **Auth product choice** (blocking for query rewrite).
-4. **Collection model + seed** (profiles, books, orders, etc. — embed vs reference).
-5. **Rewrite data access** off `lib/supabase/*`; retire RLS scripts; update readiness to Mongo + new auth.
+4. **Collection model + seed** (indexes already ensured by `db:mongo:indexes`).
+5. **Rewrite data access** off `lib/supabase/*`; retire RLS scripts.
 6. **Remove Supabase** env vars, packages, migrations workflows.
 
 ## Consequences
