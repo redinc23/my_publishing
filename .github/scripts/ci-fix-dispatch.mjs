@@ -26,7 +26,7 @@ function parseMarkerBody(body) {
 function renderTemplate(template, vars) {
   return Object.entries(vars).reduce(
     (text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value ?? '')),
-    template,
+    template
   );
 }
 
@@ -84,7 +84,7 @@ async function hasActiveAgentForPr(apiKey, prUrl) {
   const list = await cursorRequest(
     apiKey,
     'GET',
-    `/v1/agents?prUrl=${encodeURIComponent(prUrl)}&limit=10&includeArchived=false`,
+    `/v1/agents?prUrl=${encodeURIComponent(prUrl)}&limit=10&includeArchived=false`
   );
 
   for (const item of list.items ?? []) {
@@ -93,7 +93,7 @@ async function hasActiveAgentForPr(apiKey, prUrl) {
     const run = await cursorRequest(
       apiKey,
       'GET',
-      `/v1/agents/${item.id}/runs/${item.latestRunId}`,
+      `/v1/agents/${item.id}/runs/${item.latestRunId}`
     );
     if (ACTIVE_RUN_STATUSES.has(run.status)) {
       return { active: true, agentId: item.id, runId: run.id, agentUrl: item.url };
@@ -235,7 +235,7 @@ async function main() {
   const active = await hasActiveAgentForPr(cursorApiKey, prUrl);
   if (active.active) {
     core.info(
-      `Active Cursor agent ${active.agentId} (run ${active.runId}) already working on PR — skipping.`,
+      `Active Cursor agent ${active.agentId} (run ${active.runId}) already working on PR — skipping.`
     );
     return;
   }
@@ -252,7 +252,9 @@ async function main() {
   const logChunks = [];
   for (const job of failedJobs) {
     const raw = await downloadJobLogs(octokit, owner, repo, job.id);
-    logChunks.push(`### Job: ${job.name}\n${pickTopErrorLines(raw || `Job failed: ${job.html_url}`)}`);
+    logChunks.push(
+      `### Job: ${job.name}\n${pickTopErrorLines(raw || `Job failed: ${job.html_url}`)}`
+    );
   }
 
   const failureLogs =

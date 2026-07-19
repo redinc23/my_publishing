@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import {
-  DEFAULT_EMAIL_PREFERENCES,
-  isMissingTableError,
-} from '@/lib/email/preferences';
+import { DEFAULT_EMAIL_PREFERENCES, isMissingTableError } from '@/lib/email/preferences';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 
 const PreferencesSchema = z
@@ -101,10 +98,7 @@ export async function PUT(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('email_preferences')
-    .upsert(
-      { user_id: user.id, ...input },
-      { onConflict: 'user_id' }
-    )
+    .upsert({ user_id: user.id, ...input }, { onConflict: 'user_id' })
     .select('marketing, receipts, author_alerts')
     .single();
 
