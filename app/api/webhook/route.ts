@@ -8,6 +8,7 @@ import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
+import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
 import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
 // Webhook secret for signature verification
@@ -398,6 +399,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         result = await handleCheckoutCompleted(supabase, session);
+        // Purchase receipt (feat/topdog-comms): best-effort — never block or
+        // retry fulfillment because of email. The trigger also never throws.
+        if (result.success) {
+          try {
+            await sendPurchaseReceiptForCheckoutSession(session);
+          } catch (receiptError) {
+            console.error('[Webhook] Receipt email failed (ignored):', receiptError);
+          }
+        }
         break;
       }
 

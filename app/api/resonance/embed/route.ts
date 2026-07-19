@@ -53,15 +53,18 @@ export async function POST(request: NextRequest) {
 
     const embedding = await generateBookEmbedding(book);
 
-    const { error: updateError } = await supabase.from('resonance_vectors').upsert({
-      book_id,
-      embedding: JSON.stringify(embedding),
-      metadata: {
-        title: book.title,
-        genre: book.genre,
-        updated_at: new Date().toISOString(),
+    const { error: updateError } = await supabase.from('resonance_vectors').upsert(
+      {
+        book_id,
+        embedding: JSON.stringify(embedding),
+        metadata: {
+          title: book.title,
+          genre: book.genre,
+          updated_at: new Date().toISOString(),
+        },
       },
-    });
+      { onConflict: 'book_id' }
+    );
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
