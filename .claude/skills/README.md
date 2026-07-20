@@ -10,6 +10,12 @@ Humans own consoles, credentials, DNS, and go/no-go decisions (`HUMAN_TASKS.md`)
 
 ## Index
 
+### Tier 0 — Load first every session
+
+| Skill           | Path                                       | Use when                                                                 |
+| --------------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| MANGU Navigator | [`mangu-navigator/`](./mangu-navigator/)   | Session start, prioritization, onboarding, roadmap, enhancement pipeline |
+
 ### Tier A — Always load for platform work
 
 | Skill            | Path                                                 | Use when                                            |
