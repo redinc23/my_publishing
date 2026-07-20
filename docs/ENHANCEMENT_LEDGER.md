@@ -25,7 +25,7 @@ Approval: not required (L0)
 
 ### E-006 Honest reading surface (progress + file links)
 
-Lane: L0 · Status: BUILDING · Score: R4 I4 C5 /E2 = 40
+Lane: L0 · Status: SHIPPED · Score: R4 I4 C5 /E2 = 40
 Story: As a purchaser, the reading page tells me what works (progress autosave, PDF/EPUB open) instead of a fake “interface coming soon” with no path forward.
 Evidence: enhance-scan stub `ReadingClient.tsx`; library Continue Reading links here
 Metric & target: zero “coming soon” dead-ends on `/reading/[bookId]`; file CTAs when `book_content` has urls
