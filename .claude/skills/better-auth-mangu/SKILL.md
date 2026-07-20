@@ -11,7 +11,7 @@ version: 1.0.0
 - Adapter: `mongodbAdapter(getDb())`
 - `emailAndPassword`: enabled, `requireEmailVerification: true`
 - `user.additionalFields.role`: string, default `"reader"`, `input: false`
-  Allowed: `reader | author | editor | admin`
+  Allowed: `reader | author | partner | admin` (D9 — not `editor`)
 - Email verification + reset via Resend; branded template `emails/reset.tsx`
 - `databaseHooks.user.create.after`: insert `profiles` doc
   `{ auth_user_id, display_name, role, created_at, updated_at }`

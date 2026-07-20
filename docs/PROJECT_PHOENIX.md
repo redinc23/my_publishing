@@ -2,10 +2,10 @@
 
 ## Mangu Publishers — Stack Modernization Master Document
 
-**Document Version:** 4.0 (Implementation-Locked Edition)  
-**Status:** 🟡 IN PROGRESS — LOCKED FOR IMPLEMENTATION  
+**Document Version:** 4.0.1 (Implementation-Locked Edition)  
+**Status:** 🟡 IN PROGRESS — ACTIVE (owner-reactivated 2026-07-20)  
 **Classification:** CONFIDENTIAL — For Authorized Personnel Only  
-**Last Updated:** July 19, 2026  
+**Last Updated:** July 20, 2026  
 **Document Owner:** Project Lead  
 **Repository:** `redinc23/my_publishing` · **Migration Branch:** `cursor/mongodb-scaffold-dffa`  
 **Production Domain:** `https://www.mangu-publishers.com` (apex `mangu-publishers.com` → 301 → `www`)
@@ -14,6 +14,15 @@
 > ambiguity, and missing substep identified in the v3.0 audit has been corrected herein.
 > If any step in this document cannot be executed exactly as written, STOP and amend
 > this document first — do not improvise.
+
+### v4.0.1 amendments (2026-07-20)
+
+| ID  | Amendment                                                                                                                                 |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| D9  | RBAC roles are `reader \| author \| partner \| admin` (live product). Doc references to `editor` mean `partner` for portal/ARC parity.    |
+| D2  | Mongo helper lives at `lib/mongodb.ts` exporting `getDb()` (not `lib/mongo.ts`).                                                         |
+| D4  | Prefer `NEXT_PUBLIC_SITE_URL` over inventing `NEXT_PUBLIC_APP_URL`; `BETTER_AUTH_URL` may mirror site URL.                               |
+| —   | **Public dual-run:** `AUTH_PROVIDER=supabase\|better-auth` (default `supabase`). WS1 lands Better Auth code paths; production stays on Supabase Auth until Phase 11–12 cutover so the site keeps serving readers. |
 
 ---
 
@@ -192,7 +201,7 @@ The shift from Supabase is driven by **four strategic imperatives**:
 
 #### Journey D: Administrative Controls
 
-- **R-ADMIN-01:** Role-based access control with four tiers: `reader`, `author`, `editor`, `admin`.
+- **R-ADMIN-01:** Role-based access control with four tiers: `reader`, `author`, `partner`, `admin`.
 - **R-ADMIN-02:** Admin dashboard shows platform-wide statistics.
 - **R-ADMIN-03:** Admins can manage user roles, suspend accounts, and approve content.
 - **R-ADMIN-04:** Audit log of sensitive actions preserved in MongoDB `audit_logs` collection (actor, action, target, metadata, timestamp).
@@ -346,7 +355,7 @@ This section is the **primary handoff guide for engineering**. Each workstream c
 
 | Task #  | Action                           | Subtasks                                                                                                                                                                                                                                                                                                                        | Files                                                          | Verification                                                 |
 | ------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
-| **1.1** | **Setup Better Auth Server**     | 1.1.1 Install `better-auth` <br> 1.1.2 Configure MongoDB adapter <br> 1.1.3 Enable `emailAndPassword` with `requireEmailVerification: true` <br> 1.1.4 Configure Resend for `sendVerificationEmail` / `sendResetPassword` <br> 1.1.5 Define `user.additionalFields.role` (`reader`/`author`/`editor`/`admin`, default `reader`) | `lib/auth.ts`                                                  | `getAuth()` returns configured instance                      |
+| **1.1** | **Setup Better Auth Server**     | 1.1.1 Install `better-auth` <br> 1.1.2 Configure MongoDB adapter <br> 1.1.3 Enable `emailAndPassword` with `requireEmailVerification: true` <br> 1.1.4 Configure Resend for `sendVerificationEmail` / `sendResetPassword` <br> 1.1.5 Define `user.additionalFields.role` (`reader`/`author`/`partner`/`admin`, default `reader`) | `lib/auth.ts`                                                  | `getAuth()` returns configured instance                      |
 | **1.2** | **Setup Better Auth Client**     | 1.2.1 Install `better-auth/react` <br> 1.2.2 Create client instance <br> 1.2.3 Export typed hooks (`useSession`)                                                                                                                                                                                                                | `lib/auth-client.ts`                                           | Client imports resolve correctly                             |
 | **1.3** | **Create Auth API Route**        | 1.3.1 Implement catch-all route <br> 1.3.2 Export GET/POST handlers <br> 1.3.3 Configure CORS & headers                                                                                                                                                                                                                         | `app/api/auth/[...all]/route.ts`                               | `/api/auth/ok` returns 200                                   |
 | **1.4** | **Rewrite Middleware**           | 1.4.1 Parse Better Auth session cookie <br> 1.4.2 Define public vs protected route matcher <br> 1.4.3 Implement role-based redirects (`/admin` → admin only; `/dashboard/author` → author+) <br> 1.4.4 Graceful redirect to `/login?next=<path>` with return URL                                                                | `middleware.ts`                                                | Unauthenticated `/dashboard` redirects to `/login`           |

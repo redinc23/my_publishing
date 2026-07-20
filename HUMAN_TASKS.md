@@ -28,9 +28,10 @@ Optional second automation: `.cursor/automations/prod-health-triage.prompt.md` (
 
 ### C0.3 Path decision — LOCKED to Phoenix (B)
 
-**Resolved:** Project Phoenix is the active mission (`CLAUDE.md`, skills merged via #252,
-`docs/COWORK_OPERATOR.md`). Path A (stabilize-only / pause Phoenix) is **off** unless
-this section is explicitly revised.
+**Resolved (owner-confirmed 2026-07-20):** Project Phoenix is **ACTIVE**. Owner Faith
+Beckwith reactivated migration ("we gotta do that migration now") while requiring the
+site keep serving the public. Path A (stabilize-only) is **off**. Production remains
+`AUTH_PROVIDER=supabase` until Phase 11–12 cutover; do not flip Better Auth live early.
 
 ---
 
@@ -129,16 +130,10 @@ on red CI).
 
 ### H1.2 Decide Project Phoenix vs. current Supabase stack
 
-**DONE — Path B (Phoenix).** See Cowork control C0.3. Legacy Supabase remains until
-WS4/Phase 14 per Phoenix doc; agents must not pause Phoenix unless this is reopened.
-
-> **Integration reconciliation (2026-07-19):** main's newer record (commit `841a57e`,
-> 2026-07-19 04:40 UTC — ~2h after this PR's commit) lists H1.2 under "Completed by the
-> repository recovery" with the opposite outcome — "Phoenix paused; Supabase is the
-> production system until the owner explicitly reactivates the migration" — and root
-> `CLAUDE.md` is titled "PROJECT PHOENIX (PAUSED)". Both records are preserved (see also
-> C0.3 above, from the same PR). **The owner must confirm current status; until then the
-> paused record on main governs.**
+**DONE — Path B (Phoenix) REACTIVATED 2026-07-20.** Owner confirmed migration is on.
+Legacy Supabase remains the live public auth/data path until Phase 11–14 cutover
+(`AUTH_PROVIDER=supabase` default). Agents execute WS1→WS6; do not pause again unless
+the owner reopens this item.
 
 ### H1.3 Vercel environment audit
 
@@ -158,8 +153,8 @@ Advisor.
   protected production secrets, PR-safe CI credentials, label-gated auto-merge.
 - H1.1 branch protection: one approval, strict `test` + `format` checks, linear
   history, conversation resolution, and no force-pushes or branch deletion.
-- H1.2 Phoenix decision: root `CLAUDE.md` now marks Phoenix paused; Supabase is
-  the production system until the owner explicitly reactivates the migration.
+- H1.2 Phoenix decision: reactivated 2026-07-20 — Path B active; dual-run keeps
+  public Supabase Auth until cutover (`AUTH_PROVIDER`).
 - Reader-engagement, newsletter, listening-progress, and security migrations
   are recorded and applied to project `tkzvikozrcynhwsqtkqp`.
 
@@ -181,10 +176,9 @@ were run by the swarm; authenticated flows need a dedicated non-admin test user
 
 ## Project Phoenix human gates (integrated from PR #248)
 
-> Per **H1.2** above, Phoenix is currently **paused** — Supabase remains the production
-> system until the owner explicitly reactivates the migration. The tables below are the
-> Phoenix human-owned gates (from the Phase 0 deep-dive recon, `docs/PHOENIX_RECON.md`),
-> preserved here for execution upon reactivation.
+> Per **H1.2** (reactivated 2026-07-20), Phoenix is **ACTIVE**. Supabase remains the
+> public production auth/data path until cutover. The tables below are human-owned gates
+> (from `docs/PHOENIX_RECON.md`) — agents write scripts/docs; humans run consoles.
 
 Human-owned gates. Agents write scripts and docs; humans operate consoles, credentials, and DNS.
 Click-paths reference `docs/PROJECT_PHOENIX.md` unless noted.
@@ -216,6 +210,7 @@ Click-paths reference `docs/PROJECT_PHOENIX.md` unless noted.
 | ID   | Task                                                                                 | Status |
 | ---- | ------------------------------------------------------------------------------------ | ------ |
 | P8.x | Load all Phoenix §9.1 (+ amended SITE_URL / extras) into Vercel Production + Preview | ⬜     |
+| P8.x | Add `AUTH_PROVIDER=supabase`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` to Vercel (do **not** flip to better-auth until Phase 11) | ⬜     |
 | P8.x | Point Stripe webhook at Vercel `/api/webhook` (keep Cloud Run standby)               | ⬜     |
 
 ## Phase 11 — data cutover

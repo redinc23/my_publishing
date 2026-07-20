@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { betterAuthSignIn } from '@/lib/auth/better-auth-actions';
+import { isBetterAuthPrimary } from '@/lib/auth/provider';
 import { createClient } from '@/lib/supabase/server';
 import { authRateLimit, getAuthIdentifier } from '@/lib/utils/auth-rate-limit';
 import { headers } from 'next/headers';
@@ -33,11 +35,17 @@ export async function signIn(formData: FormData) {
     return { error: 'Password must be at least 6 characters long' };
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (isBetterAuthPrimary()) {
+    return betterAuthSignIn(normalizedEmail, password);
+  }
+
   try {
     const supabase = await createClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
     });
 
