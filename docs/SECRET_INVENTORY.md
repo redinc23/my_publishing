@@ -14,28 +14,28 @@ resolve to Cloud Run until the Phase 15 DNS cutover) and for emergency rollback.
 
 ## 1. P0-016 scope — payment & rate-limit secrets
 
-| Env var | Purpose | Store of record (canonical) | Legacy store ID (GCP Secret Manager) | Expected format (never the value) |
-| --- | --- | --- | --- | --- |
-| `STRIPE_SECRET_KEY` | Stripe API secret (payments) | Vercel Production env | `projects/delta-wonder-488420-i3/secrets/stripe-secret-key` | `sk_live_…` (production); must match publishable-key mode |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signature verification | Vercel Production env | `projects/delta-wonder-488420-i3/secrets/stripe-webhook-secret` | `whsec_…` from the canonical endpoint (`https://www.mangu-publishers.com/api/webhook`) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe.js client key (public by design) | Vercel Production env (build-time bake) | _Not stored in Secret Manager_ — build-time value (`cloudbuild.yaml` substitution on the legacy path) | `pk_live_…` (production); same account + mode as `STRIPE_SECRET_KEY` |
-| `UPSTASH_REDIS_REST_URL` | Distributed rate limiting (endpoint) | Vercel Production env | `projects/delta-wonder-488420-i3/secrets/upstash-redis-rest-url` | `https://….upstash.io` |
-| `UPSTASH_REDIS_REST_TOKEN` | Distributed rate limiting (credential) | Vercel Production env | `projects/delta-wonder-488420-i3/secrets/upstash-redis-rest-token` | Upstash REST token (non-empty) |
+| Env var                              | Purpose                                 | Store of record (canonical)             | Legacy store ID (GCP Secret Manager)                                                                  | Expected format (never the value)                                                      |
+| ------------------------------------ | --------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`                  | Stripe API secret (payments)            | Vercel Production env                   | `projects/delta-wonder-488420-i3/secrets/stripe-secret-key`                                           | `sk_live_…` (production); must match publishable-key mode                              |
+| `STRIPE_WEBHOOK_SECRET`              | Stripe webhook signature verification   | Vercel Production env                   | `projects/delta-wonder-488420-i3/secrets/stripe-webhook-secret`                                       | `whsec_…` from the canonical endpoint (`https://www.mangu-publishers.com/api/webhook`) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe.js client key (public by design) | Vercel Production env (build-time bake) | _Not stored in Secret Manager_ — build-time value (`cloudbuild.yaml` substitution on the legacy path) | `pk_live_…` (production); same account + mode as `STRIPE_SECRET_KEY`                   |
+| `UPSTASH_REDIS_REST_URL`             | Distributed rate limiting (endpoint)    | Vercel Production env                   | `projects/delta-wonder-488420-i3/secrets/upstash-redis-rest-url`                                      | `https://….upstash.io`                                                                 |
+| `UPSTASH_REDIS_REST_TOKEN`           | Distributed rate limiting (credential)  | Vercel Production env                   | `projects/delta-wonder-488420-i3/secrets/upstash-redis-rest-token`                                    | Upstash REST token (non-empty)                                                         |
 
 ### Must be ABSENT in production (P0-016)
 
-| Env var | Why forbidden | Enforcement |
-| --- | --- | --- |
-| `USE_MOCKS` | `true` swaps live Stripe/Upstash for mocks — silent payment/rate-limit failure | `npm run validate-env -- --production` fails if present-and-`true`, warns if present at all; never set it in Vercel Production or Cloud Run `--set-env-vars` |
-| `SKIP_EMAILS` | `true` suppresses transactional email in production | Same as above |
+| Env var       | Why forbidden                                                                  | Enforcement                                                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `USE_MOCKS`   | `true` swaps live Stripe/Upstash for mocks — silent payment/rate-limit failure | `npm run validate-env -- --production` fails if present-and-`true`, warns if present at all; never set it in Vercel Production or Cloud Run `--set-env-vars` |
+| `SKIP_EMAILS` | `true` suppresses transactional email in production                            | Same as above                                                                                                                                                |
 
 ## 2. Other secrets referenced by the ops scripts (context)
 
-| Env var | Legacy store ID (GCP Secret Manager) | Required on legacy Cloud Run path |
-| --- | --- | --- |
+| Env var                     | Legacy store ID (GCP Secret Manager)                                | Required on legacy Cloud Run path               |
+| --------------------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
 | `SUPABASE_SERVICE_ROLE_KEY` | `projects/delta-wonder-488420-i3/secrets/supabase-service-role-key` | Required (`--set-secrets` in `cloudbuild.yaml`) |
-| `RESEND_API_KEY` | `projects/delta-wonder-488420-i3/secrets/resend-api-key` | Optional (mounted only if the secret exists) |
-| `OPENAI_API_KEY` | `projects/delta-wonder-488420-i3/secrets/openai-api-key` | Optional (mounted only if the secret exists) |
+| `RESEND_API_KEY`            | `projects/delta-wonder-488420-i3/secrets/resend-api-key`            | Optional (mounted only if the secret exists)    |
+| `OPENAI_API_KEY`            | `projects/delta-wonder-488420-i3/secrets/openai-api-key`            | Optional (mounted only if the secret exists)    |
 
 ## 3. Accessor bindings (least privilege — CCR-008)
 
