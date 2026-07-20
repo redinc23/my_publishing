@@ -9,13 +9,7 @@ import '@/lib/server-only-guard';
 
 import { ObjectId, type Db, type Document, type Filter } from 'mongodb';
 import { getDb } from '@/lib/mongo';
-import type {
-  Book,
-  BookWithAuthor,
-  MongoPagination,
-  Order,
-  PaginatedResult,
-} from '@/types/mongo';
+import type { Book, BookWithAuthor, MongoPagination, Order, PaginatedResult } from '@/types/mongo';
 
 export const DEFAULT_PAGE_SIZE = 20;
 
@@ -131,14 +125,116 @@ export async function getBookBySlug(
   const match: Filter<Document> = { slug };
   if (options.status) match.status = options.status;
 
-  const pipeline: Document[] = [
-    { $match: match },
-    ...authorLookupStages(),
-    { $limit: 1 },
-  ];
+  const pipeline: Document[] = [{ $match: match }, ...authorLookupStages(), { $limit: 1 }];
 
   const [doc] = await database.collection('books').aggregate(pipeline).toArray();
   return (doc as BookWithAuthor | undefined) ?? null;
+}
+
+/**
+ * Single book by id (ObjectId hex or string legacy id), with author join.
+ */
+export async function getBookById(
+  id: string,
+  options: { status?: Book['status'] } = {},
+  db?: Db
+): Promise<BookWithAuthor | null> {
+  const database = await resolveDb(db);
+  const match: Filter<Document> = { _id: coerceId(id) as Filter<Document>['_id'] };
+  if (options.status) match.status = options.status;
+
+  const pipeline: Document[] = [{ $match: match }, ...authorLookupStages(), { $limit: 1 }];
+
+  const [doc] = await database.collection('books').aggregate(pipeline).toArray();
+  return (doc as BookWithAuthor | undefined) ?? null;
+}
+
+export type CreateMongoBookInput = {
+  title: string;
+  slug: string;
+  author_id: string;
+  description?: string;
+  cover_url?: string | null;
+  manuscript_url?: string | null;
+  status?: Book['status'];
+  visibility?: Book['visibility'];
+  price?: number;
+  currency?: string;
+  genre?: string;
+  tags?: string[];
+};
+
+/**
+ * Insert a book document. Caller must ensure unique slug.
+ */
+export async function createBook(input: CreateMongoBookInput, db?: Db): Promise<Book> {
+  const database = await resolveDb(db);
+  const now = new Date();
+  const doc = {
+    title: input.title,
+    slug: input.slug,
+    description: input.description,
+    cover_url: input.cover_url ?? null,
+    manuscript_url: input.manuscript_url ?? null,
+    author_id: coerceId(input.author_id),
+    status: input.status ?? 'draft',
+    visibility: input.visibility ?? 'public',
+    price: input.price,
+    currency: input.currency ?? 'USD',
+    genre: input.genre,
+    tags: input.tags ?? [],
+    avg_rating: 0,
+    review_count: 0,
+    published_at: input.status === 'published' ? now : null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  const result = await database.collection('books').insertOne(doc);
+  return { _id: result.insertedId, ...doc } as Book;
+}
+
+export type UpdateMongoBookInput = Partial<
+  Omit<CreateMongoBookInput, 'author_id' | 'slug'> & { slug?: string; author_id?: string }
+>;
+
+/**
+ * Patch a book by id. Returns the updated document or null if missing.
+ */
+export async function updateBook(
+  id: string,
+  patch: UpdateMongoBookInput,
+  db?: Db
+): Promise<Book | null> {
+  const database = await resolveDb(db);
+  const now = new Date();
+  const $set: Document = { updated_at: now };
+
+  if (patch.title !== undefined) $set.title = patch.title;
+  if (patch.slug !== undefined) $set.slug = patch.slug;
+  if (patch.description !== undefined) $set.description = patch.description;
+  if (patch.cover_url !== undefined) $set.cover_url = patch.cover_url;
+  if (patch.manuscript_url !== undefined) $set.manuscript_url = patch.manuscript_url;
+  if (patch.author_id !== undefined) $set.author_id = coerceId(patch.author_id);
+  if (patch.status !== undefined) {
+    $set.status = patch.status;
+    if (patch.status === 'published') $set.published_at = now;
+  }
+  if (patch.visibility !== undefined) $set.visibility = patch.visibility;
+  if (patch.price !== undefined) $set.price = patch.price;
+  if (patch.currency !== undefined) $set.currency = patch.currency;
+  if (patch.genre !== undefined) $set.genre = patch.genre;
+  if (patch.tags !== undefined) $set.tags = patch.tags;
+
+  const result = await database
+    .collection<Document>('books')
+    .findOneAndUpdate(
+      { _id: coerceId(id) } as Filter<Document>,
+      { $set },
+      { returnDocument: 'after' }
+    );
+
+  return (result as unknown as Book | null) ?? null;
 }
 
 /**
@@ -157,12 +253,9 @@ export async function getUserOrders(
 
   const [total, items] = await Promise.all([
     collection.countDocuments(filter),
-    collection
-      .find(filter)
-      .sort({ created_at: -1 })
-      .skip(skip)
-      .limit(perPage)
-      .toArray() as Promise<Order[]>,
+    collection.find(filter).sort({ created_at: -1 }).skip(skip).limit(perPage).toArray() as Promise<
+      Order[]
+    >,
   ]);
 
   return toPaginatedResult(items, total, page, perPage);

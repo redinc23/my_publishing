@@ -5,9 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { isMongoPrimary } from '@/lib/db/provider';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
+import {
+  handleMongoChargeRefunded,
+  handleMongoCheckoutCompleted,
+} from '@/lib/stripe/webhook-mongo';
 import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
 import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
@@ -375,21 +380,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const event = verification.event;
   console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
 
-  // Initialize Supabase client
-  const supabase = createAdminClient();
+  // Mongo primary: order upsert is the idempotency key (stripe_payment_intent_id).
+  // Supabase primary: keep webhook_events table tracking (prod default).
+  const mongoPrimary = isMongoPrimary();
+  const supabase = mongoPrimary ? null : createAdminClient();
 
-  // Check idempotency
-  const idempotencyCheck = await checkIdempotency(supabase, event.id);
-  if (idempotencyCheck.processed) {
-    console.log(`[Webhook] Event already processed: ${event.id}`);
-    return NextResponse.json({
-      received: true,
-      message: 'Event already processed',
-    });
+  if (supabase) {
+    const idempotencyCheck = await checkIdempotency(supabase, event.id);
+    if (idempotencyCheck.processed) {
+      console.log(`[Webhook] Event already processed: ${event.id}`);
+      return NextResponse.json({
+        received: true,
+        message: 'Event already processed',
+      });
+    }
+    await recordWebhookEvent(supabase, event);
   }
-
-  // Record the event
-  await recordWebhookEvent(supabase, event);
 
   // Process the event
   let result: WebhookProcessingResult;
@@ -398,7 +404,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        result = await handleCheckoutCompleted(supabase, session);
+        result = mongoPrimary
+          ? await handleMongoCheckoutCompleted(session)
+          : await handleCheckoutCompleted(supabase!, session);
         // Purchase receipt (feat/topdog-comms): best-effort — never block or
         // retry fulfillment because of email. The trigger also never throws.
         if (result.success) {
@@ -419,7 +427,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
-        result = await handleChargeRefunded(supabase, charge);
+        result = mongoPrimary
+          ? await handleMongoChargeRefunded(charge)
+          : await handleChargeRefunded(supabase!, charge);
         break;
       }
 
@@ -440,8 +450,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Mark as processed
-    await markEventProcessed(supabase, event.id, result.success ? undefined : result.error);
+    if (supabase) {
+      await markEventProcessed(supabase, event.id, result.success ? undefined : result.error);
+    }
 
     const duration = Date.now() - startTime;
     console.log(`[Webhook] Processed ${event.type} in ${duration}ms:`, result);
@@ -451,6 +462,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
+    // Always 200 on successful handling / idempotent duplicates (Phoenix 2b.1.4)
     return NextResponse.json({
       received: true,
       result,
@@ -459,8 +471,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[Webhook] Error processing ${event.type}:`, error);
 
-    // Mark as failed
-    await markEventProcessed(supabase, event.id, errorMessage);
+    if (supabase) {
+      await markEventProcessed(supabase, event.id, errorMessage);
+    }
 
     // Return 500 to trigger retry for unexpected errors
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
