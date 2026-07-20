@@ -1,6 +1,8 @@
 'use server';
 
 import { headers } from 'next/headers';
+import { betterAuthRequestPasswordReset } from '@/lib/auth/better-auth-actions';
+import { isBetterAuthPrimary } from '@/lib/auth/provider';
 import { createClient } from '@/lib/supabase/server';
 import { passwordResetRateLimit } from '@/lib/utils/auth-rate-limit';
 
@@ -65,6 +67,14 @@ export async function resetPassword(formData: FormData) {
   // Rate limiting for password reset
   if (!(await passwordResetRateLimit(normalizedEmail))) {
     return { error: 'Too many password reset requests. Please try again in an hour.' };
+  }
+
+  if (isBetterAuthPrimary()) {
+    const ba = await betterAuthRequestPasswordReset(normalizedEmail);
+    if (ba.error) {
+      return { error: toFriendlyResetError(ba.error) };
+    }
+    return { success: true };
   }
 
   try {

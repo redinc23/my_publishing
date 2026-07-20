@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { betterAuthSignUp } from '@/lib/auth/better-auth-actions';
+import { isBetterAuthPrimary } from '@/lib/auth/provider';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { authRateLimit, getAuthIdentifier } from '@/lib/utils/auth-rate-limit';
@@ -72,6 +74,30 @@ export async function registerUser(formData: FormData) {
 
   if (fullName.trim().length < 2) {
     return { error: 'Full name must be at least 2 characters long' };
+  }
+
+  if (isBetterAuthPrimary()) {
+    if (password.length < 8) {
+      return { error: 'Password must be at least 8 characters long' };
+    }
+    const ba = await betterAuthSignUp({
+      email: normalizedEmail,
+      password,
+      name: fullName.trim(),
+    });
+    if (ba.error) {
+      return { error: toFriendlyRegisterError(ba.error) };
+    }
+    try {
+      await sendWelcomeEmail({ to: normalizedEmail, userName: fullName.trim() });
+    } catch (welcomeError) {
+      console.error('Welcome email failed (registration unaffected):', welcomeError);
+    }
+    return {
+      success: true,
+      needsVerification: true,
+      verificationEmail: normalizedEmail,
+    };
   }
 
   try {

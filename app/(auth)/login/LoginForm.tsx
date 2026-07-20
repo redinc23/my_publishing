@@ -50,7 +50,7 @@ export function LoginForm() {
 
       const result = await signIn(formData);
 
-      if (result?.error) {
+      if (result && 'error' in result && result.error) {
         setError(result.error);
         setIsLoading(false);
       } else {

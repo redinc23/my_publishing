@@ -1,14 +1,14 @@
-# CLAUDE CODE EXECUTION BRIEFING — PROJECT PHOENIX (PAUSED)
+# CLAUDE CODE EXECUTION BRIEFING — PROJECT PHOENIX (ACTIVE)
 
-> **Status — paused 2026-07-19:** Supabase remains the production data and auth
-> platform. Do not start Phoenix implementation work, create Phoenix branches, or
-> open Phoenix pull requests unless the repository owner explicitly reactivates the
-> migration. Existing Phoenix documents and branches are retained as reference only.
+> **Status — reactivated 2026-07-20 by owner (Faith Beckwith):** Project Phoenix is
+> the active mission. Execute WS1→WS6 per `docs/PROJECT_PHOENIX.md` + this briefing.
+> **Public production stays on Supabase Auth until cutover** via
+> `AUTH_PROVIDER=supabase` (default). Do not flip `AUTH_PROVIDER=better-auth` in
+> Vercel Production until Phase 11 forced-reset readiness. Feature freeze remains.
 
-**Conditional mission (only after explicit reactivation):** Implement the complete
-Supabase → Better Auth / MongoDB Atlas / Vercel Blob migration for Mangu Publishers
-("Project Phoenix") and carry it through production cutover support. Humans own
-consoles, credentials, and DNS.
+**Mission:** Implement the complete Supabase → Better Auth / MongoDB Atlas / Vercel Blob
+migration for Mangu Publishers ("Project Phoenix") and carry it through production
+cutover support. Humans own consoles, credentials, and DNS.
 
 **Canonical contract:** `docs/PROJECT_PHOENIX.md` (v4.0, on `main`). That document is the
 single source of truth. THIS briefing is your execution wrapper around it. Where they

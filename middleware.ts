@@ -1,4 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { getSessionCookie } from 'better-auth/cookies';
+import { getAuthProvider } from '@/lib/auth/provider';
+import { MANGU_ROLE_COOKIE, normalizeManguRole } from '@/lib/auth/roles';
 import { enforceRateLimit, getRateLimitIdentity } from '@/lib/rate-limit';
 import { getEdgeAuthUser, getEdgeUserRole } from '@/lib/supabase/edge-auth';
 
@@ -16,16 +19,37 @@ function rateLimitRejection(result: { reason: string; headers: Record<string, st
   });
 }
 
+function loginRedirect(request: NextRequest, pathname: string) {
+  const url = new URL('/login', request.url);
+  url.searchParams.set('next', pathname);
+  return NextResponse.redirect(url);
+}
+
+function isProtectedPath(pathname: string): boolean {
+  const isReadingRoute = pathname.startsWith('/reading');
+  const isLibraryRoute = pathname.startsWith('/library');
+  // Note: '/author/...' (portal) must not match public '/authors' pages.
+  const isAuthorRoute = pathname === '/author' || pathname.startsWith('/author/');
+  const isPartnerRoute = pathname === '/partner' || pathname.startsWith('/partner/');
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isDashboardRoute = pathname.startsWith('/dashboard');
+  const isFilesApi = pathname.startsWith('/api/files');
+  return (
+    isReadingRoute ||
+    isLibraryRoute ||
+    isAuthorRoute ||
+    isPartnerRoute ||
+    isAdminRoute ||
+    isDashboardRoute ||
+    isFilesApi
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
   // ── Rate limiting (fail-closed, Fix C8) ────────────────────────────────────
-  // Apply to /api/auth/* endpoints AND to server-action POSTs on auth pages.
-  // Next.js server actions POST to the page URL itself (with next-action header).
-  // Identity: platform-verified request.ip first, then the spoof-resistant
-  // resolver (rightmost valid XFF hop / ephemeral identity) — client-supplied
-  // XFF chains are never trusted directly (directive Phase 6).
   const isAuthApiPath = pathname.startsWith('/api/auth/');
   const isAuthPageAction =
     method === 'POST' &&
@@ -43,8 +67,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Apply rate limiting to upload endpoints (exact API prefix only — a loose
-  // substring match previously rate-limited any URL containing "upload").
   if (pathname.startsWith('/api/upload')) {
     const ip = request.ip ?? getRateLimitIdentity(request);
     const result = await enforceRateLimit('upload', ip);
@@ -54,8 +76,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Abuse-sensitive public POST endpoints without their own limiter:
-  // newsletter signup (email spam via Resend) and checkout session creation.
   const isAbusablePublicPost =
     method === 'POST' &&
     (pathname.startsWith('/api/newsletter') || pathname.startsWith('/api/checkout'));
@@ -69,55 +89,73 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Check for required environment variables
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.error(
-      'Missing Supabase environment variables. Check .env.local.example for setup instructions.'
-    );
-  }
-
   const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
+  const isPasswordRecoveryConfirm = pathname === '/reset-password/confirm';
+  const authRoutes = ['/login', '/register', '/reset-password'];
+  const isAuthRoute =
+    !isPasswordRecoveryConfirm && authRoutes.some((route) => pathname.startsWith(route));
+
+  const isAuthorRoute = pathname === '/author' || pathname.startsWith('/author/');
+  const isPartnerRoute = pathname === '/partner' || pathname.startsWith('/partner/');
+  const isAdminRoute = pathname.startsWith('/admin');
+
   try {
+    // ── Phoenix WS1: Better Auth cookie-only Edge path ───────────────────────
+    // RBAC strategy: optimistic session cookie + optional mangu-role cookie for
+    // coarse portal gates; fine-grained checks stay in server layouts/actions.
+    if (getAuthProvider() === 'better-auth') {
+      const sessionCookie = getSessionCookie(request);
+      const userId = sessionCookie ? 'session' : null;
+
+      if (userId && isAuthRoute) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+
+      if (!userId && isProtectedPath(pathname)) {
+        return loginRedirect(request, pathname);
+      }
+
+      if (userId && (isAdminRoute || isAuthorRoute || isPartnerRoute)) {
+        const role = normalizeManguRole(request.cookies.get(MANGU_ROLE_COOKIE)?.value);
+
+        if (isAdminRoute && role !== 'admin') {
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+        if (isAuthorRoute && role !== 'author' && role !== 'admin') {
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+        if (isPartnerRoute && role !== 'partner' && role !== 'admin') {
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+      }
+
+      return response;
+    }
+
+    // ── Legacy Supabase Edge path (public production until cutover) ──────────
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error(
+        'Missing Supabase environment variables. Check .env.local.example for setup instructions.'
+      );
       return response;
     }
 
     const authUser = await getEdgeAuthUser(request);
     const userId = authUser.userId;
 
-    // Auth routes
-    const isPasswordRecoveryConfirm = pathname === '/reset-password/confirm';
-    const authRoutes = ['/login', '/register', '/reset-password'];
-    const isAuthRoute =
-      !isPasswordRecoveryConfirm && authRoutes.some((route) => pathname.startsWith(route));
-
-    // Protected routes
-    const isReadingRoute = pathname.startsWith('/reading');
-    const isLibraryRoute = pathname.startsWith('/library');
-    // Note: '/author/...' (portal) must not match public '/authors' pages.
-    const isAuthorRoute = pathname === '/author' || pathname.startsWith('/author/');
-    const isPartnerRoute = pathname === '/partner' || pathname.startsWith('/partner/');
-    const isAdminRoute = pathname.startsWith('/admin');
-
-    // Redirect logged-in users away from auth pages
     if (userId && isAuthRoute) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // Redirect unauthenticated users from protected routes
-    if (!userId) {
-      if (isReadingRoute || isLibraryRoute || isAuthorRoute || isPartnerRoute || isAdminRoute) {
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
+    if (!userId && isProtectedPath(pathname)) {
+      return loginRedirect(request, pathname);
     }
 
-    // ── Role-based access control ────────────────────────────────────────────
-    // Fetch the user profile exactly once, shared across all role-gated checks.
     if (userId && authUser.accessToken && (isAdminRoute || isAuthorRoute || isPartnerRoute)) {
       let role: string | undefined;
 
@@ -172,20 +210,12 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // For protected routes, redirect to login
-    return NextResponse.redirect(new URL('/login', request.url));
+    return loginRedirect(request, pathname);
   }
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

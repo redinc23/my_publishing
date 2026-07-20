@@ -168,6 +168,40 @@ const envConfigs: EnvConfig[] = [
     description: 'MongoDB database name (default: mangu)',
   },
   {
+    name: 'AUTH_PROVIDER',
+    required: false,
+    description: 'Auth provider switch: supabase (default/public) or better-auth (Phoenix cutover)',
+    validate: (value) => {
+      const normalized = value.toLowerCase();
+      if (!['supabase', 'better-auth', 'betterauth', 'ba'].includes(normalized)) {
+        return 'Must be supabase or better-auth';
+      }
+      return true;
+    },
+  },
+  {
+    name: 'BETTER_AUTH_SECRET',
+    required: false,
+    description: 'Better Auth signing secret (required when AUTH_PROVIDER=better-auth)',
+    validate: (value) => {
+      if (value.length < 32) {
+        return 'Must be at least 32 characters';
+      }
+      return true;
+    },
+  },
+  {
+    name: 'BETTER_AUTH_URL',
+    required: false,
+    description: 'Better Auth base URL (usually same as NEXT_PUBLIC_SITE_URL)',
+    validate: (value) => {
+      if (value && !value.match(/^https?:\/\//)) {
+        return 'BETTER_AUTH_URL must start with http:// or https://';
+      }
+      return true;
+    },
+  },
+  {
     name: 'NEXT_PUBLIC_SENTRY_DSN',
     required: false,
     description: 'Sentry DSN for client and server error tracking (optional)',
@@ -207,6 +241,20 @@ export function validateEnvironment(): EnvValidationResult {
       if (validationResult !== true) {
         warnings.push(`${config.name}: ${validationResult}`);
       }
+    }
+  }
+
+  // Phoenix dual-run: Better Auth secrets required when that provider is active.
+  const authProvider = (process.env.AUTH_PROVIDER || 'supabase').toLowerCase();
+  if (authProvider === 'better-auth' || authProvider === 'betterauth' || authProvider === 'ba') {
+    if (!process.env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET.length < 32) {
+      missing.push('BETTER_AUTH_SECRET');
+    }
+    if (!process.env.BETTER_AUTH_URL && !process.env.NEXT_PUBLIC_SITE_URL) {
+      missing.push('BETTER_AUTH_URL');
+    }
+    if (!process.env.MONGODB_URI) {
+      missing.push('MONGODB_URI');
     }
   }
 
