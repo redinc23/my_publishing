@@ -13,6 +13,10 @@ import {
   type CreateBookInput,
   type UpdateBookInput,
 } from '@/types/books';
+import { getRequestAuthUser } from '@/lib/auth/request-user';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { insertBook } from '@/lib/mongo-books';
+import { recordAudit } from '@/lib/audit';
 
 // Rate limiting
 const RATE_LIMIT = new Map<string, { count: number; timestamp: number }>();
@@ -68,6 +72,34 @@ const logAudit = async (
 
 export async function createBook(input: CreateBookInput) {
   try {
+    // ---- Mongo primary path (Phoenix 2c.1.1) ----
+    if (isMongoPrimary()) {
+      const user = await getRequestAuthUser();
+      if (!user) {
+        return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+      }
+      checkRateLimit(user.id, 'create_book');
+      const validated = CreateBookSchema.parse(input);
+      const book = await insertBook({
+        title: validated.title,
+        description: validated.description,
+        authorId: user.id,
+        status: 'draft',
+        tags: validated.tags,
+        cover_url: validated.cover_url ?? null,
+        manuscript_url: validated.manuscript_url ?? null,
+      });
+      await recordAudit(user.id, 'CREATE', String(book._id), {
+        resource_type: 'book',
+        title: book.title,
+        status: book.status,
+      });
+      revalidatePath('/admin/books');
+      revalidatePath('/books');
+      revalidateTag('featured-books');
+      return { success: true, data: book, code: 'BOOK_CREATED' };
+    }
+
     const supabase = await createClient();
 
     const {

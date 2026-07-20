@@ -3,6 +3,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { getRequestAuthUser } from '@/lib/auth/request-user';
+import { isMongoPrimary } from '@/lib/db/provider';
+import {
+  deleteMongoReview,
+  hasMongoPurchaseForBook,
+  upsertMongoReview,
+} from '@/lib/mongo-reviews';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { hasCompletedOrderForBook } from '@/lib/reading/entitlement';
 import { AuthorReplySchema } from '@/lib/validations/reviews';
@@ -181,6 +188,30 @@ export async function createReview(reviewData: {
   is_spoiler: boolean;
   is_public: boolean;
 }) {
+  // ---- Mongo primary path (Phoenix 2c.1.2) ----
+  if (isMongoPrimary()) {
+    const user = await getRequestAuthUser();
+    if (!user) {
+      throw new Error('You must be logged in to write reviews');
+    }
+    await enforceReviewRateLimit(user.id);
+
+    const verifiedPurchase = await hasMongoPurchaseForBook(user.id, reviewData.book_id);
+    await upsertMongoReview({
+      bookId: reviewData.book_id,
+      userId: user.id,
+      rating: reviewData.rating,
+      title: reviewData.title,
+      content: reviewData.content,
+      verifiedPurchase,
+    });
+
+    revalidatePath('/');
+    revalidatePath('/dashboard/my-reviews');
+    revalidatePath(`/books/${reviewData.book_id}`);
+    return { success: true };
+  }
+
   const supabase = await createClient();
   const admin = createAdminClient();
 
@@ -243,6 +274,20 @@ export async function createReview(reviewData: {
 }
 
 export async function deleteReview(reviewId: string) {
+  if (isMongoPrimary()) {
+    const user = await getRequestAuthUser();
+    if (!user) {
+      throw new Error('You must be logged in to delete reviews');
+    }
+    const result = await deleteMongoReview(reviewId, user.id);
+    if (!result.deleted) {
+      throw new Error('You can only delete your own reviews');
+    }
+    revalidatePath('/dashboard/my-reviews');
+    if (result.bookId) revalidatePath(`/books/${result.bookId}`);
+    return { success: true };
+  }
+
   const supabase = await createClient();
   const admin = createAdminClient();
 
