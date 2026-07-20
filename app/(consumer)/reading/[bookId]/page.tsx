@@ -51,7 +51,23 @@ export default async function ReadingPage({ params }: { params: { bookId: string
     .eq('book_id', params.bookId)
     .maybeSingle();
 
+  const { data: contentRows } = await admin
+    .from('book_content')
+    .select('epub_url, pdf_url, audio_url')
+    .eq('book_id', params.bookId)
+    .limit(1);
+
+  const content = contentRows?.[0] ?? null;
+
   return (
-    <ReadingClient book={book as Book} initialProgress={(progress as ReadingProgress) || null} />
+    <ReadingClient
+      book={book as Book}
+      initialProgress={(progress as ReadingProgress) || null}
+      assets={{
+        epubUrl: content?.epub_url ?? null,
+        pdfUrl: content?.pdf_url ?? null,
+        audioUrl: content?.audio_url ?? null,
+      }}
+    />
   );
 }

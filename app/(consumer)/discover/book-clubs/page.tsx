@@ -1,22 +1,9 @@
-import type { Metadata } from 'next';
-/* eslint-disable */
-import { Container } from '@/components/layout/Container';
-import { Section } from '@/components/layout/Section';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-export const metadata: Metadata = {
-  title: 'Book Clubs',
-  description: 'Join MANGU book clubs and connect with readers discussing favorite stories.',
-};
+import { redirect } from 'next/navigation';
 
-export default function BookClubsPage() {
-  return (
-    <Section>
-      <Container>
-        <h1 className="mb-8 text-4xl font-bold">Book Clubs</h1>
-        <div className="py-12 text-center">
-          <p className="text-secondary">Book clubs feature coming soon!</p>
-        </div>
-      </Container>
-    </Section>
-  );
+/**
+ * Legacy discover URL — canonical honest surface is `/book-clubs` (E-001).
+ * Keep this route so old links and sitemap entries do not show a hollow stub.
+ */
+export default function DiscoverBookClubsRedirect() {
+  redirect('/book-clubs');
 }
