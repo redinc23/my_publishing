@@ -1,25 +1,33 @@
 /**
  * Stripe Webhook Handler
  * Production-grade webhook processing with idempotency and retry logic
+ *
+ * Phoenix WS2b (2b.1.4): when DATABASE_PROVIDER=mongodb, fulfill orders via
+ * upsert on `stripe_payment_intent_id` (unique sparse index). Default remains
+ * the Supabase path so production is unchanged until cutover.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { markOrderRefundedByPaymentIntent, upsertOrderByPaymentIntent } from '@/lib/mongo-queries';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
 import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
 import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
-// Webhook secret for signature verification
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+function getWebhookSecret(): string | undefined {
+  return process.env.STRIPE_WEBHOOK_SECRET || undefined;
+}
 
 /**
  * Verify Stripe webhook signature
  */
 function verifySignature(
   payload: string,
-  signature: string
+  signature: string,
+  webhookSecret: string
 ): { valid: boolean; event?: Stripe.Event; error?: string } {
   try {
     const stripe = getStripe();
@@ -89,12 +97,100 @@ async function markEventProcessed(
 }
 
 /**
+ * Mongo fulfillment: upsert by stripe_payment_intent_id (always 200 on duplicate).
+ * user_id is the auth id from session metadata (no profiles FK lookup).
+ */
+async function handleCheckoutCompletedMongo(
+  session: Stripe.Checkout.Session
+): Promise<WebhookProcessingResult> {
+  const metadata = session.metadata as CheckoutMetadata | null;
+  const paymentIntentId =
+    typeof session.payment_intent === 'string' ? session.payment_intent : null;
+
+  if (!metadata?.book_id || !metadata?.user_id) {
+    console.error('[Webhook] Missing required metadata in checkout session:', session.id);
+    return {
+      success: false,
+      error: 'Missing required metadata (book_id or user_id)',
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+    };
+  }
+
+  if (!paymentIntentId) {
+    return {
+      success: false,
+      error: 'Missing payment_intent on checkout session',
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+      should_retry: true,
+    };
+  }
+
+  const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
+  const currency = (session.currency || 'usd').toUpperCase();
+
+  try {
+    const { upserted, orderId } = await upsertOrderByPaymentIntent({
+      user_id: metadata.user_id,
+      status: 'completed',
+      amount: totalAmount,
+      currency,
+      stripe_session_id: session.id,
+      stripe_payment_intent_id: paymentIntentId,
+      order_items: [
+        {
+          book_id: metadata.book_id,
+          title: metadata.book_slug || metadata.book_id,
+          quantity: 1,
+          unit_amount: totalAmount,
+          currency,
+        },
+      ],
+    });
+
+    return {
+      success: true,
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+      action_taken: upserted
+        ? `Mongo order created (${orderId})`
+        : `Mongo order already existed (${orderId})`,
+    };
+  } catch (error) {
+    // Duplicate key from unique sparse index → treat as success (idempotent).
+    const code = (error as { code?: number })?.code;
+    if (code === 11000) {
+      return {
+        success: true,
+        event_id: session.id,
+        event_type: 'checkout.session.completed',
+        action_taken: 'Mongo order duplicate key — treated as already processed',
+      };
+    }
+    const message = error instanceof Error ? error.message : 'Unknown mongo upsert error';
+    console.error('[Webhook] Mongo order upsert failed:', message);
+    return {
+      success: false,
+      error: message,
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+      should_retry: true,
+    };
+  }
+}
+
+/**
  * Handle checkout.session.completed event
  */
 async function handleCheckoutCompleted(
   supabase: ReturnType<typeof createAdminClient>,
   session: Stripe.Checkout.Session
 ): Promise<WebhookProcessingResult> {
+  if (isMongoPrimary()) {
+    return handleCheckoutCompletedMongo(session);
+  }
+
   const metadata = session.metadata as CheckoutMetadata | null;
   const paymentIntentId =
     typeof session.payment_intent === 'string' ? session.payment_intent : null;
@@ -260,6 +356,30 @@ async function handleCheckoutExpired(
 /**
  * Handle charge.refunded event
  */
+async function handleChargeRefundedMongo(charge: Stripe.Charge): Promise<WebhookProcessingResult> {
+  const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : null;
+  if (!paymentIntentId) {
+    return {
+      success: true,
+      event_id: charge.id,
+      event_type: 'charge.refunded',
+      action_taken: 'No payment_intent on charge; logged for review',
+    };
+  }
+  const matched = await markOrderRefundedByPaymentIntent(
+    paymentIntentId,
+    typeof charge.refunds?.data?.[0]?.reason === 'string' ? charge.refunds.data[0].reason : null
+  );
+  return {
+    success: true,
+    event_id: charge.id,
+    event_type: 'charge.refunded',
+    action_taken: matched
+      ? 'Mongo order marked as refunded'
+      : 'Mongo order not found, logged for review',
+  };
+}
+
 async function handleChargeRefunded(
   supabase: ReturnType<typeof createAdminClient>,
   charge: Stripe.Charge
@@ -332,6 +452,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Rate limiting
   const clientId = getClientIdentifier(request);
+  const webhookSecret = getWebhookSecret();
   if (!webhookSecret) {
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 503 });
   }
@@ -364,7 +485,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Verify signature
-  const verification = verifySignature(body, signature);
+  const verification = verifySignature(body, signature, webhookSecret);
   if (!verification.valid || !verification.event) {
     return NextResponse.json(
       { error: `Webhook signature verification failed: ${verification.error}` },
@@ -375,21 +496,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const event = verification.event;
   console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
 
-  // Initialize Supabase client
-  const supabase = createAdminClient();
+  const mongoPrimary = isMongoPrimary();
+  // Supabase webhook_events ledger only applies on the Supabase data path.
+  const supabase = mongoPrimary ? null : createAdminClient();
 
-  // Check idempotency
-  const idempotencyCheck = await checkIdempotency(supabase, event.id);
-  if (idempotencyCheck.processed) {
-    console.log(`[Webhook] Event already processed: ${event.id}`);
-    return NextResponse.json({
-      received: true,
-      message: 'Event already processed',
-    });
+  if (supabase) {
+    const idempotencyCheck = await checkIdempotency(supabase, event.id);
+    if (idempotencyCheck.processed) {
+      console.log(`[Webhook] Event already processed: ${event.id}`);
+      return NextResponse.json({
+        received: true,
+        message: 'Event already processed',
+      });
+    }
+    await recordWebhookEvent(supabase, event);
   }
-
-  // Record the event
-  await recordWebhookEvent(supabase, event);
 
   // Process the event
   let result: WebhookProcessingResult;
@@ -398,7 +519,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        result = await handleCheckoutCompleted(supabase, session);
+        result = mongoPrimary
+          ? await handleCheckoutCompletedMongo(session)
+          : await handleCheckoutCompleted(supabase!, session);
         // Purchase receipt (feat/topdog-comms): best-effort — never block or
         // retry fulfillment because of email. The trigger also never throws.
         if (result.success) {
@@ -419,7 +542,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
-        result = await handleChargeRefunded(supabase, charge);
+        result = mongoPrimary
+          ? await handleChargeRefundedMongo(charge)
+          : await handleChargeRefunded(supabase!, charge);
         break;
       }
 
@@ -440,8 +565,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Mark as processed
-    await markEventProcessed(supabase, event.id, result.success ? undefined : result.error);
+    if (supabase) {
+      await markEventProcessed(supabase, event.id, result.success ? undefined : result.error);
+    }
 
     const duration = Date.now() - startTime;
     console.log(`[Webhook] Processed ${event.type} in ${duration}ms:`, result);
@@ -451,6 +577,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
+    // Always 200 on successful handling / Mongo PI duplicates (idempotent).
     return NextResponse.json({
       received: true,
       result,
@@ -459,8 +586,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[Webhook] Error processing ${event.type}:`, error);
 
-    // Mark as failed
-    await markEventProcessed(supabase, event.id, errorMessage);
+    if (supabase) {
+      await markEventProcessed(supabase, event.id, errorMessage);
+    }
 
     // Return 500 to trigger retry for unexpected errors
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

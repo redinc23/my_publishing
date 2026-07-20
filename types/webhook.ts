@@ -90,10 +90,13 @@ export interface WebhookConfig {
  */
 export interface CheckoutMetadata {
   book_id: string;
+  /** Optional slug mirrored from createCheckoutSession metadata. */
+  book_slug?: string;
   /**
    * Supabase auth user id (auth.uid()) of the purchaser — NOT profiles.id.
    * Fulfillment must resolve it via profiles.user_id before writing
    * orders.user_id, which references profiles(id).
+   * On Mongo primary, this is stored directly as orders.user_id (auth id).
    */
   user_id: string;
   price_id?: string;

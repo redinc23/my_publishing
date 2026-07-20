@@ -86,7 +86,9 @@
 | `/api/resonance/{track,similar,recommend,embed}` | pgvector recommendations                                    |
 | `/api/mcp/[transport]`                           | MCP server (gated)                                          |
 
-**Not present (Phoenix requires):** `/api/auth/[...all]`, `/api/files/[id]`, `/api/books`, `/api/books/[id]`.
+**Not present (Phoenix requires):** `/api/files/[id]`.
+
+**Present (WS1 / WS2b):** `/api/auth/[...all]`, `/api/books`, `/api/books/[id]` (dual-run behind `DATABASE_PROVIDER`; default supabase).
 
 ### 1.3 `next.config.js` (routing / platform)
 
@@ -299,24 +301,24 @@ Present: seed/migrate/RLS/GCP/Stripe webhook helpers.
 
 ## 10. Delta list (doc X → repo Y → resolution Z)
 
-| #       | Doc says                                        | Repo has                                                     | Resolution                                                                                       |
-| ------- | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| D1      | App Router                                      | App Router + dead `pages/_document.tsx`                      | Delete in WS4; no path doc change                                                                |
+| #       | Doc says                                        | Repo has                                                     | Resolution                                                                                                        |
+| ------- | ----------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| D1      | App Router                                      | App Router + dead `pages/_document.tsx`                      | Delete in WS4; no path doc change                                                                                 |
 | D2      | `lib/mongo.ts`                                  | Scaffold: `lib/mongodb.ts`                                   | **Resolved WS2a:** `lib/mongodb.ts` canonical; `lib/mongo.ts` re-exports `getDb()`; Phoenix doc §4.3/§9.2 amended |
-| D3      | `db:mongo:*` scripts                            | Absent on `main`; on scaffold                                | Adopt in WS2 PR                                                                                  |
-| D4      | `NEXT_PUBLIC_APP_URL`                           | `NEXT_PUBLIC_SITE_URL` everywhere                            | Keep SITE_URL; amend §9.1                                                                        |
-| D5      | §9.1 ≈14 vars                                   | Also Stripe publishable, OpenAI, Sentry build trio           | Amend §9.1                                                                                       |
-| D6      | Real `.env.example`                             | Stub                                                         | Rebuild WS4                                                                                      |
-| D7      | E2E baseline                                    | Not runnable locally (validate-env)                          | CI is e2e baseline; human gate for local                                                         |
-| D8      | WS3 `access: 'public'` blobs                    | —                                                            | Doc decision: manuscripts via proxy only; covers public OK                                       |
-| **D9**  | Roles include `editor`                          | Live `partner` (+ portal/ARC)                                | **Amend Phoenix RBAC → `reader\|author\|partner\|admin`**                                        |
-| **D10** | `orders.stripe_payment_intent_id` unique upsert | `payment_intent_id` non-unique + event idempotency           | Transform + WS2b implement doc target                                                            |
-| **D11** | `avg_rating` / `review_count`                   | `average_rating` / `total_reviews` / `review_count`          | Map in `types/mongo.ts` + transform; single recompute path                                       |
-| **D12** | Lean Mongo target set                           | Rich product (resonance, MCP, social, payouts, content_type) | Feature freeze: parity for catalog/auth/orders/reviews/portals; stub or defer others in doc §1.4 |
-| **D13** | `books.manuscript_url`                          | `manuscripts` table + Storage URLs                           | Transform maps accepted manuscripts → book field or keep collection                              |
-| D14     | —                                               | `react` 18.3.1 vs `react-dom` 19.2.7                         | Out of Phoenix scope; do not “fix” mid-migration unless build breaks                             |
-| D15     | Protect `/dashboard*`                           | Unprotected in middleware                                    | Include in WS1 matcher                                                                           |
-| D16     | Rate limits 100/60 & 10/60                      | Auth 5/60, upload 30/60; no global `/api/*`                  | Align in WS6                                                                                     |
+| D3      | `db:mongo:*` scripts                            | Absent on `main`; on scaffold                                | Adopt in WS2 PR                                                                                                   |
+| D4      | `NEXT_PUBLIC_APP_URL`                           | `NEXT_PUBLIC_SITE_URL` everywhere                            | Keep SITE_URL; amend §9.1                                                                                         |
+| D5      | §9.1 ≈14 vars                                   | Also Stripe publishable, OpenAI, Sentry build trio           | Amend §9.1                                                                                                        |
+| D6      | Real `.env.example`                             | Stub                                                         | Rebuild WS4                                                                                                       |
+| D7      | E2E baseline                                    | Not runnable locally (validate-env)                          | CI is e2e baseline; human gate for local                                                                          |
+| D8      | WS3 `access: 'public'` blobs                    | —                                                            | Doc decision: manuscripts via proxy only; covers public OK                                                        |
+| **D9**  | Roles include `editor`                          | Live `partner` (+ portal/ARC)                                | **Amend Phoenix RBAC → `reader\|author\|partner\|admin`**                                                         |
+| **D10** | `orders.stripe_payment_intent_id` unique upsert | `payment_intent_id` non-unique + event idempotency           | Transform + WS2b implement doc target                                                                             |
+| **D11** | `avg_rating` / `review_count`                   | `average_rating` / `total_reviews` / `review_count`          | Map in `types/mongo.ts` + transform; single recompute path                                                        |
+| **D12** | Lean Mongo target set                           | Rich product (resonance, MCP, social, payouts, content_type) | Feature freeze: parity for catalog/auth/orders/reviews/portals; stub or defer others in doc §1.4                  |
+| **D13** | `books.manuscript_url`                          | `manuscripts` table + Storage URLs                           | Transform maps accepted manuscripts → book field or keep collection                                               |
+| D14     | —                                               | `react` 18.3.1 vs `react-dom` 19.2.7                         | Out of Phoenix scope; do not “fix” mid-migration unless build breaks                                              |
+| D15     | Protect `/dashboard*`                           | Unprotected in middleware                                    | Include in WS1 matcher                                                                                            |
+| D16     | Rate limits 100/60 & 10/60                      | Auth 5/60, upload 30/60; no global `/api/*`                  | Align in WS6                                                                                                      |
 
 ---
 

@@ -9,13 +9,7 @@ import '@/lib/server-only-guard';
 
 import { ObjectId, type Db, type Document, type Filter } from 'mongodb';
 import { getDb } from '@/lib/mongo';
-import type {
-  Book,
-  BookWithAuthor,
-  MongoPagination,
-  Order,
-  PaginatedResult,
-} from '@/types/mongo';
+import type { Book, BookWithAuthor, MongoPagination, Order, PaginatedResult } from '@/types/mongo';
 
 export const DEFAULT_PAGE_SIZE = 20;
 
@@ -131,11 +125,7 @@ export async function getBookBySlug(
   const match: Filter<Document> = { slug };
   if (options.status) match.status = options.status;
 
-  const pipeline: Document[] = [
-    { $match: match },
-    ...authorLookupStages(),
-    { $limit: 1 },
-  ];
+  const pipeline: Document[] = [{ $match: match }, ...authorLookupStages(), { $limit: 1 }];
 
   const [doc] = await database.collection('books').aggregate(pipeline).toArray();
   return (doc as BookWithAuthor | undefined) ?? null;
@@ -157,15 +147,161 @@ export async function getUserOrders(
 
   const [total, items] = await Promise.all([
     collection.countDocuments(filter),
-    collection
-      .find(filter)
-      .sort({ created_at: -1 })
-      .skip(skip)
-      .limit(perPage)
-      .toArray() as Promise<Order[]>,
+    collection.find(filter).sort({ created_at: -1 }).skip(skip).limit(perPage).toArray() as Promise<
+      Order[]
+    >,
   ]);
 
   return toPaginatedResult(items, total, page, perPage);
+}
+
+/**
+ * Single book by id (ObjectId hex or legacy string id), with author join.
+ */
+export async function getBookById(
+  id: string,
+  options: { status?: Book['status'] } = {},
+  db?: Db
+): Promise<BookWithAuthor | null> {
+  const database = await resolveDb(db);
+  const match: Filter<Document> = { _id: coerceId(id) };
+  if (options.status) match.status = options.status;
+
+  const pipeline: Document[] = [{ $match: match }, ...authorLookupStages(), { $limit: 1 }];
+
+  const [doc] = await database.collection('books').aggregate(pipeline).toArray();
+  return (doc as BookWithAuthor | undefined) ?? null;
+}
+
+export type InsertBookInput = Omit<
+  Book,
+  '_id' | 'avg_rating' | 'review_count' | 'created_at' | 'updated_at'
+> & {
+  avg_rating?: number;
+  review_count?: number;
+};
+
+/**
+ * Insert a book document. Returns the inserted id as a string.
+ */
+export async function insertBook(input: InsertBookInput, db?: Db): Promise<string> {
+  const database = await resolveDb(db);
+  const now = new Date();
+  const doc = {
+    ...input,
+    author_id: typeof input.author_id === 'string' ? coerceId(input.author_id) : input.author_id,
+    avg_rating: input.avg_rating ?? 0,
+    review_count: input.review_count ?? 0,
+    created_at: now,
+    updated_at: now,
+  };
+  const result = await database.collection('books').insertOne(doc);
+  return result.insertedId.toString();
+}
+
+export type UpdateBookPatch = Partial<
+  Pick<
+    Book,
+    | 'title'
+    | 'slug'
+    | 'description'
+    | 'cover_url'
+    | 'manuscript_url'
+    | 'status'
+    | 'visibility'
+    | 'price'
+    | 'discount_price'
+    | 'currency'
+    | 'genre'
+    | 'tags'
+    | 'content_type'
+    | 'published_at'
+  >
+>;
+
+/**
+ * Patch a book by id. Returns false when no document matched.
+ */
+export async function updateBook(id: string, patch: UpdateBookPatch, db?: Db): Promise<boolean> {
+  const database = await resolveDb(db);
+  const $set: Document = { ...patch, updated_at: new Date() };
+  const result = await database
+    .collection('books')
+    .updateOne({ _id: coerceId(id) as ObjectId }, { $set });
+  return result.matchedCount > 0;
+}
+
+export type UpsertOrderInput = {
+  user_id: string;
+  status: Order['status'];
+  amount: number;
+  currency: string;
+  order_items: Order['order_items'];
+  stripe_session_id?: string | null;
+  stripe_payment_intent_id: string;
+};
+
+/**
+ * Idempotent order upsert keyed by `stripe_payment_intent_id` (Phoenix 2b.1.4).
+ * Uses `$setOnInsert` so duplicate webhook deliveries leave the first order intact.
+ * Returns `{ upserted: true }` when a new order was created.
+ */
+export async function upsertOrderByPaymentIntent(
+  input: UpsertOrderInput,
+  db?: Db
+): Promise<{ upserted: boolean; orderId: string | null }> {
+  const database = await resolveDb(db);
+  const now = new Date();
+  const filter = { stripe_payment_intent_id: input.stripe_payment_intent_id };
+
+  const result = await database.collection('orders').updateOne(
+    filter,
+    {
+      $setOnInsert: {
+        user_id: input.user_id,
+        status: input.status,
+        amount: input.amount,
+        currency: input.currency,
+        order_items: input.order_items,
+        stripe_session_id: input.stripe_session_id ?? null,
+        stripe_payment_intent_id: input.stripe_payment_intent_id,
+        created_at: now,
+        updated_at: now,
+      },
+    },
+    { upsert: true }
+  );
+
+  const upserted = Boolean(result.upsertedCount && result.upsertedCount > 0);
+  const orderId = result.upsertedId
+    ? String(result.upsertedId)
+    : ((
+        await database.collection('orders').findOne(filter, { projection: { _id: 1 } })
+      )?._id?.toString() ?? null);
+
+  return { upserted, orderId };
+}
+
+/**
+ * Mark an order refunded by Stripe payment intent id.
+ */
+export async function markOrderRefundedByPaymentIntent(
+  paymentIntentId: string,
+  refundReason?: string | null,
+  db?: Db
+): Promise<boolean> {
+  const database = await resolveDb(db);
+  const result = await database.collection('orders').updateOne(
+    { stripe_payment_intent_id: paymentIntentId },
+    {
+      $set: {
+        status: 'refunded' as const,
+        refund_reason: refundReason ?? null,
+        updated_at: new Date(),
+      },
+    }
+  );
+  return result.matchedCount > 0;
 }
 
 /**

@@ -52,6 +52,8 @@ export interface Book {
   status: BookStatus;
   visibility?: BookVisibility;
   price?: number;
+  /** Optional sale price used by checkout when lower than `price`. */
+  discount_price?: number | null;
   currency?: string;
   genre?: string;
   tags?: string[];

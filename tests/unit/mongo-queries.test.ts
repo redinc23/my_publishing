@@ -14,10 +14,15 @@ jest.mock('@/lib/mongo', () => ({
 
 import {
   DEFAULT_PAGE_SIZE,
+  getBookById,
   getBookBySlug,
   getBooks,
   getUserOrders,
+  insertBook,
+  markOrderRefundedByPaymentIntent,
   searchBooks,
+  updateBook,
+  upsertOrderByPaymentIntent,
 } from '@/lib/mongo-queries';
 
 type AggFn = jest.Mock;
@@ -29,6 +34,9 @@ function mockDb(
     aggregateResult?: unknown[];
     findResult?: unknown[];
     countResult?: number;
+    insertId?: { toString(): string };
+    updateResult?: { matchedCount?: number; upsertedCount?: number; upsertedId?: unknown };
+    findOneResult?: { _id?: { toString(): string } } | null;
   } = {}
 ) {
   const toArray: AggFn = jest.fn().mockResolvedValue(handlers.aggregateResult ?? []);
@@ -40,12 +48,25 @@ function mockDb(
   const sort = jest.fn().mockReturnValue({ skip });
   const find = jest.fn().mockReturnValue({ sort });
   const countDocuments: CountFn = jest.fn().mockResolvedValue(handlers.countResult ?? 0);
+  const insertOne = jest.fn().mockResolvedValue({
+    insertedId: handlers.insertId ?? { toString: () => '507f1f77bcf86cd799439011' },
+  });
+  const updateOne = jest
+    .fn()
+    .mockResolvedValue(
+      handlers.updateResult ?? { matchedCount: 1, upsertedCount: 0, upsertedId: null }
+    );
+  const findOne = jest
+    .fn()
+    .mockResolvedValue(
+      handlers.findOneResult ?? { _id: { toString: () => '507f1f77bcf86cd799439099' } }
+    );
 
   const collection = jest.fn().mockImplementation((name: string) => {
     if (name === 'orders') {
-      return { find, countDocuments };
+      return { find, countDocuments, updateOne, findOne };
     }
-    return { aggregate };
+    return { aggregate, insertOne, updateOne, findOne };
   });
 
   return {
@@ -57,6 +78,9 @@ function mockDb(
     sort,
     skip,
     limit,
+    insertOne,
+    updateOne,
+    findOne,
   };
 }
 
@@ -161,5 +185,118 @@ describe('lib/mongo-queries', () => {
     });
     expect(pipeline[1]).toEqual({ $addFields: { score: { $meta: 'textScore' } } });
     expect(pipeline[2]).toEqual({ $sort: { score: { $meta: 'textScore' } } });
+  });
+
+  it('getBookById returns null when missing', async () => {
+    const { db } = mockDb({ aggregateResult: [] });
+    await expect(getBookById('507f1f77bcf86cd799439011', {}, db)).resolves.toBeNull();
+  });
+
+  it('insertBook writes defaults and returns inserted id', async () => {
+    const { db, insertOne } = mockDb({
+      insertId: { toString: () => '507f1f77bcf86cd799439012' },
+    });
+    const id = await insertBook(
+      {
+        title: 'New',
+        slug: 'new',
+        author_id: '507f1f77bcf86cd799439013',
+        status: 'draft',
+      },
+      db
+    );
+    expect(id).toBe('507f1f77bcf86cd799439012');
+    expect(insertOne).toHaveBeenCalled();
+    const doc = insertOne.mock.calls[0][0] as Record<string, unknown>;
+    expect(doc.avg_rating).toBe(0);
+    expect(doc.review_count).toBe(0);
+  });
+
+  it('updateBook returns false when nothing matched', async () => {
+    const { db } = mockDb({ updateResult: { matchedCount: 0 } });
+    await expect(updateBook('507f1f77bcf86cd799439011', { title: 'X' }, db)).resolves.toBe(false);
+  });
+
+  it('upsertOrderByPaymentIntent uses $setOnInsert and reports upserted', async () => {
+    const { db, updateOne } = mockDb({
+      updateResult: {
+        matchedCount: 0,
+        upsertedCount: 1,
+        upsertedId: { toString: () => '507f1f77bcf86cd799439014' },
+      },
+    });
+
+    const first = await upsertOrderByPaymentIntent(
+      {
+        user_id: 'user-1',
+        status: 'completed',
+        amount: 12,
+        currency: 'USD',
+        stripe_payment_intent_id: 'pi_123',
+        order_items: [
+          {
+            book_id: 'b1',
+            title: 'Book',
+            quantity: 1,
+            unit_amount: 12,
+            currency: 'USD',
+          },
+        ],
+      },
+      db
+    );
+
+    expect(first.upserted).toBe(true);
+    expect(first.orderId).toBe('507f1f77bcf86cd799439014');
+    expect(updateOne).toHaveBeenCalledWith(
+      { stripe_payment_intent_id: 'pi_123' },
+      expect.objectContaining({
+        $setOnInsert: expect.objectContaining({
+          stripe_payment_intent_id: 'pi_123',
+          user_id: 'user-1',
+        }),
+      }),
+      { upsert: true }
+    );
+
+    // Second delivery: matched existing, not upserted
+    updateOne.mockResolvedValueOnce({
+      matchedCount: 1,
+      upsertedCount: 0,
+      upsertedId: null,
+    });
+    const second = await upsertOrderByPaymentIntent(
+      {
+        user_id: 'user-1',
+        status: 'completed',
+        amount: 12,
+        currency: 'USD',
+        stripe_payment_intent_id: 'pi_123',
+        order_items: [
+          {
+            book_id: 'b1',
+            title: 'Book',
+            quantity: 1,
+            unit_amount: 12,
+            currency: 'USD',
+          },
+        ],
+      },
+      db
+    );
+    expect(second.upserted).toBe(false);
+  });
+
+  it('markOrderRefundedByPaymentIntent sets status refunded', async () => {
+    const { db, updateOne } = mockDb({ updateResult: { matchedCount: 1 } });
+    await expect(
+      markOrderRefundedByPaymentIntent('pi_abc', 'requested_by_customer', db)
+    ).resolves.toBe(true);
+    expect(updateOne).toHaveBeenCalledWith(
+      { stripe_payment_intent_id: 'pi_abc' },
+      expect.objectContaining({
+        $set: expect.objectContaining({ status: 'refunded' }),
+      })
+    );
   });
 });

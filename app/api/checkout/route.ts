@@ -1,7 +1,26 @@
+/**
+ * Stripe checkout session API (Phoenix WS2b Task 2b.1.3).
+ *
+ * Reuses `createCheckoutSession` from lib/stripe/server.
+ * Dual-run: auth via AUTH_PROVIDER; book load via DATABASE_PROVIDER.
+ * Defaults remain supabase so production is unchanged.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
+import { getRequestUser } from '@/lib/api/request-auth';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { getBookById, getBookBySlug } from '@/lib/mongo-queries';
 import { createClient } from '@/lib/supabase/server';
 import { createCheckoutSession } from '@/lib/stripe/server';
 import type { CheckoutSessionRequest, CheckoutSessionResponse } from '@/types';
+
+function bookPrice(book: { price?: number | null; discount_price?: number | null }): number {
+  const discount = book.discount_price;
+  if (typeof discount === 'number' && Number.isFinite(discount) && discount > 0) {
+    return discount;
+  }
+  return typeof book.price === 'number' && Number.isFinite(book.price) ? book.price : 0;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,38 +40,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-
-    // Verify user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getRequestUser(request);
     if (!user || user.id !== user_id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get book details
-    let bookQuery = supabase.from('books').select('*');
+    let bookId: string;
+    let bookSlug: string;
+    let bookTitle: string;
+    let price: number;
 
-    if (book_id) {
-      bookQuery = bookQuery.eq('id', book_id);
-    } else if (book_slug) {
-      bookQuery = bookQuery.eq('slug', book_slug);
+    if (isMongoPrimary()) {
+      const book = book_id ? await getBookById(book_id) : await getBookBySlug(book_slug!);
+      if (!book) {
+        return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+      }
+      bookId = String(book._id);
+      bookSlug = book.slug;
+      bookTitle = book.title;
+      price = bookPrice(book);
+    } else {
+      const supabase = await createClient();
+      let bookQuery = supabase.from('books').select('*');
+      if (book_id) {
+        bookQuery = bookQuery.eq('id', book_id);
+      } else if (book_slug) {
+        bookQuery = bookQuery.eq('slug', book_slug);
+      }
+      const { data: book, error: bookError } = await bookQuery.single();
+      if (bookError || !book) {
+        return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+      }
+      bookId = book.id;
+      bookSlug = book.slug;
+      bookTitle = book.title;
+      price = bookPrice(book);
     }
 
-    const { data: book, error: bookError } = await bookQuery.single();
-
-    if (bookError || !book) {
-      return NextResponse.json({ error: 'Book not found' }, { status: 404 });
-    }
-
-    // Create Stripe checkout session
     const session = await createCheckoutSession({
-      bookId: book.id,
-      bookSlug: book.slug,
+      bookId,
+      bookSlug,
       userId: user_id,
-      bookTitle: book.title,
-      price: book.discount_price || book.price,
+      bookTitle,
+      price,
     });
 
     const response: CheckoutSessionResponse = {
