@@ -14,6 +14,7 @@ Humans own consoles, credentials, DNS, and go/no-go decisions (`HUMAN_TASKS.md`)
 
 | Skill            | Path                                                 | Use when                                            |
 | ---------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| **MANGU Navigator** | [`mangu-navigator/`](./mangu-navigator/)          | **Load first every session.** Orchestration, dual ledgers (NEXT_GO + Phoenix), next-best-action, enhancement engine, task routing |
 | Phoenix Contract | [`phoenix-contract/`](./phoenix-contract/)           | Task IDs, PR order, feature freeze, doc amendments  |
 | Ops Runbook      | [`mangu-ops-runbook/`](./mangu-ops-runbook/)         | Incidents, health, rollback triage                  |
 | Env & Secrets    | [`mangu-env-and-secrets/`](./mangu-env-and-secrets/) | Env vars, validate-env, human gates for secrets     |

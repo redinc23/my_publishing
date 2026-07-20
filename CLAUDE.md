@@ -320,8 +320,10 @@ Specialized reviewers live under `.claude/agents/`.
 Skills encode Phoenix + ops procedures for agents. They do **not** replace human gates
 (consoles, credentials, DNS). When a skill applies, read its `SKILL.md` before acting.
 
-Priority packs: `phoenix-contract`, `mangu-env-and-secrets`, `mcp-catalog-ops`,
-`better-auth-mangu`, `mongodb-atlas-mangu`, `mangu-ops-runbook`, `phoenix-data-migration`.
+Priority packs: **`mangu-navigator`** (load first every session — dual ledgers,
+next-best-action, enhancement engine), then `phoenix-contract`,
+`mangu-env-and-secrets`, `mcp-catalog-ops`, `better-auth-mangu`,
+`mongodb-atlas-mangu`, `mangu-ops-runbook`, `phoenix-data-migration`.
 
 ## 15. CONTINUOUS COWORK
 
