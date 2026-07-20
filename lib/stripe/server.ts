@@ -20,9 +20,10 @@ interface CreateCheckoutSessionParams {
   bookId: string;
   bookSlug?: string;
   /**
-   * Supabase auth user id (auth.uid()). Stored in session metadata as
-   * `user_id`; the webhook resolves it to profiles.id before writing
-   * orders.user_id (which references profiles.id).
+   * Purchaser id stored in session metadata as `user_id`.
+   * - Supabase path: auth.uid(); webhook resolves to profiles.id before insert.
+   * - Mongo path (DATABASE_PROVIDER=mongodb): Better Auth / migrated user id
+   *   written directly to orders.user_id (Phoenix flatten).
    */
   userId: string;
   bookTitle: string;

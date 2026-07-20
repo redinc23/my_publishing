@@ -9,6 +9,11 @@ import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
 import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
+import { isMongoPrimary } from '@/lib/db/provider';
+import {
+  markOrderRefundedByPaymentIntent,
+  upsertOrderFromCheckoutSession,
+} from '@/lib/mongo-orders';
 import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
 // Webhook secret for signature verification
@@ -375,6 +380,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const event = verification.event;
   console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
 
+  // Phoenix 2b.1.4 — Mongo path: upsert by stripe_payment_intent_id; 200 on dup.
+  if (isMongoPrimary()) {
+    try {
+      const result = await processMongoWebhookEvent(event);
+      const duration = Date.now() - startTime;
+      console.log(`[Webhook:mongo] Processed ${event.type} in ${duration}ms:`, result);
+
+      if (!result.success && result.should_retry) {
+        return NextResponse.json({ error: result.error }, { status: 500 });
+      }
+
+      // Duplicates and successes always 200 (Stripe must not retry forever).
+      return NextResponse.json({ received: true, provider: 'mongodb', result });
+    } catch (error) {
+      console.error(`[Webhook:mongo] Error processing ${event.type}:`, error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  }
+
   // Initialize Supabase client
   const supabase = createAdminClient();
 
@@ -464,6 +488,87 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Return 500 to trigger retry for unexpected errors
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * Mongo fulfillment path (DATABASE_PROVIDER=mongodb).
+ * Order idempotency via unique sparse stripe_payment_intent_id + $setOnInsert.
+ */
+async function processMongoWebhookEvent(event: Stripe.Event): Promise<WebhookProcessingResult> {
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const upsert = await upsertOrderFromCheckoutSession(session);
+      if ('error' in upsert) {
+        return {
+          success: false,
+          error: upsert.error,
+          event_id: event.id,
+          event_type: event.type,
+          should_retry: !upsert.error.includes('Missing required metadata'),
+        };
+      }
+
+      if (upsert.inserted || upsert.duplicate) {
+        try {
+          await sendPurchaseReceiptForCheckoutSession(session);
+        } catch (receiptError) {
+          console.error('[Webhook:mongo] Receipt email failed (ignored):', receiptError);
+        }
+      }
+
+      return {
+        success: true,
+        event_id: event.id,
+        event_type: event.type,
+        action_taken: upsert.duplicate
+          ? 'Order already exists (idempotent upsert)'
+          : 'Order upserted successfully',
+      };
+    }
+
+    case 'checkout.session.expired': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      return handleCheckoutExpired(session);
+    }
+
+    case 'charge.refunded': {
+      const charge = event.data.object as Stripe.Charge;
+      const paymentIntentId =
+        typeof charge.payment_intent === 'string' ? charge.payment_intent : null;
+      if (!paymentIntentId) {
+        return {
+          success: true,
+          event_id: event.id,
+          event_type: event.type,
+          action_taken: 'No payment_intent on charge; logged',
+        };
+      }
+      const { updated } = await markOrderRefundedByPaymentIntent(
+        paymentIntentId,
+        charge.refunds?.data?.[0]?.reason ?? null
+      );
+      return {
+        success: true,
+        event_id: event.id,
+        event_type: event.type,
+        action_taken: updated ? 'Order marked as refunded' : 'Order not found, logged for review',
+      };
+    }
+
+    case 'payment_intent.payment_failed': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      return handlePaymentFailed(paymentIntent);
+    }
+
+    default:
+      return {
+        success: true,
+        event_id: event.id,
+        event_type: event.type,
+        action_taken: 'Event type not handled',
+      };
   }
 }
 
