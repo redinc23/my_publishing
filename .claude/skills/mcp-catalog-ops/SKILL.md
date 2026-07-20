@@ -1,7 +1,7 @@
 ---
 name: mcp-catalog-ops
 description: This skill should be used when the user asks about the Mangu MCP server, /api/mcp, MCP_ENABLED, recommend_books, search_books, get_book, list_genres, MCP health tool, mcp-handler, catalog MCP clients, or migrating MCP off Supabase onto Mongo.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # MCP Catalog Ops
@@ -41,10 +41,13 @@ Security notes: `references/security-posture.md`.
 
 ## Phoenix migration of MCP
 
-Today handlers use Supabase anon client. Target: Mongo query layer (`getBooks` /
-`searchBooks` / etc.) with **stable tool names and input schemas** so clients do not break.
+Today handlers dual-run via `lib/mcp/catalog.ts`:
 
-Checklist: `references/phoenix-mcp-migration.md`.
+- Default: Supabase anon client + RLS
+- `DATABASE_PROVIDER=mongodb`: `getBooks` / `searchBooks` / genre aggregate / ping
+
+Keep tool names stable. Full Supabase purge of the MCP route lands in WS4.
+Checklist below remains for final cutover polish.
 
 ## Operating procedures
 
