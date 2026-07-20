@@ -3,31 +3,31 @@ import Link from 'next/link';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
   title: 'Book Clubs',
-  description: 'Find MANGU reader resources for choosing, organizing, and discussing group reads.',
+  description:
+    'MANGU book clubs are not available yet. Use the catalog and Readers Hub for group-read planning.',
 };
 
-const clubLinks = [
+const workingLinks = [
   {
-    title: 'Browse books',
-    description: 'Pick your next group read from the public catalog.',
+    title: 'Browse the catalog',
+    description: 'Pick titles that already exist on MANGU for your next group read.',
     href: '/books',
     cta: 'Browse books',
   },
   {
     title: 'Explore genres',
-    description: 'Find discussion ideas by genre and theme.',
+    description: 'Find themes and categories that spark discussion.',
     href: '/genres',
     cta: 'View genres',
   },
   {
-    title: 'Reader tools',
-    description: 'Manage your reading activity from the readers hub.',
+    title: 'Readers Hub',
+    description: 'Manage wishlist, highlights, and reading activity that work today.',
     href: '/readers-hub',
-    cta: 'Open readers hub',
+    cta: 'Open Readers Hub',
   },
 ];
 
@@ -35,26 +35,26 @@ export default function BookClubsPage() {
   return (
     <Section>
       <Container>
+        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-secondary">
+          Status: not available yet
+        </p>
         <h1 className="mb-4 text-4xl font-bold">Book Clubs</h1>
         <p className="mb-8 max-w-2xl text-secondary">
-          Book club creation is coming soon. In the meantime, use these working resources to choose
-          and organize your next read.
+          Hosted book clubs are not live on MANGU. There is nothing to join here yet — no fake club
+          list, waitlist, or signup form. When clubs ship, this page will say so clearly.
         </p>
-        <div className="grid gap-6 md:grid-cols-3">
-          {clubLinks.map((item) => (
-            <Card key={item.href}>
-              <CardHeader>
-                <CardTitle>{item.title}</CardTitle>
-                <CardDescription>{item.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild>
-                  <Link href={item.href}>{item.cta}</Link>
-                </Button>
-              </CardContent>
-            </Card>
+        <p className="mb-4 text-sm font-medium text-foreground">Working today</p>
+        <ul className="grid gap-6 md:grid-cols-3">
+          {workingLinks.map((item) => (
+            <li key={item.href} className="border-t border-border pt-4">
+              <h2 className="mb-2 text-lg font-semibold">{item.title}</h2>
+              <p className="mb-4 text-sm text-secondary">{item.description}</p>
+              <Button asChild variant="outline">
+                <Link href={item.href}>{item.cta}</Link>
+              </Button>
+            </li>
           ))}
-        </div>
+        </ul>
       </Container>
     </Section>
   );
