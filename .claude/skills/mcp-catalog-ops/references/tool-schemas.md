@@ -1,6 +1,8 @@
 # MCP Tool Schemas
 
-Mirror of `app/api/mcp/[transport]/route.ts`. Update when tools change.
+Mirror of `app/api/mcp/[transport]/route.ts` + `lib/mcp/catalog.ts`. Update when tools change.
+
+Book IDs accept legacy UUIDs **or** 24-char Mongo ObjectId hex (dual-run).
 
 ## recommend_books
 
@@ -8,9 +10,11 @@ Inputs:
 
 - `limit`: int 1–50, default 10
 - `genre`: string optional
-- `exclude_book_ids`: uuid[] optional
+- `exclude_book_ids`: book-id[] optional
+- `similar_to_book_id`: book-id optional (additive) — prefer same genre as seed
 
 Output: JSON `{ books: Book[], total: number }` (text content).
+Ranking uses views/purchases (when present), avg_rating, review_count, and recency.
 
 ## search_books
 
@@ -25,7 +29,7 @@ Output: JSON array of book summaries.
 
 Inputs:
 
-- `book_id`: uuid
+- `book_id`: UUID or ObjectId hex
 
 Output: JSON book detail including author + stats, or error.
 
@@ -39,4 +43,4 @@ Output: genres with counts.
 
 Inputs: none.
 
-Output: connectivity status for API/DB used by MCP.
+Output: `{ status, db, provider }` where `provider` is `supabase` | `mongodb`.

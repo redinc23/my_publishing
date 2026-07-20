@@ -9,13 +9,7 @@ import '@/lib/server-only-guard';
 
 import { ObjectId, type Db, type Document, type Filter } from 'mongodb';
 import { getDb } from '@/lib/mongo';
-import type {
-  Book,
-  BookWithAuthor,
-  MongoPagination,
-  Order,
-  PaginatedResult,
-} from '@/types/mongo';
+import type { Book, BookWithAuthor, MongoPagination, Order, PaginatedResult } from '@/types/mongo';
 
 export const DEFAULT_PAGE_SIZE = 20;
 
@@ -28,11 +22,15 @@ export type GetBooksFilters = {
   status?: Book['status'];
   authorId?: string;
   genre?: string;
+  /** Storefront/MCP: typically `public`. */
+  visibility?: Book['visibility'];
 };
 
 export type SearchBooksOptions = MongoPagination & {
   /** Restrict to published by default for storefront search. */
   status?: Book['status'];
+  visibility?: Book['visibility'];
+  genre?: string;
 };
 
 function normalizePagination(opts: MongoPagination = {}): {
@@ -100,6 +98,7 @@ export async function getBooks(
   const match: Filter<Document> = {};
   if (filters.status) match.status = filters.status;
   if (filters.genre) match.genre = filters.genre;
+  if (filters.visibility) match.visibility = filters.visibility;
   if (filters.authorId) match.author_id = coerceId(filters.authorId);
 
   const pipeline: Document[] = [
@@ -120,6 +119,33 @@ export async function getBooks(
 }
 
 /**
+ * Single book by id (ObjectId hex or legacy string UUID), with author join.
+ * Returns null when not found.
+ */
+export async function getBookById(
+  id: string,
+  options: { status?: Book['status']; visibility?: Book['visibility'] } = {},
+  db?: Db
+): Promise<BookWithAuthor | null> {
+  const database = await resolveDb(db);
+  const coerced = coerceId(id);
+
+  const andClauses: Filter<Document>[] =
+    coerced instanceof ObjectId ? [{ $or: [{ _id: coerced }, { _id: id }] }] : [{ _id: id }];
+  if (options.status) andClauses.push({ status: options.status });
+  if (options.visibility) andClauses.push({ visibility: options.visibility });
+
+  const pipeline: Document[] = [
+    { $match: andClauses.length === 1 ? andClauses[0] : { $and: andClauses } },
+    ...authorLookupStages(),
+    { $limit: 1 },
+  ];
+
+  const [doc] = await database.collection('books').aggregate(pipeline).toArray();
+  return (doc as BookWithAuthor | undefined) ?? null;
+}
+
+/**
  * Single book by slug, with author join. Returns null when not found.
  */
 export async function getBookBySlug(
@@ -131,11 +157,7 @@ export async function getBookBySlug(
   const match: Filter<Document> = { slug };
   if (options.status) match.status = options.status;
 
-  const pipeline: Document[] = [
-    { $match: match },
-    ...authorLookupStages(),
-    { $limit: 1 },
-  ];
+  const pipeline: Document[] = [{ $match: match }, ...authorLookupStages(), { $limit: 1 }];
 
   const [doc] = await database.collection('books').aggregate(pipeline).toArray();
   return (doc as BookWithAuthor | undefined) ?? null;
@@ -157,12 +179,9 @@ export async function getUserOrders(
 
   const [total, items] = await Promise.all([
     collection.countDocuments(filter),
-    collection
-      .find(filter)
-      .sort({ created_at: -1 })
-      .skip(skip)
-      .limit(perPage)
-      .toArray() as Promise<Order[]>,
+    collection.find(filter).sort({ created_at: -1 }).skip(skip).limit(perPage).toArray() as Promise<
+      Order[]
+    >,
   ]);
 
   return toPaginatedResult(items, total, page, perPage);
@@ -188,6 +207,8 @@ export async function searchBooks(
     $text: { $search: trimmed },
   };
   if (options.status) match.status = options.status;
+  if (options.visibility) match.visibility = options.visibility;
+  if (options.genre) match.genre = options.genre;
 
   const pipeline: Document[] = [
     { $match: match },
@@ -205,4 +226,33 @@ export async function searchBooks(
   const items = (facet?.items ?? []) as BookWithAuthor[];
   const total = Number(facet?.total?.[0]?.count ?? 0);
   return toPaginatedResult(items, total, page, perPage);
+}
+
+/**
+ * Distinct genres among books matching filters, with counts (MCP `list_genres`).
+ */
+export async function listGenreCounts(
+  filters: Pick<GetBooksFilters, 'status' | 'visibility'> = {},
+  db?: Db
+): Promise<Record<string, number>> {
+  const database = await resolveDb(db);
+  const match: Filter<Document> = {};
+  if (filters.status) match.status = filters.status;
+  if (filters.visibility) match.visibility = filters.visibility;
+
+  const pipeline: Document[] = [
+    { $match: match },
+    { $match: { genre: { $type: 'string', $ne: '' } } },
+    { $group: { _id: '$genre', count: { $sum: 1 } } },
+    { $sort: { count: -1, _id: 1 } },
+  ];
+
+  const rows = await database.collection('books').aggregate(pipeline).toArray();
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    if (typeof row._id === 'string' && row._id) {
+      counts[row._id] = Number(row.count ?? 0);
+    }
+  }
+  return counts;
 }
