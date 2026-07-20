@@ -824,6 +824,8 @@ _Decision Time Limit:_ No more than **60 minutes** between trigger and Go/No-Go 
 | `lib/orders/mongo-fulfill.ts`| Idempotent Stripe order upsert    | WS2b       | ✅ New      |
 | `lib/mongo-books.ts`         | Mongo book insert/update helpers  | WS2b       | ✅ New      |
 | `lib/audit.ts`               | Audit log writer                  | WS2c       | ✅ New      |
+| `lib/mongo-reviews.ts`       | Review upsert + rating recompute  | WS2c       | ✅ New      |
+| `lib/mongo-profiles.ts`      | Profile updateOne helper          | WS2c       | ✅ New      |
 | `lib/actions/upload.ts`      | Server actions (rewritten)        | WS3        | ✅ Migrated |
 | `scripts/migrate-storage.ts` | Supabase→Blob bulk file migration | WS3        | ✅ New      |
 | `scripts/transform-data.ts`  | Export→Mongo transform pipeline   | P11        | ✅ New      |
