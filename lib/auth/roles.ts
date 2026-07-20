@@ -19,3 +19,8 @@ export function isManguRole(value: unknown): value is ManguRole {
 export function normalizeManguRole(value: unknown): ManguRole {
   return isManguRole(value) ? value : DEFAULT_MANGU_ROLE;
 }
+
+/** Authors and admins may create/update catalog books via API. */
+export function canMutateCatalog(role: ManguRole): boolean {
+  return role === 'admin' || role === 'author';
+}

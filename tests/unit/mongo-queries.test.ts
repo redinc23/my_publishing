@@ -14,6 +14,7 @@ jest.mock('@/lib/mongo', () => ({
 
 import {
   DEFAULT_PAGE_SIZE,
+  getBookById,
   getBookBySlug,
   getBooks,
   getUserOrders,
@@ -161,5 +162,17 @@ describe('lib/mongo-queries', () => {
     });
     expect(pipeline[1]).toEqual({ $addFields: { score: { $meta: 'textScore' } } });
     expect(pipeline[2]).toEqual({ $sort: { score: { $meta: 'textScore' } } });
+  });
+
+  it('getBookById matches on coerced ObjectId', async () => {
+    const { db, aggregate, toArray } = mockDb({
+      aggregateResult: [{ _id: '507f1f77bcf86cd799439011', slug: 'x', title: 'X' }],
+    });
+    const book = await getBookById('507f1f77bcf86cd799439011', {}, db);
+    expect(book?.slug).toBe('x');
+    expect(aggregate).toHaveBeenCalled();
+    const pipeline = aggregate.mock.calls[0][0] as Record<string, unknown>[];
+    expect((pipeline[0] as { $match: { _id: unknown } }).$match._id).toBeTruthy();
+    expect(toArray).toHaveBeenCalled();
   });
 });

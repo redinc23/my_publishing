@@ -91,9 +91,10 @@ export interface WebhookConfig {
 export interface CheckoutMetadata {
   book_id: string;
   /**
-   * Supabase auth user id (auth.uid()) of the purchaser — NOT profiles.id.
-   * Fulfillment must resolve it via profiles.user_id before writing
-   * orders.user_id, which references profiles(id).
+   * Purchaser auth user id.
+   * - Supabase path: auth.uid(); webhook resolves profiles.id before writing orders.user_id.
+   * - Mongo path (DATABASE_PROVIDER=mongodb): Better Auth / imported user id stored
+   *   directly on orders.user_id (see types/mongo.Order).
    */
   user_id: string;
   price_id?: string;
