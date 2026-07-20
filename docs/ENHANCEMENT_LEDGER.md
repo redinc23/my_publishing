@@ -13,16 +13,29 @@ Seeded 2026-07-20 from navigator SCOUT @ `9a8a940`. Re-run
 ---
 
 ### E-001 Honest book-clubs placeholder
-Lane: L0 · Status: PROPOSED · Score: R3 I3 C5 /E1 = 45
+
+Lane: L0 · Status: SHIPPED · Score: R3 I3 C5 /E1 = 45
 Story: As a reader, I see an honest status (not fake “Coming Soon” that looks live) on book clubs.
-Evidence: stub surface under `app/(consumer)/book-clubs`; G6 no false-success
+Evidence: `app/(consumer)/book-clubs/page.tsx` already states creation is coming soon + links only to live resources
 Metric & target: zero false-success complaints on that route; G6 closer to TRUE
-Flag: n/a (truth fix; remove misleading CTA if present)
+Flag: n/a (truth fix)
 Gate/Star tie: G6
 Effort: S · Risk: none · Verification: visual QA on `/book-clubs`
 Approval: not required (L0)
 
+### E-006 MCP catalog dual-run (Mongo path)
+
+Lane: L1 · Status: SHIPPED(flag) · Score: R5 I4 C5 /E2 = 50
+Story: As an MCP client, catalog tools keep working when DATABASE_PROVIDER flips to mongodb.
+Evidence: `lib/mcp/catalog.ts` + route refactor; unit suite `mcp-catalog.test.ts`
+Metric & target: tool names stable; health reports provider; smoke still gated by MCP_ENABLED
+Flag: DATABASE_PROVIDER (existing; default supabase)
+Gate/Star tie: Phoenix MCP migration checklist
+Effort: S · Risk: response field shape drift · Verification: `npm test` mcp-catalog + docs/MCP_SERVER.md
+Approval: not required (migration parity)
+
 ### E-002 Replace console.log with structured logger in app/lib
+
 Lane: L0 · Status: PROPOSED · Score: R2 I3 C5 /E2 = 15
 Story: As an operator, I get structured logs instead of raw console noise in production.
 Evidence: enhance-scan hygiene signal; WS6 / `mangu-observability` path
@@ -33,6 +46,7 @@ Effort: S · Risk: log volume · Verification: `grep -r console.log app lib | wc
 Approval: not required (L0)
 
 ### E-003 Friendly 429 / rate-limit UX
+
 Lane: L1 · Status: PROPOSED · Score: R4 I3 C4 /E2 = 24
 Story: As a reader hitting rate limits, I see a clear retry message instead of a blank error.
 Evidence: WS6 rate-limit contract; CCR-019 a11y on critical states
@@ -43,6 +57,7 @@ Effort: S · Risk: none · Verification: trigger limit in staging; screenshot + 
 Approval: not required (L1 hardening-adjacent)
 
 ### E-004 Metadata coverage for pages missing generateMetadata
+
 Lane: L2 · Status: PROPOSED · Score: R5 I4 C4 /E3 = 26.7
 Story: As a search crawler / social sharer, every public page has correct title/description/OG.
 Evidence: enhance-scan SEO gap (~24 of 61 pages lack metadata)
@@ -53,6 +68,7 @@ Effort: M · Risk: wrong titles · Verification: crawl sample + Lighthouse SEO
 Approval: required for L2 during freeze
 
 ### E-005 Audio↔text position sync (signature differentiator)
+
 Lane: L3 · Status: PROPOSED · Score: R5 I5 C3 /E5 = 15
 Story: As a reader, I switch between listening and reading and resume at the same place.
 Evidence: benchmark map — few competitors do this well; MANGU has both engines

@@ -824,6 +824,9 @@ _Decision Time Limit:_ No more than **60 minutes** between trigger and Go/No-Go 
 | `lib/orders/mongo-stripe-order.ts` | Idempotent Mongo Stripe upsert    | WS2b       | ✅ New                                             |
 | `lib/api/request-user.ts`          | Dual-run API session helper       | WS2b       | ✅ New                                             |
 | `lib/audit.ts`                     | Audit log writer                  | WS2c       | ✅ New                                             |
+| `lib/actions/mongo-mutations.ts`   | Mongo book/review/profile writes  | WS2c       | ✅ New                                             |
+| `lib/actions/phoenix-mutations.ts` | Dual-run mutation entry points    | WS2c       | ✅ New                                             |
+| `lib/mcp/catalog.ts`               | MCP catalog dual-run data layer   | WS2b/MCP   | ✅ New                                             |
 | `lib/actions/upload.ts`            | Server actions (rewritten)        | WS3        | ✅ Migrated                                        |
 | `scripts/migrate-storage.ts`       | Supabase→Blob bulk file migration | WS3        | ✅ New                                             |
 | `scripts/transform-data.ts`        | Export→Mongo transform pipeline   | P11        | ✅ New                                             |
