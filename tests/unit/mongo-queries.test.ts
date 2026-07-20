@@ -14,9 +14,11 @@ jest.mock('@/lib/mongo', () => ({
 
 import {
   DEFAULT_PAGE_SIZE,
+  getBookById,
   getBookBySlug,
   getBooks,
   getUserOrders,
+  listGenreCounts,
   searchBooks,
 } from '@/lib/mongo-queries';
 
@@ -161,5 +163,45 @@ describe('lib/mongo-queries', () => {
     });
     expect(pipeline[1]).toEqual({ $addFields: { score: { $meta: 'textScore' } } });
     expect(pipeline[2]).toEqual({ $sort: { score: { $meta: 'textScore' } } });
+  });
+
+  it('getBookById matches ObjectId or string id with filters', async () => {
+    const doc = { _id: '507f1f77bcf86cd799439011', title: 'ById', author: null };
+    const { db, aggregate } = mockDb({ aggregateResult: [doc] });
+    const result = await getBookById(
+      '507f1f77bcf86cd799439011',
+      { status: 'published', visibility: 'public' },
+      db
+    );
+    expect(result?.title).toBe('ById');
+    const pipeline = aggregate.mock.calls[0][0] as Record<string, unknown>[];
+    expect(pipeline[0]).toEqual(
+      expect.objectContaining({
+        $match: expect.objectContaining({ $and: expect.any(Array) }),
+      })
+    );
+  });
+
+  it('listGenreCounts groups by genre', async () => {
+    const { db, aggregate } = mockDb({
+      aggregateResult: [
+        { _id: 'Fantasy', count: 2 },
+        { _id: 'Sci-Fi', count: 1 },
+      ],
+    });
+    const counts = await listGenreCounts({ status: 'published', visibility: 'public' }, db);
+    expect(counts).toEqual({ Fantasy: 2, 'Sci-Fi': 1 });
+    expect(aggregate).toHaveBeenCalled();
+  });
+
+  it('getBooks includes visibility in $match when provided', async () => {
+    const { db, aggregate } = mockDb({
+      aggregateResult: [{ items: [], total: [{ count: 0 }] }],
+    });
+    await getBooks({ status: 'published', visibility: 'public' }, {}, db);
+    const pipeline = aggregate.mock.calls[0][0] as Record<string, unknown>[];
+    expect(pipeline[0]).toEqual({
+      $match: { status: 'published', visibility: 'public' },
+    });
   });
 });

@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
-  title: 'Book Clubs',
-  description: 'Find MANGU reader resources for choosing, organizing, and discussing group reads.',
+  title: 'Book Clubs — reader resources',
+  description:
+    'Hosted book clubs are not live yet. Use these MANGU reader resources to choose and organize a group read.',
 };
 
 const clubLinks = [
@@ -35,10 +36,16 @@ export default function BookClubsPage() {
   return (
     <Section>
       <Container>
+        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-secondary">
+          Reader resources
+        </p>
         <h1 className="mb-4 text-4xl font-bold">Book Clubs</h1>
-        <p className="mb-8 max-w-2xl text-secondary">
-          Book club creation is coming soon. In the meantime, use these working resources to choose
-          and organize your next read.
+        <p className="mb-3 max-w-2xl text-secondary">
+          Hosted book-club creation is not available yet. This page lists working MANGU tools you
+          can use today to pick and discuss a group read — not a live clubs product.
+        </p>
+        <p className="mb-8 max-w-2xl text-sm text-muted-foreground">
+          Want to be notified when clubs launch? Use Contact from the site footer.
         </p>
         <div className="grid gap-6 md:grid-cols-3">
           {clubLinks.map((item) => (

@@ -1,7 +1,7 @@
 ---
 name: mcp-catalog-ops
 description: This skill should be used when the user asks about the Mangu MCP server, /api/mcp, MCP_ENABLED, recommend_books, search_books, get_book, list_genres, MCP health tool, mcp-handler, catalog MCP clients, or migrating MCP off Supabase onto Mongo.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # MCP Catalog Ops
@@ -12,6 +12,7 @@ In-app Model Context Protocol server exposing the **public catalog** only.
 
 - Transport: Streamable HTTP via `mcp-handler`
 - Path: `POST /api/mcp/mcp` (see `app/api/mcp/[transport]/route.ts`)
+- Catalog data: `lib/mcp/catalog.ts` (dual-run Supabase / Mongo)
 - Local: `http://localhost:3000/api/mcp/mcp`
 - Prod: `https://www.mangu-publishers.com/api/mcp/mcp` (only if enabled)
 
@@ -30,19 +31,20 @@ Client configs: `.cursor/mcp.json`, `.vscode/mcp.json`, `docs/MCP_SERVER.md`.
 
 | Tool              | Purpose                                                 |
 | ----------------- | ------------------------------------------------------- |
-| `recommend_books` | Popularity/recency ranking; optional genre; exclude IDs |
+| `recommend_books` | Popularity/rating/recency; optional genre or similar_to |
 | `search_books`    | Title/description search (sanitized)                    |
-| `get_book`        | Full details by book UUID                               |
+| `get_book`        | Full details by book UUID or ObjectId                   |
 | `list_genres`     | Distinct genres + counts                                |
-| `health`          | API + DB connectivity                                   |
+| `health`          | API + DB connectivity (+ provider)                      |
 
 Schemas and examples: `references/tool-schemas.md`.
 Security notes: `references/security-posture.md`.
 
 ## Phoenix migration of MCP
 
-Today handlers use Supabase anon client. Target: Mongo query layer (`getBooks` /
-`searchBooks` / etc.) with **stable tool names and input schemas** so clients do not break.
+Handlers use `lib/mcp/catalog.ts`. Target path (Mongo) is live behind
+`DATABASE_PROVIDER=mongodb` using `getBooks` / `searchBooks` / `getBookById` /
+`listGenreCounts`. Prod stays on Supabase until cutover.
 
 Checklist: `references/phoenix-mcp-migration.md`.
 

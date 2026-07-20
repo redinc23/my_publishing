@@ -38,9 +38,10 @@ unauthenticated.
   is capped too (CCR-007).
 - Key comparison is constant-time (SHA-256 digests + `timingSafeEqual`), so
   neither the key length nor a matching prefix leaks via timing.
-- All tools remain read-only over `published` + `public` rows via the Supabase
-  anon key + RLS, and search input is sanitized against PostgREST filter
-  injection (`sanitizeSearchQuery`).
+- All tools remain read-only over `published` + `public` rows. Data access goes
+  through `lib/mcp/catalog.ts` (dual-run): Supabase anon + RLS by default, or the
+  Phoenix Mongo query layer when `DATABASE_PROVIDER=mongodb`. Search input is
+  sanitized against filter injection (`sanitizeSearchQuery`).
 - Guard implementation: `lib/mcp/guard.ts` (`mcpGuard`), applied to all
   methods exported by `app/api/mcp/[transport]/route.ts`.
 
@@ -54,15 +55,16 @@ guarding commit removes the key requirement.
 
 ## Tools
 
-| Tool              | Description                                                      |
-| ----------------- | ---------------------------------------------------------------- |
-| `recommend_books` | Popularity/recency-ranked recommendations, optional genre filter |
-| `search_books`    | Text search over published book titles/descriptions              |
-| `get_book`        | Full details for a book by ID (author + stats)                   |
-| `list_genres`     | Distinct genres with counts                                      |
-| `health`          | API and DB connectivity check                                    |
+| Tool              | Description                                                                   |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `recommend_books` | Popularity / rating / recency ranking; optional genre or `similar_to_book_id` |
+| `search_books`    | Text search over published book titles/descriptions                           |
+| `get_book`        | Full details for a book by UUID or ObjectId (author + stats)                  |
+| `list_genres`     | Distinct genres with counts                                                   |
+| `health`          | API / DB connectivity + active catalog `provider`                             |
 
-All tools use the Supabase anon key, so only `published` + `public` data is exposed (RLS enforced).
+Server version: **1.1.0**. Catalog access defaults to Supabase (prod-safe);
+set `DATABASE_PROVIDER=mongodb` only in non-prod / cutover environments.
 
 ## Client configuration
 
