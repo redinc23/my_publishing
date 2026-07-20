@@ -11,6 +11,7 @@ import { ObjectId, type Db, type Document, type Filter } from 'mongodb';
 import { getDb } from '@/lib/mongo';
 import type {
   Book,
+  BookStatus,
   BookWithAuthor,
   MongoPagination,
   Order,
@@ -131,11 +132,25 @@ export async function getBookBySlug(
   const match: Filter<Document> = { slug };
   if (options.status) match.status = options.status;
 
-  const pipeline: Document[] = [
-    { $match: match },
-    ...authorLookupStages(),
-    { $limit: 1 },
-  ];
+  const pipeline: Document[] = [{ $match: match }, ...authorLookupStages(), { $limit: 1 }];
+
+  const [doc] = await database.collection('books').aggregate(pipeline).toArray();
+  return (doc as BookWithAuthor | undefined) ?? null;
+}
+
+/**
+ * Single book by id (ObjectId hex or string legacy id), with author join.
+ */
+export async function getBookById(
+  id: string,
+  options: { status?: BookStatus } = {},
+  db?: Db
+): Promise<BookWithAuthor | null> {
+  const database = await resolveDb(db);
+  const match: Filter<Document> = { _id: coerceId(id) };
+  if (options.status) match.status = options.status;
+
+  const pipeline: Document[] = [{ $match: match }, ...authorLookupStages(), { $limit: 1 }];
 
   const [doc] = await database.collection('books').aggregate(pipeline).toArray();
   return (doc as BookWithAuthor | undefined) ?? null;
@@ -157,12 +172,9 @@ export async function getUserOrders(
 
   const [total, items] = await Promise.all([
     collection.countDocuments(filter),
-    collection
-      .find(filter)
-      .sort({ created_at: -1 })
-      .skip(skip)
-      .limit(perPage)
-      .toArray() as Promise<Order[]>,
+    collection.find(filter).sort({ created_at: -1 }).skip(skip).limit(perPage).toArray() as Promise<
+      Order[]
+    >,
   ]);
 
   return toPaginatedResult(items, total, page, perPage);

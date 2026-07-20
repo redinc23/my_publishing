@@ -38,9 +38,10 @@ unauthenticated.
   is capped too (CCR-007).
 - Key comparison is constant-time (SHA-256 digests + `timingSafeEqual`), so
   neither the key length nor a matching prefix leaks via timing.
-- All tools remain read-only over `published` + `public` rows via the Supabase
-  anon key + RLS, and search input is sanitized against PostgREST filter
-  injection (`sanitizeSearchQuery`).
+- All tools remain read-only over `published` + `public` books via the dual-run
+  catalog layer (`lib/mcp/catalog.ts`): Supabase anon+RLS by default, Mongo query
+  helpers when `DATABASE_PROVIDER=mongodb`. Search input is sanitized against
+  PostgREST filter injection (`sanitizeSearchQuery`).
 - Guard implementation: `lib/mcp/guard.ts` (`mcpGuard`), applied to all
   methods exported by `app/api/mcp/[transport]/route.ts`.
 
@@ -62,7 +63,10 @@ guarding commit removes the key requirement.
 | `list_genres`     | Distinct genres with counts                                      |
 | `health`          | API and DB connectivity check                                    |
 
-All tools use the Supabase anon key, so only `published` + `public` data is exposed (RLS enforced).
+Default (`DATABASE_PROVIDER=supabase`): tools use the Supabase anon key so only
+`published` + `public` data is exposed (RLS enforced). When Mongo is primary,
+the same filters are applied in `lib/mcp/catalog.ts` (no service-role, no
+manuscripts, no PII). `book_id` accepts UUID or Mongo ObjectId hex.
 
 ## Client configuration
 

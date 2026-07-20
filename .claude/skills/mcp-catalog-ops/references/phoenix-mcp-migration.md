@@ -16,3 +16,12 @@
 4. Update smoke script expectations if field names change intentionally.
 5. Remove `@supabase` from MCP route in WS4 window with the rest of the purge.
 6. Document any response field renames in `docs/MCP_SERVER.md`.
+
+## Status (2026-07-20)
+
+Dual-run landed in `lib/mcp/catalog.ts` + thin `app/api/mcp/[transport]/route.ts`:
+
+- Tool names unchanged: `recommend_books`, `search_books`, `get_book`, `list_genres`, `health`.
+- `book_id` / `exclude_book_ids` accept UUID **or** 24-char ObjectId hex (additive).
+- Mongo responses include stable `id` / `author.full_name` aliases for clients.
+- Supabase path remains default until cutover.
