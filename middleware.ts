@@ -3,20 +3,15 @@ import { getSessionCookie } from 'better-auth/cookies';
 import { getAuthProvider } from '@/lib/auth/provider';
 import { MANGU_ROLE_COOKIE, normalizeManguRole } from '@/lib/auth/roles';
 import { enforceRateLimit, getRateLimitIdentity } from '@/lib/rate-limit';
+import { buildRateLimitResponse } from '@/lib/rate-limit-response';
 import { getEdgeAuthUser, getEdgeUserRole } from '@/lib/supabase/edge-auth';
 
 /** Reject a request per rate-limit result: 429 when limited, 503 when the limiter is unavailable (fail-closed). */
-function rateLimitRejection(result: { reason: string; headers: Record<string, string> }) {
-  if (result.reason === 'unavailable') {
-    return new NextResponse('Service Unavailable', {
-      status: 503,
-      headers: result.headers,
-    });
-  }
-  return new NextResponse('Too Many Requests', {
-    status: 429,
-    headers: result.headers,
-  });
+function rateLimitRejection(
+  request: NextRequest,
+  result: { reason: string; headers: Record<string, string> }
+) {
+  return buildRateLimitResponse(request, result);
 }
 
 function loginRedirect(request: NextRequest, pathname: string) {
@@ -63,7 +58,7 @@ export async function middleware(request: NextRequest) {
     const result = await enforceRateLimit('auth', ip);
 
     if (!result.success) {
-      return rateLimitRejection(result);
+      return rateLimitRejection(request, result);
     }
   }
 
@@ -72,7 +67,7 @@ export async function middleware(request: NextRequest) {
     const result = await enforceRateLimit('upload', ip);
 
     if (!result.success) {
-      return rateLimitRejection(result);
+      return rateLimitRejection(request, result);
     }
   }
 
@@ -85,7 +80,7 @@ export async function middleware(request: NextRequest) {
     const result = await enforceRateLimit('api', ip);
 
     if (!result.success) {
-      return rateLimitRejection(result);
+      return rateLimitRejection(request, result);
     }
   }
 
@@ -215,7 +210,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };

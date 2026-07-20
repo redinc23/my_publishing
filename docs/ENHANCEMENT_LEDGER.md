@@ -49,14 +49,15 @@ Approval: not required (L0)
 
 ### E-003 Friendly 429 / rate-limit UX
 
-Lane: L1 · Status: PROPOSED · Score: R4 I3 C4 /E2 = 24
+Lane: L1 · Status: SHIPPED(flag) · Score: R4 I3 C4 /E2 = 24
 Story: As a reader hitting rate limits, I see a clear retry message instead of a blank error.
 Evidence: WS6 rate-limit contract; CCR-019 a11y on critical states
 Metric & target: 429 responses render Retry-After guidance; support tickets ↓
 Flag: NEXT_PUBLIC_FEATURE_FRIENDLY_429 (default off until measured)
 Gate/Star tie: North Star #8
-Effort: S · Risk: none · Verification: trigger limit in staging; screenshot + header check
+Effort: S · Risk: none · Verification: unit tests in `tests/unit/friendly-429.test.ts`; enable flag in preview
 Approval: not required (L1 hardening-adjacent)
+Shipped: 2026-07-20 — `lib/rate-limit-response.ts` + `/too-many-requests` page; middleware wired.
 
 ### E-004 Metadata coverage for pages missing generateMetadata
 
@@ -79,6 +80,28 @@ Flag: NEXT_PUBLIC_FEATURE_AUDIO_TEXT_SYNC (default off)
 Gate/Star tie: post-GO growth
 Effort: L · Risk: scope / sync correctness · Verification: e2e cross-mode resume
 Approval: wait for GO or explicit unfreeze
+
+### E-007 Honest blog empty-state copy pass
+
+Lane: L0 · Status: PROPOSED · Score: R2 I2 C5 /E1 = 20
+Story: As a reader, the blog page does not imply a live editorial feed when no posts exist.
+Evidence: enhance-scan stub `app/(consumer)/blog/page.tsx` @ 625f46d
+Metric & target: G6 honesty; no false “newsroom” cues
+Flag: n/a
+Gate/Star tie: G6
+Effort: S · Risk: none · Verification: visual QA `/blog`
+Approval: not required (L0)
+
+### E-008 Route-level code-splitting for heavy clients
+
+Lane: L2 · Status: PROPOSED · Score: R4 I4 C3 /E3 = 16
+Story: As a visitor, first load ships less JS by dynamically importing heavy reader/audio clients.
+Evidence: enhance-scan — 90 `use client` vs 1 dynamic import
+Metric & target: LCP/TBT improvement on `/books/[slug]` and reader routes
+Flag: NEXT_PUBLIC_FEATURE_ROUTE_SPLIT (default off)
+Gate/Star tie: post-GO / owner change-control
+Effort: M · Risk: hydration · Verification: bundle analyzer before/after
+Approval: required for L2 during freeze
 
 ---
 
