@@ -33,6 +33,25 @@ Beckwith reactivated migration ("we gotta do that migration now") while requirin
 site keep serving the public. Path A (stabilize-only) is **off**. Production remains
 `AUTH_PROVIDER=supabase` until Phase 11–12 cutover; do not flip Better Auth live early.
 
+### C0.4 Close duplicate Phoenix drafts (agent swarm collision — 2026-07-20)
+
+WS2a already merged as **#307**. Multiple parallel agents reopened overlapping drafts.
+**Prefer these keepers and close the rest as duplicates:**
+
+| Keep     | Title                                        | Why                                                         |
+| -------- | -------------------------------------------- | ----------------------------------------------------------- |
+| **#309** | WS2b dual-run books/checkout + Mongo webhook | Canonical WS2b (or merge **#313** which stacks MCP on #309) |
+| **#310** | Honest book-clubs (E-001 / G6)               | Freeze-legal L0 truth fix                                   |
+| **#313** | MCP catalog dual-run                         | Website MCP tool Mongo path; includes #309 commits          |
+
+| Close as duplicate | Notes                                                              |
+| ------------------ | ------------------------------------------------------------------ |
+| #306, #308         | Superseded by merged #307 (WS2a / navigator)                       |
+| #311, #312         | Parallel WS2b clones of #309 — close after picking one WS2b keeper |
+
+Until **C0.1** storm automations are disabled, agents will keep colliding. Do not open
+another WS2b PR; rebase/update **#309** or **#313** instead.
+
 ---
 
 ## P0 — security-critical
@@ -207,11 +226,11 @@ Click-paths reference `docs/PROJECT_PHOENIX.md` unless noted.
 
 ## Phase 8 — Vercel env / Stripe
 
-| ID   | Task                                                                                 | Status |
-| ---- | ------------------------------------------------------------------------------------ | ------ |
-| P8.x | Load all Phoenix §9.1 (+ amended SITE_URL / extras) into Vercel Production + Preview | ⬜     |
+| ID   | Task                                                                                                                            | Status |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P8.x | Load all Phoenix §9.1 (+ amended SITE_URL / extras) into Vercel Production + Preview                                            | ⬜     |
 | P8.x | Add `AUTH_PROVIDER=supabase`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` to Vercel (do **not** flip to better-auth until Phase 11) | ⬜     |
-| P8.x | Point Stripe webhook at Vercel `/api/webhook` (keep Cloud Run standby)               | ⬜     |
+| P8.x | Point Stripe webhook at Vercel `/api/webhook` (keep Cloud Run standby)                                                          | ⬜     |
 
 ## Phase 11 — data cutover
 
