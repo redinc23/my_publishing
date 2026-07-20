@@ -35,11 +35,32 @@ async function main(): Promise<void> {
     { key: { status: 1, visibility: 1 }, name: 'books_status_visibility' },
     { key: { author_id: 1 }, name: 'books_author_id' },
     { key: { created_at: -1 }, name: 'books_created_at' },
+    {
+      key: { title: 'text', description: 'text' },
+      name: 'books_text_search',
+      weights: { title: 10, description: 5 },
+    },
   ]);
 
   await db.collection('orders').createIndexes([
+    {
+      key: { stripe_payment_intent_id: 1 },
+      unique: true,
+      sparse: true,
+      name: 'orders_stripe_payment_intent_uq',
+    },
     { key: { stripe_session_id: 1 }, unique: true, sparse: true, name: 'orders_stripe_session_uq' },
     { key: { user_id: 1, created_at: -1 }, name: 'orders_user_created' },
+  ]);
+
+  await db.collection('reviews').createIndexes([
+    { key: { book_id: 1, user_id: 1 }, unique: true, name: 'reviews_book_user_uq' },
+    { key: { book_id: 1, created_at: -1 }, name: 'reviews_book_created' },
+  ]);
+
+  await db.collection('audit_logs').createIndexes([
+    { key: { actor_id: 1, created_at: -1 }, name: 'audit_logs_actor_created' },
+    { key: { created_at: -1 }, name: 'audit_logs_created' },
   ]);
 
   await db.collection('order_items').createIndexes([
@@ -48,7 +69,7 @@ async function main(): Promise<void> {
     { key: { order_id: 1, book_id: 1 }, unique: true, name: 'order_items_order_book_uq' },
   ]);
 
-  console.log('✓ profiles, authors, books, orders, order_items indexes ready');
+  console.log('✓ profiles, authors, books, orders, order_items, reviews, audit_logs indexes ready');
 }
 
 main().catch((err) => {

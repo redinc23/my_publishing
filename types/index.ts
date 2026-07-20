@@ -42,6 +42,20 @@ export type { BookStats as AnalyticsBookStats } from './analytics';
 // Database types (Supabase generated - you may need to regenerate these)
 export type { Database } from './database';
 
+// Mongo types (Phoenix WS2a)
+export type {
+  Profile as MongoProfile,
+  Author as MongoAuthor,
+  Book as MongoBook,
+  Order as MongoOrder,
+  OrderItem as MongoOrderItem,
+  Review as MongoReview,
+  ReadingProgress as MongoReadingProgress,
+  AuditLog as MongoAuditLog,
+  BookWithAuthor as MongoBookWithAuthor,
+  OrderWithBooks as MongoOrderWithBooks,
+} from './mongo';
+
 /**
  * Common utility types
  */
