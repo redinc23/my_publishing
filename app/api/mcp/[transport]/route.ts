@@ -11,23 +11,34 @@
  *    `Authorization: Bearer ${MCP_API_KEY}` (401 otherwise). If
  *    `MCP_ENABLED=true` but no key is configured, the endpoint fails closed
  *    as if disabled — it can never be open unauthenticated.
- *  - Read-only over published+public books only (anon key + RLS). User search
- *    text is sanitized before it reaches a PostgREST filter (no `.or()`
- *    injection).
+ *  - Read-only over published+public books only. User search text is sanitized
+ *    before it reaches filters (no `.or()` injection on Supabase).
+ *  - Dual-run (Phoenix): DATABASE_PROVIDER=mongodb uses mongo-queries;
+ *    default supabase keeps production unchanged.
  */
 
 import { createMcpHandler } from 'mcp-handler';
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { mcpGuard, sanitizeSearchQuery } from '@/lib/mcp/guard';
+import {
+  mcpCatalogHealth,
+  mcpGetBook,
+  mcpListGenres,
+  mcpRecommendBooks,
+  mcpSearchBooks,
+} from '@/lib/mcp/catalog';
+import { mcpGuard } from '@/lib/mcp/guard';
 
-function supabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
+/** Accept Supabase UUIDs and Mongo ObjectId hex (24 chars). */
+const bookIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .refine(
+    (v) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v) ||
+      /^[a-fA-F0-9]{24}$/.test(v),
+    { message: 'book_id must be a UUID or Mongo ObjectId hex' }
   );
-}
 
 const handler = createMcpHandler(
   (server) => {
@@ -37,47 +48,15 @@ const handler = createMcpHandler(
       {
         limit: z.number().int().min(1).max(50).default(10),
         genre: z.string().optional(),
-        exclude_book_ids: z.array(z.string().uuid()).optional(),
+        exclude_book_ids: z.array(bookIdSchema).optional(),
       },
       async ({ limit, genre, exclude_book_ids }) => {
-        let query = supabase()
-          .from('books')
-          .select(
-            `*, author:profiles!books_author_id_fkey(id, full_name, avatar_url),
-             stats:book_stats_summary(total_views, total_purchases, total_revenue)`
-          )
-          .eq('status', 'published')
-          .eq('visibility', 'public')
-          .order('created_at', { ascending: false })
-          .limit(limit);
-
-        if (genre) query = query.eq('genre', genre);
-        if (exclude_book_ids?.length) {
-          query = query.not('id', 'in', `(${exclude_book_ids.join(',')})`);
-        }
-
-        const { data, error } = await query;
-        if (error) throw new Error(`Query failed: ${error.message}`);
-
-        const scored = (data || [])
-          .map((book) => {
-            const recencyDays = Math.floor(
-              (Date.now() - new Date(book.created_at).getTime()) / 86_400_000
-            );
-            const score =
-              (book.stats?.total_views || 0) +
-              (book.stats?.total_purchases || 0) * 10 +
-              Math.max(0, 30 - recencyDays) * 5;
-            return { ...book, _score: score };
-          })
-          .sort((a, b) => b._score - a._score)
-          .map(({ _score, ...book }) => book);
-
+        const result = await mcpRecommendBooks({ limit, genre, exclude_book_ids });
         return {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify({ books: scored, total: scored.length }, null, 2),
+              text: JSON.stringify(result, null, 2),
             },
           ],
         };
@@ -92,20 +71,7 @@ const handler = createMcpHandler(
         limit: z.number().int().min(1).max(50).default(10),
       },
       async ({ query, limit }) => {
-        const safe = sanitizeSearchQuery(query);
-        if (!safe) {
-          return { content: [{ type: 'text' as const, text: JSON.stringify([], null, 2) }] };
-        }
-        const { data, error } = await supabase()
-          .from('books')
-          .select(
-            'id, title, description, genre, created_at, author:profiles!books_author_id_fkey(id, full_name)'
-          )
-          .eq('status', 'published')
-          .eq('visibility', 'public')
-          .or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
-          .limit(limit);
-        if (error) throw new Error(`Search failed: ${error.message}`);
+        const data = await mcpSearchBooks({ query, limit });
         return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
       }
     );
@@ -113,19 +79,9 @@ const handler = createMcpHandler(
     server.tool(
       'get_book',
       'Get full details for a single published book by ID, including author and stats.',
-      { book_id: z.string().uuid() },
+      { book_id: bookIdSchema },
       async ({ book_id }) => {
-        const { data, error } = await supabase()
-          .from('books')
-          .select(
-            `*, author:profiles!books_author_id_fkey(id, full_name, avatar_url),
-             stats:book_stats_summary(total_views, total_purchases, total_revenue)`
-          )
-          .eq('id', book_id)
-          .eq('status', 'published')
-          .eq('visibility', 'public')
-          .single();
-        if (error) throw new Error(`Book not found: ${error.message}`);
+        const data = await mcpGetBook(book_id);
         return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
       }
     );
@@ -135,37 +91,25 @@ const handler = createMcpHandler(
       'List distinct genres among published books with counts.',
       {},
       async () => {
-        const { data, error } = await supabase()
-          .from('books')
-          .select('genre')
-          .eq('status', 'published')
-          .eq('visibility', 'public');
-        if (error) throw new Error(`Query failed: ${error.message}`);
-        const counts: Record<string, number> = {};
-        for (const row of data || []) {
-          if (row.genre) counts[row.genre] = (counts[row.genre] || 0) + 1;
-        }
+        const counts = await mcpListGenres();
         return { content: [{ type: 'text' as const, text: JSON.stringify(counts, null, 2) }] };
       }
     );
 
     server.tool('health', 'Check API and database connectivity.', {}, async () => {
-      const { error } = await supabase().from('books').select('id').limit(1);
+      const health = await mcpCatalogHealth();
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify({
-              status: error ? 'degraded' : 'ok',
-              db: error ? error.message : 'connected',
-            }),
+            text: JSON.stringify(health, null, 2),
           },
         ],
       };
     });
   },
   {
-    serverInfo: { name: 'mangu-publishers', version: '1.0.0' },
+    serverInfo: { name: 'mangu-publishers', version: '1.1.0' },
   },
   {
     basePath: '/api/mcp',

@@ -23,6 +23,7 @@ import {
   searchBooks,
   updateBook,
   upsertOrderByPaymentIntent,
+  listGenreCounts,
 } from '@/lib/mongo-queries';
 
 type AggFn = jest.Mock;
@@ -298,5 +299,20 @@ describe('lib/mongo-queries', () => {
         $set: expect.objectContaining({ status: 'refunded' }),
       })
     );
+  });
+
+  it('listGenreCounts aggregates genre groups', async () => {
+    const toArray = jest.fn().mockResolvedValue([
+      { _id: 'Fantasy', count: 2 },
+      { _id: null, count: 1 },
+    ]);
+    const aggregate = jest.fn().mockReturnValue({ toArray });
+    const db = {
+      collection: jest.fn().mockReturnValue({ aggregate }),
+    } as unknown as import('mongodb').Db;
+
+    const counts = await listGenreCounts({ status: 'published', visibility: 'public' }, db);
+    expect(counts).toEqual({ Fantasy: 2 });
+    expect(aggregate).toHaveBeenCalled();
   });
 });

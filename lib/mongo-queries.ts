@@ -305,6 +305,34 @@ export async function markOrderRefundedByPaymentIntent(
 }
 
 /**
+ * Distinct genres among published (+ optional visibility) books with counts.
+ */
+export async function listGenreCounts(
+  options: { status?: Book['status']; visibility?: Book['visibility'] } = {},
+  db?: Db
+): Promise<Record<string, number>> {
+  const database = await resolveDb(db);
+  const match: Filter<Document> = {
+    status: options.status ?? 'published',
+  };
+  if (options.visibility) match.visibility = options.visibility;
+
+  const rows = await database
+    .collection('books')
+    .aggregate<{ _id: string; count: number }>([
+      { $match: match },
+      { $group: { _id: '$genre', count: { $sum: 1 } } },
+    ])
+    .toArray();
+
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    if (row._id) counts[row._id] = row.count;
+  }
+  return counts;
+}
+
+/**
  * Full-text book search (`$text`) sorted by text score (default 20 per page).
  * Requires the books text index from `npm run db:mongo:indexes`.
  */

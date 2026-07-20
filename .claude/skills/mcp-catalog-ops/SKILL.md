@@ -1,7 +1,7 @@
 ---
 name: mcp-catalog-ops
 description: This skill should be used when the user asks about the Mangu MCP server, /api/mcp, MCP_ENABLED, recommend_books, search_books, get_book, list_genres, MCP health tool, mcp-handler, catalog MCP clients, or migrating MCP off Supabase onto Mongo.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # MCP Catalog Ops
