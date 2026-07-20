@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { recordAudit } from '@/lib/audit';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 
@@ -59,6 +60,11 @@ export async function updateBookStatusAction(formData: FormData) {
     .eq('id', id);
 
   if (error) return;
+
+  await recordAudit(auth.user.id, 'book.status_update', id, {
+    resource_type: 'book',
+    status,
+  });
   revalidatePath('/admin/books');
 }
 
@@ -90,6 +96,12 @@ export async function updateUserRoleAction(formData: FormData) {
     .eq('id', profileId);
 
   if (error) return;
+
+  await recordAudit(auth.user.id, 'user.role_change', profileId, {
+    resource_type: 'profile',
+    role,
+    target_user_id: target.user_id,
+  });
   revalidatePath('/admin/users');
 }
 
@@ -114,6 +126,11 @@ export async function updateManuscriptStatusAction(formData: FormData) {
     .eq('id', id);
 
   if (error) return;
+
+  await recordAudit(auth.user.id, 'manuscript.status_update', id, {
+    resource_type: 'manuscript',
+    status,
+  });
   revalidatePath('/admin/manuscripts');
 }
 
