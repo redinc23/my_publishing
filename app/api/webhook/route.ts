@@ -9,6 +9,7 @@ import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
 import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
+import { logger } from '@/lib/logger';
 import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
 // Webhook secret for signature verification
@@ -139,7 +140,10 @@ async function handleCheckoutCompleted(
   const existingOrder = existingOrders?.[0];
 
   if (existingOrder) {
-    console.log('[Webhook] Order already exists for session:', session.id);
+    logger.info('Webhook order already exists for session', {
+      route: '/api/webhook',
+      sessionId: session.id,
+    });
     const { data: existingItems } = await supabase
       .from('order_items')
       .select('id')
@@ -230,7 +234,10 @@ async function handleCheckoutCompleted(
     },
   });
 
-  console.log('[Webhook] Order created successfully:', session.id);
+  logger.info('Webhook order created successfully', {
+    route: '/api/webhook',
+    sessionId: session.id,
+  });
 
   return {
     success: true,
@@ -246,7 +253,10 @@ async function handleCheckoutCompleted(
 async function handleCheckoutExpired(
   session: Stripe.Checkout.Session
 ): Promise<WebhookProcessingResult> {
-  console.log('[Webhook] Checkout session expired:', session.id);
+  logger.info('Webhook checkout session expired', {
+    route: '/api/webhook',
+    sessionId: session.id,
+  });
 
   // Optionally track abandoned checkout
   return {
@@ -373,7 +383,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const event = verification.event;
-  console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
+  logger.info('Webhook event received', {
+    route: '/api/webhook',
+    eventType: event.type,
+    eventId: event.id,
+  });
 
   // Initialize Supabase client
   const supabase = createAdminClient();
@@ -381,7 +395,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Check idempotency
   const idempotencyCheck = await checkIdempotency(supabase, event.id);
   if (idempotencyCheck.processed) {
-    console.log(`[Webhook] Event already processed: ${event.id}`);
+    logger.info('Webhook event already processed', {
+      route: '/api/webhook',
+      eventId: event.id,
+    });
     return NextResponse.json({
       received: true,
       message: 'Event already processed',
@@ -430,7 +447,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       default: {
-        console.log(`[Webhook] Unhandled event type: ${event.type}`);
+        logger.info('Webhook unhandled event type', {
+          route: '/api/webhook',
+          eventType: event.type,
+        });
         result = {
           success: true,
           event_id: event.id,
@@ -444,7 +464,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await markEventProcessed(supabase, event.id, result.success ? undefined : result.error);
 
     const duration = Date.now() - startTime;
-    console.log(`[Webhook] Processed ${event.type} in ${duration}ms:`, result);
+    logger.info('Webhook event processed', {
+      route: '/api/webhook',
+      eventType: event.type,
+      durationMs: duration,
+      result,
+    });
 
     if (!result.success && result.should_retry) {
       // Return 500 to trigger Stripe retry

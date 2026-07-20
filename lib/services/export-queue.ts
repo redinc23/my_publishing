@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 interface ExportJob {
   id: string;
@@ -259,7 +260,7 @@ export class ExportQueueService {
     }
   }
 
-  private async sendNotification(job: ExportJob, fileUrl: string): Promise<void> {
+  private async sendNotification(job: ExportJob, _fileUrl: string): Promise<void> {
     const { data: user } = await this.supabase
       .from('users')
       .select('email, name')
@@ -268,9 +269,12 @@ export class ExportQueueService {
 
     if (!user?.email) return;
 
-    // Send email notification
-    // Implementation depends on your email service
-    console.log(`Export ready for ${user.email}: ${fileUrl}`);
+    // Notify without logging PII (email / signed URL). Email send TBD.
+    logger.info('Export ready notification queued', {
+      route: 'services/export-queue',
+      userId: job.userId,
+      jobId: job.id,
+    });
   }
 
   async cleanupOldExports(): Promise<void> {

@@ -11,6 +11,7 @@ import { getCompletedOrderBookIds } from '@/lib/reading/entitlement';
 import { getResonanceRecommendations } from '@/lib/resonance/recommendations';
 import type { RecommendationMode } from '@/lib/resonance/recommendations';
 import type { BookWithStats, BookWithAuthor, ApiResponse } from '@/types';
+import { logger } from '@/lib/logger';
 
 // Personalized responses must never be cached across users.
 export const dynamic = 'force-dynamic';
@@ -211,7 +212,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const finalBooks = scoredBooks.map(({ _score, ...book }) => book);
 
     const duration = Date.now() - startTime;
-    console.log(`[Recommend] Returned ${finalBooks.length} recommendations in ${duration}ms`);
+    logger.info('Recommendations returned', {
+      route: '/api/resonance/recommend',
+      count: finalBooks.length,
+      durationMs: duration,
+    });
 
     const result: RecommendationResult = {
       books: finalBooks,

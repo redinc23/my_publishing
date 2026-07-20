@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { AnalyticsEventSchema, validateSafe, getFirstError } from '@/lib/validations/schemas';
+import { logger } from '@/lib/logger';
 import type { TrackEventResponse, AnalyticsEvent } from '@/types/analytics';
 
 /**
@@ -184,7 +185,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[Analytics] Tracked ${event_type} for book ${book_id} in ${duration}ms`);
+    logger.info('Analytics event tracked', {
+      route: '/api/analytics/track',
+      eventType: event_type,
+      bookId: book_id,
+      durationMs: duration,
+    });
 
     return NextResponse.json(
       {

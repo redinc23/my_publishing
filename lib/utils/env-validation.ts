@@ -3,6 +3,8 @@
  * Validates required environment variables at startup
  */
 
+import { logger } from '@/lib/logger';
+
 interface EnvValidationResult {
   valid: boolean;
   missing: string[];
@@ -350,7 +352,7 @@ export function skipEmails(): boolean {
  */
 export function printValidationResults(result: EnvValidationResult): void {
   if (result.valid && result.warnings.length === 0) {
-    console.log('✅ All environment variables are valid');
+    logger.info('All environment variables are valid', { route: 'env-validation' });
     return;
   }
 

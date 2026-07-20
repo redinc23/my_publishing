@@ -8,8 +8,10 @@ version: 1.0.0
 
 ## Logger (`lib/logger.ts`)
 
-JSON shape: `{ level, route, requestId, message, stack }`.
-Wrap API handlers; do not log secrets or raw auth cookies.
+JSON shape: `{ level, route, requestId, message, stack, ts }`.
+Sensitive keys (`password`, `token`, `authorization`, …) are redacted.
+Prefer `logger.info|warn|error|exception` over `console.log` in `app/` + `lib/`.
+Wrap API handlers (6.1.2) still pending; do not log secrets or raw auth cookies.
 
 ## Sentry
 

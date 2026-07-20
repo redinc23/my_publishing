@@ -18,6 +18,7 @@ import {
 } from './messages';
 import { shouldSendEmail } from './preferences';
 import { getEmailUrl } from './urls';
+import { logger } from '@/lib/logger';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
@@ -74,7 +75,10 @@ export async function sendPurchaseReceiptForCheckoutSession(
     }
 
     if (!(await shouldSendEmail(metadata.user_id, 'receipts'))) {
-      console.log('[email] Receipt skipped: user opted out of receipts', metadata.user_id);
+      logger.info('Receipt skipped: user opted out of receipts', {
+        route: 'email/triggers',
+        userId: metadata.user_id,
+      });
       return;
     }
 
@@ -164,7 +168,10 @@ export async function notifyAuthorOfNewReview(input: NotifyAuthorOfNewReviewInpu
     }
 
     if (!(await shouldSendEmail(authorEmail.authUserId, 'author_alerts'))) {
-      console.log('[email] Review alert skipped: author opted out', authorEmail.authUserId);
+      logger.info('Review alert skipped: author opted out', {
+        route: 'email/triggers',
+        userId: authorEmail.authUserId,
+      });
       return;
     }
 
@@ -229,7 +236,10 @@ export async function notifyAuthorOfPayout(input: NotifyAuthorOfPayoutInput): Pr
     }
 
     if (!(await shouldSendEmail(input.authorAuthUserId, 'author_alerts'))) {
-      console.log('[email] Payout notification skipped: author opted out');
+      logger.info('Payout notification skipped: author opted out', {
+        route: 'email/triggers',
+        userId: input.authorAuthUserId,
+      });
       return;
     }
 

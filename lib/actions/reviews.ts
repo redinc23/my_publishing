@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { hasCompletedOrderForBook } from '@/lib/reading/entitlement';
 import { AuthorReplySchema } from '@/lib/validations/reviews';
+import { logger } from '@/lib/logger';
 
 /** Throws when the caller has exceeded the shared API rate bucket. */
 async function enforceReviewRateLimit(userId: string) {
@@ -168,7 +169,11 @@ export async function reportReview(reviewId: string) {
   }
 
   // In a real implementation, this would create a moderation report
-  console.log(`Review ${reviewId} reported by user ${user.id}`);
+  logger.info('Review reported', {
+    route: 'actions/reviews',
+    reviewId,
+    userId: user.id,
+  });
 
   return { success: true };
 }
