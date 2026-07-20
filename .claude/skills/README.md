@@ -10,6 +10,12 @@ Humans own consoles, credentials, DNS, and go/no-go decisions (`HUMAN_TASKS.md`)
 
 ## Index
 
+### Tier 0 — Load first (orchestration)
+
+| Skill           | Path                                           | Use when                                                                 |
+| --------------- | ---------------------------------------------- | ------------------------------------------------------------------------ |
+| MANGU Navigator | [`mangu-navigator/`](./mangu-navigator/)       | **Every session start**; "what's next", priorities, roadmap, onboard, GO, Phoenix finish, product enhancement / growth ideas. Routes to specialists below. |
+
 ### Tier A — Always load for platform work
 
 | Skill            | Path                                                 | Use when                                            |

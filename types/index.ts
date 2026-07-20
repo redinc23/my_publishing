@@ -363,3 +363,26 @@ export interface EngagementEvent {
   event_value?: Record<string, unknown> | null;
   created_at: string;
 }
+
+/**
+ * Phoenix Mongo document types (WS2a) — prefixed to avoid clashing with
+ * legacy Supabase-shaped interfaces above.
+ */
+export type {
+  Profile as MongoProfile,
+  Author as MongoAuthor,
+  Book as MongoBook,
+  BookWithAuthor as MongoBookWithAuthor,
+  Order as MongoOrder,
+  OrderItem as MongoOrderItem,
+  Review as MongoReview,
+  ReadingProgress as MongoReadingProgress,
+  AuditLog as MongoAuditLog,
+  PaginationInput as MongoPaginationInput,
+  PaginatedResult as MongoPaginatedResult,
+  MongoRole,
+  MongoBookStatus,
+  MongoBookVisibility,
+  MongoOrderStatus,
+  MongoTimestamps,
+} from './mongo';

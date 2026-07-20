@@ -16,4 +16,8 @@ Collections (logical):
 | `audit_logs`               | actor, action, target, metadata, timestamp                               |
 
 Import transform rules: Phoenix §5.5 / `phoenix-data-migration` skill.
-Keep this file in sync with `types/mongo.ts` once landed.
+
+**Landed (WS2a):** canonical types live in `types/mongo.ts` and are re-exported
+from `types/index.ts` as `MongoProfile`, `MongoBook`, `MongoOrder`, etc.
+Connection: `lib/mongodb.ts` (canonical) + `lib/mongo.ts` (doc-path alias, D2).
+Queries: `lib/mongo-queries.ts`.

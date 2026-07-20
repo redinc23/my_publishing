@@ -20,7 +20,7 @@
 | ID  | Amendment                                                                                                                                 |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | D9  | RBAC roles are `reader \| author \| partner \| admin` (live product). Doc references to `editor` mean `partner` for portal/ARC parity.    |
-| D2  | Mongo helper lives at `lib/mongodb.ts` exporting `getDb()` (not `lib/mongo.ts`).                                                         |
+| D2  | Mongo helper lives at `lib/mongodb.ts` exporting `getDb()` (canonical). `lib/mongo.ts` is a thin re-export alias for the original doc path. |
 | D4  | Prefer `NEXT_PUBLIC_SITE_URL` over inventing `NEXT_PUBLIC_APP_URL`; `BETTER_AUTH_URL` may mirror site URL.                               |
 | —   | **Public dual-run:** `AUTH_PROVIDER=supabase\|better-auth` (default `supabase`). WS1 lands Better Auth code paths; production stays on Supabase Auth until Phase 11–12 cutover so the site keeps serving readers. |
 
@@ -816,8 +816,10 @@ _Decision Time Limit:_ No more than **60 minutes** between trigger and Go/No-Go 
 | `lib/auth.ts`                | Better Auth server config         | WS1        | ✅ New      |
 | `lib/auth-client.ts`         | Better Auth React client          | WS1        | ✅ New      |
 | `emails/reset.tsx`           | Branded reset email template      | WS1        | ✅ New      |
-| `lib/mongo.ts`               | MongoDB connection singleton      | WS2a       | ✅ New      |
-| `lib/mongo-queries.ts`       | Centralized query functions       | WS2a       | ✅ New      |
+| `lib/mongo.ts`               | MongoDB connection singleton (alias → mongodb.ts) | WS2a       | ✅ New      |
+| `lib/mongodb.ts`             | Canonical MongoClient + `getDb()`                 | WS2a       | ✅ New      |
+| `types/mongo.ts`             | Mongo document types                              | WS2a       | ✅ New      |
+| `lib/mongo-queries.ts`       | Centralized query functions                       | WS2a       | ✅ New      |
 | `lib/audit.ts`               | Audit log writer                  | WS2c       | ✅ New      |
 | `lib/actions/upload.ts`      | Server actions (rewritten)        | WS3        | ✅ Migrated |
 | `scripts/migrate-storage.ts` | Supabase→Blob bulk file migration | WS3        | ✅ New      |
