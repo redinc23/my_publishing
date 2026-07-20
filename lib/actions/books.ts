@@ -13,6 +13,10 @@ import {
   type CreateBookInput,
   type UpdateBookInput,
 } from '@/types/books';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { createBookMongo, updateBookMongo } from '@/lib/mongo-books';
+import { getBookById } from '@/lib/mongo-queries';
+import { recordAudit } from '@/lib/audit';
 
 // Rate limiting
 const RATE_LIMIT = new Map<string, { count: number; timestamp: number }>();
@@ -68,6 +72,41 @@ const logAudit = async (
 
 export async function createBook(input: CreateBookInput) {
   try {
+    if (isMongoPrimary()) {
+      const { getRequestUser } = await import('@/lib/api/request-user');
+      const user = await getRequestUser();
+      if (!user) {
+        return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+      }
+      checkRateLimit(user.id, 'create_book');
+      const validated = CreateBookSchema.parse(input);
+      const result = await createBookMongo({
+        title: validated.title,
+        description: validated.description,
+        cover_url: validated.cover_url,
+        manuscript_url: validated.manuscript_url,
+        author_id: user.id,
+        tags: validated.tags,
+      });
+      if ('error' in result) {
+        return {
+          success: false,
+          error: result.error,
+          code: result.code === 'DUPLICATE_SLUG' ? 'DUPLICATE_BOOK' : result.code,
+        };
+      }
+      await recordAudit(user.id, 'CREATE', String(result.book._id), {
+        resource_type: 'book',
+        title: result.book.title,
+        status: result.book.status,
+      });
+      revalidatePath('/admin/books');
+      revalidatePath('/books');
+      revalidateTag('featured-books');
+      revalidateBooks();
+      return { success: true, data: result.book, code: 'BOOK_CREATED' };
+    }
+
     const supabase = await createClient();
 
     const {
@@ -156,6 +195,42 @@ export async function createBook(input: CreateBookInput) {
 
 export async function updateBook(bookId: string, input: UpdateBookInput) {
   try {
+    if (isMongoPrimary()) {
+      const { getRequestUser } = await import('@/lib/api/request-user');
+      const user = await getRequestUser();
+      if (!user) {
+        return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+      }
+      checkRateLimit(user.id, 'update_book');
+      const validated = UpdateBookSchema.parse(input);
+      const existing = await getBookById(bookId);
+      if (!existing || (String(existing.author_id) !== user.id && user.role !== 'admin')) {
+        return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+      }
+      const result = await updateBookMongo(bookId, {
+        title: validated.title,
+        description: validated.description,
+        cover_url: validated.cover_url,
+        manuscript_url: validated.manuscript_url,
+        status: validated.status,
+        slug: validated.slug,
+        tags: validated.tags,
+      });
+      if ('error' in result) {
+        return { success: false, error: result.error, code: result.code };
+      }
+      await recordAudit(user.id, 'UPDATE', bookId, {
+        resource_type: 'book',
+        title: result.book.title,
+      });
+      revalidatePath('/admin/books');
+      revalidatePath('/books');
+      revalidatePath(`/books/${result.book.slug}`);
+      revalidateTag('featured-books');
+      revalidateBooks();
+      return { success: true, data: result.book, code: 'BOOK_UPDATED' };
+    }
+
     const supabase = await createClient();
 
     const {
