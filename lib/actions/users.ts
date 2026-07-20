@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { getRequestAuthUser } from '@/lib/auth/request-user';
 import { isMongoPrimary } from '@/lib/db/provider';
 import { updateMongoProfileByAuthUserId } from '@/lib/mongo-profiles';
 
@@ -13,6 +12,7 @@ export async function updateProfile(updates: {
   avatar_url?: string;
 }) {
   if (isMongoPrimary()) {
+    const { getRequestAuthUser } = await import('@/lib/auth/request-user');
     const user = await getRequestAuthUser();
     if (!user) {
       return { error: 'Not authenticated' };

@@ -13,7 +13,6 @@ import {
   type CreateBookInput,
   type UpdateBookInput,
 } from '@/types/books';
-import { getRequestAuthUser } from '@/lib/auth/request-user';
 import { isMongoPrimary } from '@/lib/db/provider';
 import { insertBook } from '@/lib/mongo-books';
 import { recordAudit } from '@/lib/audit';
@@ -74,6 +73,7 @@ export async function createBook(input: CreateBookInput) {
   try {
     // ---- Mongo primary path (Phoenix 2c.1.1) ----
     if (isMongoPrimary()) {
+      const { getRequestAuthUser } = await import('@/lib/auth/request-user');
       const user = await getRequestAuthUser();
       if (!user) {
         return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };

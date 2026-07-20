@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
-import { getRequestAuthUser } from '@/lib/auth/request-user';
 import { isMongoPrimary } from '@/lib/db/provider';
 import {
   deleteMongoReview,
@@ -190,6 +189,7 @@ export async function createReview(reviewData: {
 }) {
   // ---- Mongo primary path (Phoenix 2c.1.2) ----
   if (isMongoPrimary()) {
+    const { getRequestAuthUser } = await import('@/lib/auth/request-user');
     const user = await getRequestAuthUser();
     if (!user) {
       throw new Error('You must be logged in to write reviews');
@@ -275,6 +275,7 @@ export async function createReview(reviewData: {
 
 export async function deleteReview(reviewId: string) {
   if (isMongoPrimary()) {
+    const { getRequestAuthUser } = await import('@/lib/auth/request-user');
     const user = await getRequestAuthUser();
     if (!user) {
       throw new Error('You must be logged in to delete reviews');

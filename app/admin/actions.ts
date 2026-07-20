@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import { ObjectId } from 'mongodb';
 import { recordAudit } from '@/lib/audit';
-import { getRequestAuthUser } from '@/lib/auth/request-user';
 import { isMongoPrimary } from '@/lib/db/provider';
 import { getDb } from '@/lib/mongo';
 import { updateBookById } from '@/lib/mongo-books';
@@ -17,6 +16,7 @@ type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled' | 'refun
 
 async function requireAdminForAction() {
   if (isMongoPrimary()) {
+    const { getRequestAuthUser } = await import('@/lib/auth/request-user');
     const user = await getRequestAuthUser();
     if (!user) return { ok: false as const, error: 'Unauthorized' };
     if (user.role !== 'admin') return { ok: false as const, error: 'Admin access required' };
