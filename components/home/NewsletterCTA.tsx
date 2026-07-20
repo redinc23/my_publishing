@@ -11,6 +11,7 @@ export function NewsletterCTA({ enabled = true }: { enabled?: boolean }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +26,11 @@ export function NewsletterCTA({ enabled = true }: { enabled?: boolean }) {
       });
 
       if (res.ok) {
+        // Honest success copy (P0-013): the backend uses double opt-in, so we
+        // show the server-provided message ("check your inbox to confirm")
+        // rather than claiming an active subscription that doesn't exist yet.
+        const data = await res.json().catch(() => ({}));
+        setSuccessMessage(data?.message || 'Check your inbox to confirm your subscription.');
         setStatus('success');
         setEmail('');
         setTimeout(() => setStatus('idle'), 4000);
@@ -96,15 +102,14 @@ export function NewsletterCTA({ enabled = true }: { enabled?: boolean }) {
                 {status === 'success' ? (
                   <motion.div
                     key="success"
+                    role="status"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     className="flex items-center justify-center gap-3 py-4"
                   >
                     <CheckCircle className="h-6 w-6 text-green-400" />
-                    <span className="text-lg font-medium text-green-400">
-                      You&apos;re subscribed! Welcome aboard.
-                    </span>
+                    <span className="text-lg font-medium text-green-400">{successMessage}</span>
                   </motion.div>
                 ) : (
                   <motion.form

@@ -126,9 +126,42 @@ function PaymentIcon({ name }: { name: string }) {
   );
 }
 
-export function Footer() {
+export function Footer({ newsletterEnabled = false }: { newsletterEnabled?: boolean }) {
   const currentYear = new Date().getFullYear();
-  const [subscribed, setSubscribed] = useState(false);
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [feedback, setFeedback] = useState('');
+
+  // P0-013 / CCR-006: never fake a subscription. The footer form posts to the
+  // same double opt-in endpoint as the homepage CTA and only shows success
+  // after the backend has persisted the signup and sent the confirm email.
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('loading');
+    setFeedback('');
+
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        setStatus('success');
+        setFeedback(data?.message || 'Check your inbox to confirm your subscription.');
+        setEmail('');
+        return;
+      }
+
+      setStatus('error');
+      setFeedback(data?.message || 'Something went wrong. Please try again.');
+    } catch {
+      setStatus('error');
+      setFeedback('Network error. Please try again.');
+    }
+  };
 
   return (
     <footer className="border-t border-border bg-background">
@@ -182,29 +215,37 @@ export function Footer() {
                 Get the latest books and updates delivered to your inbox.
               </p>
             </div>
-            {subscribed ? (
+            {!newsletterEnabled ? (
+              <p className="text-sm text-muted-foreground">
+                Newsletter sign-ups are coming soon.
+              </p>
+            ) : status === 'success' ? (
               <p className="text-sm font-medium text-primary" role="status">
-                Thanks for subscribing! Keep an eye on your inbox.
+                {feedback}
               </p>
             ) : (
-              <form
-                className="flex w-full items-center gap-3 md:w-auto"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setSubscribed(true);
-                }}
-              >
-                <Input
-                  type="email"
-                  required
-                  placeholder="Enter your email"
-                  className="w-full border-border bg-background md:w-72"
-                  aria-label="Email address for newsletter"
-                />
-                <Button type="submit" className="shrink-0">
-                  Subscribe
-                </Button>
-              </form>
+              <div className="w-full md:w-auto">
+                <form className="flex w-full items-center gap-3" onSubmit={handleSubscribe}>
+                  <Input
+                    type="email"
+                    required
+                    placeholder="Enter your email"
+                    className="w-full border-border bg-background md:w-72"
+                    aria-label="Email address for newsletter"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={status === 'loading'}
+                  />
+                  <Button type="submit" className="shrink-0" disabled={status === 'loading'}>
+                    {status === 'loading' ? 'Subscribing…' : 'Subscribe'}
+                  </Button>
+                </form>
+                {status === 'error' && (
+                  <p role="alert" className="mt-2 text-sm text-red-500">
+                    {feedback}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </Container>

@@ -59,9 +59,13 @@ export function ContactForm({
           name="name"
           required
           minLength={2}
+          aria-invalid={state.fieldErrors?.name ? true : undefined}
+          aria-describedby={state.fieldErrors?.name ? 'name-error' : undefined}
         />
         {state.fieldErrors?.name && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.name}</p>
+          <p className="mt-1 text-sm text-red-600" id="name-error">
+            {state.fieldErrors.name}
+          </p>
         )}
       </div>
 
@@ -75,9 +79,13 @@ export function ContactForm({
           name="email"
           required
           type="email"
+          aria-invalid={state.fieldErrors?.email ? true : undefined}
+          aria-describedby={state.fieldErrors?.email ? 'email-error' : undefined}
         />
         {state.fieldErrors?.email && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.email}</p>
+          <p className="mt-1 text-sm text-red-600" id="email-error">
+            {state.fieldErrors.email}
+          </p>
         )}
       </div>
 
@@ -91,9 +99,13 @@ export function ContactForm({
           name="subject"
           required
           minLength={3}
+          aria-invalid={state.fieldErrors?.subject ? true : undefined}
+          aria-describedby={state.fieldErrors?.subject ? 'subject-error' : undefined}
         />
         {state.fieldErrors?.subject && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.subject}</p>
+          <p className="mt-1 text-sm text-red-600" id="subject-error">
+            {state.fieldErrors.subject}
+          </p>
         )}
       </div>
 
@@ -107,14 +119,19 @@ export function ContactForm({
           name="message"
           required
           minLength={10}
+          aria-invalid={state.fieldErrors?.message ? true : undefined}
+          aria-describedby={state.fieldErrors?.message ? 'message-error' : undefined}
         />
         {state.fieldErrors?.message && (
-          <p className="mt-1 text-sm text-red-600">{state.fieldErrors.message}</p>
+          <p className="mt-1 text-sm text-red-600" id="message-error">
+            {state.fieldErrors.message}
+          </p>
         )}
       </div>
 
       {state.message && (
         <p
+          role={state.status === 'success' ? 'status' : 'alert'}
           className={state.status === 'success' ? 'text-sm text-green-700' : 'text-sm text-red-600'}
         >
           {state.message}
