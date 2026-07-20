@@ -5,16 +5,32 @@ does not have. Everything else is being executed autonomously. Ordered by priori
 
 ## Cowork control (do these first)
 
-### C0.1 Disable Cursor storm automations — STILL REQUIRED (verified 2026-07-19)
+### C0.1 Disable Cursor storm automations — STILL REQUIRED (re-verified 2026-07-20 23:28 UTC)
 
-Both are still **`enabled: true`** and still opening draft PRs:
+Both are still **`enabled: true`** and still opening draft PRs. As of this
+timestamp, `gh pr list` showed **15+ concurrent draft PRs** with duplicate
+WS2b / WS2c / E-001 / MCP dual-run slices from parallel cloud agents.
 
 | Automation                   | ID                                     | Action                                                                            |
 | ---------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
 | Fix CI failures              | `094ce0ad-7ba5-11f1-ba66-0e7d0216e441` | **Disable** → https://cursor.com/automations/094ce0ad-7ba5-11f1-ba66-0e7d0216e441 |
 | pr (Repository health sweep) | `ab582f50-7ba7-11f1-ba66-0e7d0216e441` | **Disable** → https://cursor.com/automations/ab582f50-7ba7-11f1-ba66-0e7d0216e441 |
 
-Agents cannot toggle these via API (read-only). Close duplicate draft PRs after disable.
+Agents cannot toggle these via API (read-only). **Close duplicate draft PRs after disable.**
+
+### C0.4 Preferred Phoenix / L0 drafts to keep (2026-07-20 storm triage)
+
+After C0.1, close the rest as duplicates. Prefer these (merge order):
+
+| Keep | Topic | Notes |
+| ---- | ----- | ----- |
+| **#312** | WS2b books API + idempotent webhook | Canonical 2b.1 from this run |
+| **#322** | WS2c audit + rating recompute | Based on #312 — retarget to `main` after #312 merges |
+| **#325** | E-001 book-clubs honesty | Independent L0; can merge anytime |
+
+Close other open drafts that duplicate WS2b (`#311`, `#317`, `#318`, …), WS2c
+(`#323`, …), E-001 (`#315`, `#320`, …), or speculative MCP/WS6 slices until
+the waterfall (2b→2c→2d→WS3…) is clear.
 
 ### C0.2 Create safe Phoenix cowork automation (after C0.1)
 
