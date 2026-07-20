@@ -1,5 +1,5 @@
-// PERF-PHASE2-1
-import { getBooksPage } from '@/lib/supabase/queries';
+// PERF-PHASE2-1 — dual-run via catalog helper (Phoenix WS2d)
+import { getCatalogBooksPage } from '@/lib/catalog/get-books-page';
 import { BookListItem } from './BookListItem';
 
 interface BookListStreamProps {
@@ -18,7 +18,7 @@ export async function BookListStream({
   searchParams,
   emptyMessage,
 }: BookListStreamProps) {
-  const books = await getBooksPage({
+  const books = await getCatalogBooksPage({
     contentType,
     q: searchParams.q,
     genre: searchParams.genre,

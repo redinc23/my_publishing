@@ -5,9 +5,15 @@ does not have. Everything else is being executed autonomously. Ordered by priori
 
 ## Cowork control (do these first)
 
-### C0.1 Disable Cursor storm automations — STILL REQUIRED (verified 2026-07-19)
+### C0.1 Disable Cursor storm automations — STILL REQUIRED
 
-Both are still **`enabled: true`** and still opening draft PRs:
+Both are still believed **enabled** (last verified 2026-07-19). This agent could not
+read automation flags (AutomationsService: not found / inaccessible). Assume still on
+until a human confirms `enabled: false`.
+
+**Also (2026-07-20 ~23:28 UTC):** parallel Cloud Agents opened many overlapping draft
+PRs (#317–#324: duplicate WS2b/WS2c/MCP/E-001/logger). Prefer merging **one** complete
+Phoenix package (recommend **#317**) and closing the rest after C0.1 is done.
 
 | Automation                   | ID                                     | Action                                                                            |
 | ---------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
@@ -207,11 +213,11 @@ Click-paths reference `docs/PROJECT_PHOENIX.md` unless noted.
 
 ## Phase 8 — Vercel env / Stripe
 
-| ID   | Task                                                                                 | Status |
-| ---- | ------------------------------------------------------------------------------------ | ------ |
-| P8.x | Load all Phoenix §9.1 (+ amended SITE_URL / extras) into Vercel Production + Preview | ⬜     |
+| ID   | Task                                                                                                                            | Status |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P8.x | Load all Phoenix §9.1 (+ amended SITE_URL / extras) into Vercel Production + Preview                                            | ⬜     |
 | P8.x | Add `AUTH_PROVIDER=supabase`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` to Vercel (do **not** flip to better-auth until Phase 11) | ⬜     |
-| P8.x | Point Stripe webhook at Vercel `/api/webhook` (keep Cloud Run standby)               | ⬜     |
+| P8.x | Point Stripe webhook at Vercel `/api/webhook` (keep Cloud Run standby)                                                          | ⬜     |
 
 ## Phase 11 — data cutover
 
