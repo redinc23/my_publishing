@@ -819,6 +819,10 @@ _Decision Time Limit:_ No more than **60 minutes** between trigger and Go/No-Go 
 | `lib/mongodb.ts`             | MongoDB connection singleton      | WS2a       | ✅ New (canonical; `lib/mongo.ts` re-exports — D2) |
 | `lib/mongo-queries.ts`       | Centralized query functions       | WS2a       | ✅ New      |
 | `types/mongo.ts`             | Mongo document types              | WS2a       | ✅ New      |
+| `app/api/books/route.ts`     | Books list/create API (dual-run)  | WS2b       | ✅ New      |
+| `app/api/books/[id]/route.ts`| Book get/patch API (dual-run)     | WS2b       | ✅ New      |
+| `lib/orders/mongo-fulfill.ts`| Idempotent Stripe order upsert    | WS2b       | ✅ New      |
+| `lib/mongo-books.ts`         | Mongo book insert/update helpers  | WS2b       | ✅ New      |
 | `lib/audit.ts`               | Audit log writer                  | WS2c       | ✅ New      |
 | `lib/actions/upload.ts`      | Server actions (rewritten)        | WS3        | ✅ Migrated |
 | `scripts/migrate-storage.ts` | Supabase→Blob bulk file migration | WS3        | ✅ New      |
