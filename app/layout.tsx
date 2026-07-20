@@ -6,6 +6,7 @@ import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/seo';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
+import { isEmailConfigured } from '@/lib/email/send';
 
 const inter = localFont({
   src: [
@@ -134,6 +135,11 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Honest gating (P0-013): the footer newsletter form is only interactive
+  // when the email provider is configured; otherwise it shows an honest
+  // "coming soon" state instead of faking subscriptions.
+  const newsletterEnabled = isEmailConfigured();
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
@@ -156,7 +162,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="flex min-h-screen flex-col">
             <Header />
             <main className="flex-1">{children}</main>
-            <Footer />
+            <Footer newsletterEnabled={newsletterEnabled} />
           </div>
         </Providers>
       </body>
