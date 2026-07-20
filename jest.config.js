@@ -29,7 +29,8 @@ const customJestConfig = {
 module.exports = async () => {
   const config = await createJestConfig(customJestConfig)();
   config.transformIgnorePatterns = [
-    '/node_modules/(?!(uncrypto|@upstash/redis|@upstash/ratelimit)/)',
+    // bson (pulled in by mongodb) ships ESM-only .mjs — transform it for Jest.
+    '/node_modules/(?!(uncrypto|@upstash/redis|@upstash/ratelimit|mongodb|bson)/)',
   ];
   return config;
 };

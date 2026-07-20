@@ -6,7 +6,10 @@
  * released before freeze.
  *
  * Server-only — do not import from Client Components.
+ * Doc alias: `lib/mongo.ts` re-exports this module (Phoenix Task 2a.1 / D2).
  */
+
+import '@/lib/server-only-guard';
 
 import { MongoClient, type Db, type MongoClientOptions } from 'mongodb';
 import { assertMongoUri, getMongoDbName } from '@/lib/mongodb-config';
