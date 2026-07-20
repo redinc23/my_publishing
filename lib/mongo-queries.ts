@@ -142,6 +142,28 @@ export async function getBookBySlug(
 }
 
 /**
+ * Single book by id (ObjectId hex or string id), with author join.
+ */
+export async function getBookById(
+  id: string,
+  options: { status?: Book['status'] } = {},
+  db?: Db
+): Promise<BookWithAuthor | null> {
+  const database = await resolveDb(db);
+  const match: Filter<Document> = { _id: coerceId(id) };
+  if (options.status) match.status = options.status;
+
+  const pipeline: Document[] = [
+    { $match: match },
+    ...authorLookupStages(),
+    { $limit: 1 },
+  ];
+
+  const [doc] = await database.collection('books').aggregate(pipeline).toArray();
+  return (doc as BookWithAuthor | undefined) ?? null;
+}
+
+/**
  * Orders for a user, newest first (default 20 per page).
  */
 export async function getUserOrders(

@@ -1,14 +1,24 @@
 /**
  * Stripe Webhook Handler
- * Production-grade webhook processing with idempotency and retry logic
+ * Production-grade webhook processing with idempotency and retry logic.
+ *
+ * Dual-run (Phoenix 2b.1.4): when DATABASE_PROVIDER=mongodb, orders are upserted
+ * by `stripe_payment_intent_id` ($setOnInsert + unique sparse index). Duplicate
+ * deliveries return HTTP 200.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
+import { getBookById } from '@/lib/mongo-queries';
+import {
+  markOrderRefundedByPaymentIntent,
+  upsertOrderFromCheckout,
+} from '@/lib/orders/mongo-fulfill';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
-import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
+import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
 // Webhook secret for signature verification
@@ -89,7 +99,83 @@ async function markEventProcessed(
 }
 
 /**
- * Handle checkout.session.completed event
+ * Mongo path: idempotent order upsert by stripe_payment_intent_id.
+ */
+async function handleCheckoutCompletedMongo(
+  session: Stripe.Checkout.Session
+): Promise<WebhookProcessingResult> {
+  const metadata = session.metadata as CheckoutMetadata | null;
+  const paymentIntentId =
+    typeof session.payment_intent === 'string' ? session.payment_intent : null;
+
+  if (!metadata?.book_id || !metadata?.user_id) {
+    console.error('[Webhook] Missing required metadata in checkout session:', session.id);
+    return {
+      success: false,
+      error: 'Missing required metadata (book_id or user_id)',
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+    };
+  }
+
+  const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
+  let bookTitle = metadata.book_slug || metadata.book_id;
+  try {
+    const book = await getBookById(metadata.book_id);
+    if (book?.title) bookTitle = book.title;
+  } catch (err) {
+    console.warn('[Webhook] Mongo book lookup failed (using metadata fallback):', err);
+  }
+
+  const result = await upsertOrderFromCheckout({
+    paymentIntentId,
+    sessionId: session.id,
+    userId: metadata.user_id,
+    bookId: metadata.book_id,
+    bookTitle,
+    amount: totalAmount,
+    currency: session.currency || 'usd',
+  });
+
+  console.log(
+    `[Webhook] Mongo order ${result.created ? 'created' : 'duplicate'} for session:`,
+    session.id,
+    result.orderId
+  );
+
+  return {
+    success: true,
+    event_id: session.id,
+    event_type: 'checkout.session.completed',
+    action_taken: result.duplicate
+      ? 'Order already exists (idempotent upsert)'
+      : 'Order created successfully',
+  };
+}
+
+async function handleChargeRefundedMongo(charge: Stripe.Charge): Promise<WebhookProcessingResult> {
+  const paymentIntentId =
+    typeof charge.payment_intent === 'string' ? charge.payment_intent : null;
+  if (!paymentIntentId) {
+    return {
+      success: true,
+      event_id: charge.id,
+      event_type: 'charge.refunded',
+      action_taken: 'No payment_intent on charge; logged for review',
+    };
+  }
+
+  const { found } = await markOrderRefundedByPaymentIntent(paymentIntentId);
+  return {
+    success: true,
+    event_id: charge.id,
+    event_type: 'charge.refunded',
+    action_taken: found ? 'Order marked as refunded' : 'Order not found, logged for review',
+  };
+}
+
+/**
+ * Handle checkout.session.completed event (Supabase path)
  */
 async function handleCheckoutCompleted(
   supabase: ReturnType<typeof createAdminClient>,
@@ -375,7 +461,62 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const event = verification.event;
   console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
 
-  // Initialize Supabase client
+  // ---- Mongo primary path (Phoenix dual-run) ----
+  if (isMongoPrimary()) {
+    let result: WebhookProcessingResult;
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object as Stripe.Checkout.Session;
+          result = await handleCheckoutCompletedMongo(session);
+          if (result.success && result.action_taken?.includes('created')) {
+            try {
+              await sendPurchaseReceiptForCheckoutSession(session);
+            } catch (receiptError) {
+              console.error('[Webhook] Receipt email failed (ignored):', receiptError);
+            }
+          }
+          break;
+        }
+        case 'checkout.session.expired': {
+          result = await handleCheckoutExpired(event.data.object as Stripe.Checkout.Session);
+          break;
+        }
+        case 'charge.refunded': {
+          result = await handleChargeRefundedMongo(event.data.object as Stripe.Charge);
+          break;
+        }
+        case 'payment_intent.payment_failed': {
+          result = await handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
+          break;
+        }
+        default: {
+          console.log(`[Webhook] Unhandled event type: ${event.type}`);
+          result = {
+            success: true,
+            event_id: event.id,
+            event_type: event.type,
+            action_taken: 'Event type not handled',
+          };
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      console.log(`[Webhook] Mongo processed ${event.type} in ${duration}ms:`, result);
+
+      // Idempotent duplicates and success → always 200 (never 500 retry loops).
+      if (!result.success && result.should_retry) {
+        return NextResponse.json({ error: result.error }, { status: 500 });
+      }
+
+      return NextResponse.json({ received: true, result });
+    } catch (error) {
+      console.error(`[Webhook] Mongo error processing ${event.type}:`, error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  }
+
+  // ---- Supabase path (production default until cutover) ----
   const supabase = createAdminClient();
 
   // Check idempotency

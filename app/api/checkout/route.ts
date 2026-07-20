@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { ObjectId } from 'mongodb';
+import { getRequestAuthUser } from '@/lib/auth/request-user';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { getBookById, getBookBySlug } from '@/lib/mongo-queries';
 import { createCheckoutSession } from '@/lib/stripe/server';
+import { createClient } from '@/lib/supabase/server';
 import type { CheckoutSessionRequest, CheckoutSessionResponse } from '@/types';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,9 +27,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const authUser = await getRequestAuthUser(request.headers);
+    if (!authUser || authUser.id !== user_id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Verify user
+    if (isMongoPrimary()) {
+      const book = book_id
+        ? await getBookById(book_id, { status: 'published' })
+        : book_slug
+          ? await getBookBySlug(book_slug, { status: 'published' })
+          : null;
+
+      if (!book) {
+        return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+      }
+
+      const bookId =
+        book._id instanceof ObjectId ? book._id.toHexString() : String(book._id);
+      const price = typeof book.price === 'number' ? book.price : 0;
+
+      const session = await createCheckoutSession({
+        bookId,
+        bookSlug: book.slug,
+        userId: user_id,
+        bookTitle: book.title,
+        price,
+      });
+
+      const response: CheckoutSessionResponse = {
+        sessionId: session.id,
+        url: session.url || '',
+      };
+      return NextResponse.json(response);
+    }
+
+    // Supabase path (production default)
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -31,9 +71,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get book details
     let bookQuery = supabase.from('books').select('*');
-
     if (book_id) {
       bookQuery = bookQuery.eq('id', book_id);
     } else if (book_slug) {
@@ -41,12 +79,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: book, error: bookError } = await bookQuery.single();
-
     if (bookError || !book) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
-    // Create Stripe checkout session
     const session = await createCheckoutSession({
       bookId: book.id,
       bookSlug: book.slug,

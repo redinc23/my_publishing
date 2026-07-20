@@ -14,6 +14,7 @@ jest.mock('@/lib/mongo', () => ({
 
 import {
   DEFAULT_PAGE_SIZE,
+  getBookById,
   getBookBySlug,
   getBooks,
   getUserOrders,
@@ -108,6 +109,18 @@ describe('lib/mongo-queries', () => {
     expect(result?.slug).toBe('hello');
     const pipeline = aggregate.mock.calls[0][0] as Record<string, unknown>[];
     expect(pipeline[0]).toEqual({ $match: { slug: 'hello', status: 'published' } });
+  });
+
+  it('getBookById matches ObjectId hex', async () => {
+    const id = '507f1f77bcf86cd799439011';
+    const { db, aggregate } = mockDb({
+      aggregateResult: [{ _id: id, title: 'By Id', slug: 'by-id', author: null }],
+    });
+    const result = await getBookById(id, {}, db);
+    expect(result?.title).toBe('By Id');
+    const pipeline = aggregate.mock.calls[0][0] as Record<string, unknown>[];
+    const match = pipeline[0] as { $match: { _id: { toHexString?: () => string } | string } };
+    expect(String(match.$match._id)).toContain('507f');
   });
 
   it('getUserOrders pages by user_id', async () => {
