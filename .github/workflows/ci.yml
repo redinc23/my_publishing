@@ -7,6 +7,14 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # Dummy build-time values so `next build` can prerender without real secrets.
+    env:
+      USE_MOCKS: 'true'
+      NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co'
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy-anon-for-ci'
+      NEXT_PUBLIC_SITE_URL: 'https://example.com'
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_dummy'
+      SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy-service-role-for-ci'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
