@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0](https://github.com/redinc23/my_publishing/compare/v1.1.1...v1.2.0) (2026-07-20)
+
+
+### Features
+
+* **phoenix-ws1:** Better Auth dual-run + owner reactivation (1.1–1.7) ([#304](https://github.com/redinc23/my_publishing/issues/304)) ([9a8a940](https://github.com/redinc23/my_publishing/commit/9a8a940cf1af7235df42641846ba6b5f118eb6a1))
+* **phoenix-ws2a:** Mongo types, query library, and index contract (2a.1–2a.3) ([#307](https://github.com/redinc23/my_publishing/issues/307)) ([625f46d](https://github.com/redinc23/my_publishing/commit/625f46d886503452be981d9a59e900e1b78b4d4d))
+
+
+### Bug Fixes
+
+* **ci:** repair bug-to-issue workflow trigger ([#294](https://github.com/redinc23/my_publishing/issues/294)) ([14d82ed](https://github.com/redinc23/my_publishing/commit/14d82ede7bbf0ced4b60d0d149eeefa6481ce403))
+* **forms:** honest contact + newsletter states (P0-012, P0-013) ([#303](https://github.com/redinc23/my_publishing/issues/303)) ([9d625d9](https://github.com/redinc23/my_publishing/commit/9d625d9caadbe3af3cea6ac1a5d8807d524f5397))
+* **rate-limit:** fail closed on Redis outage in newsletter + email-preferences routes (P0-011, refs [#195](https://github.com/redinc23/my_publishing/issues/195)) ([#295](https://github.com/redinc23/my_publishing/issues/295)) ([2adbc9e](https://github.com/redinc23/my_publishing/commit/2adbc9e6cc015ab9af963227ac51c50ebadc1491))
+
 ## [1.1.1](https://github.com/redinc23/my_publishing/compare/v1.1.0...v1.1.1) (2026-07-19)
 
 
