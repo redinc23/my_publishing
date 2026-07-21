@@ -20,9 +20,9 @@ Evidence: stub surface under `app/(consumer)/book-clubs`; G6 no false-success
 Metric & target: zero false-success complaints on that route; G6 closer to TRUE
 Flag: n/a (truth fix; remove misleading CTA if present)
 Gate/Star tie: G6
-Effort: S · Risk: none · Verification: visual QA on `/book-clubs` + `/discover/book-clubs`
+Effort: S · Risk: none · Verification: `npm test -- tests/unit/book-clubs-honesty.test.ts`
 Approval: not required (L0)
-Shipped: 2026-07-20 — PR `cursor/e001-book-clubs-honesty-f698` (#320)
+Shipped: `/book-clubs`, `/discover/book-clubs`, discover hub CTA → honest “Not available yet” (#325)
 
 ### E-006 MCP catalog dual-run (Phoenix prep)
 

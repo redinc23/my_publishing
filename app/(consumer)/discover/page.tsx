@@ -52,11 +52,13 @@ export default function DiscoverPage() {
           <Card>
             <CardHeader>
               <CardTitle>Book Clubs</CardTitle>
-              <CardDescription>Join book clubs and discuss your favorite reads</CardDescription>
+              <CardDescription>
+                Hosted clubs are not available yet — see status and alternatives
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild>
-                <Link href="/discover/book-clubs">Browse Clubs</Link>
+              <Button asChild variant="secondary">
+                <Link href="/discover/book-clubs">View status</Link>
               </Button>
             </CardContent>
           </Card>
