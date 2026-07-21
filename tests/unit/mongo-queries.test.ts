@@ -14,10 +14,12 @@ jest.mock('@/lib/mongo', () => ({
 
 import {
   DEFAULT_PAGE_SIZE,
+  getBookById,
   getBookBySlug,
   getBooks,
   getUserOrders,
   searchBooks,
+  upsertOrderByPaymentIntent,
 } from '@/lib/mongo-queries';
 
 type AggFn = jest.Mock;
@@ -29,6 +31,9 @@ function mockDb(
     aggregateResult?: unknown[];
     findResult?: unknown[];
     countResult?: number;
+    findOneResult?: unknown;
+    updateOneResult?: { upsertedCount?: number; matchedCount?: number; modifiedCount?: number };
+    insertOneId?: string;
   } = {}
 ) {
   const toArray: AggFn = jest.fn().mockResolvedValue(handlers.aggregateResult ?? []);
@@ -40,12 +45,21 @@ function mockDb(
   const sort = jest.fn().mockReturnValue({ skip });
   const find = jest.fn().mockReturnValue({ sort });
   const countDocuments: CountFn = jest.fn().mockResolvedValue(handlers.countResult ?? 0);
+  const findOne = jest.fn().mockResolvedValue(handlers.findOneResult ?? null);
+  const updateOne = jest
+    .fn()
+    .mockResolvedValue(
+      handlers.updateOneResult ?? { upsertedCount: 0, matchedCount: 1, modifiedCount: 0 }
+    );
+  const insertOne = jest.fn().mockResolvedValue({
+    insertedId: handlers.insertOneId ?? '507f1f77bcf86cd799439099',
+  });
 
   const collection = jest.fn().mockImplementation((name: string) => {
     if (name === 'orders') {
-      return { find, countDocuments };
+      return { find, countDocuments, findOne, updateOne, insertOne };
     }
-    return { aggregate };
+    return { aggregate, findOne, updateOne, insertOne };
   });
 
   return {
@@ -57,6 +71,9 @@ function mockDb(
     sort,
     skip,
     limit,
+    findOne,
+    updateOne,
+    insertOne,
   };
 }
 
@@ -161,5 +178,66 @@ describe('lib/mongo-queries', () => {
     });
     expect(pipeline[1]).toEqual({ $addFields: { score: { $meta: 'textScore' } } });
     expect(pipeline[2]).toEqual({ $sort: { score: { $meta: 'textScore' } } });
+  });
+
+  it('upsertOrderByPaymentIntent inserts once then reports duplicate', async () => {
+    const orderDoc = { _id: 'ord1', stripe_payment_intent_id: 'pi_123' };
+    const { db, updateOne, findOne } = mockDb({
+      updateOneResult: { upsertedCount: 1, matchedCount: 0, modifiedCount: 0 },
+      findOneResult: orderDoc,
+    });
+
+    const first = await upsertOrderByPaymentIntent(
+      {
+        user_id: 'u1',
+        stripe_payment_intent_id: 'pi_123',
+        amount: 9.99,
+        currency: 'usd',
+        order_items: [
+          {
+            book_id: 'b1',
+            title: 'T',
+            quantity: 1,
+            unit_amount: 9.99,
+            currency: 'usd',
+          },
+        ],
+      },
+      db
+    );
+    expect(first.inserted).toBe(true);
+    expect(first.orderId).toBe('ord1');
+    expect(updateOne).toHaveBeenCalledWith(
+      { stripe_payment_intent_id: 'pi_123' },
+      expect.objectContaining({ $setOnInsert: expect.any(Object) }),
+      { upsert: true }
+    );
+
+    updateOne.mockResolvedValueOnce({ upsertedCount: 0, matchedCount: 1, modifiedCount: 0 });
+    findOne.mockResolvedValueOnce(orderDoc);
+    const second = await upsertOrderByPaymentIntent(
+      {
+        user_id: 'u1',
+        stripe_payment_intent_id: 'pi_123',
+        amount: 9.99,
+        currency: 'usd',
+        order_items: [
+          {
+            book_id: 'b1',
+            title: 'T',
+            quantity: 1,
+            unit_amount: 9.99,
+            currency: 'usd',
+          },
+        ],
+      },
+      db
+    );
+    expect(second.inserted).toBe(false);
+  });
+
+  it('getBookById returns null when missing', async () => {
+    const { db } = mockDb({ aggregateResult: [] });
+    await expect(getBookById('507f1f77bcf86cd799439011', {}, db)).resolves.toBeNull();
   });
 });

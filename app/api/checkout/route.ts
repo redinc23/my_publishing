@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createCheckoutSession } from '@/lib/stripe/server';
+import { fetchBookForApi } from '@/lib/data/books';
 import type { CheckoutSessionRequest, CheckoutSessionResponse } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Verify user
+    // Verify user (prod remains AUTH_PROVIDER=supabase until cutover)
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -31,28 +32,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get book details
-    let bookQuery = supabase.from('books').select('*');
+    const book = await fetchBookForApi({
+      id: book_id || undefined,
+      slug: book_slug || undefined,
+    });
 
-    if (book_id) {
-      bookQuery = bookQuery.eq('id', book_id);
-    } else if (book_slug) {
-      bookQuery = bookQuery.eq('slug', book_slug);
-    }
-
-    const { data: book, error: bookError } = await bookQuery.single();
-
-    if (bookError || !book) {
+    if (!book) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
-    // Create Stripe checkout session
+    const price =
+      typeof book.discount_price === 'number' && book.discount_price > 0
+        ? book.discount_price
+        : Number(book.price ?? 0);
+
     const session = await createCheckoutSession({
       bookId: book.id,
       bookSlug: book.slug,
       userId: user_id,
       bookTitle: book.title,
-      price: book.discount_price || book.price,
+      price,
     });
 
     const response: CheckoutSessionResponse = {
