@@ -4,12 +4,17 @@
 
 import '@/lib/server-only-guard';
 
-import { ObjectId, type Db, type Document } from 'mongodb';
+import { ObjectId, type Db, type Document, type Filter } from 'mongodb';
 import { getDb } from '@/lib/mongo';
 import type { Review } from '@/types/mongo';
 
 function coerceId(id: string): ObjectId | string {
   return /^[a-fA-F0-9]{24}$/.test(id) ? new ObjectId(id) : id;
+}
+
+/** Driver Filter typings assume ObjectId-only `_id`. */
+function asIdFilter(filter: Document): Filter<Document> {
+  return filter as unknown as Filter<Document>;
 }
 
 async function resolveDb(db?: Db): Promise<Db> {
@@ -52,16 +57,13 @@ export async function recomputeBookRating(
   const review_count = facet?.count ?? 0;
   const avg_rating = review_count ? Number((facet?.avg ?? 0).toFixed(2)) : 0;
 
-  await database.collection('books').updateOne(
-    { _id: bookKey },
-    {
-      $set: {
-        avg_rating,
-        review_count,
-        updated_at: new Date(),
-      },
-    }
-  );
+  await database.collection('books').updateOne(asIdFilter({ _id: bookKey }), {
+    $set: {
+      avg_rating,
+      review_count,
+      updated_at: new Date(),
+    },
+  });
 
   return { avg_rating, review_count };
 }
@@ -115,15 +117,17 @@ export async function deleteReviewMongo(
   db?: Db
 ): Promise<{ deleted: boolean; bookId?: string }> {
   const database = await resolveDb(db);
-  const existing = await database.collection('reviews').findOne({
-    _id: coerceId(reviewId),
-    user_id: userId,
-  });
+  const existing = await database.collection('reviews').findOne(
+    asIdFilter({
+      _id: coerceId(reviewId),
+      user_id: userId,
+    })
+  );
   if (!existing) {
     return { deleted: false };
   }
 
-  await database.collection('reviews').deleteOne({ _id: existing._id });
+  await database.collection('reviews').deleteOne(asIdFilter({ _id: existing._id }));
   const bookId = String(existing.book_id);
   await recomputeBookRating(bookId, database);
   return { deleted: true, bookId };

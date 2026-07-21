@@ -4,12 +4,17 @@
 
 import '@/lib/server-only-guard';
 
-import { ObjectId, type Db, type Document } from 'mongodb';
+import { ObjectId, type Db, type Document, type Filter } from 'mongodb';
 import { getDb } from '@/lib/mongo';
 import type { Book, BookStatus } from '@/types/mongo';
 
 function coerceId(id: string): ObjectId | string {
   return /^[a-fA-F0-9]{24}$/.test(id) ? new ObjectId(id) : id;
+}
+
+/** Driver Filter typings assume ObjectId-only `_id`. */
+function asIdFilter(filter: Document): Filter<Document> {
+  return filter as unknown as Filter<Document>;
 }
 
 async function resolveDb(db?: Db): Promise<Db> {
@@ -108,7 +113,7 @@ export async function updateBookMongo(
   if (patch.slug) {
     const clash = await database
       .collection('books')
-      .findOne({ slug: patch.slug, _id: { $ne: _id } }, { projection: { _id: 1 } });
+      .findOne(asIdFilter({ slug: patch.slug, _id: { $ne: _id } }), { projection: { _id: 1 } });
     if (clash) {
       return { error: 'A book with this slug already exists', code: 'DUPLICATE_SLUG' };
     }
@@ -135,9 +140,9 @@ export async function updateBookMongo(
 
   const result = await database
     .collection('books')
-    .findOneAndUpdate({ _id }, { $set }, { returnDocument: 'after' });
+    .findOneAndUpdate(asIdFilter({ _id }), { $set }, { returnDocument: 'after' });
 
-  const book = result as Book | null;
+  const book = result as unknown as Book | null;
   if (!book?._id) {
     return { error: 'Book not found', code: 'NOT_FOUND' };
   }
