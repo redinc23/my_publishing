@@ -13,16 +13,31 @@ Seeded 2026-07-20 from navigator SCOUT @ `9a8a940`. Re-run
 ---
 
 ### E-001 Honest book-clubs placeholder
-Lane: L0 · Status: PROPOSED · Score: R3 I3 C5 /E1 = 45
+
+Lane: L0 · Status: SHIPPED · Score: R3 I3 C5 /E1 = 45
 Story: As a reader, I see an honest status (not fake “Coming Soon” that looks live) on book clubs.
 Evidence: stub surface under `app/(consumer)/book-clubs`; G6 no false-success
 Metric & target: zero false-success complaints on that route; G6 closer to TRUE
 Flag: n/a (truth fix; remove misleading CTA if present)
 Gate/Star tie: G6
-Effort: S · Risk: none · Verification: visual QA on `/book-clubs`
+Effort: S · Risk: none · Verification: visual QA on `/book-clubs` + `/discover/book-clubs`
 Approval: not required (L0)
+Shipped: 2026-07-20 — PR `cursor/e001-book-clubs-honesty-f698` (#320)
+
+### E-006 MCP catalog dual-run (Phoenix prep)
+
+Lane: L1 · Status: SHIPPED · Score: R4 I4 C5 /E2 = 40
+Story: As an operator/agent, catalog MCP tools keep working when DATABASE_PROVIDER flips to mongodb.
+Evidence: `lib/mcp/catalog.ts`; tool names stable; default supabase
+Metric & target: health returns provider; smoke green on both providers in staging
+Flag: n/a (provider switch already gated)
+Gate/Star tie: North Star migration parity / MCP ops
+Effort: M · Risk: response field drift · Verification: unit + mcp-transport-security
+Approval: not required (L1 hardening / migration parity)
+Shipped: 2026-07-20 — PR `cursor/mcp-dual-run-catalog-f698` (#324)
 
 ### E-002 Replace console.log with structured logger in app/lib
+
 Lane: L0 · Status: PROPOSED · Score: R2 I3 C5 /E2 = 15
 Story: As an operator, I get structured logs instead of raw console noise in production.
 Evidence: enhance-scan hygiene signal; WS6 / `mangu-observability` path
@@ -33,6 +48,7 @@ Effort: S · Risk: log volume · Verification: `grep -r console.log app lib | wc
 Approval: not required (L0)
 
 ### E-003 Friendly 429 / rate-limit UX
+
 Lane: L1 · Status: PROPOSED · Score: R4 I3 C4 /E2 = 24
 Story: As a reader hitting rate limits, I see a clear retry message instead of a blank error.
 Evidence: WS6 rate-limit contract; CCR-019 a11y on critical states
@@ -43,6 +59,7 @@ Effort: S · Risk: none · Verification: trigger limit in staging; screenshot + 
 Approval: not required (L1 hardening-adjacent)
 
 ### E-004 Metadata coverage for pages missing generateMetadata
+
 Lane: L2 · Status: PROPOSED · Score: R5 I4 C4 /E3 = 26.7
 Story: As a search crawler / social sharer, every public page has correct title/description/OG.
 Evidence: enhance-scan SEO gap (~24 of 61 pages lack metadata)
@@ -53,6 +70,7 @@ Effort: M · Risk: wrong titles · Verification: crawl sample + Lighthouse SEO
 Approval: required for L2 during freeze
 
 ### E-005 Audio↔text position sync (signature differentiator)
+
 Lane: L3 · Status: PROPOSED · Score: R5 I5 C3 /E5 = 15
 Story: As a reader, I switch between listening and reading and resume at the same place.
 Evidence: benchmark map — few competitors do this well; MANGU has both engines
