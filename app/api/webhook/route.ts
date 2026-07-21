@@ -9,6 +9,8 @@ import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { enforceRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe/server';
 import { sendPurchaseReceiptForCheckoutSession } from '@/lib/email/triggers';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { upsertOrderByPaymentIntent } from '@/lib/mongo-queries';
 import type { WebhookProcessingResult, CheckoutMetadata } from '@/types/webhook';
 
 // Webhook secret for signature verification
@@ -108,6 +110,37 @@ async function handleCheckoutCompleted(
       error: 'Missing required metadata (book_id or user_id)',
       event_id: session.id,
       event_type: 'checkout.session.completed',
+    };
+  }
+
+  // Phoenix dual-run: Mongo orders use embedded items + PI upsert (2b.1.4).
+  if (isMongoPrimary()) {
+    const piKey = paymentIntentId || `session_${session.id}`;
+    const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
+    const { inserted, orderId } = await upsertOrderByPaymentIntent({
+      user_id: metadata.user_id,
+      stripe_payment_intent_id: piKey,
+      stripe_session_id: session.id,
+      amount: totalAmount,
+      currency: (session.currency || 'usd').toLowerCase(),
+      order_items: [
+        {
+          book_id: metadata.book_id,
+          title: metadata.book_slug || metadata.book_id,
+          quantity: 1,
+          unit_amount: totalAmount,
+          currency: (session.currency || 'usd').toLowerCase(),
+        },
+      ],
+    });
+
+    return {
+      success: true,
+      event_id: session.id,
+      event_type: 'checkout.session.completed',
+      action_taken: inserted
+        ? `Mongo order created (${orderId})`
+        : `Mongo order already existed (${orderId})`,
     };
   }
 

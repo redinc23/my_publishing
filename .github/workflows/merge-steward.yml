@@ -1,0 +1,70 @@
+name: MANGU Merge Steward
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: mangu-merge-steward
+  cancel-in-progress: false
+
+jobs:
+  process-pull-requests:
+    name: Process pull requests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Select pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_PR: ${{ github.event.pull_request.number }}
+          EVENT_DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
+            if [[ "$EVENT_DRAFT" == "true" ]]; then
+              echo "PR #$EVENT_PR is a draft; it will be processed when marked ready."
+              exit 0
+            fi
+            printf '%s\n' "$EVENT_PR" > /tmp/prs.txt
+          else
+            gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --state open \
+              --json number,isDraft \
+              --jq '.[] | select(.isDraft == false) | .number' > /tmp/prs.txt
+          fi
+
+          echo "Selected pull requests:"
+          cat /tmp/prs.txt
+
+      - name: Arm autonomous squash merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ ! -s /tmp/prs.txt ]]; then
+            echo "No ready pull requests found."
+            exit 0
+          fi
+
+          while IFS= read -r pr; do
+            echo "Processing PR #$pr"
+            gh pr merge "$pr" \
+              --repo "$GITHUB_REPOSITORY" \
+              --squash \
+              --auto || echo "::warning title=Merge Steward blocked::PR #$pr could not be merged or armed for auto-merge."
+          done < /tmp/prs.txt

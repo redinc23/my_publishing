@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache';
 import { enforceRateLimit } from '@/lib/rate-limit';
 import { hasCompletedOrderForBook } from '@/lib/reading/entitlement';
 import { AuthorReplySchema } from '@/lib/validations/reviews';
+import { isMongoPrimary } from '@/lib/db/provider';
+import { deleteReviewMongo, upsertReviewMongo } from '@/lib/mongo-reviews';
 
 /** Throws when the caller has exceeded the shared API rate bucket. */
 async function enforceReviewRateLimit(userId: string) {
@@ -181,6 +183,27 @@ export async function createReview(reviewData: {
   is_spoiler: boolean;
   is_public: boolean;
 }) {
+  if (isMongoPrimary()) {
+    const { getRequestUser } = await import('@/lib/api/request-user');
+    const user = await getRequestUser();
+    if (!user) {
+      throw new Error('You must be logged in to write reviews');
+    }
+    await enforceReviewRateLimit(user.id);
+    await upsertReviewMongo({
+      book_id: reviewData.book_id,
+      user_id: user.id,
+      rating: reviewData.rating,
+      title: reviewData.title,
+      content: reviewData.content,
+      verified_purchase: false,
+    });
+    revalidatePath('/');
+    revalidatePath('/dashboard/my-reviews');
+    revalidatePath(`/books/${reviewData.book_id}`);
+    return { success: true };
+  }
+
   const supabase = await createClient();
   const admin = createAdminClient();
 
@@ -243,6 +266,23 @@ export async function createReview(reviewData: {
 }
 
 export async function deleteReview(reviewId: string) {
+  if (isMongoPrimary()) {
+    const { getRequestUser } = await import('@/lib/api/request-user');
+    const user = await getRequestUser();
+    if (!user) {
+      throw new Error('You must be logged in to delete reviews');
+    }
+    const result = await deleteReviewMongo(reviewId, user.id);
+    if (!result.deleted) {
+      throw new Error('You can only delete your own reviews');
+    }
+    revalidatePath('/dashboard/my-reviews');
+    if (result.bookId) {
+      revalidatePath(`/books/${result.bookId}`);
+    }
+    return { success: true };
+  }
+
   const supabase = await createClient();
   const admin = createAdminClient();
 

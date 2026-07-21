@@ -23,16 +23,16 @@ import { validateEnvironment, printValidationResults } from '../lib/utils/env-va
 const PRODUCTION_MODE =
   process.argv.includes('--production') || process.env.ENV_TARGET === 'production';
 
-function argValue(flag) {
+function argValue(flag: string) {
   const idx = process.argv.indexOf(flag);
   return idx >= 0 && idx + 1 < process.argv.length ? process.argv[idx + 1] : undefined;
 }
 
 // Minimal .env file parser (dotenv is not a dependency). Handles KEY=value,
 // optional quotes, and `#` comments. Never throws on a missing file.
-function parseEnvFile(filePath) {
-  const out = {};
-  let text;
+function parseEnvFile(filePath: string) {
+  const out: Record<string, string> = {};
+  let text: string;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const fs = require('fs');
@@ -79,8 +79,8 @@ function loadEnvironmentFiles() {
 
 // Load the production-shaped env: real process env wins; values from the
 // target file fill the gaps (mirrors how Vercel/Cloud Run inject env).
-function loadProductionEnvironment(filePath) {
-  process.env.NODE_ENV = 'production';
+function loadProductionEnvironment(filePath: string) {
+  (process.env as { NODE_ENV?: string }).NODE_ENV = 'production';
   const fromFile = parseEnvFile(filePath);
   for (const [key, value] of Object.entries(fromFile)) {
     if (process.env[key] === undefined) {
@@ -91,9 +91,13 @@ function loadProductionEnvironment(filePath) {
 }
 
 // True when a value still looks like an .example placeholder (fail-closed).
-function looksPlaceholder(value) {
-  return /\.\.\.$/.test(value) || /your[-_]/i.test(value) || /xxxxx/i.test(value) ||
-    /<[^>]+>/.test(value);
+function looksPlaceholder(value: string) {
+  return (
+    /\.\.\.$/.test(value) ||
+    /your[-_]/i.test(value) ||
+    /xxxxx/i.test(value) ||
+    /<[^>]+>/.test(value)
+  );
 }
 
 /**
@@ -101,15 +105,23 @@ function looksPlaceholder(value) {
  * The var list mirrors .env.production.example; formats are checked by prefix
  * only — values are never logged.
  */
-function validateProductionShape(filePath) {
+function validateProductionShape(filePath: string) {
   const errors = [];
   const warnings = [];
 
-  const required = [
-    ['NEXT_PUBLIC_SUPABASE_URL', (v) => v.startsWith('https://') && v.includes('.supabase.co'), 'https://*.supabase.co'],
+  const required: Array<[string, (v: string) => boolean, string]> = [
+    [
+      'NEXT_PUBLIC_SUPABASE_URL',
+      (v) => v.startsWith('https://') && v.includes('.supabase.co'),
+      'https://*.supabase.co',
+    ],
     ['NEXT_PUBLIC_SUPABASE_ANON_KEY', (v) => v.length >= 20, 'Supabase anon JWT'],
     ['SUPABASE_SERVICE_ROLE_KEY', (v) => v.length >= 20, 'Supabase service-role JWT'],
-    ['MONGODB_URI', (v) => v.startsWith('mongodb://') || v.startsWith('mongodb+srv://'), 'mongodb+srv://… (ADR-002)'],
+    [
+      'MONGODB_URI',
+      (v) => v.startsWith('mongodb://') || v.startsWith('mongodb+srv://'),
+      'mongodb+srv://… (ADR-002)',
+    ],
     ['NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', (v) => v.startsWith('pk_'), 'pk_live_… / pk_test_…'],
     ['STRIPE_SECRET_KEY', (v) => v.startsWith('sk_'), 'sk_live_… / sk_test_…'],
     ['STRIPE_WEBHOOK_SECRET', (v) => v.startsWith('whsec_'), 'whsec_…'],
@@ -134,7 +146,7 @@ function validateProductionShape(filePath) {
   }
 
   // Optional integrations: validate format only when present.
-  const optional = [
+  const optional: Array<[string, (v: string) => boolean, string]> = [
     ['OPENAI_API_KEY', (v) => v.startsWith('sk-'), 'sk-…'],
     ['RESEND_API_KEY', (v) => v.startsWith('re_'), 're_…'],
     ['MONGODB_DB', (v) => v.length > 0, 'database name'],
@@ -158,7 +170,7 @@ function validateProductionShape(filePath) {
   }
 
   // Stripe live/test mode consistency across publishable + secret keys.
-  const modeOf = (v) => {
+  const modeOf = (v: string | undefined) => {
     if (!v) return undefined;
     if (/_live_/.test(v)) return 'live';
     if (/_test_/.test(v)) return 'test';
@@ -167,14 +179,18 @@ function validateProductionShape(filePath) {
   const pkMode = modeOf(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
   const skMode = modeOf(process.env.STRIPE_SECRET_KEY);
   if (pkMode && skMode && (pkMode === 'unknown' || skMode === 'unknown')) {
-    warnings.push('Stripe key mode not recognizable (expected pk_live_/sk_live_ or pk_test_/sk_test_)');
+    warnings.push(
+      'Stripe key mode not recognizable (expected pk_live_/sk_live_ or pk_test_/sk_test_)'
+    );
   } else if (pkMode && skMode && pkMode !== skMode) {
     errors.push(
       `Stripe mode mismatch: publishable key is ${pkMode} but secret key is ${skMode} — use one account+mode (P0-016)`
     );
   }
   if (pkMode === 'test') {
-    warnings.push('Stripe TEST mode keys in a production-shaped config — switch to live keys before launch');
+    warnings.push(
+      'Stripe TEST mode keys in a production-shaped config — switch to live keys before launch'
+    );
   }
 
   return { errors, warnings, filePath };

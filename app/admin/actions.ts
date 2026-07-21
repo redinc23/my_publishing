@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { recordAudit } from '@/lib/audit';
 
 type Role = 'reader' | 'author' | 'partner' | 'admin';
 type BookStatus = 'draft' | 'published';
@@ -59,6 +60,10 @@ export async function updateBookStatusAction(formData: FormData) {
     .eq('id', id);
 
   if (error) return;
+  await recordAudit(auth.user.id, 'content.approve', id, {
+    resource_type: 'book',
+    status,
+  });
   revalidatePath('/admin/books');
 }
 
@@ -90,6 +95,11 @@ export async function updateUserRoleAction(formData: FormData) {
     .eq('id', profileId);
 
   if (error) return;
+  await recordAudit(auth.user.id, 'user.role_change', profileId, {
+    resource_type: 'profile',
+    role,
+    target_user_id: target.user_id,
+  });
   revalidatePath('/admin/users');
 }
 
@@ -114,6 +124,12 @@ export async function updateManuscriptStatusAction(formData: FormData) {
     .eq('id', id);
 
   if (error) return;
+  await recordAudit(
+    auth.user.id,
+    status === 'accepted' ? 'content.approve' : 'content.reject',
+    id,
+    { resource_type: 'manuscript', status }
+  );
   revalidatePath('/admin/manuscripts');
 }
 
