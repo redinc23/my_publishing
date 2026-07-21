@@ -18,6 +18,17 @@ function coerceId(id: string): ObjectId | string {
   return /^[a-fA-F0-9]{24}$/.test(id) ? new ObjectId(id) : id;
 }
 
+/**
+ * Match `_id` whether stored as ObjectId or legacy string UUID.
+ * Driver Filter typings assume ObjectId-only `_id`; cast via unknown.
+ */
+function idMatchFilter(id: string): Filter<Document> {
+  const coerced = coerceId(id);
+  const filter =
+    coerced instanceof ObjectId ? { $or: [{ _id: coerced }, { _id: id }] } : { _id: id };
+  return filter as unknown as Filter<Document>;
+}
+
 export type GetBooksFilters = {
   status?: Book['status'];
   authorId?: string;
@@ -125,9 +136,7 @@ export async function getBookById(
   db?: Db
 ): Promise<BookWithAuthor | null> {
   const database = await resolveDb(db);
-  const coerced = coerceId(id);
-  const andClauses: Filter<Document>[] =
-    coerced instanceof ObjectId ? [{ $or: [{ _id: coerced }, { _id: id }] }] : [{ _id: id }];
+  const andClauses: Filter<Document>[] = [idMatchFilter(id)];
   if (options.status) andClauses.push({ status: options.status });
   if (options.visibility) andClauses.push({ visibility: options.visibility });
 
@@ -201,9 +210,7 @@ export async function updateBook(
   db?: Db
 ): Promise<boolean> {
   const database = await resolveDb(db);
-  const coerced = coerceId(id);
-  const filter: Filter<Document> =
-    coerced instanceof ObjectId ? { $or: [{ _id: coerced }, { _id: id }] } : { _id: id };
+  const filter = idMatchFilter(id);
 
   const $set: Document = { updated_at: new Date() };
   for (const [key, value] of Object.entries(patch)) {
