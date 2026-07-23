@@ -58,7 +58,7 @@
     "clsx": "^2.1.0",
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
-    "framer-motion": "^10.18.0",
+    "framer-motion": "^12.42.2",
     "lodash": "^4.17.21",
     "lru-cache": "^11.5.2",
     "lucide-react": "^0.309.0",
