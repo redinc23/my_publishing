@@ -70,6 +70,8 @@ BEGIN
   END LOOP;
 END $$;
 
+ALTER TABLE manuscripts DROP CONSTRAINT IF EXISTS manuscripts_status_check;
+
 ALTER TABLE manuscripts
   ADD CONSTRAINT manuscripts_status_check
   CHECK (
