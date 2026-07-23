@@ -241,3 +241,24 @@ Click-paths reference `docs/PROJECT_PHOENIX.md` unless noted.
 ---
 
 _Updated with Phase 0 deep dive (`docs/PHOENIX_RECON.md`)._
+
+---
+
+## Ledger governance
+
+### H-L1 Supply or ratify the Product Gap handover (owner decision)
+
+`docs/PRODUCT_GAP_AI_HANDOVER.md` — the document `docs/AGENT_EXECUTION_PACKET.md`
+cites as defining the 60 Product Gap items (P-001..P-060) — is **absent from the
+repo and from git history** as of baseline `47340b73f6c609059229c3102ae442f5d161b910`.
+The canonical ledger `docs/product-gap-ledger.yml` (Run R1) was therefore
+**reconstructed** from `docs/AGENT_EXECUTION_PACKET.md`, `docs/NEXT_GO.md`,
+`docs/PRODUCT_FEATURE_STORIES.md`, and `docs/ENHANCEMENT_LEDGER.md`.
+
+**Owner action:** supply the original handover document, or ratify the
+reconstructed ledger. Pay particular attention to the **area assignments** for
+P-013..P-016, P-019, P-020, P-023..P-030, P-033..P-037, P-039..P-042,
+P-044..P-047, and P-050..P-058 — these were inferred from the four source
+documents above rather than from the missing original. Also ratify the
+owner-decision table in `docs/PRODUCT_GAP_LEDGER.md` §3 (P-015, P-021, P-022,
+P-031, P-038, P-043, P-048, P-049, P-059).

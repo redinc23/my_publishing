@@ -1,0 +1,1957 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# PRODUCT GAP LEDGER — canonical machine-readable source (Run R1)
+#
+# This YAML is the source of truth. docs/PRODUCT_GAP_LEDGER.md is a GENERATED
+# view of this file — do not edit the markdown by hand.
+#
+# Subordinate to docs/NEXT_GO.md (G1-G13 hard gates; G13 TRUE, G12 PARTIAL).
+# Nothing in this ledger overrides the gate matrix. Migration authority:
+# docs/PROJECT_PHOENIX.md. Platform authority: docs/adr/.
+#
+# IDs are P-### always. P0-001..P0-020 is the SEPARATE release backlog in
+# NEXT_GO.md section 5 — never write P0-### for a Product Gap item.
+# Issue titles: "[Gap P-###]". Labels: "product-gap:P-###".
+#
+# ─── FIELD SEMANTICS (trimmed — full semantics in product-gap-ledger.SCHEMA.yml) ─
+# id                 P-###. Stable forever. Never renumber.
+# area               Product surface or technical system.
+# gap                What is missing, weak, or unclear. Present tense, observed.
+# target_behavior    ONE testable outcome. Items without it stay UNMAPPED.
+# product_priority   P0 | P1 | P2 — product urgency.
+# shipping_lane      L0 | L1 | L2 | L3 — freeze legality. NOT the same as priority.
+#                      L0 truth correction / false-success removal -> ships when narrow
+#                      L1 security, reliability, migration parity   -> ships tied to governing work
+#                      L2 product improvement beyond approved scope -> needs owner approval
+#                      L3 new/expanded capability                   -> post-GO unless unfrozen
+# work_package       WP-00 .. WP-08. Exactly one owner package per ID.
+# gate_tie           G1-G13 or N/A. NEVER invent a tie to justify work.
+# phoenix_tie        Phoenix Task ID / North Star, or N/A.
+# existing_issue     GitHub issue/PR that already covers this. Prevents duplicate work.
+# existing_story     PRODUCT_FEATURE_STORIES.md or ENHANCEMENT_LEDGER.md anchor.
+# code_anchor        Real path in app/ or lib/. Verified to exist, not guessed.
+# test_anchor        Test file that proves it, or null if none exists yet.
+# status             UNMAPPED | DUPLICATE | ALREADY_EVIDENCED | READY | BLOCKED
+#                    | SCOPE_DECISION | DEFERRED — planning state, SEPARATE from
+#                    NEXT_GO.md evidence vocabulary (NOT STARTED / IN PROGRESS /
+#                    BLOCKED / FAILED / PASSED / SUPERSEDED / WAIVED).
+# dependencies       List of P-### that must be PASSED first.
+# evidence_required  What actually closes this. Be specific.
+# baseline_sha       SHA the gap was observed at.
+# candidate_sha      SHA the fix is evidenced at. null until evidenced.
+# owner_agent        A0..A6.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+meta:
+  schema_version: 1
+  canonical: true                     # this YAML is the source of truth
+  rendered_view: docs/PRODUCT_GAP_LEDGER.md
+  baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+  totals:                             # CI-enforced by scripts/validate-gap-ledger.ts
+    P0: 31
+    P1: 23
+    P2: 6
+    total: 60
+  authority:
+    launch: docs/NEXT_GO.md           # rules G1-G13; this ledger is subordinate
+    migration: docs/PROJECT_PHOENIX.md
+    platform: docs/adr/
+  namespace_rule: >
+    Product Gap IDs are written P-### always. The repo separately uses P0-001..P0-020
+    for the release backlog in NEXT_GO.md section 5. Never abbreviate P-001 to P0-001.
+    Issue titles: "[Gap P-###]". Labels: "product-gap:P-###".
+  work_packages:
+    WP-00: >
+      Governance and ledger (owner A0). The ledger itself, scope decisions, and
+      post-GO ratification. No P-### items are assigned to WP-00; it owns this
+      file and the owner-decision table in the rendered view.
+    WP-01: >
+      Routes, CTA, and truth (A1 audit, A6 truth fixes). Route/CTA manifests,
+      placeholder and false-success honesty, homepage role paths, marketing and
+      verticals truth. Items: P-001, P-002, P-003, P-004, P-038, P-052, P-053,
+      P-054, P-056.
+    WP-02: >
+      Auth & account (A2). Signup, verification, login redirect, reset, auth
+      errors, auth dual-run boundary, onboarding roles, account center, RBAC
+      server-side enforcement. Items: P-005..P-012, P-024.
+    WP-03: >
+      Reader, library, discovery (A3). Web reader, progress/resume, catalog
+      browse & search, engagement loops, reviews, serialized fiction, clubs,
+      AI companions, Resonance flag honesty. Items: P-013, P-014, P-016, P-019,
+      P-022, P-036, P-037, P-039, P-040.
+    WP-04: >
+      Commerce & webhooks (A3). Checkout state machine, entitlement, audio
+      entitlement, edition/pricing model, order integrity, file delivery,
+      price display, webhook operations. Items: P-017, P-018, P-021, P-032,
+      P-033, P-034, P-035, P-041.
+    WP-05: >
+      Author, admin, partner (A4). Submission pipeline, admin portal
+      completeness, catalog quality, moderation queue, author analytics/growth,
+      partner portal export gating. Items: P-020, P-023, P-042, P-045, P-046,
+      P-047, P-050.
+    WP-06: >
+      Trust: accessibility, mobile, legal, SEO (A6). A11y scope, mobile E2E,
+      privacy operations, legal documents, SEO/indexability, metadata. Items:
+      P-043, P-044, P-048, P-049, P-051, P-058.
+    WP-07: >
+      Platform, migration, ops (A5; A2 for P-059). RLS hosted verification,
+      rate-limit fail-closed, readiness truth, Sentry correlation, secrets
+      validation, MCP transport, status page, structured logging, Phoenix
+      data-provider boundary, deploy/DNS cutover. Items: P-025..P-030, P-055,
+      P-057, P-059, P-060.
+    WP-08: >
+      Post-GO scope (A0). Payouts/royalties and subscriptions — closed to
+      implementation until owner amends launch scope. Items: P-015, P-031.
+
+items:
+  - id: P-001
+    area: Homepage / role paths
+    gap: >
+      The homepage (app/page.tsx) does not present four explicit role paths
+      (Browse Books, Start Reading, Publish With Us, Partner Portal). The rendered
+      page assembles marketing sections from components/home, and the four labels
+      appear only scattered across other routes (app/(consumer)/books/page.tsx,
+      components/shared/Footer.tsx), so a first-visit user has no validated,
+      role-directed entry to the product.
+    target_behavior: >
+      The homepage exposes exactly four role-path CTAs — Browse Books, Start
+      Reading, Publish With Us, Partner Portal — and each is verified by the R2
+      route audit to resolve to a REAL destination, or is hidden / honestly
+      labeled unavailable until its destination is REAL.
+    product_priority: P0
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/page.tsx, components/shared/Footer.tsx
+    test_anchor: null
+    status: READY
+    dependencies: [P-002]
+    evidence_required: >
+      Route manifest rows for the four destinations classified REAL (or the CTA
+      removed / honestly labeled); before/after capture of the homepage; test
+      asserting the four CTAs render and resolve; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A1
+  
+  - id: P-002
+    area: Route inventory
+    gap: >
+      No machine-readable inventory of routes, redirects, middleware protections,
+      and feature-flag gating exists. The repo has ~62 page routes and ~29 API
+      routes across the (consumer), (portals), admin, and dev groups, and no
+      script or document enumerates them with a deterministic classification.
+    target_behavior: >
+      scripts/audit/route-manifest.ts generates docs/audit/route-manifest.json
+      covering every App Router page and API route, dynamic segments, layouts,
+      middleware.ts protections, redirects, and flag gating, with each row
+      classified exactly one of REAL, PARTIAL, HONEST_UNAVAILABLE, MISLEADING,
+      BROKEN, REDIRECT, DEAD, UNKNOWN.
+    product_priority: P0
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/page.tsx, middleware.ts
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Script checked in; docs/audit/route-manifest.json regenerated deterministically
+      by re-running the script; every route row carries one classification plus
+      evidence; docs/ROUTE_AUDIT.md merged. Audit is read-only against application
+      code.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A1
+  
+  - id: P-003
+    area: CTA & link integrity
+    gap: >
+      There is no verified ledger of visible links, buttons, form actions, card
+      CTAs, and error-recovery actions across shared navigation
+      (components/shared/Header.tsx, components/shared/Navigation.tsx,
+      components/shared/MobileNav.tsx), the footer (components/shared/Footer.tsx),
+      and critical routes, so dead links and unhandled CTAs ship undetected.
+    target_behavior: >
+      scripts/audit/cta-crawl.ts generates docs/audit/cta-manifest.json classifying
+      every extracted CTA as REAL, DEAD, or MISLEADING, and docs/CTA_LEDGER.md
+      records each DEAD or MISLEADING CTA with its owning route; every CTA either
+      resolves to a working destination or is queued for R3 honest-state fixing.
+    product_priority: P0
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: components/shared/Header.tsx, components/shared/Navigation.tsx, components/shared/Footer.tsx
+    test_anchor: null
+    status: READY
+    dependencies: [P-002]
+    evidence_required: >
+      CTA manifest generated by script (not hand-crawled); public routes probed on
+      the deployed canonical site with status codes recorded (apex->www 301
+      followed, not reported as a defect; no credentials, no PII); zero
+      UNCLASSIFIED rows; docs/CTA_LEDGER.md merged.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A1
+  
+  - id: P-004
+    area: Dead ends / false-success surfaces
+    gap: >
+      Placeholder and "coming soon" screens present as functional. ~30 files under
+      app/ and components/ contain placeholder/waitlist strings at baseline,
+      including app/(consumer)/blog/page.tsx, app/(consumer)/comics/[slug]/page.tsx,
+      and app/(consumer)/papers/[slug]/page.tsx; several render interactive-looking
+      controls with no backing implementation.
+    target_behavior: >
+      Every placeholder surface either states honestly that it is unavailable, or
+      is removed entirely. No control implies an action the system cannot perform.
+      Any waitlist form that renders actually persists the address, and no form
+      shows a success state without a real submission.
+    product_priority: P0
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md#phase-9   # P0-012/013/014 set the pattern to follow
+    code_anchor: app/(consumer)/blog/page.tsx, app/(consumer)/comics/[slug]/page.tsx, app/(consumer)/papers/[slug]/page.tsx
+    test_anchor: null
+    status: READY
+    dependencies: [P-002]
+    evidence_required: >
+      docs/PRODUCT_TRUTH_REGISTER.md has zero MISLEADING rows; every BROKEN row is
+      fixed, removed, or converted to HONEST_UNAVAILABLE in
+      docs/audit/route-manifest.json; a test asserting the honest state per fixed
+      surface; before/after capture; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-005
+    area: Account creation
+    gap: >
+      There is no single canonical signup entry point: app/(auth)/register exists
+      but no /signup route exists anywhere in app/, and role-sensitive onboarding
+      after creation (stored multiple roles vs switchable contexts vs one primary
+      role plus capabilities) is undefined.
+    target_behavior: >
+      One account-creation entry point at /signup on the current production
+      provider (Supabase); the multi-role semantics are defined explicitly in
+      writing and implemented consistently; post-creation onboarding routes the
+      user according to that definition.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-02
+    gate_tie: G3
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/(auth)/register/page.tsx, app/(auth)/register/actions.ts, lib/auth/provider.ts
+    test_anchor: tests/e2e/auth-flow.spec.ts
+    status: READY
+    dependencies: [P-010]
+    evidence_required: >
+      /signup live as the single creation entry; role-semantics decision recorded
+      in the slice PR description; scenario-matrix rows for duplicate signup and
+      signed-out creation pass on one candidate SHA; unit, integration, and E2E
+      evidence on the same SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-006
+    area: Email verification
+    gap: >
+      Email verification handling is partial: /verify-email exists with a resend
+      form, but resend throttling, token expiry, and invalid/used-link states are
+      not all evidenced, and there is no defined support path for a user whose
+      link has expired or been consumed.
+    target_behavior: >
+      /verify-email handles resend (rate-limited), expired links, and invalid or
+      already-used links with an explicit honest state and a recovery action for
+      each; every state is covered by an automated test.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-02
+    gate_tie: G3
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/(auth)/verify-email/page.tsx, app/(auth)/verify-email/actions.ts
+    test_anchor: tests/e2e/auth-flow.spec.ts
+    status: READY
+    dependencies: [P-005]
+    evidence_required: >
+      Scenario-matrix rows for unverified, expired-token, and invalid-token users
+      pass; resend abuse is rate-limited with a negative test; unit, integration,
+      and E2E evidence on the same candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-007
+    area: Login redirect
+    gap: >
+      Post-login redirect does not guarantee return to the intended page, and the
+      next/return URL parameter is not verified to be sanitized — an open-redirect
+      vector if absolute, protocol-relative, or off-origin URLs are accepted.
+    target_behavior: >
+      After login the user returns to the intended page when the target is safe,
+      else lands on their role dashboard; the next/return parameter rejects
+      absolute URLs, protocol-relative URLs, and any off-origin value, with a
+      negative test asserting the rejection.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-02
+    gate_tie: G3
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/(auth)/login/page.tsx, app/(auth)/login/LoginForm.tsx, app/(auth)/login/actions.ts
+    test_anchor: tests/e2e/auth-flow.spec.ts
+    status: READY
+    dependencies: [P-005]
+    evidence_required: >
+      Open-redirect negative tests green (absolute, protocol-relative, off-origin
+      inputs all rejected); intended-page return evidenced for reader, author,
+      partner, and admin roles on one candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-008
+    area: Password reset
+    gap: >
+      The full password reset cycle (request -> email -> reset -> confirm ->
+      login) is not evidenced end to end; app/(auth)/reset-password exists with a
+      confirm subroute, but expiry, invalid-token, and forced-reset-user states
+      lack verified handling.
+    target_behavior: >
+      The complete reset cycle works on the production provider: request issues a
+      time-limited link, the confirm step accepts only a valid unexpired token,
+      the new password logs the user in, and expired/invalid tokens get an honest
+      error with a restart path.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-02
+    gate_tie: G3
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/(auth)/reset-password/page.tsx, app/(auth)/reset-password/actions.ts, app/(auth)/reset-password/confirm
+    test_anchor: tests/e2e/auth-flow.spec.ts
+    status: READY
+    dependencies: [P-005]
+    evidence_required: >
+      E2E trace of request -> reset -> confirm -> login green; negative tests for
+      expired and invalid tokens; forced-reset scenario-matrix row passes; all
+      evidence on one candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-009
+    area: Auth error handling
+    gap: >
+      No dedicated auth error page exists: app/error.tsx and app/global-error.tsx
+      are generic, and OAuth failure, session expiry, and invalid-link errors have
+      no purpose-built surface with a clear recovery action per failure type.
+    target_behavior: >
+      A dedicated auth error page distinguishes OAuth failure, session expiry, and
+      invalid/used link, and renders one working recovery action per case (retry
+      sign-in, re-login, resend/request new link); no case dead-ends.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-02
+    gate_tie: G3
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/error.tsx, app/global-error.tsx, app/(auth)/callback
+    test_anchor: null
+    status: READY
+    dependencies: [P-006, P-008]
+    evidence_required: >
+      Each of the three failure classes triggered in test and shown to render the
+      dedicated page with its recovery action; recovery actions verified to reach
+      working destinations; evidence on one candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-010
+    area: Auth architecture
+    gap: >
+      Both Supabase Auth and Better Auth are present in the codebase
+      (lib/auth/provider.ts switches on AUTH_PROVIDER; lib/auth/better-auth-actions.ts
+      and lib/auth-client.ts both exist), and the dual-run boundary is not
+      documented — provider defaults, cutover criteria, and rollback path are
+      unwritten.
+    target_behavior: >
+      The dual-run boundary is DOCUMENTED with explicit provider defaults, cutover
+      criteria, and rollback path. Production remains AUTH_PROVIDER=supabase.
+      NOTE: "single chosen authority" in the source ledger does NOT license
+      deleting a provider or flipping production. The coexistence is Project
+      Phoenix's deliberate dual-run architecture. An agent that "resolves" this by
+      removing Supabase has caused an outage and failed the run.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-02
+    gate_tie: N/A
+    phoenix_tie: PROJECT_PHOENIX auth cutover
+    existing_issue: null
+    existing_story: docs/PROJECT_PHOENIX.md
+    code_anchor: lib/auth/provider.ts, lib/auth/better-auth-actions.ts, lib/auth-client.ts
+    test_anchor: tests/unit/auth-provider.test.ts
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Boundary document merged naming which provider serves which path today, the
+      cutover criteria, and the rollback path; provider defaults confirmed
+      unchanged in the diff (AUTH_PROVIDER untouched). Documentation-only slice.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-011
+    area: Onboarding & roles
+    gap: >
+      Onboarding is not role-sensitive. AGENT_EXECUTION_PACKET.md R4 calls out that
+      multi-role semantics are undefined — it is unclear whether a user holds stored
+      multiple roles, switchable role contexts, or one primary role plus capabilities.
+      Post-signup flow cannot be specified or tested until this is decided and written.
+    target_behavior: >
+      A written role model defines exactly one semantics for multi-role users (stored
+      multiple roles vs. switchable contexts vs. primary role plus capabilities), and
+      the post-signup onboarding flow routes each role to its correct first-run
+      experience. A new reader, author, and partner each land on a role-appropriate
+      onboarding path after account creation.
+    product_priority: P0
+    shipping_lane: L2
+    work_package: WP-02
+    gate_tie: G5
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/AGENT_EXECUTION_PACKET.md#r4
+    code_anchor: app/(auth)/register, app/api/auth
+    test_anchor: tests/e2e/role-gating.spec.ts
+    status: READY
+    dependencies: [P-005]
+    evidence_required: >
+      Role-semantics decision recorded in docs; onboarding route map per role merged;
+      role-gating e2e extended to assert each role's post-signup landing; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-012
+    area: Account center
+    gap: >
+      There is no unified account center. Settings live in an isolated page
+      (app/dashboard/settings/page.tsx) with no coherent surface for profile, security,
+      role/application status, and active sessions/devices in one place.
+    target_behavior: >
+      A signed-in user can view and edit profile, manage security settings, see their
+      role and any application status, and list/revoke active sessions or devices from
+      one account center surface.
+    product_priority: P1
+    shipping_lane: L2
+    work_package: WP-02
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/AGENT_EXECUTION_PACKET.md#r4
+    code_anchor: app/dashboard/settings/page.tsx, app/api/session/route.ts
+    test_anchor: null
+    status: READY
+    dependencies: [P-005]
+    evidence_required: >
+      Account center route live covering profile, security, role/application status,
+      and sessions/devices; each section backed by a real data path (no placeholder
+      controls); e2e covering view + one mutation per section; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-013
+    area: Web reader
+    gap: >
+      The web reading surface is not a complete reader. Stories EPIC T1.1 require
+      rendering actual book content with reader settings; the current surface under
+      app/(consumer)/reading/[bookId]/ does not yet deliver a full real reading
+      experience for entitled users.
+    target_behavior: >
+      An entitled user opening a book at /reading/[bookId] sees the real book content
+      rendered (not a stub), can turn pages/scroll through the full text, and can
+      adjust core reader settings (e.g. font size, theme) with the settings persisting
+      across reload.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-03
+    gate_tie: G8
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#epic-t11-real-web-reader
+    code_anchor: app/(consumer)/reading/[bookId]/page.tsx, app/(consumer)/reading/[bookId]/ReadingClient.tsx
+    test_anchor: null
+    status: BLOCKED
+    dependencies: [P-018]
+    evidence_required: >
+      Real content rendered for an owned test title end to end; reader settings change
+      and persist verified in e2e; non-entitled access denied (ties to P-018);
+      candidate SHA + environment + UTC timestamp.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-014
+    area: Reading progress & resume
+    gap: >
+      Reading progress/resume sync is not verified end to end. Progress persistence
+      primitives exist (lib/reading/engagement.ts, reading actions) but there is no
+      evidenced behavior that a reader's position is saved and restored reliably
+      across sessions and devices.
+    target_behavior: >
+      A reader who stops mid-book and returns — including from a fresh session or a
+      second device — resumes at the exact last-read position, and that position is
+      reflected consistently in the library/continue-reading surface.
+    product_priority: P1
+    shipping_lane: L2
+    work_package: WP-03
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#epic-t13-readlisten-continuity
+    code_anchor: lib/reading/engagement.ts, app/(consumer)/reading/[bookId]/actions.ts
+    test_anchor: null
+    status: READY
+    dependencies: [P-013]
+    evidence_required: >
+      E2e asserting save-and-resume across a fresh session; cross-device/server-side
+      sync verified for one test account; progress reflected on library surface;
+      candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-015
+    area: Subscriptions & membership
+    gap: >
+      Subscriptions/membership monetization appears in roadmap material (EPIC T4.2
+      pricing and revenue expansion) but is not in the NEXT_GO.md launch scope. The
+      ledger's P1 product priority conflicts with the launch-scope freeze; only an
+      owner can resolve it.
+    target_behavior: >
+      DEFERRED. NEXT_GO.md does not include subscriptions/membership in launch scope.
+      Target behavior is written only after an owner amends launch scope. Until then
+      this item is closed to implementation regardless of its P1 marking.
+    product_priority: P1
+    shipping_lane: L3
+    work_package: WP-08
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#epic-t42-pricing-and-revenue-expansion
+    code_anchor: null
+    test_anchor: null
+    status: SCOPE_DECISION
+    dependencies: []
+    evidence_required: >
+      Owner decision recorded and NEXT_GO.md formally amended BEFORE any
+      implementation. No agent may begin this on the strength of the P1 label alone.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A0
+  
+  - id: P-016
+    area: Catalog browse & search
+    gap: >
+      Catalog browse and search correctness is unverified. EPIC T3.2 requires a
+      search result quality pass; there is no evidenced behavior that browse, filters,
+      and search return correct, complete, and consistently ordered results over the
+      real catalog.
+    target_behavior: >
+      For a known seeded catalog, browse (genres, filters) and search return exactly
+      the matching published titles with stable ordering, no missing items, and no
+      unpublished or draft items leaking into results.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-03
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#epic-t32-search-shelves-and-recommendations
+    code_anchor: app/(consumer)/books/page.tsx, app/(consumer)/books/BookFilters.tsx, app/(consumer)/discover/page.tsx
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Test fixtures with known expected result sets; automated tests asserting browse,
+      filter, and search result correctness including exclusion of unpublished items;
+      candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-017
+    area: Checkout
+    gap: >
+      Payment state machine UX is incomplete; non-happy paths are unhandled or unclear.
+    target_behavior: >
+      All states handled and observable: created, redirected, processing, succeeded,
+      cancelled, failed, duplicate, expired, refunded/reversed. Amounts and product
+      identity are server-derived. Retry is idempotent. Duplicate webhook delivery
+      produces neither a duplicate order nor a duplicate entitlement.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-04
+    gate_tie: G4, G8
+    phoenix_tie: N/A
+    existing_issue: "#205"
+    existing_story: docs/NEXT_GO.md#p0-010
+    code_anchor: app/api/checkout/route.ts, app/api/webhooks/stripe/route.ts, lib/stripe/webhooks.ts
+    test_anchor: tests/e2e/
+    status: BLOCKED
+    dependencies: [P-005, P-007]
+    evidence_required: >
+      One traced purchase with correlated request/event IDs at every hop; duplicate-delivery
+      negative test green (tests/unit/webhook-order-idempotency.test.ts or successor);
+      refund/reversal tested; candidate SHA + deployment ID + environment + UTC
+      timestamp + actor. Sanitized evidence only — no live keys, no customer PII, no
+      raw webhook payloads.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-018
+    area: Library & entitlement
+    gap: >
+      Library and entitlement enforcement is not evidenced end to end. An entitlement
+      check exists (lib/reading/entitlement.ts) and a library page exists, but the
+      full behavior — purchased/free/borrowed visibility, read/resume/download only
+      when entitled, and revocation/refund behavior — is unverified.
+    target_behavior: >
+      The library shows exactly the titles the user is entitled to (purchased, free,
+      borrowed); read/resume/download actions succeed only for entitled titles and are
+      denied otherwise; a refunded or revoked purchase removes access on next check.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-04
+    gate_tie: G4, G8
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md#p0-010
+    code_anchor: app/(consumer)/library/page.tsx, lib/reading/entitlement.ts
+    test_anchor: tests/unit/reading-entitlement.test.ts
+    status: BLOCKED
+    dependencies: [P-017]
+    evidence_required: >
+      Entitlement matrix test (purchased/free/borrowed/none) green; negative test for
+      non-entitled read/download; revocation-after-refund test green; candidate SHA +
+      environment + UTC timestamp.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-019
+    area: Reader engagement (highlights, notes, wishlist, follows)
+    gap: >
+      Highlights, notes, wishlist, and follows are incomplete. EPIC T1.2 stories
+      (T1.2.1-T1.2.3) describe finishing highlight creation, wishlist from book page,
+      and author follow; API route stubs exist under app/api/ but the end-to-end
+      reader-facing loops are not complete.
+    target_behavior: >
+      DEFERRED per NEXT_GO.md: growth-loop engagement features are post-GO. When
+      unfrozen: a reader can create a highlight/note from the reader, wishlist a book
+      from its page, and follow an author from a book page, with each action persisted
+      and visible on the corresponding surface.
+    product_priority: P1
+    shipping_lane: L3
+    work_package: WP-03
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#epic-t12-highlights-notes-wishlist-follows
+    code_anchor: app/api/highlights/route.ts, app/api/wishlist/route.ts, app/api/follows/route.ts, app/api/bookmarks/route.ts
+    test_anchor: null
+    status: DEFERRED
+    dependencies: []
+    evidence_required: >
+      Post-GO unfreeze recorded; per-feature e2e (highlight create, wishlist add,
+      follow) green against persisted state; candidate SHA at that time.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-020
+    area: Author submission pipeline
+    gap: >
+      The author submission-to-published pipeline is incomplete. EPIC T2.1 requires a
+      manuscript lifecycle workflow from submission through to published; the author
+      portal has submit and projects surfaces but the full lifecycle (submission,
+      review states, publication) is not evidenced end to end.
+    target_behavior: >
+      An author submits a manuscript via the author portal, sees it progress through
+      defined lifecycle states, and an approved manuscript reaches published state and
+      appears in the public catalog — each state transition recorded and visible to
+      the author.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-05
+    gate_tie: G5
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#epic-t21-submission-to-published-pipeline
+    code_anchor: app/(portals)/author/submit/page.tsx, app/(portals)/author/submit/actions.ts, app/(portals)/author/projects/page.tsx
+    test_anchor: null
+    status: READY
+    dependencies: [P-011]
+    evidence_required: >
+      Traced submission through every lifecycle state to published with a test title;
+      state transitions persisted and visible in the author portal; published title
+      present in catalog; candidate SHA + environment + UTC timestamp.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A4
+  
+  - id: P-021
+    area: Audiobooks & audio entitlement
+    gap: >
+      An audio catalog surface exists (app/(consumer)/audio/page.tsx,
+      app/(consumer)/audio/[id]/page.tsx) and reads narrator/duration defensively
+      from book_content, but there is no explicit audiobook feature flag and no
+      purchase-to-listen entitlement path; audio access is not tied to any order
+      or entitlement check.
+    target_behavior: >
+      CONDITIONAL on the audiobook flag: when the flag is disabled, every audio
+      surface renders an honest-unavailable state and no control implies playback
+      or purchase is possible; when enabled, a user can only stream audio for a
+      title they hold a verified entitlement to, and unentitled requests are
+      refused server-side.
+    product_priority: P1
+    shipping_lane: L3
+    work_package: WP-04
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md#section-7   # audiobooks listed under launch-with-flag / honest-unavailable
+    code_anchor: app/(consumer)/audio/page.tsx, app/(consumer)/audio/[id]/page.tsx, lib/validations/audio.ts
+    test_anchor: tests/unit/audio-progress-route.test.ts
+    status: SCOPE_DECISION
+    dependencies: []
+    evidence_required: >
+      Owner decision recorded on audiobook launch scope (flag on vs. off). If off:
+      flag-gated honest-unavailable rendering asserted by test. If on: entitlement
+      check traced end-to-end for one audio title with a server-side refusal
+      negative test; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-022
+    area: Reviews & ratings
+    gap: >
+      Review surfaces exist in the codebase (app/dashboard/my-reviews/page.tsx,
+      components/books/ReviewCard), but NEXT_GO.md section 7 scopes launch to
+      "reviews/ratings (coming-soon only)"; the full review product (submit,
+      moderate, display ratings on catalog) is post-GO and currently neither
+      clearly coming-soon-gated nor fully shipped.
+    target_behavior: >
+      At launch, review/rating surfaces render exactly one of two states: an
+      honest coming-soon state per NEXT_GO.md section 7, or a fully functional
+      review flow after an owner scope amendment. No half-functional submit path
+      that silently fails to persist or display a review.
+    product_priority: P1
+    shipping_lane: L3
+    work_package: WP-03
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md#section-7   # "reviews/ratings (coming-soon only)"
+    code_anchor: app/dashboard/my-reviews/page.tsx
+    test_anchor: null
+    status: SCOPE_DECISION
+    dependencies: []
+    evidence_required: >
+      Owner decision confirming coming-soon-only launch scope (or formal NEXT_GO.md
+      amendment for full scope). Coming-soon state asserted by test at launch
+      surfaces; if amended, a submitted review persists and renders on the title
+      page with evidence capture; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-023
+    area: Admin portal completeness
+    gap: >
+      The admin portal (app/admin with books, dashboard, health, manuscripts,
+      orders, users sections) exists but completeness against its required
+      operator workflows is not evidenced end-to-end; hardening coverage is
+      partial (tests/unit/admin-portal-hardening.test.ts covers role-checked
+      mutations only).
+    target_behavior: >
+      Every admin route under app/admin loads for an admin role, performs its
+      stated operator action against real data (no dead buttons or placeholder
+      panels), and is refused for non-admin roles; a route-by-route admin manifest
+      records REAL vs. placeholder status for each section.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-05
+    gate_tie: G5
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md
+    code_anchor: app/admin
+    test_anchor: tests/unit/admin-portal-hardening.test.ts
+    status: READY
+    dependencies: [P-024]
+    evidence_required: >
+      Admin route manifest with per-section REAL/HONEST_UNAVAILABLE status;
+      positive admin journey test and non-admin refusal test green for each
+      section; before/after capture; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A4
+  
+  - id: P-024
+    area: RBAC server-side enforcement
+    gap: >
+      Role checks exist (middleware.ts, lib/auth/roles.ts, e2e role-gating matrix),
+      but server-side refusal of wrong-role calls to protected actions and API
+      routes is not comprehensively evidenced; UI hiding and middleware redirects
+      are not authorization, and a directly invoked server action or API route may
+      bypass the middleware gate.
+    target_behavior: >
+      Every role-protected server action and API route refuses a wrong-role caller
+      server-side (403/redirect with no mutation performed), proven by negative
+      tests that invoke the route/action directly with each wrong role; UI hiding
+      is treated as cosmetic and is not counted as evidence.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-02
+    gate_tie: G5
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md
+    code_anchor: middleware.ts, lib/auth/roles.ts, lib/middleware/auth.ts
+    test_anchor: tests/e2e/role-gating.spec.ts
+    status: READY
+    dependencies: [P-005]
+    evidence_required: >
+      Negative test matrix green: for each protected surface, each wrong role is
+      refused server-side with no state change; tests invoke the action/route
+      directly (not just via UI navigation); middleware-vs-action coverage gap
+      list closed; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-025
+    area: RLS hosted order_items SELECT policy
+    gap: >
+      The order_items SELECT-own policy exists as a migration
+      (supabase/migrations/20260717114300_order_items_select_own.sql) and the
+      schema is DONE per NEXT_GO.md P0-015, but the policy is not verified applied
+      on the hosted database and the entitled nested-read path (order -> items)
+      remains unverified in Phase 12/13.
+    target_behavior: >
+      On the hosted production database, an authenticated user can SELECT their
+      own order_items (including the entitled nested read from orders) and cannot
+      SELECT another user's order_items, verified by the verify-rls check against
+      the hosted instance.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: G7
+    phoenix_tie: N/A
+    existing_issue: "#199"
+    existing_story: docs/NEXT_GO.md#p0-015
+    code_anchor: supabase/migrations/20260717114300_order_items_select_own.sql
+    test_anchor: null
+    status: BLOCKED
+    dependencies: []
+    evidence_required: >
+      verify-rls run against the hosted database showing the order_items SELECT
+      policy present and enforced; positive own-row read and negative cross-user
+      read captured; deployment ID + environment + UTC timestamp + actor; issue
+      #199 closed; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A5
+  
+  - id: P-026
+    area: Production rate limiting fail-closed
+    gap: >
+      Upstash-backed rate limiting (lib/rate-limit.ts) has a fail-closed test for
+      the production limiter when Redis is unreachable
+      (tests/unit/rate-limit-fail-closed.test.ts), but NEXT_GO.md P0-011 states
+      live production verification remains; fail-closed behavior on a real Redis
+      outage in the deployed environment is not yet evidenced.
+    target_behavior: >
+      In the production deployment, when Upstash Redis is unreachable, rate-limited
+      endpoints (checkout, auth POSTs, webhook-adjacent surfaces) refuse requests
+      rather than allowing unlimited traffic, and recover when Redis returns.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: G3, G7
+    phoenix_tie: N/A
+    existing_issue: "#195"
+    existing_story: docs/NEXT_GO.md#p0-011
+    code_anchor: lib/rate-limit.ts, lib/rate-limit-response.ts
+    test_anchor: tests/unit/rate-limit-fail-closed.test.ts
+    status: BLOCKED
+    dependencies: [P-029]
+    evidence_required: >
+      Live production observation of fail-closed behavior during a real or induced
+      Redis outage (sanitized capture: status codes, timestamps, no credentials);
+      recovery observed; issue #195 closed; candidate SHA + deployment ID +
+      environment + UTC timestamp + actor.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A5
+  
+  - id: P-027
+    area: Health/readiness probe truth
+    gap: >
+      /api/health distinguishes a lightweight startup probe from a full readiness
+      probe (?ready=1) per app/api/health/route.ts, and NEXT_GO.md requires
+      ready:true for GO (G7), but readiness truth — every critical component
+      actually checked and honestly reported in the deployed environment — is not
+      yet evidenced for production.
+    target_behavior: >
+      GET /api/health?ready=1 against the production deployment returns ready:true
+      only when all critical components (database, Stripe config, Redis/rate-limit
+      backing) are verified healthy; when any critical component fails, the probe
+      reports ready:false with the failing component named.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: G7
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md
+    code_anchor: app/api/health/route.ts
+    test_anchor: tests/e2e/purchase-flow.spec.ts
+    status: BLOCKED
+    dependencies: [P-029]
+    evidence_required: >
+      Production readiness response captured showing ready:true with the critical
+      component list; a forced-degraded observation showing ready:false naming the
+      failing component; deployment ID + environment + UTC timestamp + actor;
+      candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A5
+  
+  - id: P-028
+    area: Observability — Sentry release-SHA correlation & alert routing
+    gap: >
+      Sentry is wired (sentry.client/server/edge configs, lib/sentry/index.ts) but
+      there is no evidenced correlation between Sentry events and the deployed
+      release SHA, and alert routing (who gets paged for which error class) is not
+      documented or verified.
+    target_behavior: >
+      A captured Sentry event from the production deployment carries the release
+      SHA matching the deployment, and a documented alert-routing table maps error
+      classes (checkout, webhook, auth, unhandled) to named destinations that have
+      been verified to receive a test alert.
+    product_priority: P1
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md
+    code_anchor: lib/sentry/index.ts, sentry.server.config.ts, sentry.client.config.ts
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Sanitized Sentry event capture showing the release SHA matching the deployed
+      candidate SHA; alert-routing table merged into docs; one test alert observed
+      at each named destination; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A5
+  
+  - id: P-029
+    area: Production secrets validation
+    gap: >
+      NEXT_GO.md section 10/11 lists the required production secrets (Supabase,
+      Stripe, Upstash, canonical site URL) and P0-016 requires USE_MOCKS /
+      SKIP_EMAILS proven absent, but production env validation (section 11) is
+      NOT STARTED; lib/utils/env-validation.ts exists but hosted-environment
+      verification is not evidenced.
+    target_behavior: >
+      The production deployment provably has every required secret present and
+      correctly scoped (service-role key server-only), and USE_MOCKS and
+      SKIP_EMAILS are provably absent/never set in the production environment.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: G7, G8
+    phoenix_tie: N/A
+    existing_issue: "#203"
+    existing_story: docs/NEXT_GO.md#p0-016
+    code_anchor: lib/utils/env-validation.ts
+    test_anchor: tests/unit/env-file.test.ts
+    status: BLOCKED
+    dependencies: []
+    evidence_required: >
+      Sanitized production env audit (names + presence/absence only, never values):
+      all NEXT_GO.md section 10 required secrets present; USE_MOCKS and
+      SKIP_EMAILS absent; Stripe live-mode keys confirmed server-side; issue #203
+      closed; deployment ID + environment + UTC timestamp + actor; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A5
+  
+  - id: P-030
+    area: Public MCP transport exposure
+    gap: >
+      Previously, the public MCP transport under app/api/mcp/[transport] could be
+      reachable without an explicit enable flag; unauthenticated catalog tooling
+      exposed to the public internet without fail-closed rate limiting.
+    target_behavior: >
+      The MCP transport is disabled by default unless MCP_ENABLED=true; when
+      enabled it is fail-closed rate-limited and input-sanitized; when disabled,
+      requests to /api/mcp/[transport] are refused. Evidenced and resolved per
+      NEXT_GO.md P0-017 (agent DONE, #217 + #223 route-export fix).
+    product_priority: P1
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: G7
+    phoenix_tie: N/A
+    existing_issue: "#200"
+    existing_story: docs/NEXT_GO.md#p0-017
+    code_anchor: app/api/mcp/[transport]
+    test_anchor: tests/unit/mcp-transport-security.test.ts
+    status: ALREADY_EVIDENCED
+    dependencies: []
+    evidence_required: >
+      Commit ae7b92628d2079fe83632a5abc5b7383d7df11c1 ("fix(security): fail-closed
+      MCP transport gate (P0-017) (#297)") ships the MCP_ENABLED default-off gate;
+      tests/unit/mcp-transport-security.test.ts asserts disabled-by-default refusal
+      and fail-closed rate limiting; NEXT_GO.md section 8 records P0-017 resolved;
+      issue #200 closable on operator confirmation.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: ae7b92628d2079fe83632a5abc5b7383d7df11c1
+    owner_agent: A5
+
+  - id: P-031
+    area: Royalties and payouts
+    gap: >
+      Author financial workflow is incomplete — no earnings dashboard, Stripe Connect
+      payouts, or royalty statements. Only a partner payouts action stub exists at
+      lib/actions/payouts.ts with no connected payout rail or author-facing statements.
+    target_behavior: >
+      DEFERRED. NEXT_GO.md section 7 treats Stripe Connect and payouts as post-GO scope.
+      Target behavior is written only after an owner amends launch scope. Until then this
+      item is closed to implementation regardless of its P0 marking.
+    product_priority: P0
+    shipping_lane: L3
+    work_package: WP-08
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: lib/actions/payouts.ts
+    test_anchor: null
+    status: DEFERRED
+    dependencies: []
+    evidence_required: >
+      Owner decision recorded and NEXT_GO.md formally amended BEFORE any implementation.
+      No agent may begin this on the strength of the P0 label alone.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A0
+  
+  - id: P-032
+    area: Edition, pricing, and territory model
+    gap: >
+      No product/edition data model exists. There is no representation of product ID,
+      edition ID, currency, territory, price version, or entitlement mapping in the
+      codebase, so purchases cannot be tied to a specific priced edition.
+    target_behavior: >
+      A documented edition/pricing schema exists in which every purchasable item has a
+      product ID, edition ID, currency, territory set, and price version, and every
+      entitlement row maps to exactly one priced edition. A test asserts that an
+      entitlement can be resolved back to its edition and price version.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-04
+    gate_tie: G4
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: null
+    test_anchor: null
+    status: BLOCKED
+    dependencies: [P-017]
+    evidence_required: >
+      Schema and mapping document merged; migration or data definition present; test
+      green showing entitlement-to-edition resolution; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-033
+    area: Order data integrity
+    gap: >
+      Order persistence correctness is unproven. It is not evidenced that orders and
+      order_items rows are written correctly on purchase, nor that buyers can read only
+      their own orders.
+    target_behavior: >
+      A completed purchase writes exactly one orders row and the correct order_items
+      rows with server-derived amounts, and a buyer querying their orders sees only
+      their own rows. A negative test confirms a second user cannot read the first
+      user's order.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-04
+    gate_tie: G4
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/api/checkout/route.ts, app/api/webhook/route.ts
+    test_anchor: tests/unit/webhook-order-idempotency.test.ts
+    status: BLOCKED
+    dependencies: [P-017]
+    evidence_required: >
+      Traced purchase showing orders and order_items rows correct; cross-user read
+      negative test green; duplicate webhook produces no duplicate rows; candidate SHA.
+      Sanitized evidence only — no live keys or customer PII.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-034
+    area: File storage and download delivery
+    gap: >
+      Purchased-file storage and download delivery are not on the Phoenix WS3 target
+      storage architecture. Uploads are handled by lib/uploads/store-asset.ts and
+      app/api/upload, but the migration of storage and the buyer download-delivery path
+      to the Phoenix workstream 3 design is not complete or evidenced.
+    target_behavior: >
+      After a purchase, the buyer can download each entitled file through the migrated
+      storage path, and the download link is authorized (owner-only) rather than a
+      public or guessable URL. A test asserts an unauthenticated or non-owner request
+      is denied.
+    product_priority: P1
+    shipping_lane: L1
+    work_package: WP-04
+    gate_tie: N/A
+    phoenix_tie: PROJECT_PHOENIX workstream 3
+    existing_issue: null
+    existing_story: null
+    code_anchor: lib/uploads/store-asset.ts, app/api/upload
+    test_anchor: null
+    status: BLOCKED
+    dependencies: [P-018]
+    evidence_required: >
+      Phoenix WS3 storage migration applied to delivery path; owner-only download test
+      green; non-owner denial negative test green; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-035
+    area: Book-detail pricing display
+    gap: >
+      Pricing shown on the book-detail page (app/(consumer)/books/[slug]/page.tsx) is
+      not evidenced to be consistent with the price the checkout actually charges,
+      since there is no edition/price-version source of truth behind the display.
+    target_behavior: >
+      The price displayed on the book-detail page equals the server-side price charged
+      at checkout for the same edition. A test renders the detail page and asserts the
+      displayed price matches the checkout amount for that edition.
+    product_priority: P1
+    shipping_lane: L2
+    work_package: WP-04
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/(consumer)/books/[slug]/page.tsx
+    test_anchor: null
+    status: READY
+    dependencies: [P-032]
+    evidence_required: >
+      Display price sourced from the same edition/price record as checkout; consistency
+      test green; before/after capture; candidate SHA. Requires owner approval as L2
+      product work beyond approved scope.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-036
+    area: Serialized fiction
+    gap: >
+      Serialized fiction (series and season model, scheduled chapter releases,
+      wait-or-pay fast pass) is not implemented. No series/season data model or
+      scheduled release mechanism exists.
+    target_behavior: >
+      DEFERRED post-GO. When unfrozen: an author can create a series with seasons and
+      schedule chapter releases, and a reader sees scheduled chapters appear at their
+      release time. Stories T4.1.1-T4.1.3 in docs/PRODUCT_FEATURE_STORIES.md define the
+      acceptance surface.
+    product_priority: P2
+    shipping_lane: L3
+    work_package: WP-03
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#t4.1
+    code_anchor: null
+    test_anchor: null
+    status: DEFERRED
+    dependencies: []
+    evidence_required: >
+      Post-GO unfreeze decision recorded; series/season model and scheduled release
+      implemented per stories T4.1.1-T4.1.3; scheduled-release test green; candidate
+      SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-037
+    area: Book clubs and challenges
+    gap: >
+      Full book clubs and challenges (pacing, reading challenges, badges, author AMA
+      events) are not implemented. The honest-unavailable slice has shipped: the
+      book-clubs page states it is unavailable rather than implying functionality.
+    target_behavior: >
+      DEFERRED post-GO. The interim honesty state is already evidenced: the book-clubs
+      surface renders an honest unavailable status with no functional pretense (E-001,
+      shipped via #325, commit 085a07aa5cb13253548f5c1007c41e71f4a38fde, covered by
+      tests/unit/book-clubs-honesty.test.ts). When unfrozen: clubs with pacing,
+      challenges, and badges work per stories T5.2.1-T5.2.3.
+    product_priority: P2
+    shipping_lane: L3
+    work_package: WP-03
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: "#325"
+    existing_story: docs/ENHANCEMENT_LEDGER.md#e-001
+    code_anchor: app/(consumer)/book-clubs/
+    test_anchor: tests/unit/book-clubs-honesty.test.ts
+    status: DEFERRED
+    dependencies: []
+    evidence_required: >
+      Honesty slice evidenced at commit 085a07aa5cb13253548f5c1007c41e71f4a38fde with
+      tests/unit/book-clubs-honesty.test.ts green. Full feature closure requires
+      post-GO unfreeze and implementation of stories T5.2.1-T5.2.3 with tests green;
+      candidate SHA recorded at that time.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-038
+    area: Email preferences UI honesty
+    gap: >
+      The email preferences UI (app/dashboard/settings/page.tsx rendering
+      components/email/EmailPreferences.tsx, backed by app/api/email/preferences/route.ts)
+      risks implying preferences are active when email sending is disabled because
+      RESEND_API_KEY is not configured.
+    target_behavior: >
+      When RESEND_API_KEY is absent, the email preferences UI states honestly that
+      email delivery is disabled and no toggle implies mail will actually be sent. A
+      test renders the settings surface without RESEND_API_KEY and asserts the
+      disabled state is communicated.
+    product_priority: P1
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/api/email/preferences/route.ts, components/email/EmailPreferences.tsx, lib/email/send.ts
+    test_anchor: null
+    status: READY
+    dependencies: [P-004]
+    evidence_required: >
+      UI shows honest disabled state when RESEND_API_KEY is unset; test green asserting
+      the honest state; before/after capture; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-039
+    area: AI recommendations (Resonance) flag honesty
+    gap: >
+      Resonance AI recommendations (lib/resonance/, app/api/resonance/) require
+      OPENAI_API_KEY. When the key is absent the feature must be honestly flagged off;
+      it is not evidenced that every recommendations surface degrades to an honest
+      unavailable state rather than implying AI recommendations are active.
+    target_behavior: >
+      When OPENAI_API_KEY is absent, every Resonance entry point (recommend, similar,
+      embed, track) and the recommendations page honestly report the feature as
+      unavailable instead of fabricating or implying AI output. A test asserts the
+      flagged-off state with the key unset.
+    product_priority: P1
+    shipping_lane: L0
+    work_package: WP-03
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: lib/resonance/recommendations.ts, app/api/resonance/recommend, app/(consumer)/recommendations
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Key-absent path returns honest unavailable state on all Resonance routes and the
+      recommendations page; test green asserting flagged-off behavior; before/after
+      capture; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-040
+    area: AI reading companions
+    gap: >
+      AI reading companions (spoiler-safe "Previously on" recap and companion features)
+      are not implemented. No companion capability exists in the codebase.
+    target_behavior: >
+      DEFERRED post-GO. When unfrozen: a reader can invoke an AI companion that gives a
+      spoiler-safe recap bounded to their current reading position, per stories T6.2.x
+      in docs/PRODUCT_FEATURE_STORIES.md. A test asserts no content beyond the reader's
+      position is revealed.
+    product_priority: P2
+    shipping_lane: L3
+    work_package: WP-03
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#t6.2
+    code_anchor: null
+    test_anchor: null
+    status: DEFERRED
+    dependencies: []
+    evidence_required: >
+      Post-GO unfreeze decision recorded; companion implemented per stories T6.2.x;
+      spoiler-boundary test green; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-041
+    area: Webhook operations
+    gap: >
+      Stripe webhook processing (app/api/webhook/route.ts, lib/stripe/webhooks.ts) has no
+      admin-visible event log. Operators cannot see received events with correlation IDs,
+      processing status, error detail, or request/event identifiers, and there is no
+      controlled replay path for failed or missed events.
+    target_behavior: >
+      An admin-visible webhook event log lists every received event with correlation ID,
+      request/event IDs, processing status, and error detail. Replay is role-protected
+      (admin only), idempotent (replaying an event never duplicates an order or
+      entitlement), bounded (rate-limited and capped), and audit-logged with actor and
+      UTC timestamp.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-04
+    gate_tie: G8
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/AGENT_EXECUTION_PACKET.md#r5
+    code_anchor: app/api/webhook/route.ts, lib/stripe/webhooks.ts, app/admin
+    test_anchor: tests/unit/webhook-order-idempotency.test.ts
+    status: BLOCKED
+    dependencies: [P-017]
+    evidence_required: >
+      Admin event log rendering correlated request/event IDs, status, and error for a
+      traced purchase; replay negative test proving duplicate replay produces no duplicate
+      order or entitlement; non-admin replay denied; audit log entry with actor + UTC
+      timestamp per replay; candidate SHA. Sanitized evidence only — no raw webhook
+      payloads, no customer PII.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A3
+  
+  - id: P-042
+    area: Catalog quality & moderation
+    gap: >
+      Catalog quality controls are thin: there is no human-verified catalog program,
+      content-warning surfacing, or review-integrity enforcement, so low-quality or
+      unsafe titles present identically to vetted ones.
+    target_behavior: >
+      A catalog quality program exists where a title can carry a verifiable quality
+      state (e.g., human-verified flag, content warnings, review-integrity signals)
+      that is stored, displayed on the catalog surface, and administrable by a
+      moderation role.
+    product_priority: P1
+    shipping_lane: L2
+    work_package: WP-05
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#t71
+    code_anchor: app/(portals)/partner/catalogs/page.tsx
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Quality state persisted and rendered on at least one catalog surface; moderation
+      role can set/unset the state; reader-visible content warning displayed when set;
+      test asserting the honest quality display; candidate SHA. L2: owner approval
+      recorded before scheduling.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A4
+  
+  - id: P-043
+    area: Accessibility
+    gap: >
+      Accessibility is unscoped and unevidenced. No launch acceptance criteria define
+      which journeys must be accessible, and no evidence exists for keyboard operation,
+      focus management, labels, error association, contrast, screen-reader landmarks,
+      reduced motion, or accessible media. A full WCAG 2.1 conformance claim is made
+      nowhere with backing audit evidence.
+    target_behavior: >
+      SCOPE split decided and documented: launch acceptance covers critical journeys
+      only — keyboard operation, visible focus, form labels, error association,
+      contrast, screen-reader landmarks, reduced motion, accessible media — each with
+      a testable check. A full WCAG 2.1 conformance CLAIM is made only after a
+      separately evidenced audit; no agent output constitutes that audit.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-06
+    gate_tie: G10
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/AGENT_EXECUTION_PACKET.md#r6
+    code_anchor: null
+    test_anchor: null
+    status: SCOPE_DECISION
+    dependencies: []
+    evidence_required: >
+      Owner decision recorded on the launch-scope accessibility acceptance list; each
+      accepted criterion mapped to a named journey and a verifiable check; explicit
+      statement that any WCAG 2.1 conformance claim requires a separate evidenced audit
+      and is not part of launch acceptance.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-044
+    area: Mobile E2E coverage
+    gap: >
+      End-to-end coverage (tests/e2e/) does not run on real or representative mobile
+      devices/viewports for the critical journeys: signup, verification, login,
+      purchase, library, reading, and author submission. Mobile breakage would not be
+      caught before GO.
+    target_behavior: >
+      The critical journeys — signup, verification, login, purchase, library, reading,
+      author submission — each pass E2E on at least one real or representative mobile
+      device/viewport, with device, OS, and browser recorded per run.
+    product_priority: P1
+    shipping_lane: L1
+    work_package: WP-06
+    gate_tie: G10
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/AGENT_EXECUTION_PACKET.md#r6
+    code_anchor: tests/e2e, playwright.config.ts
+    test_anchor: tests/e2e/purchase-flow.spec.ts
+    status: BLOCKED
+    dependencies: [P-043]
+    evidence_required: >
+      E2E run artifacts for all seven journeys on a recorded mobile device/OS/browser
+      combination; failures triaged to honest states; candidate SHA plus environment
+      and UTC timestamp for each run.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-045
+    area: Content reporting & moderation queue
+    gap: >
+      Readers have no way to report problematic content, and moderators have no queue
+      in which reports are received, triaged, and resolved. Only review-level
+      moderation logic exists (lib/actions/reviews.ts); there is no general content
+      reporting pipeline.
+    target_behavior: >
+      A reader can submit a content report against a title; the report lands in a
+      moderator-visible queue with status transitions (open, triaged, resolved) and
+      each transition is recorded with actor and UTC timestamp.
+    product_priority: P1
+    shipping_lane: L2
+    work_package: WP-05
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#t71
+    code_anchor: lib/actions/reviews.ts, app/admin
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Report submitted by a reader role appears in the moderation queue; status
+      transitions persist and are visible; non-moderator access to the queue denied;
+      test asserting submission-to-queue flow; candidate SHA. L2: owner approval
+      recorded before scheduling.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A4
+  
+  - id: P-046
+    area: Author analytics
+    gap: >
+      Author-facing analytics are placeholder-grade: the analytics surface
+      (app/(portals)/author/analytics/page.tsx) does not show real revenue rollups,
+      chapter-level funnel data, or highlight intelligence (stories T2.2.1–T2.2.3).
+    target_behavior: >
+      DEFERRED post-GO. When unfrozen: the author analytics surface renders a real
+      revenue rollup sourced from actual order data (never a fabricated zero), plus
+      chapter-level funnel metrics, each traceable to server-derived data.
+    product_priority: P1
+    shipping_lane: L3
+    work_package: WP-05
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#t22
+    code_anchor: app/(portals)/author/analytics/page.tsx
+    test_anchor: tests/unit/analytics-actions.test.ts
+    status: DEFERRED
+    dependencies: []
+    evidence_required: >
+      Post-GO only. Revenue rollup matches server-side order totals for a test author;
+      no placeholder or fabricated figures render; funnel metrics backed by recorded
+      events; candidate SHA with environment and UTC timestamp.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A4
+  
+  - id: P-047
+    area: Author growth suite
+    gap: >
+      Author growth capabilities — storefront pages, reader email ownership with
+      consent, cover/blurb A/B testing, preorders and launch command center (stories
+      T2.3.1–T2.3.4) — are not implemented.
+    target_behavior: >
+      DEFERRED post-GO. When unfrozen: an author can publish a storefront page and
+      collect reader email with explicit recorded consent; each capability in the
+      suite ships as its own evidenced slice, not a monolithic release.
+    product_priority: P2
+    shipping_lane: L3
+    work_package: WP-05
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/PRODUCT_FEATURE_STORIES.md#t23
+    code_anchor: app/(portals)/author/dashboard/page.tsx
+    test_anchor: null
+    status: DEFERRED
+    dependencies: []
+    evidence_required: >
+      Post-GO only. Per-slice evidence: storefront page renders for a published author;
+      consent captured and recorded before any reader email is exposed to the author;
+      candidate SHA per slice. No slice may begin before a post-GO unfreeze decision.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A4
+  
+  - id: P-048
+    area: Privacy operations
+    gap: >
+      There is no documented operational route for privacy requests: access, export,
+      deletion, and consent handling have no defined intake, fulfilment, or retention
+      process. A privacy page exists (app/(consumer)/privacy/page.tsx) but no
+      operational procedure backs it.
+    target_behavior: >
+      A documented operational route exists covering access, export, deletion, and
+      consent requests, plus the retention process, with named responsible roles and
+      fulfilment steps. Fulfilment of each request class carries MANDATORY human
+      approval before execution. A self-service privacy center may follow as a later
+      slice.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-06
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/AGENT_EXECUTION_PACKET.md#r6
+    code_anchor: app/(consumer)/privacy/page.tsx
+    test_anchor: null
+    status: BLOCKED
+    dependencies: []
+    evidence_required: >
+      Operational privacy runbook merged (intake, verification, fulfilment, retention)
+      for all four request classes; MANDATORY human approval by a named owner recorded
+      for each fulfilled request; demonstration of one end-to-end access/export and one
+      deletion request against a test account with the human approval named in the
+      evidence. No agent output alone closes this item.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-049
+    area: Legal documents & acceptance
+    gap: >
+      Required legal documents — Terms, Privacy, Refund policy, Content License,
+      Author Agreement, DMCA process — are incomplete (only terms and privacy pages
+      exist under app/(consumer/)) and there is no acceptance-capture or
+      version-recording mechanism tying users to the document version they accepted.
+    target_behavior: >
+      Draft and inventory all six legal documents, wire acceptance capture and version
+      recording (user, document, version, UTC timestamp). LEGAL APPROVAL IS A HUMAN
+      GATE: no document may be marked final or PASSED on agent output; a named human
+      legal approval is required per document.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-06
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/AGENT_EXECUTION_PACKET.md#r6
+    code_anchor: app/(consumer)/terms/page.tsx, app/(consumer)/privacy/page.tsx
+    test_anchor: null
+    status: BLOCKED
+    dependencies: []
+    evidence_required: >
+      Inventory of all six documents with draft/published state; acceptance records
+      capturing user, document, version, and UTC timestamp; per-document human legal
+      approval recorded by a named approver before the item is PASSED. Gate status
+      never advances on agent-drafted text alone.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-050
+    area: Partner portal
+    gap: >
+      Partner portal surfaces (app/(portals)/partner/) exist for dashboard, catalogs,
+      arc-requests, and orders including orders/export, but partner-only enforcement
+      on /partner/orders/export is called out in the NEXT_GO.md route security matrix
+      and its role-gating evidence for G5 is currently FALSE.
+    target_behavior: >
+      The partner portal and /partner/orders/export are accessible to partner-role
+      users and denied to non-partners; the export returns only partner-scoped order
+      data; G5 RBAC smokes pass with non-admin denied, non-partner export denied, and
+      partner roles succeeding.
+    product_priority: P1
+    shipping_lane: L1
+    work_package: WP-05
+    gate_tie: G5
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/NEXT_GO.md#section-11
+    code_anchor: app/(portals)/partner/orders/export, app/(portals)/partner/orders/page.tsx
+    test_anchor: tests/e2e/role-gating.spec.ts
+    status: READY
+    dependencies: [P-024]
+    evidence_required: >
+      G5 RBAC evidence green: non-partner request to /partner/orders/export denied;
+      partner export succeeds and contains only that partner's scoped data; role-gating
+      E2E run recorded with candidate SHA, environment, and UTC timestamp.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A4
+
+  
+  - id: P-051
+    area: SEO & indexability
+    gap: >
+      SEO posture is unverified end-to-end: canonical URLs, per-page metadata, Open Graph
+      tags, robots/sitemap coverage, and structured data have no documented audit, and
+      there is no check that private, unavailable, or dev-only surfaces (app/dev/*) are
+      excluded from indexing.
+    target_behavior: >
+      Every public canonical route emits correct canonical URL, title/description metadata,
+      and OG tags; robots.txt and sitemap.xml include exactly the public indexable route
+      set; app/dev/* and other non-public routes are not listed in the sitemap and resolve
+      to noindex or a non-200 for anonymous crawlers; structured data validates for the
+      primary entity types.
+    product_priority: P1
+    shipping_lane: L2
+    work_package: WP-06
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: lib/seo/siteUrl.ts, app/robots.ts, app/sitemap.ts, app/dev/library-preview
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Route-by-route SEO audit table (canonical URL, title, description, OG, indexable
+      yes/no) merged; sitemap.xml and robots.txt diff shown; explicit confirmation that
+      app/dev/* is absent from the sitemap and returns noindex/non-200 anonymously;
+      structured-data validator output for primary pages; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-052
+    area: Verticals surfaces (comics/papers)
+    gap: >
+      The comics and papers verticals are placeholder surfaces: app/(consumer)/comics and
+      app/(consumer)/papers pages exist but have no real catalog content behind them, so
+      they present as functional product areas the system does not actually serve.
+    target_behavior: >
+      Each comics/papers surface either renders real backed content or states honestly
+      that the vertical is unavailable. No control or link implies browsing/purchasing
+      capability that does not exist.
+    product_priority: P1
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: app/(consumer)/comics/page.tsx, app/(consumer)/comics/[slug]/page.tsx, app/(consumer)/papers/page.tsx, app/(consumer)/papers/[slug]/page.tsx
+    test_anchor: tests/unit/product-truth.test.ts
+    status: READY
+    dependencies: [P-004]
+    evidence_required: >
+      Route manifest rows for /comics and /papers moving MISLEADING -> HONEST_UNAVAILABLE
+      or REAL; test asserting the honest state; before/after capture; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-053
+    area: Marketing pages honesty (blog/press/careers)
+    gap: >
+      Marketing surfaces (blog, press, careers) present as populated sections; the blog
+      in particular lacks an honest empty state (E-007), so visitors see a section that
+      implies content the system does not have.
+    target_behavior: >
+      Blog, press, and careers pages each either render real content or display explicit,
+      honest empty-state copy. The blog empty state is user-facing and accurate; no fake
+      posts, fake jobs, or fake press entries render.
+    product_priority: P1
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/ENHANCEMENT_LEDGER.md#e-007
+    code_anchor: app/(consumer)/blog/page.tsx, app/(consumer)/press, app/(consumer)/careers
+    test_anchor: tests/unit/product-truth.test.ts
+    status: READY
+    dependencies: [P-004]
+    evidence_required: >
+      Blog empty-state copy shipped and asserted by test; press and careers audited and
+      either populated or honest; route manifest rows moving MISLEADING -> HONEST_UNAVAILABLE
+      or REAL; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-054
+    area: Newsletter capture
+    gap: >
+      Newsletter CTA previously implied capture the system did not perform. Fixed as
+      P0-013 (#201): the form now behaves honestly per environment gating instead of
+      false-success. Live production confirmation remains part of Phase 12 QA.
+    target_behavior: >
+      In every environment the newsletter form either persists the address and says so,
+      or states honestly that capture is unavailable. No false-success state renders.
+      Behavior is confirmed against the live deployment in Phase 12.
+    product_priority: P1
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: G6
+    phoenix_tie: N/A
+    existing_issue: "#201"
+    existing_story: docs/NEXT_GO.md#p0-013
+    code_anchor: app/(consumer)/blog/page.tsx
+    test_anchor: tests/unit/form-honesty.test.tsx
+    status: ALREADY_EVIDENCED
+    dependencies: []
+    evidence_required: >
+      Shipped in commit 9d625d9 "fix(forms): honest contact + newsletter states (P0-012,
+      P0-013) (#303)" with form-honesty tests green (suite 127/127 per NEXT_GO.md section
+      5); G6 stays FALSE pending live Phase 12 QA confirmation on the deployed site.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: 9d625d9caadbe3af3cea6ac1a5d8807d524f5397
+    owner_agent: A6
+  
+  - id: P-055
+    area: Public status page
+    gap: >
+      There is no public status page. Before one can be built, four prerequisites are
+      unnamed: which systems are monitored, who owns the page, what incident states are
+      published, and what the update process is during an incident.
+    target_behavior: >
+      A public status page exists listing the monitored systems with named ownership, a
+      defined set of incident states, and a documented update process, and it is updated
+      according to that process.
+    product_priority: P2
+    shipping_lane: L2
+    work_package: WP-07
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: null
+    test_anchor: null
+    status: BLOCKED
+    dependencies: []
+    evidence_required: >
+      Owner decision on the four prerequisites recorded: monitored systems list, ownership
+      assignment, incident state taxonomy, and incident update process. Only then may the
+      status page itself be specified and scheduled.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A1
+  
+  - id: P-056
+    area: Deployed canonical site probe
+    gap: >
+      The live canonical site has no documented probe: public routes are not systematically
+      checked for status codes, redirect chains, and page titles, and there is no
+      smoke-test matrix spec tying routes to expected live behavior.
+    target_behavior: >
+      A probe runs against the deployed site covering public routes only, recording HTTP
+      status, redirect chain, and page title per route. Apex -> www 301s are followed and
+      recorded as expected, not flagged as defects. A smoke-test matrix spec maps each
+      public route to its expected probe result.
+    product_priority: P1
+    shipping_lane: L0
+    work_package: WP-01
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: null
+    code_anchor: null
+    test_anchor: tests/e2e/smoke-auth.spec.ts
+    status: READY
+    dependencies: [P-002]
+    evidence_required: >
+      Probe results table for every public route (status, redirect chain, title) captured
+      against the canonical deployment with UTC timestamp; apex 301 -> www documented as
+      expected behavior; smoke-test matrix spec merged under docs/.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A1
+  
+  - id: P-057
+    area: Structured logging
+    gap: >
+      Console.log is used in application and library code instead of a structured logger
+      (E-002). Baseline grep finds console.log call sites across app/ and lib/ (including
+      app/api routes and lib/actions), producing unstructured, uncorrelated output.
+    target_behavior: >
+      A structured logger replaces console.log in app/ and lib/; log lines carry level,
+      message, and context fields, and a repo-wide grep for console.log in app/ and lib/
+      returns zero remaining call sites.
+    product_priority: P2
+    shipping_lane: L0
+    work_package: WP-07
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/ENHANCEMENT_LEDGER.md#e-002
+    code_anchor: app/api/webhook/route.ts, lib/utils/env-validation.ts, lib/actions/reviews.ts
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Logger module adopted; grep for console.log across app/ and lib/ returns zero;
+      sample structured output captured; test suite green; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A5
+  
+  - id: P-058
+    area: Metadata coverage
+    gap: >
+      Roughly two dozen pages do not export generateMetadata (E-004). Baseline inspection
+      of app/(consumer) shows ~23 page.tsx files with only ~6 exporting generateMetadata,
+      leaving most public routes without per-route titles and descriptions.
+    target_behavior: >
+      Every public page exports generateMetadata (or inherits a documented layout-level
+      default) producing a unique, accurate title and description per route.
+    product_priority: P1
+    shipping_lane: L2
+    work_package: WP-06
+    gate_tie: N/A
+    phoenix_tie: N/A
+    existing_issue: null
+    existing_story: docs/ENHANCEMENT_LEDGER.md#e-004
+    code_anchor: app/(consumer)/layout.tsx
+    test_anchor: null
+    status: READY
+    dependencies: [P-051]
+    evidence_required: >
+      Route-by-route metadata table merged showing title/description per public route;
+      count of pages without generateMetadata reduced to zero (or explicitly justified
+      layout defaults); rendered <title> spot-checks; candidate SHA.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A6
+  
+  - id: P-059
+    area: Phoenix data-provider boundary
+    gap: >
+      Both Supabase and MongoDB data providers coexist (lib/db/provider.ts switches on
+      DATABASE_PROVIDER, defaulting to supabase; ADR-002 defines the MongoDB data
+      platform), but the dual-run boundary, defaults, and cutover criteria are not
+      documented in one authoritative place.
+    target_behavior: >
+      The Supabase/MongoDB dual-run boundary is DOCUMENTED with explicit provider default
+      (DATABASE_PROVIDER=supabase), cutover criteria, and rollback path. Production stays
+      on supabase until the Phase 11-12 cutover. NOTE: this item does NOT license removing
+      a provider or flipping production; the coexistence is Project Phoenix's deliberate
+      architecture, and an agent that "resolves" it by deletion has caused an outage.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: N/A
+    phoenix_tie: PROJECT_PHOENIX data migration
+    existing_issue: null
+    existing_story: docs/PROJECT_PHOENIX.md
+    code_anchor: lib/db/provider.ts, docs/adr/ADR-002-mongodb-data-platform.md
+    test_anchor: null
+    status: READY
+    dependencies: []
+    evidence_required: >
+      Boundary document merged; provider default confirmed unchanged in the diff
+      (DATABASE_PROVIDER=supabase); cutover criteria and rollback stated per PROJECT_PHOENIX
+      workstreams 1-4. Documentation-only slice.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A2
+  
+  - id: P-060
+    area: Deploy/DNS cutover readiness
+    gap: >
+      The production deployment is not yet on the canonical Vercel path: apex DNS is not
+      pointed at Vercel, KNOWN_GOOD_REVISION rollback semantics are unrehearsed, and the
+      promote/redeploy flow (P0-018, #198) is not evidenced on the canonical target.
+    target_behavior: >
+      The site is deployed via the canonical Vercel path with apex DNS resolving to
+      Vercel, and a rollback rehearsal is executed and evidenced: a KNOWN_GOOD_REVISION
+      is recorded and a redeploy to it is demonstrated.
+    product_priority: P0
+    shipping_lane: L1
+    work_package: WP-07
+    gate_tie: G1, G9, G11
+    phoenix_tie: N/A
+    existing_issue: "#198"
+    existing_story: docs/NEXT_GO.md#p0-018
+    code_anchor: null
+    test_anchor: null
+    status: BLOCKED
+    dependencies: [P-027, P-029]
+    evidence_required: >
+      Vercel promote/redeploy run evidenced (deployment ID, environment, UTC timestamp,
+      actor); apex DNS cutover confirmed resolving to Vercel; KNOWN_GOOD_REVISION recorded
+      and rollback rehearsal executed with before/after evidence; G1/G9/G11 gate evidence
+      updated in NEXT_GO.md.
+    baseline_sha: 47340b73f6c609059229c3102ae442f5d161b910
+    candidate_sha: null
+    owner_agent: A5
