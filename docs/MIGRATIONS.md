@@ -178,6 +178,35 @@ Migrations **must be applied in this exact order** due to dependencies between t
     - `listening_progress` table (composite PK per listener/book) + RLS mirroring the `reading_progress` ownership pattern
     - **Dependencies**: `profiles`, `books`
 
+32. **20260724000000_expand_manuscript_workflow.sql**
+    - Reviewer assignment + workflow timestamp columns, `version_number`, `author_notes`/`internal_notes`, canonical `submitted_at` (backfilled)
+    - Replaces the manuscript status constraint with the canonical 8-status set; legacy `published` rows remapped to `converted_to_book`
+    - **Dependencies**: `manuscripts`, `profiles`
+
+33. **20260724000001_create_manuscript_status_history.sql**
+    - `manuscript_status_history` (immutable, trigger-written) + automatic status-change trigger + backfill
+    - **Dependencies**: 20260724000000
+
+34. **20260724000002_create_manuscript_reviews.sql**
+    - `manuscript_reviews` with decision constraint, review rounds, author feedback vs. internal notes
+    - **Dependencies**: 20260724000000, `update_updated_at_column()`
+
+35. **20260724000003_add_manuscript_book_link.sql**
+    - `manuscripts.book_id` + `converted_by_profile_id`, conversion consistency check, one-book-per-manuscript partial unique index
+    - **Dependencies**: 20260724000000, `books`
+
+36. **20260724000004_harden_manuscript_rls.sql**
+    - Drops the broad `FOR ALL` author policy; separated per-operation policies; `current_profile_id()` / `current_user_is_admin()` helpers (profiles.role, not JWT); workflow-field protection trigger; author-safe `author_manuscript_status_history` and `author_manuscript_feedback` views
+    - **Dependencies**: 20260724000000–20260724000003
+
+37. **20260724000005_harden_manuscript_storage.sql**
+    - Manuscript bucket stays private / 100 MiB / 4 MIME types; per-user path isolation (`<auth-user-id>/<manuscript-id>/<version>/<file>`); draft-only deletion; authoritative admin policy; placeholder virus-scan trigger replaced by `scan_status=pending` tagging
+    - **Dependencies**: 20260724000004 (helper functions), 20260117000006
+
+38. **20260724000006_add_manuscript_indexes.sql**
+    - Workflow indexes for admin queue, reviewer queue, author project list, history timeline, review rounds
+    - **Dependencies**: 20260724000001, 20260724000002
+
 Also present (early sequence): **20260116000001_create_books_table.sql**, **20260117000007_storage_policies.sql** — both applied hosted; keep filenames stable. (`20260117000007` is a recorded `SELECT 1;` stub so remote `supabase_migrations` history matches the local directory.)
 
 > **Note — duplicate `content_type` migrations (Fix C3):** `20260619124500` and

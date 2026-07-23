@@ -301,6 +301,18 @@ export type Database = {
           manuscript_file_url: string | null;
           sample_chapters_url: string | null;
           cover_draft_url: string | null;
+          book_id: string | null;
+          assigned_reviewer_id: string | null;
+          converted_by_profile_id: string | null;
+          author_notes: string | null;
+          internal_notes: string | null;
+          version_number: number;
+          submitted_at: string | null;
+          assigned_at: string | null;
+          review_started_at: string | null;
+          decision_at: string | null;
+          withdrawn_at: string | null;
+          converted_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -319,6 +331,18 @@ export type Database = {
           manuscript_file_url?: string | null;
           sample_chapters_url?: string | null;
           cover_draft_url?: string | null;
+          book_id?: string | null;
+          assigned_reviewer_id?: string | null;
+          converted_by_profile_id?: string | null;
+          author_notes?: string | null;
+          internal_notes?: string | null;
+          version_number?: number;
+          submitted_at?: string | null;
+          assigned_at?: string | null;
+          review_started_at?: string | null;
+          decision_at?: string | null;
+          withdrawn_at?: string | null;
+          converted_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -337,8 +361,78 @@ export type Database = {
           manuscript_file_url?: string | null;
           sample_chapters_url?: string | null;
           cover_draft_url?: string | null;
+          book_id?: string | null;
+          assigned_reviewer_id?: string | null;
+          converted_by_profile_id?: string | null;
+          author_notes?: string | null;
+          internal_notes?: string | null;
+          version_number?: number;
+          submitted_at?: string | null;
+          assigned_at?: string | null;
+          review_started_at?: string | null;
+          decision_at?: string | null;
+          withdrawn_at?: string | null;
+          converted_at?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      manuscript_status_history: {
+        Row: {
+          id: string;
+          manuscript_id: string;
+          from_status: ManuscriptStatus | null;
+          to_status: ManuscriptStatus;
+          changed_by_profile_id: string | null;
+          reason: string | null;
+          internal_reason: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          manuscript_id: string;
+          from_status?: ManuscriptStatus | null;
+          to_status: ManuscriptStatus;
+          changed_by_profile_id?: string | null;
+          reason?: string | null;
+          internal_reason?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: never;
+      };
+      manuscript_reviews: {
+        Row: {
+          id: string;
+          manuscript_id: string;
+          reviewer_profile_id: string;
+          decision: ManuscriptReviewDecision;
+          author_feedback: string | null;
+          internal_notes: string | null;
+          review_round: number;
+          created_at: string;
+          updated_at: string;
+          submitted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          manuscript_id: string;
+          reviewer_profile_id: string;
+          decision?: ManuscriptReviewDecision;
+          author_feedback?: string | null;
+          internal_notes?: string | null;
+          review_round?: number;
+          created_at?: string;
+          updated_at?: string;
+          submitted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          decision?: ManuscriptReviewDecision;
+          author_feedback?: string | null;
+          internal_notes?: string | null;
+          submitted_at?: string | null;
         };
       };
       partners: {
@@ -537,7 +631,10 @@ export type ManuscriptStatus =
   | 'revisions_requested'
   | 'accepted'
   | 'rejected'
-  | 'published';
+  | 'withdrawn'
+  | 'converted_to_book';
+
+export type ManuscriptReviewDecision = 'pending' | 'changes_requested' | 'accepted' | 'rejected';
 export type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled' | 'refunded';
 
 // Helper types
@@ -555,6 +652,8 @@ export type ReadingProgress = Tables<'reading_progress'>;
 export type ResonanceVector = Tables<'resonance_vectors'>;
 export type EngagementEvent = Tables<'engagement_events'>;
 export type Manuscript = Tables<'manuscripts'>;
+export type ManuscriptStatusHistory = Tables<'manuscript_status_history'>;
+export type ManuscriptReview = Tables<'manuscript_reviews'>;
 export type Partner = Tables<'partners'>;
 export type ArcRequest = Tables<'arc_requests'>;
 export type Order = Tables<'orders'>;
