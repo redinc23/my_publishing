@@ -16,7 +16,7 @@ jobs:
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_test_dummy'
       SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy-service-role-for-ci'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
