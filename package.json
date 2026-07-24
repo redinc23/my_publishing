@@ -26,7 +26,8 @@
     "db:mongo:import-uri": "tsx scripts/mongo-import-uri.ts",
     "auth:request-password-reset": "tsx scripts/request-password-reset.ts",
     "verify-rls": "tsx scripts/verify-rls.ts",
-    "validate:gap-ledger": "tsx scripts/validate-gap-ledger.ts"
+    "validate:gap-ledger": "tsx scripts/validate-gap-ledger.ts",
+    "ops:rotate-anon-key": "tsx scripts/rotate-supabase-anon-key.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
