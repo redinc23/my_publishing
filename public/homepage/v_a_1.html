@@ -1,0 +1,4106 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="MANGU PUBLISHING - Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime."
+    />
+    <meta name="keywords" content="books, publishing, audiobooks, reading, stories, literature" />
+    <meta name="author" content="MANGU PUBLISHING" />
+    <meta property="og:title" content="MANGU PUBLISHING - Full Experience" />
+    <meta
+      property="og:description"
+      content="Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos anywhere, anytime."
+    />
+    <meta
+      property="og:image"
+      content="https://images.unsplash.com/photo-1497636577773-f1231844b336?auto=format&fit=crop&w=1200&h=630&q=80"
+    />
+    <meta property="og:url" content="https://mangu-publishers.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>MANGU PUBLISHING — Hero Fix</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="enhancements.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --netflix-black: #141414;
+        --netflix-dark: #181818;
+        --netflix-red: #e50914;
+        --netflix-white: #ffffff;
+        --netflix-gray: #b3b3b3;
+        --netflix-light-gray: #f5f5f1;
+        --accent-blue: #0073e6;
+        --accent-gold: #ffd700;
+        --accent-purple: #8a2be2;
+        --accent-coral: #ff6b6b;
+        --accent-teal: #4ecdc4;
+        --accent-orange: #ff7700;
+        --success-green: #46d369;
+        --warning-orange: #ffa500;
+        --modal-overlay: rgba(0, 0, 0, 0.85);
+        --transition-base: all 0.3s ease;
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+        --border-radius: 8px;
+        --border-radius-lg: 12px;
+        --border-radius-xl: 16px;
+        --max-width: 1920px;
+        --header-height: 70px;
+        --z-index-dropdown: 1000;
+        --z-index-sticky: 1020;
+        --z-index-fixed: 1030;
+        --z-index-modal: 1040;
+        --z-index-popover: 1050;
+        --z-index-tooltip: 1060;
+      }
+
+      /* Light mode variables */
+      [data-theme='light'] {
+        --netflix-black: #f5f5f1;
+        --netflix-dark: #e6e6e6;
+        --netflix-white: #141414;
+        --netflix-gray: #6e6e6e;
+        --netflix-light-gray: #181818;
+        --modal-overlay: rgba(245, 245, 241, 0.95);
+      }
+
+      /* High contrast mode */
+      .high-contrast {
+        --netflix-black: #000000;
+        --netflix-dark: #111111;
+        --netflix-white: #ffffff;
+        --netflix-gray: #cccccc;
+        --netflix-red: #ff0000;
+        --accent-blue: #0000ff;
+      }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        .hero-character,
+        .floating-book {
+          animation: none !important;
+        }
+      }
+
+      body {
+        font-family: 'Netflix Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background: var(--netflix-black);
+        color: var(--netflix-white);
+        overflow-x: hidden;
+        line-height: 1.4;
+        transition: var(--transition-base);
+      }
+
+      /* Focus styles for accessibility */
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 2px;
+      }
+
+      /* Skip to main content link for accessibility */
+      .skip-to-content {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--accent-blue);
+        color: white;
+        padding: 8px;
+        z-index: var(--z-index-tooltip);
+        transition: top 0.3s;
+      }
+
+      .skip-to-content:focus {
+        top: 0;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--netflix-dark);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--netflix-gray);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--netflix-white);
+      }
+
+      /* Progress bar */
+      .progress-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: transparent;
+        z-index: var(--z-index-tooltip);
+      }
+
+      .progress-bar {
+        height: 3px;
+        background: var(--accent-orange);
+        width: 0%;
+        transition: width 0.2s ease;
+      }
+
+      /* Header */
+      .header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: var(--z-index-fixed);
+        background: linear-gradient(180deg, rgba(20, 20, 20, 0.7) 10%, transparent);
+        transition: var(--transition-base);
+        padding: 0 4%;
+        height: var(--header-height);
+      }
+
+      .header.scrolled {
+        background: var(--netflix-black);
+        box-shadow: var(--shadow-md);
+      }
+
+      .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 100%;
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
+
+      .logo {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--netflix-white);
+        text-decoration: none;
+        letter-spacing: -1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: radial-gradient(circle at 30% 30%, #ff7700, #cc5500);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .logo-icon::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        right: 2px;
+        bottom: 2px;
+        background: linear-gradient(45deg, #ff9900, #ff6600);
+        border-radius: 50%;
+        opacity: 0.8;
+      }
+
+      .logo-icon::after {
+        content: '🔥';
+        position: relative;
+        z-index: 1;
+        font-size: 16px;
+      }
+
+      .nav-main {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-left: 24px;
+      }
+
+      .nav-item {
+        position: relative;
+      }
+
+      .nav-main a {
+        color: var(--netflix-white);
+        text-decoration: none;
+        font-weight: 400;
+        font-size: 14px;
+        transition: var(--transition-base);
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .nav-main a:hover,
+      .nav-main a.active {
+        color: var(--netflix-gray);
+      }
+
+      .nav-main a.active::after {
+        content: '';
+        position: absolute;
+        bottom: -24px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--accent-orange);
+      }
+
+      /* Books dropdown */
+      .books-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-xl);
+        padding: 10px 0;
+        min-width: 180px;
+        display: none;
+        z-index: var(--z-index-dropdown);
+        margin-top: 20px;
+      }
+
+      .books-dropdown.active {
+        display: block;
+      }
+
+      .books-dropdown a {
+        display: block;
+        padding: 8px 15px;
+        color: var(--netflix-white);
+        text-decoration: none;
+        transition: var(--transition-base);
+        font-size: 14px;
+      }
+
+      .books-dropdown a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--accent-orange);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .search-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .search-input {
+        background: rgba(0, 0, 0, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        border-radius: var(--border-radius);
+        padding: 8px 12px 8px 40px;
+        color: var(--netflix-white);
+        font-size: 14px;
+        width: 250px;
+        transition: var(--transition-base);
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--netflix-white);
+        background: rgba(0, 0, 0, 0.9);
+      }
+
+      .search-input::placeholder {
+        color: var(--netflix-gray);
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        color: var(--netflix-gray);
+        font-size: 14px;
+      }
+
+      .header-icon {
+        color: var(--netflix-white);
+        font-size: 20px;
+        cursor: pointer;
+        transition: var(--transition-base);
+        position: relative;
+        background: none;
+        border: none;
+      }
+
+      .header-icon:hover {
+        color: var(--netflix-gray);
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: var(--accent-orange);
+        color: white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+      }
+
+      .profile-menu {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .profile-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--border-radius);
+        background: linear-gradient(45deg, var(--accent-blue), var(--accent-purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      /* Profile dropdown */
+      .profile-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-xl);
+        padding: 10px 0;
+        min-width: 200px;
+        display: none;
+        z-index: var(--z-index-dropdown);
+        margin-top: 10px;
+      }
+
+      .profile-dropdown.active {
+        display: block;
+      }
+
+      .profile-dropdown a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        color: var(--netflix-white);
+        text-decoration: none;
+        transition: var(--transition-base);
+        font-size: 14px;
+      }
+
+      .profile-dropdown a:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .profile-dropdown a i {
+        width: 16px;
+      }
+
+      /* Theme toggle + language */
+      .theme-toggle {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--netflix-white);
+      }
+
+      .language-selector {
+        position: relative;
+      }
+
+      .language-btn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: var(--netflix-white);
+        padding: 6px 12px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .language-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-xl);
+        padding: 10px 0;
+        min-width: 160px;
+        display: none;
+        z-index: var(--z-index-dropdown);
+      }
+
+      .language-dropdown.active {
+        display: block;
+      }
+
+      .language-option {
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: var(--transition-base);
+      }
+
+      .language-option:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Hero with Video */
+      .hero {
+        position: relative;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        background: linear-gradient(
+          135deg,
+          #0f0f23 0%,
+          #1a1a2e 25%,
+          #16213e 50%,
+          #0f3460 75%,
+          #533483 100%
+        );
+      }
+
+      .hero-video {
+        position: absolute;
+        top: 50%;
+        right: 10%;
+        width: 500px;
+        height: 280px;
+        transform: translateY(-50%);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-xl);
+        z-index: 1;
+      }
+
+      .hero-video video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .video-controls {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .hero-video-pause {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: rgba(0, 0, 0, 0.7);
+        border: 2px solid var(--accent-orange);
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+
+      .hero-video-pause:hover {
+        background: var(--accent-orange);
+        transform: scale(1.1);
+      }
+
+      .video-btn {
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-base);
+      }
+
+      .video-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.1);
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(0, 115, 230, 0.1) 0%, transparent 50%);
+      }
+
+      .hero-content {
+        max-width: var(--max-width);
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 4%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 3;
+      }
+
+      .hero-left {
+        flex: 1;
+        max-width: 600px;
+      }
+
+      .hero-title {
+        font-size: clamp(3.5rem, 8vw, 8rem);
+        font-weight: 300;
+        letter-spacing: 8px;
+        margin-bottom: 24px;
+        background: linear-gradient(45deg, #ffd700, #ff8c00, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-transform: uppercase;
+        line-height: 0.9;
+        animation: titleGlow 4s ease-in-out infinite alternate;
+      }
+
+      @keyframes titleGlow {
+        from {
+          filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+        }
+        to {
+          filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.6));
+        }
+      }
+
+      .hero-subtitle {
+        font-size: 20px;
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: 40px;
+        line-height: 1.6;
+        font-weight: 300;
+      }
+
+      .hero-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--accent-orange);
+        color: white;
+        padding: 16px 32px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: var(--shadow-lg);
+        border: none;
+        cursor: pointer;
+      }
+
+      .hero-cta:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 48px rgba(255, 119, 0, 0.4);
+        background: #cc5500;
+      }
+
+      .hero-right {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      /* Hero Video Background Styles */
+      .hero-video-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      .hero-background-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .video-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 2;
+      }
+
+      .hero-character {
+        width: 500px;
+        height: 500px;
+        position: relative;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .character-base {
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><defs><linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23ff6b6b;stop-opacity:1" /><stop offset="100%" style="stop-color:%23ff8e8e;stop-opacity:1" /></linearGradient><linearGradient id="bagGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23654321;stop-opacity:1" /><stop offset="100%" style="stop-color:%238b5a2b;stop-opacity:1" /></linearGradient></defs><ellipse cx="250" cy="450" rx="80" ry="20" fill="rgba(0,0,0,0.2)"/><circle cx="250" cy="180" r="70" fill="%23ffdbac"/><rect x="210" y="240" width="80" height="120" rx="40" fill="url(%23bodyGrad)"/><rect x="190" y="350" width="40" height="80" rx="20" fill="%234ecdc4"/><rect x="270" y="350" width="40" height="80" rx="20" fill="%234ecdc4"/><rect x="160" y="260" width="50" height="100" rx="25" fill="%23ffdbac"/><rect x="290" y="260" width="50" height="100" rx="25" fill="%23ffdbac"/><circle cx="230" cy="160" r="8" fill="%23333"/><circle cx="270" cy="160" r="8" fill="%23333"/><path d="M220 180 Q250 200 280 180" stroke="%23333" stroke-width="3" fill="none"/><rect x="200" y="200" width="100" height="50" rx="25" fill="url(%23bagGrad)"/><rect x="210" y="140" width="80" height="25" rx="12" fill="%23654321"/></svg>')
+          center/contain no-repeat;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        33% {
+          transform: translateY(-20px) rotate(2deg);
+        }
+        66% {
+          transform: translateY(-10px) rotate(-1deg);
+        }
+      }
+
+      .floating-books {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .floating-book {
+        position: absolute;
+        width: 40px;
+        height: 60px;
+        background: linear-gradient(45deg, var(--accent-coral), var(--accent-teal));
+        border-radius: var(--border-radius);
+        animation: floatBook 8s ease-in-out infinite;
+        opacity: 0.7;
+      }
+
+      .floating-book:nth-child(1) {
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+      .floating-book:nth-child(2) {
+        top: 70%;
+        right: 10%;
+        animation-delay: 2s;
+      }
+      .floating-book:nth-child(3) {
+        top: 30%;
+        left: 5%;
+        animation-delay: 4s;
+      }
+      .floating-book:nth-child(4) {
+        top: 80%;
+        left: 20%;
+        animation-delay: 6s;
+      }
+
+      @keyframes floatBook {
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-30px) rotate(10deg);
+        }
+      }
+
+      /* New Featured Section Styles - Replace existing featured styles */
+      .featured-hero {
+        margin-top: -150px;
+        position: relative;
+        z-index: 10;
+        background: linear-gradient(to top, var(--netflix-black) 0%, transparent 100%);
+        padding: 150px 0 100px;
+      }
+
+      .featured-hero .container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .featured-hero .header {
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: normal;
+        margin-bottom: 30px;
+      }
+
+      .feature-card {
+        background: #222;
+        border: 2px solid #ff6b35;
+        border-radius: 12px;
+        padding: 30px;
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+        min-height: 400px;
+        margin: 0 -20px;
+        position: relative;
+      }
+
+      .feature-card::before,
+      .feature-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 26px;
+        background: var(--accent-orange);
+      }
+
+      .feature-card::before {
+        left: 0;
+      }
+
+      .feature-card::after {
+        right: 0;
+      }
+
+      .featured-hero::before,
+      .featured-hero::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 0px;
+        background: var(--accent-orange);
+        z-index: 1;
+      }
+
+      .featured-hero::before {
+        top: 0;
+      }
+
+      .featured-hero::after {
+        bottom: 0;
+      }
+
+      .featured-hero {
+        position: relative;
+      }
+
+      .feature-card .book-cover {
+        flex-shrink: 0;
+        width: 150px;
+        height: 220px;
+        border: 2px solid #ff6b35;
+        border-radius: 8px;
+        background: #1a1a1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="25" fill="none" stroke="%23ff6b35" stroke-width="2"/><circle cx="50" cy="50" r="8" fill="%23ff6b35"/><path d="M30 30 Q50 15 70 30" stroke="%23ff6b35" stroke-width="1.5" fill="none"/><path d="M25 60 Q50 45 75 60" stroke="%23ff6b35" stroke-width="1.5" fill="none"/></svg>');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 60%;
+      }
+
+      .book-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .feature-card .book-title {
+        font-size: 48px;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 8px;
+        line-height: 1.1;
+      }
+
+      .feature-card .book-author {
+        color: #ff6b35;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .feature-card .book-meta {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: #ccc;
+      }
+
+      .feature-card .rating-number {
+        color: white;
+      }
+
+      .feature-card .stars {
+        color: #ffd700;
+      }
+
+      .feature-card .book-description {
+        color: white;
+        line-height: 1.4;
+        margin-bottom: 20px;
+        font-size: 14px;
+        max-width: 400px;
+      }
+
+      .feature-card .star-rating {
+        margin-bottom: 20px;
+      }
+
+      .feature-card .star-rating .stars {
+        font-size: 16px;
+        margin-right: 10px;
+      }
+
+      .feature-card .star-rating .rating-text {
+        color: #999;
+        font-size: 14px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .feature-card .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-read {
+        background: #ff6b35;
+        color: white;
+      }
+
+      .btn-watch {
+        background: #8b5cf6;
+        color: white;
+      }
+
+      .btn-library {
+        background: #06b6d4;
+        color: white;
+      }
+
+      .platform-links {
+        display: flex;
+        gap: 8px;
+      }
+
+      .platform-btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 12px;
+        border: none;
+        cursor: pointer;
+        color: white;
+        font-weight: bold;
+      }
+
+      .platform-btn.apple {
+        background: #007aff;
+      }
+      .platform-btn.google {
+        background: #4285f4;
+      }
+      .platform-btn.amazon {
+        background: #ff9900;
+      }
+
+      .info-icons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .info-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ff6b35;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      /* Netflix-style TV Screen */
+      .tv-section {
+        flex-shrink: 0;
+        width: 350px;
+        height: 220px;
+        position: relative;
+        margin-left: auto;
+      }
+
+      .tv-frame {
+        background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow:
+          0 0 0 2px #333,
+          0 0 0 4px #222,
+          0 10px 25px rgba(0, 0, 0, 0.8),
+          inset 0 1px 5px rgba(255, 255, 255, 0.1);
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .tv-frame::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 6px;
+        height: 6px;
+        background: #ff0000;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #ff0000;
+      }
+
+      .tv-screen {
+        width: 100%;
+        height: 100%;
+        background: #000;
+        border-radius: 6px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+      }
+
+      .netflix-content {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        background: linear-gradient(135deg, #2c1810 0%, #8b4513 50%, #daa520 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .movie-scene {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(ellipse at 70% 30%, rgba(255, 215, 0, 0.4) 0%, transparent 60%),
+          radial-gradient(ellipse at 20% 80%, rgba(139, 69, 19, 0.6) 0%, transparent 50%),
+          linear-gradient(45deg, rgba(44, 24, 16, 0.8) 0%, rgba(139, 69, 19, 0.6) 100%);
+        animation: atmosphereShift 10s ease-in-out infinite;
+      }
+
+      .characters-netflix {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+      }
+
+      .character-netflix {
+        border-radius: 8px;
+        position: relative;
+        animation: subtleMovement 8s ease-in-out infinite;
+      }
+
+      .character-main {
+        width: 45px;
+        height: 70px;
+        background: linear-gradient(180deg, #deb887 0%, #cd853f 100%);
+        animation-delay: 0s;
+      }
+
+      .character-side {
+        width: 35px;
+        height: 55px;
+        background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+        animation-delay: 3s;
+      }
+
+      .netflix-ui {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+      }
+
+      .play-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .play-btn {
+        width: 24px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        animation: playPulse 3s ease-in-out infinite;
+      }
+
+      .play-btn::after {
+        content: '▶';
+        color: #000;
+        font-size: 10px;
+        margin-left: 1px;
+      }
+
+      .progress-bar {
+        flex: 1;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        margin: 0 10px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: #e50914;
+        width: 35%;
+        border-radius: 2px;
+        animation: progressMove 12s linear infinite;
+      }
+
+      .time-display {
+        color: white;
+        font-size: 10px;
+        font-family: monospace;
+      }
+
+      .screen-reflection {
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.15) 50%,
+          transparent 100%
+        );
+        animation: screenReflection 6s ease-in-out infinite;
+      }
+
+      @keyframes atmosphereShift {
+        0%,
+        100% {
+          filter: brightness(1) contrast(1.1) saturate(1.2);
+          transform: scale(1.02);
+        }
+        33% {
+          filter: brightness(1.1) contrast(1.2) saturate(1.3);
+          transform: scale(1.05) translateX(2px);
+        }
+        66% {
+          filter: brightness(0.9) contrast(1.3) saturate(1.1);
+          transform: scale(1.03) translateX(-1px);
+        }
+      }
+
+      @keyframes subtleMovement {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+        }
+        25% {
+          transform: translateY(-3px) scale(1.02);
+        }
+        50% {
+          transform: translateY(-1px) scale(0.98);
+        }
+        75% {
+          transform: translateY(-2px) scale(1.01);
+        }
+      }
+
+      @keyframes playPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.9;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 1;
+        }
+      }
+
+      @keyframes progressMove {
+        0% {
+          width: 35%;
+        }
+        50% {
+          width: 60%;
+        }
+        100% {
+          width: 35%;
+        }
+      }
+
+      @keyframes screenReflection {
+        0% {
+          left: -100%;
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          left: 100%;
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .feature-card {
+          flex-direction: column;
+        }
+
+        .tv-section {
+          width: 100%;
+          max-width: 350px;
+          margin: 20px auto 0;
+        }
+
+        .feature-card .book-title {
+          font-size: 36px;
+        }
+      }
+      /* Trending Section */
+      .trending-section {
+        margin: 40px 4%;
+        padding: 20px 0;
+      }
+
+      .trending-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        max-width: var(--max-width);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .trending-title {
+        color: white;
+        font-size: 28px;
+        font-weight: 600;
+        position: relative;
+      }
+
+      .trending-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, #ff6b35, #f7931e);
+        border-radius: 2px;
+      }
+
+      .see-all {
+        color: #999;
+        font-size: 14px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+
+      .see-all:hover {
+        color: #ff6b35;
+      }
+
+      .carousel-container {
+        position: relative;
+        overflow: hidden;
+        padding: 20px 0;
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
+
+      .carousel-track {
+        display: flex;
+        gap: 25px;
+        transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        padding: 0 20px;
+      }
+
+      .book-card {
+        width: 200px;
+        height: 300px;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+        transition:
+          transform 0.4s ease,
+          box-shadow 0.4s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(45deg, #2b2b2b, #1a1a1a);
+        flex-shrink: 0;
+      }
+
+      .book-card:hover {
+        transform: scale(1.08);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+      }
+
+      .book-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: filter 0.3s ease;
+      }
+
+      .book-card:hover .book-cover {
+        filter: brightness(0.7);
+      }
+
+      .book-card .book-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        padding: 15px 10px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+          opacity 0.3s ease,
+          transform 0.3s ease;
+      }
+
+      .book-card:hover .book-info {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .book-title {
+        color: white;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .book-metadata {
+        color: #d2d2d2;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .match-rate {
+        color: #46d369;
+        font-weight: 700;
+        margin-right: 8px;
+      }
+
+      .year,
+      .length {
+        margin-right: 8px;
+      }
+
+      .maturity-rating {
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        padding: 0 4px;
+        margin-right: 8px;
+      }
+
+      .book-genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 12px;
+      }
+
+      .genre {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #d2d2d2;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+      }
+
+      .book-buttons {
+        display: flex;
+        gap: 12px;
+      }
+
+      .icon-button {
+        background-color: rgba(42, 42, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .icon-button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: white;
+        transform: scale(1.1);
+      }
+
+      .icon-button i {
+        color: white;
+        font-size: 14px;
+      }
+
+      .new-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-size: 11px;
+        padding: 3px 6px;
+        border-radius: 3px;
+      }
+
+      .progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        background-color: #e50914;
+        width: 0%;
+        transition: width 0.5s ease;
+      }
+
+      .book-card:hover .progress-bar {
+        width: 60%;
+      }
+
+      .carousel-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 107, 53, 0.9);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 20;
+      }
+
+      .carousel-nav:hover {
+        background: #ff6b35;
+        transform: translateY(-50%) scale(1.1);
+      }
+
+      .nav-prev {
+        left: -25px;
+      }
+
+      .nav-next {
+        right: -25px;
+      }
+
+      /* Rows */
+      .books-container {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .books-row {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding: 8px 0 32px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .books-row::-webkit-scrollbar {
+        display: none;
+      }
+
+      .book-card {
+        min-width: 280px;
+        height: 450px;
+        position: relative;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform-origin: center;
+      }
+
+      .book-card:hover {
+        transform: scale(1.05);
+        z-index: 20;
+        box-shadow: var(--shadow-xl);
+      }
+
+      .book-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: var(--transition-base);
+      }
+
+      .book-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.9) 0%,
+          rgba(0, 0, 0, 0.4) 50%,
+          rgba(0, 0, 0, 0) 100%
+        );
+        opacity: 0;
+        transition: var(--transition-base);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 16px;
+      }
+
+      .book-card:hover .book-overlay {
+        opacity: 1;
+      }
+
+      .book-actions {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .book-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(42, 42, 42, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-base);
+        font-size: 14px;
+      }
+
+      .book-action:hover {
+        border-color: white;
+        background: rgba(42, 42, 42, 1);
+        transform: scale(1.1);
+      }
+
+      .book-info {
+        color: white;
+      }
+
+      .book-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        line-height: 1.3;
+      }
+
+      .book-author {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.75);
+        margin-bottom: 4px;
+      }
+
+      .book-rating {
+        font-size: 12px;
+        color: var(--accent-gold);
+        font-weight: 700;
+      }
+
+      /* Filter panel */
+      .filter-panel {
+        position: fixed;
+        top: var(--header-height);
+        right: -400px;
+        width: 400px;
+        height: calc(100vh - var(--header-height));
+        background: var(--netflix-dark);
+        z-index: var(--z-index-modal);
+        padding: 20px;
+        overflow-y: auto;
+        transition: right 0.3s ease;
+        box-shadow: var(--shadow-xl);
+      }
+
+      .filter-panel.active {
+        right: 0;
+      }
+
+      .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .filter-group {
+        margin-bottom: 25px;
+      }
+
+      .filter-title {
+        font-size: 18px;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .filter-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .filter-option {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition-base);
+      }
+
+      .filter-option:hover,
+      .filter-option.active {
+        background: var(--accent-orange);
+      }
+
+      .range-slider {
+        width: 100%;
+        margin: 15px 0;
+      }
+
+      .range-values {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        color: var(--netflix-gray);
+      }
+
+      .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+      }
+
+      /* Upload */
+      .upload-section {
+        padding: 80px 4%;
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius-lg);
+        margin: 40px 4%;
+        max-width: var(--max-width);
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .upload-header {
+        text-align: center;
+        margin-bottom: 60px;
+      }
+
+      .upload-title {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--netflix-white);
+        margin-bottom: 16px;
+      }
+
+      .upload-subtitle {
+        font-size: 18px;
+        color: var(--netflix-gray);
+        max-width: 680px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .upload-form {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(36, 36, 36, 0.8);
+        padding: 40px;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .form-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--netflix-white);
+        margin-bottom: 8px;
+      }
+
+      .form-input,
+      .form-textarea,
+      .form-select {
+        background: rgba(22, 22, 22, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: var(--border-radius);
+        padding: 12px 16px;
+        color: var(--netflix-white);
+        font-size: 16px;
+        transition: var(--transition-base);
+      }
+
+      .form-input:focus,
+      .form-textarea:focus,
+      .form-select:focus {
+        outline: none;
+        border-color: var(--accent-orange);
+        background: rgba(22, 22, 22, 0.9);
+      }
+
+      .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .file-upload {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: var(--border-radius);
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: var(--transition-base);
+        margin-bottom: 24px;
+      }
+
+      .file-upload:hover {
+        border-color: var(--accent-orange);
+        background: rgba(255, 119, 0, 0.05);
+      }
+
+      .upload-icon {
+        font-size: 48px;
+        color: var(--accent-orange);
+        margin-bottom: 16px;
+      }
+
+      .upload-text {
+        font-size: 18px;
+        color: var(--netflix-white);
+        margin-bottom: 8px;
+      }
+
+      .upload-hint {
+        font-size: 14px;
+        color: var(--netflix-gray);
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        margin-top: 32px;
+      }
+
+      .btn-submit {
+        background: var(--accent-orange);
+        color: white;
+        padding: 12px 32px;
+        border-radius: var(--border-radius);
+        border: none;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition-base);
+      }
+
+      .btn-submit:hover {
+        background: #cc5500;
+      }
+
+      .btn-cancel {
+        background: rgba(109, 109, 110, 0.7);
+        color: var(--netflix-white);
+        padding: 12px 32px;
+        border-radius: var(--border-radius);
+        border: none;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition-base);
+      }
+
+      .btn-cancel:hover {
+        background: rgba(109, 109, 110, 0.4);
+      }
+
+      /* Dashboard */
+      .dashboard-section {
+        display: none;
+        padding: 100px 4% 40px;
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
+
+      .dashboard-section.active {
+        display: block;
+      }
+
+      .dashboard-header {
+        margin-bottom: 40px;
+      }
+
+      .dashboard-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .dashboard-subtitle {
+        color: var(--netflix-gray);
+        font-size: 18px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .stat-card {
+        background: var(--netflix-dark);
+        padding: 25px;
+        border-radius: var(--border-radius);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .stat-label {
+        color: var(--netflix-gray);
+        font-size: 14px;
+      }
+
+      .stat-trend {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 14px;
+      }
+
+      .trend-up {
+        color: var(--success-green);
+      }
+
+      .trend-down {
+        color: var(--netflix-red);
+      }
+
+      /* Comments */
+      .comments-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .comment-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .comment-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 12px 20px;
+        color: var(--netflix-white);
+      }
+
+      .comment-submit {
+        background: var(--accent-orange);
+        border: none;
+        border-radius: 20px;
+        padding: 0 20px;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .comment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .comment-item {
+        display: flex;
+        gap: 15px;
+      }
+
+      .comment-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, var(--accent-blue), var(--accent-purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* Auth Modals */
+      .auth-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--modal-overlay);
+        z-index: var(--z-index-modal);
+        align-items: center;
+        justify-content: center;
+      }
+
+      .auth-modal.active {
+        display: flex;
+      }
+
+      .auth-container {
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius);
+        width: 460px;
+        max-width: 90%;
+        padding: 40px;
+        box-shadow: var(--shadow-xl);
+        position: relative;
+      }
+
+      .auth-header {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .auth-title {
+        font-size: 30px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+
+      .auth-tabs {
+        display: flex;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 16px;
+      }
+
+      .auth-tab {
+        flex: 1;
+        text-align: center;
+        padding: 12px;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: var(--transition-base);
+      }
+
+      .auth-tab.active {
+        opacity: 1;
+        border-bottom: 3px solid var(--accent-orange);
+      }
+
+      .auth-form {
+        display: none;
+      }
+
+      .auth-form.active {
+        display: block;
+      }
+
+      .social-auth {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 16px 0;
+      }
+
+      .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px;
+        border-radius: var(--border-radius);
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-base);
+      }
+
+      .google-btn {
+        background: #fff;
+        color: #333;
+      }
+
+      .facebook-btn {
+        background: #3b5998;
+        color: #fff;
+      }
+
+      .apple-btn {
+        background: #000;
+        color: #fff;
+      }
+
+      .cognito-btn {
+        background: var(--accent-orange);
+        color: #fff;
+      }
+
+      .divider {
+        text-align: center;
+        position: relative;
+        margin: 16px 0;
+      }
+
+      .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .divider span {
+        background: var(--netflix-dark);
+        padding: 0 12px;
+        position: relative;
+        color: var(--netflix-gray);
+      }
+
+      .form-footer {
+        margin-top: 12px;
+        text-align: center;
+        font-size: 14px;
+        color: var(--netflix-gray);
+      }
+
+      .form-footer a {
+        color: var(--accent-orange);
+        text-decoration: none;
+      }
+
+      .close-modal {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: none;
+        border: none;
+        color: var(--netflix-gray);
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      /* Viewer */
+      .viewer-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--netflix-black);
+        z-index: var(--z-index-modal);
+      }
+
+      .viewer-modal.active {
+        display: block;
+      }
+
+      .viewer-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+        z-index: 10;
+      }
+
+      .viewer-content {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .viewer-iframe {
+        width: 80%;
+        height: 80%;
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-xl);
+        background: white;
+      }
+
+      .viewer-controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .control-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-base);
+      }
+
+      /* Admin Panel (Hidden) */
+      .admin-panel {
+        display: none;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--netflix-black);
+        z-index: var(--z-index-modal);
+        padding: 40px;
+        overflow-y: auto;
+      }
+
+      .admin-panel.active {
+        display: block;
+      }
+
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--accent-orange);
+      }
+
+      .admin-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--accent-orange);
+      }
+
+      .admin-sections {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+      }
+
+      .admin-section {
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius-lg);
+        padding: 30px;
+        border: 1px solid var(--accent-orange);
+      }
+
+      .admin-section h3 {
+        color: var(--accent-orange);
+        margin-bottom: 20px;
+        font-size: 20px;
+      }
+
+      /* Accessibility */
+      .accessibility-tools {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: var(--z-index-fixed);
+      }
+
+      .accessibility-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--accent-orange);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: var(--shadow-lg);
+        border: none;
+      }
+
+      .accessibility-panel {
+        position: absolute;
+        bottom: 60px;
+        right: 0;
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius);
+        padding: 15px;
+        width: 260px;
+        box-shadow: var(--shadow-lg);
+        display: none;
+      }
+
+      .accessibility-panel.active {
+        display: block;
+      }
+
+      .accessibility-option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .text-size-buttons {
+        display: flex;
+        gap: 6px;
+      }
+
+      .text-size-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: var(--border-radius);
+        color: var(--netflix-white);
+        cursor: pointer;
+      }
+
+      .text-size-btn.active {
+        background: var(--accent-orange);
+      }
+
+      /* Notifications & Achievements */
+      .notification-center {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        width: 350px;
+        z-index: var(--z-index-popover);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .notification {
+        background: var(--netflix-dark);
+        border-left: 4px solid var(--accent-orange);
+        border-radius: var(--border-radius);
+        padding: 15px;
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .notification-icon {
+        color: var(--accent-orange);
+        font-size: 18px;
+      }
+
+      .notification-title {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .notification-message {
+        font-size: 14px;
+        color: var(--netflix-gray);
+      }
+
+      .achievement-badge {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, var(--accent-gold), #ff8c00);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        font-size: 24px;
+        position: relative;
+        box-shadow: var(--shadow-md);
+      }
+
+      .achievement-locked {
+        background: linear-gradient(45deg, #555, #333);
+        color: #777;
+      }
+
+      .achievement-popup {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius);
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: var(--shadow-lg);
+        transform: translateY(150px);
+        transition: transform 0.5s ease;
+        z-index: var(--z-index-popover);
+      }
+
+      .achievement-popup.show {
+        transform: translateY(0);
+      }
+
+      /* Footer */
+      .footer {
+        background: linear-gradient(to top, var(--netflix-black), rgba(20, 20, 20, 0.95));
+        padding: 80px 4% 40px;
+        margin-top: 80px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .footer-content {
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 40px;
+        margin-bottom: 40px;
+      }
+
+      .footer-column h4 {
+        color: var(--netflix-white);
+        font-size: 16px;
+        font-weight: 800;
+        margin-bottom: 20px;
+      }
+
+      .footer-column a {
+        color: var(--netflix-gray);
+        text-decoration: none;
+        display: block;
+        margin-bottom: 12px;
+        transition: var(--transition-base);
+        font-size: 14px;
+      }
+
+      .footer-column a:hover {
+        color: var(--accent-orange);
+      }
+
+      .footer-bottom {
+        text-align: center;
+        padding-top: 40px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--netflix-gray);
+        font-size: 14px;
+      }
+
+      /* Animation helpers & responsive */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+      }
+
+      .loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      .interactive:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease;
+      }
+
+      .books-row,
+      .trending-grid {
+        will-change: transform;
+      }
+
+      .book-card,
+      .trending-card {
+        will-change: transform, box-shadow;
+      }
+
+      /* Cookie consent banner */
+      .cookie-consent {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--netflix-dark);
+        padding: 20px;
+        z-index: var(--z-index-modal);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+      }
+
+      .cookie-consent.show {
+        transform: translateY(0);
+      }
+
+      .cookie-text {
+        flex: 1;
+        margin-right: 20px;
+        font-size: 14px;
+      }
+
+      .cookie-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      /* Loading spinner */
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--accent-orange);
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Error boundary UI */
+      .error-boundary {
+        padding: 40px;
+        text-align: center;
+        background: var(--netflix-dark);
+        border-radius: var(--border-radius);
+        margin: 40px auto;
+        max-width: 600px;
+      }
+
+      .error-icon {
+        font-size: 48px;
+        color: var(--netflix-red);
+        margin-bottom: 20px;
+      }
+
+      /* Offline indicator */
+      .offline-indicator {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: var(--warning-orange);
+        color: white;
+        padding: 10px 20px;
+        border-radius: var(--border-radius);
+        z-index: var(--z-index-tooltip);
+        transition: transform 0.3s ease;
+      }
+
+      .offline-indicator.show {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Responsive design */
+      @media (max-width: 1200px) {
+        .hero-title {
+          font-size: clamp(3rem, 6vw, 6rem);
+        }
+
+        .featured-title {
+          font-size: 48px;
+        }
+
+        .hero-video {
+          width: 400px;
+          height: 225px;
+        }
+      }
+
+      @media (max-width: 992px) {
+        .hero-content {
+          flex-direction: column;
+          text-align: center;
+          padding-top: 100px;
+        }
+
+        .hero-left {
+          margin-bottom: 60px;
+        }
+
+        .hero-character {
+          width: 300px;
+          height: 300px;
+        }
+
+        .hero-video {
+          position: relative;
+          right: auto;
+          top: auto;
+          transform: none;
+          margin-top: 40px;
+        }
+        /* Hero Video Background Styles - Add these to your existing hero CSS */
+
+        .featured-container {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .featured-info {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .form-row {
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .carousel-btn {
+          display: none;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .nav-main {
+          display: none;
+        }
+
+        .search-input {
+          width: 180px;
+        }
+
+        .featured-title {
+          font-size: 36px;
+        }
+
+        .trending-section,
+        .content-section {
+          margin: 20px;
+          padding: 40px 20px;
+        }
+
+        .books-row,
+        .trending-grid {
+          gap: 12px;
+        }
+
+        .book-card {
+          min-width: 160px;
+          height: 240px;
+        }
+
+        .trending-card {
+          min-width: 240px;
+          height: 360px;
+        }
+
+        .filter-panel {
+          width: 300px;
+        }
+
+        .upload-form {
+          padding: 20px;
+        }
+
+        .hero-video {
+          width: 300px;
+          height: 169px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .header-actions {
+          gap: 12px;
+        }
+
+        .search-input {
+          width: 140px;
+        }
+
+        .featured-poster {
+          width: 220px;
+          height: 320px;
+        }
+
+        .hero-title {
+          font-size: 2.6rem;
+        }
+
+        .hero-subtitle {
+          font-size: 16px;
+        }
+
+        .auth-container {
+          padding: 20px;
+        }
+
+        .footer-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-video {
+          width: 280px;
+          height: 158px;
+        }
+
+        .featured-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .external-stores {
+          justify-content: center;
+        }
+      }
+
+      /* Print styles */
+      @media print {
+        .header,
+        .hero-cta,
+        .featured-actions,
+        .filter-panel,
+        .upload-section,
+        .footer,
+        .accessibility-tools,
+        .hero-video,
+        .video-controls {
+          display: none !important;
+        }
+
+        body {
+          background: white;
+          color: black;
+        }
+
+        .hero {
+          height: auto;
+          background: white;
+        }
+
+        .hero-title {
+          -webkit-text-fill-color: black;
+          background: none;
+        }
+
+        .hero-subtitle {
+          color: black;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
+
+    <!-- Progress Bar -->
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+    <!-- Offline indicator -->
+    <div class="offline-indicator" id="offlineIndicator">You are currently offline</div>
+
+    <!-- Cookie consent -->
+    <div class="cookie-consent" id="cookieConsent">
+      <div class="cookie-text">
+        We use cookies to enhance your experience. By continuing to visit this site you agree to our
+        use of cookies.
+      </div>
+      <div class="cookie-actions">
+        <button class="btn-cancel" id="cookieReject">Reject</button>
+        <button class="btn-submit" id="cookieAccept">Accept</button>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+      <div class="header-content">
+        <div style="display: flex; align-items: center; gap: 20px">
+          <a href="#" class="logo" aria-label="MANGU PUBLISHING Home">
+            <div class="logo-icon"></div>
+            MANGU PUBLISHING
+          </a>
+          <nav class="nav-main" aria-label="Main navigation">
+            <div class="nav-item">
+              <a href="#" id="libraryNav"
+                >Library <i class="fas fa-chevron-down" style="font-size: 10px"></i
+              ></a>
+              <div class="books-dropdown" id="libraryDropdown">
+                <a href="#">Books</a>
+                <a href="#">Comic Books</a>
+                <a href="#">Research Papers</a>
+                <a href="#">Tutorials</a>
+              </div>
+            </div>
+            <div class="nav-item">
+              <a href="#" id="mediaNav"
+                >Media <i class="fas fa-chevron-down" style="font-size: 10px"></i
+              ></a>
+              <div class="books-dropdown" id="mediaDropdown">
+                <a href="#">Audiobooks</a>
+                <a href="#">Films</a>
+                <a href="#">Animations</a>
+              </div>
+            </div>
+            <div class="nav-item">
+              <a href="#" id="newsroomNav"
+                >Newsroom <i class="fas fa-chevron-down" style="font-size: 10px"></i
+              ></a>
+              <div class="books-dropdown" id="newsroomDropdown">
+                <a href="#">News</a>
+                <a href="#">Events</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+        <div class="header-actions">
+          <div class="search-container">
+            <i class="fas fa-search search-icon" aria-hidden="true"></i>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search books, authors, videos…"
+              aria-label="Search"
+            />
+          </div>
+          <button
+            class="theme-toggle"
+            id="themeToggle"
+            title="Toggle light/dark"
+            aria-label="Toggle theme"
+          >
+            <i class="fas fa-moon"></i>
+          </button>
+          <div class="language-selector">
+            <button
+              class="language-btn"
+              id="languageBtn"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="fas fa-globe" aria-hidden="true"></i> EN
+            </button>
+            <div class="language-dropdown" id="languageDropdown" role="menu">
+              <div class="language-option" data-lang="en" role="menuitem">English</div>
+              <div class="language-option" data-lang="es" role="menuitem">Español</div>
+              <div class="language-option" data-lang="fr" role="menuitem">Français</div>
+              <div class="language-option" data-lang="de" role="menuitem">Deutsch</div>
+              <div class="language-option" data-lang="ja" role="menuitem">日本語</div>
+            </div>
+          </div>
+          <button
+            class="header-icon"
+            id="notifBell"
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <i class="fas fa-bell"></i><span class="notification-badge">3</span>
+          </button>
+          <button class="header-icon" title="Cart" aria-label="Shopping cart">
+            <i class="fas fa-shopping-cart"></i>
+          </button>
+          <div
+            class="profile-menu"
+            id="profileMenu"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <div class="profile-avatar">A</div>
+            <i class="fas fa-caret-down" style="font-size: 12px"></i>
+            <div class="profile-dropdown" id="profileDropdown">
+              <a href="#"><i class="fas fa-user"></i> My Profile</a>
+              <a href="#"><i class="fas fa-bookmark"></i> My Library</a>
+              <a href="#"><i class="fas fa-history"></i> Reading History</a>
+              <a href="#"><i class="fas fa-cog"></i> Settings</a>
+              <a href="#" id="adminAccess"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+              <a href="#"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero with Full Background Video -->
+    <section class="hero" id="main-content">
+      <!-- Video Background -->
+      <div class="hero-video-container">
+        <video
+          id="heroBackgroundVideo"
+          autoplay
+          muted
+          loop
+          playsinline
+          class="hero-background-video"
+        >
+          <source src="laps.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <div class="video-overlay"></div>
+        <button id="heroVideoPause" class="hero-video-pause">
+          <i class="fas fa-pause"></i>
+        </button>
+      </div>
+
+      <div class="hero-content">
+        <div class="hero-left">
+          <h1 class="hero-title">MANGU PUBLISHING</h1>
+          <p class="hero-subtitle">
+            Discover a universe of stories. Stream unlimited books, audiobooks, and exclusive videos
+            anywhere, anytime.
+          </p>
+          <a href="#featured" class="hero-cta"><i class="fas fa-play"></i> Start Reading Now</a>
+        </div>
+
+        <!-- Empty right side since we have full background video -->
+        <div class="hero-right"></div>
+      </div>
+    </section>
+
+    <!-- Featured -->
+    <section id="featured" class="featured-hero">
+      <div class="container">
+        <h1 class="header">Featured Book</h1>
+
+        <div class="feature-card">
+          <div class="book-cover"></div>
+
+          <div class="book-info">
+            <h2 class="book-title">The Midnight<br />Library</h2>
+            <p class="book-author">By Matt Haig</p>
+
+            <div class="book-meta">
+              <span class="rating-number">★ 4.7</span>
+              <span>2024 Edition</span>
+              <span>📄 304 pages</span>
+              <span>Fiction</span>
+            </div>
+
+            <p class="book-description">
+              Between life and death there is a library… Every book provides a chance to try another
+              life you could have lived.
+            </p>
+
+            <div class="star-rating">
+              <span class="stars">★★★★★</span>
+              <span class="rating-text">(0 ratings)</span>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn btn-read" id="readNow">📖 Read Now</button>
+              <button class="btn btn-watch" id="watchMovie">▶ Watch Movie</button>
+              <button class="btn btn-library">📚 Add to Library</button>
+            </div>
+
+            <div class="platform-links">
+              <button class="platform-btn apple">🍎 Apple Books</button>
+              <button class="platform-btn google">▶ Google Play</button>
+              <button class="platform-btn amazon">📦 Amazon</button>
+            </div>
+
+            <div class="info-icons">
+              <div class="info-icon">🔗</div>
+              <div class="info-icon">ℹ</div>
+            </div>
+          </div>
+
+          <div class="tv-section">
+            <div class="tv-frame">
+              <div class="tv-screen">
+                <div class="netflix-content">
+                  <div class="movie-scene"></div>
+                  <div class="characters-netflix">
+                    <div class="character-netflix character-main"></div>
+                    <div class="character-netflix character-side"></div>
+                  </div>
+                  <div class="netflix-ui">
+                    <div class="play-controls">
+                      <div class="play-btn"></div>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill"></div>
+                    </div>
+                    <div class="time-display">1:23:45</div>
+                  </div>
+                  <div class="screen-reflection"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trending -->
+    <section class="trending-section">
+      <div class="trending-header">
+        <h2 class="trending-title">Trending Now</h2>
+        <span class="see-all">See all</span>
+      </div>
+
+      <div class="carousel-container">
+        <button class="carousel-nav nav-prev" onclick="moveCarousel(-1)">‹</button>
+        <button class="carousel-nav nav-next" onclick="moveCarousel(1)">›</button>
+
+        <div class="carousel-track" id="carouselTrack">
+          <!-- Card 1 -->
+          <div class="book-card">
+            <div class="new-badge">NEW</div>
+            <img
+              src="https://images.unsplash.com/photo-1544716278-ca5e3f4ebf0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
+              alt="The Starlit Quest"
+              class="book-cover"
+            />
+            <div class="progress-bar"></div>
+            <div class="book-info">
+              <h3 class="book-title">The Starlit Quest</h3>
+              <div class="book-metadata">
+                <span class="match-rate">95% Match</span>
+                <span class="year">2025</span>
+                <span class="maturity-rating">16+</span>
+                <span class="length">400 pages</span>
+              </div>
+              <div class="book-genres">
+                <span class="genre">Sci-Fi</span>
+                <span class="genre">Fantasy</span>
+                <span class="genre">Adventure</span>
+              </div>
+              <div class="book-buttons">
+                <div class="icon-button"><i class="fas fa-play"></i></div>
+                <div class="icon-button"><i class="fas fa-book-open"></i></div>
+                <div class="icon-button"><i class="fas fa-plus"></i></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="book-card">
+            <img
+              src="https://images.unsplash.com/photo-1589998059171-988d887df646?w=500&h=750&fit=crop"
+              alt="Midnight Tales"
+              class="book-cover"
+            />
+            <div class="progress-bar"></div>
+            <div class="book-info">
+              <h3 class="book-title">Midnight Tales</h3>
+              <div class="book-metadata">
+                <span class="match-rate">89% Match</span>
+                <span class="year">2024</span>
+                <span class="maturity-rating">18+</span>
+                <span class="length">320 pages</span>
+              </div>
+              <div class="book-genres">
+                <span class="genre">Horror</span>
+                <span class="genre">Mystery</span>
+              </div>
+              <div class="book-buttons">
+                <div class="icon-button"><i class="fas fa-play"></i></div>
+                <div class="icon-button"><i class="fas fa-book-open"></i></div>
+                <div class="icon-button"><i class="fas fa-plus"></i></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="book-card">
+            <img
+              src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=500&h=750&fit=crop"
+              alt="The Lost City"
+              class="book-cover"
+            />
+            <div class="progress-bar"></div>
+            <div class="book-info">
+              <h3 class="book-title">The Lost City</h3>
+              <div class="book-metadata">
+                <span class="match-rate">92% Match</span>
+                <span class="year">2024</span>
+                <span class="maturity-rating">13+</span>
+                <span class="length">280 pages</span>
+              </div>
+              <div class="book-genres">
+                <span class="genre">Adventure</span>
+                <span class="genre">Action</span>
+              </div>
+              <div class="book-buttons">
+                <div class="icon-button"><i class="fas fa-play"></i></div>
+                <div class="icon-button"><i class="fas fa-book-open"></i></div>
+                <div class="icon-button"><i class="fas fa-plus"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Releases Row -->
+    <section class="content-section">
+      <div class="section-header">
+        <h2 class="section-title">New Releases</h2>
+        <a href="#" class="view-all">See all</a>
+      </div>
+      <div class="books-container">
+        <div class="books-row">
+          <div class="book-card">
+            <img
+              class="book-cover"
+              src="https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=400&h=600&fit=crop"
+              alt="Chasing the Stars book cover"
+            />
+            <div class="book-overlay">
+              <div class="book-actions">
+                <div class="book-action" aria-label="Play"><i class="fas fa-play"></i></div>
+                <div class="book-action" aria-label="Add to bookmarks">
+                  <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="book-action" aria-label="Add to cart">
+                  <i class="fas fa-shopping-cart"></i>
+                </div>
+              </div>
+              <div class="book-info">
+                <div class="book-title">Chasing the Stars</div>
+                <div class="book-author">Alex Chen</div>
+                <div class="book-rating">★ 4.8</div>
+              </div>
+            </div>
+          </div>
+          <div class="book-card">
+            <img
+              class="book-cover"
+              src="https://images.unsplash.com/photo-1517849845537-4d257902454a?w=400&h=600&fit=crop"
+              alt="Beneath Deep book cover"
+            />
+            <div class="book-overlay">
+              <div class="book-actions">
+                <div class="book-action" aria-label="Play"><i class="fas fa-play"></i></div>
+                <div class="book-action" aria-label="Add to bookmarks">
+                  <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="book-action" aria-label="Add to cart">
+                  <i class="fas fa-shopping-cart"></i>
+                </div>
+              </div>
+              <div class="book-info">
+                <div class="book-title">Beneath Deep</div>
+                <div class="book-author">Mira Sung</div>
+                <div class="book-rating">★ 4.6</div>
+              </div>
+            </div>
+          </div>
+          <div class="book-card">
+            <img
+              class="book-cover"
+              src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=600&fit=crop"
+              alt="The Lost City book cover"
+            />
+            <div class="book-overlay">
+              <div class="book-actions">
+                <div class="book-action" aria-label="Play"><i class="fas fa-play"></i></div>
+                <div class="book-action" aria-label="Add to bookmarks">
+                  <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="book-action" aria-label="Add to cart">
+                  <i class="fas fa-shopping-cart"></i>
+                </div>
+              </div>
+              <div class="book-info">
+                <div class="book-title">The Lost City</div>
+                <div class="book-author">R.K. Devon</div>
+                <div class="book-rating">★ 4.7</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Panel Toggle Button (floating) -->
+    <button
+      id="filterBtn"
+      class="header-icon"
+      title="Filters"
+      aria-label="Open filters"
+      style="position: fixed; top: 85px; right: 24px; z-index: 901"
+    >
+      <i class="fas fa-sliders-h"></i>
+    </button>
+
+    <!-- Advanced Filter Panel -->
+    <aside id="filterPanel" class="filter-panel" aria-label="Filters">
+      <div class="filter-header">
+        <h3>Filter & Sort</h3>
+        <button
+          id="closeFilterPanel"
+          class="btn-icon"
+          style="width: 36px; height: 36px"
+          aria-label="Close filters"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="filter-group">
+        <div class="filter-title">Genres</div>
+        <div class="filter-options">
+          <div class="filter-option" role="button" tabindex="0">Fiction</div>
+          <div class="filter-option" role="button" tabindex="0">Fantasy</div>
+          <div class="filter-option" role="button" tabindex="0">Romance</div>
+          <div class="filter-option" role="button" tabindex="0">Sci‑Fi</div>
+          <div class="filter-option" role="button" tabindex="0">Non‑fiction</div>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-title">Year</div>
+        <input
+          id="yearSlider"
+          class="range-slider"
+          type="range"
+          min="1990"
+          max="2025"
+          value="2024"
+          aria-label="Publication year"
+        />
+        <div class="range-values">
+          <span>1990</span><span id="yearValue">2024</span><span>2025</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-title">Rating</div>
+        <div class="filter-options">
+          <div class="filter-option" role="button" tabindex="0">4.5★+</div>
+          <div class="filter-option" role="button" tabindex="0">4.0★+</div>
+          <div class="filter-option" role="button" tabindex="0">3.5★+</div>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-cancel" id="resetFilters">Reset</button
+        ><button class="btn-submit" id="applyFilters">Apply</button>
+      </div>
+    </aside>
+
+    <!-- Upload Content -->
+    <section class="upload-section">
+      <div class="upload-header">
+        <h2 class="upload-title">Share Your Content</h2>
+        <p class="upload-subtitle">
+          Upload your books, videos, or audiobooks to share with our community of readers and
+          creators.
+        </p>
+      </div>
+      <form
+        class="upload-form"
+        onsubmit="
+          event.preventDefault();
+          showToast('Upload queued!');
+        "
+      >
+        <div
+          id="file-upload"
+          class="file-upload"
+          role="button"
+          tabindex="0"
+          aria-label="File upload area"
+        >
+          <i class="fas fa-cloud-upload-alt upload-icon" aria-hidden="true"></i>
+          <div class="upload-text">Click to upload or drag & drop</div>
+          <div class="upload-hint">PDF, EPUB, MP4 up to 500MB</div>
+          <input id="file-input" type="file" hidden />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="title">Title</label
+            ><input id="title" class="form-input" placeholder="Enter title" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="author">Author/Creator</label
+            ><input id="author" class="form-input" placeholder="Enter author or creator" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="category">Category</label
+            ><select id="category" class="form-select">
+              <option>Book</option>
+              <option>Video</option>
+              <option>Audiobook</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="genre">Genre</label
+            ><input id="genre" class="form-input" placeholder="e.g. Fantasy" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="description">Description</label
+          ><textarea
+            id="description"
+            class="form-textarea"
+            placeholder="Tell readers what your content is about…"
+            required
+          ></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" type="reset">Cancel</button
+          ><button class="btn-submit" type="submit">Submit</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Dashboard (hidden demo) -->
+    <section id="dashboard" class="dashboard-section">
+      <div class="dashboard-header">
+        <h2 class="dashboard-title">Your Dashboard</h2>
+        <div class="dashboard-subtitle">At‑a‑glance stats for your account</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">128</div>
+          <div class="stat-label">Books Finished</div>
+          <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 12% this month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">43</div>
+          <div class="stat-label">Hours Listened</div>
+          <div class="stat-trend trend-down">
+            <i class="fas fa-arrow-down"></i> 3% from last month
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">7</div>
+          <div class="stat-label">Achievements Unlocked</div>
+          <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 2 new this month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">15</div>
+          <div class="stat-label">Items in My List</div>
+          <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> +4 this week</div>
+        </div>
+      </div>
+
+      <div class="comments-section">
+        <form
+          class="comment-form"
+          onsubmit="
+            event.preventDefault();
+            addComment();
+          "
+        >
+          <input
+            id="commentInput"
+            class="comment-input"
+            placeholder="Write a comment…"
+            aria-label="Write a comment"
+          />
+          <button class="comment-submit" type="submit">Post</button>
+        </form>
+        <div id="commentList" class="comment-list"></div>
+      </div>
+    </section>
+
+    <!-- Viewer Modal -->
+    <div
+      id="viewerModal"
+      class="viewer-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="viewerTitle"
+    >
+      <div class="viewer-header">
+        <button id="closeViewer" class="btn-icon" title="Close" aria-label="Close viewer">
+          <i class="fas fa-times"></i>
+        </button>
+        <div style="display: flex; gap: 8px">
+          <div class="achievement-badge" title="Featured">⭐</div>
+        </div>
+      </div>
+      <div class="viewer-content">
+        <iframe
+          id="contentFrame"
+          class="viewer-iframe"
+          src="about:blank"
+          title="Content viewer"
+        ></iframe>
+      </div>
+      <div class="viewer-controls">
+        <div class="control-group">
+          <button id="playPauseBtn" class="control-btn" aria-label="Play/Pause">
+            <i class="fas fa-play"></i>
+          </button>
+          <button class="control-btn" aria-label="Rewind">
+            <i class="fas fa-rotate-left"></i>
+          </button>
+          <button class="control-btn" aria-label="Volume"><i class="fas fa-volume-up"></i></button>
+        </div>
+        <input
+          id="progressSlider"
+          class="progress-slider"
+          type="range"
+          min="0"
+          max="100"
+          value="0"
+          aria-label="Progress"
+        />
+        <div class="control-group">
+          <button class="control-btn" aria-label="Subtitles">
+            <i class="fas fa-closed-captioning"></i>
+          </button>
+          <button class="control-btn" aria-label="Fullscreen"><i class="fas fa-expand"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auth Modals -->
+    <div
+      id="loginModal"
+      class="auth-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="loginTitle"
+    >
+      <div class="auth-container">
+        <button id="closeLoginModal" class="close-modal" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="auth-header"><h3 class="auth-title">Welcome back</h3></div>
+        <div class="auth-tabs">
+          <div class="auth-tab active">Login</div>
+          <div class="auth-tab" id="switchToRegister">Register</div>
+        </div>
+        <form class="auth-form active">
+          <div class="form-group">
+            <label class="form-label">Email</label
+            ><input class="form-input" type="email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label
+            ><input class="form-input" type="password" placeholder="••••••••" required />
+          </div>
+          <button class="btn-submit" type="submit">Sign in</button>
+        </form>
+        <div class="divider"><span>or</span></div>
+        <div class="social-auth">
+          <button class="social-btn cognito-btn">
+            <i class="fab fa-aws"></i> Continue with AWS Cognito
+          </button>
+          <button class="social-btn google-btn">
+            <i class="fab fa-google"></i> Continue with Google
+          </button>
+          <button class="social-btn facebook-btn">
+            <i class="fab fa-facebook"></i> Continue with Facebook
+          </button>
+          <button class="social-btn apple-btn">
+            <i class="fab fa-apple"></i> Continue with Apple
+          </button>
+        </div>
+        <div class="form-footer">
+          New here? <a href="#" id="switchToRegisterLink">Create an account</a>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="registerModal"
+      class="auth-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="registerTitle"
+    >
+      <div class="auth-container">
+        <button id="closeRegisterModal" class="close-modal" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="auth-header"><h3 class="auth-title">Create your account</h3></div>
+        <div class="auth-tabs">
+          <div class="auth-tab" id="switchToLogin">Login</div>
+          <div class="auth-tab active">Register</div>
+        </div>
+        <form class="auth-form active">
+          <div class="form-group">
+            <label class="form-label">Full name</label
+            ><input class="form-input" placeholder="Ada Lovelace" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label
+            ><input class="form-input" type="email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label
+            ><input class="form-input" type="password" placeholder="Create a password" required />
+          </div>
+          <button class="btn-submit" type="submit">Sign up</button>
+        </form>
+        <div class="form-footer">
+          Already have an account? <a href="#" id="switchToLoginLink">Sign in</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel (Hidden) -->
+    <section id="adminPanel" class="admin-panel">
+      <div class="admin-header">
+        <h2 class="admin-title">Admin Dashboard</h2>
+        <button id="closeAdminPanel" class="btn-icon" aria-label="Close admin panel">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="admin-sections">
+        <div class="admin-section">
+          <h3>Content Management</h3>
+          <p>Upload and manage books, videos, and audiobooks</p>
+          <div style="margin-top: 20px">
+            <button class="btn-submit" style="margin-right: 10px">Upload Book</button>
+            <button class="btn-submit" style="margin-right: 10px">Upload Video</button>
+            <button class="btn-submit">Manage Library</button>
+          </div>
+        </div>
+        <div class="admin-section">
+          <h3>User Management</h3>
+          <p>Monitor user activity and manage accounts</p>
+          <div style="margin-top: 20px">
+            <button class="btn-submit" style="margin-right: 10px">View Users</button>
+            <button class="btn-submit">User Analytics</button>
+          </div>
+        </div>
+        <div class="admin-section">
+          <h3>Analytics</h3>
+          <p>View platform statistics and performance metrics</p>
+          <div style="margin-top: 20px">
+            <button class="btn-submit" style="margin-right: 10px">View Reports</button>
+            <button class="btn-submit">Download Data</button>
+          </div>
+        </div>
+        <div class="admin-section">
+          <h3>Settings</h3>
+          <p>Configure platform settings and preferences</p>
+          <div style="margin-top: 20px">
+            <button class="btn-submit" style="margin-right: 10px">System Settings</button>
+            <button class="btn-submit">Security</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notifications container -->
+    <div id="notificationCenter" class="notification-center"></div>
+    <!-- Achievement popup -->
+    <div id="achievementPopup" class="achievement-popup">
+      <div class="achievement-badge">🏆</div>
+      <div class="achievement-info">
+        <h4>New Achievement!</h4>
+        <p>You finished your first book this week.</p>
+      </div>
+    </div>
+
+    <!-- Accessibility tools -->
+    <div class="accessibility-tools">
+      <button
+        id="accessibilityBtn"
+        class="accessibility-btn"
+        title="Accessibility options"
+        aria-label="Accessibility options"
+      >
+        <i class="fas fa-universal-access"></i>
+      </button>
+      <div id="accessibilityPanel" class="accessibility-panel">
+        <div class="accessibility-option">
+          <div class="accessibility-label">Text size</div>
+          <div class="text-size-buttons">
+            <button class="text-size-btn" data-scale="0.95" aria-label="Decrease text size">
+              A-</button
+            ><button class="text-size-btn active" data-scale="1" aria-label="Normal text size">
+              A</button
+            ><button class="text-size-btn" data-scale="1.1" aria-label="Increase text size">
+              A+
+            </button>
+          </div>
+        </div>
+        <div class="accessibility-option">
+          <div class="accessibility-label">High contrast</div>
+          <button id="contrastToggle" class="text-size-btn" aria-pressed="false">HC</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-grid">
+          <div class="footer-column">
+            <h4>Browse</h4>
+            <a href="#">Home</a><a href="#">Library</a><a href="#">Genres</a
+            ><a href="#">New & Popular</a>
+          </div>
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About</a><a href="#">Careers</a><a href="#">Press</a><a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Help</h4>
+            <a href="#">Support</a><a href="#">FAQ</a><a href="#">Community</a
+            ><a href="#">Accessibility</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Use</a><a href="#">Privacy Policy</a
+            ><a href="#">Cookie Preferences</a><a href="#">Content Guidelines</a
+            ><a href="#">Copyright Notice</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          &copy; 2025 MANGU PUBLISHING. All rights reserved. | The ultimate destination for book
+          lovers worldwide.
+        </div>
+      </div>
+    </footer>
+
+    <!-- Error boundary fallback (hidden by default) -->
+    <div class="error-boundary" id="errorBoundary" style="display: none">
+      <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <h2>Something went wrong</h2>
+      <p>We're sorry, but something went wrong. Please try refreshing the page.</p>
+      <button class="btn-submit" onclick="window.location.reload()">Refresh Page</button>
+    </div>
+
+    <script src="enhancements.js"></script>
+    <script>
+          // Main App Object to organize functionality
+          const ManguApp = {
+            // Initialize the application
+            init: function() {
+              this.setupEventListeners();
+              this.loadUserPreferences();
+              this.setupIntersectionObserver();
+              this.setupTrendingHovers();
+              console.log('MANGU PUBLISHING initialized successfully');
+            },
+
+            // Setup all event listeners
+            setupEventListeners: function() {
+              // Error handling
+              window.addEventListener('error', (e) => {
+                console.error('Global error:', e.error);
+                document.getElementById('errorBoundary').style.display = 'block';
+              });
+              // Hero video pause button
+              const heroVideo = document.getElementById('heroBackgroundVideo');
+              const heroPauseBtn = document.getElementById('heroVideoPause');
+              let heroVideoPlaying = true;
+
+              heroPauseBtn.addEventListener('click', () => {
+                if (heroVideoPlaying) {
+                  heroVideo.pause();
+                  heroPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                  heroVideoPlaying = false;
+                } else {
+                  heroVideo.play();
+                  heroPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                  heroVideoPlaying = true;
+        }
+      });
+              // Online/offline detection
+              window.addEventListener('online', () => {
+                document.getElementById('offlineIndicator').classList.remove('show');
+                this.showToast('Connection restored');
+              });
+
+              window.addEventListener('offline', () => {
+                document.getElementById('offlineIndicator').classList.add('show');
+              });
+
+              // Cookie consent
+              if (!localStorage.getItem('cookiesAccepted')) {
+                setTimeout(() => {
+                  document.getElementById('cookieConsent').classList.add('show');
+                }, 2000);
+              }
+
+              document.getElementById('cookieAccept').addEventListener('click', () => {
+                localStorage.setItem('cookiesAccepted', 'true');
+                document.getElementById('cookieConsent').classList.remove('show');
+              });
+
+              document.getElementById('cookieReject').addEventListener('click', () => {
+                localStorage.setItem('cookiesRejected', 'true');
+                document.getElementById('cookieConsent').classList.remove('show');
+              });
+
+              // Header scroll effect + progress bar
+              window.addEventListener('scroll', () => {
+                const header = document.getElementById('header');
+                if (window.scrollY > 60) header.classList.add('scrolled'); else header.classList.remove('scrolled');
+                const progress = document.getElementById('progressBar');
+                const scrollTop = window.scrollY;
+                const docHeight = document.body.scrollHeight - window.innerHeight;
+                const scrolled = (scrollTop / docHeight) * 100;
+                progress.style.width = scrolled + '%';
+              });
+
+              // Theme toggle
+              const themeToggle = document.getElementById('themeToggle');
+              themeToggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                themeToggle.innerHTML = next === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+                localStorage.setItem('theme', next);
+              });
+
+              // Library dropdown
+              const libraryNav = document.getElementById('libraryNav');
+              const libraryDropdown = document.getElementById('libraryDropdown');
+              libraryNav.addEventListener('click', (e) => {
+                e.preventDefault();
+                libraryDropdown.classList.toggle('active');
+              });
+              document.addEventListener('click', (e) => {
+                if (!libraryNav.contains(e.target) && !libraryDropdown.contains(e.target)) {
+                  libraryDropdown.classList.remove('active');
+                }
+              });
+
+              // Media dropdown
+              const mediaNav = document.getElementById('mediaNav');
+              const mediaDropdown = document.getElementById('mediaDropdown');
+              mediaNav.addEventListener('click', (e) => {
+                e.preventDefault();
+                mediaDropdown.classList.toggle('active');
+              });
+              document.addEventListener('click', (e) => {
+                if (!mediaNav.contains(e.target) && !mediaDropdown.contains(e.target)) {
+                  mediaDropdown.classList.remove('active');
+                }
+              });
+
+              // Newsroom dropdown
+              const newsroomNav = document.getElementById('newsroomNav');
+              const newsroomDropdown = document.getElementById('newsroomDropdown');
+              newsroomNav.addEventListener('click', (e) => {
+                e.preventDefault();
+                newsroomDropdown.classList.toggle('active');
+              });
+              document.addEventListener('click', (e) => {
+                if (!newsroomNav.contains(e.target) && !newsroomDropdown.contains(e.target)) {
+                  newsroomDropdown.classList.remove('active');
+                }
+              });
+
+              // Profile dropdown with admin access
+              const profileMenu = document.getElementById('profileMenu');
+              const profileDropdown = document.getElementById('profileDropdown');
+              profileMenu.addEventListener('click', () => {
+                const expanded = profileMenu.getAttribute('aria-expanded') === 'true';
+                profileMenu.setAttribute('aria-expanded', !expanded);
+                profileDropdown.classList.toggle('active');
+              });
+              document.addEventListener('click', (e) => {
+                if (!profileMenu.contains(e.target)) {
+                  profileMenu.setAttribute('aria-expanded', 'false');
+                  profileDropdown.classList.remove('active');
+                }
+              });
+
+              // Admin panel access
+              document.getElementById('adminAccess').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('adminPanel').classList.add('active');
+                profileDropdown.classList.remove('active');
+              });
+
+              document.getElementById('closeAdminPanel').addEventListener('click', () => {
+                document.getElementById('adminPanel').classList.remove('active');
+              });
+
+              // Language dropdown
+              const languageBtn = document.getElementById('languageBtn');
+              const languageDropdown = document.getElementById('languageDropdown');
+              languageBtn.addEventListener('click', () => {
+                const expanded = languageBtn.getAttribute('aria-expanded') === 'true';
+                languageBtn.setAttribute('aria-expanded', !expanded);
+                languageDropdown.classList.toggle('active');
+              });
+              document.addEventListener('click', (e) => {
+                if (!languageBtn.contains(e.target) && !languageDropdown.contains(e.target)) {
+                  languageBtn.setAttribute('aria-expanded', 'false');
+                  languageDropdown.classList.remove('active');
+                }
+              });
+
+              // Accessibility panel
+              const accessibilityBtn = document.getElementById('accessibilityBtn');
+              const accessibilityPanel = document.getElementById('accessibilityPanel');
+              accessibilityBtn.addEventListener('click', () => {
+                const expanded = accessibilityBtn.getAttribute('aria-expanded') === 'true';
+                accessibilityBtn.setAttribute('aria-expanded', !expanded);
+                accessibilityPanel.classList.toggle('active');
+              });
+              document.querySelectorAll('.text-size-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                  document.querySelectorAll('.text-size-btn').forEach(b => b.classList.remove('active'));
+                  btn.classList.add('active');
+                  document.documentElement.style.fontSize = (btn.dataset.scale || 1) + 'em';
+                  localStorage.setItem('textScale', btn.dataset.scale);
+                });
+              });
+              document.getElementById('contrastToggle').addEventListener('click', () => {
+                const pressed = document.getElementById('contrastToggle').getAttribute('aria-pressed') === 'true';
+                document.getElementById('contrastToggle').setAttribute('aria-pressed', !pressed);
+                document.body.classList.toggle('high-contrast');
+                localStorage.setItem('highContrast', !pressed);
+              });
+
+              // Filter panel
+              const filterBtn = document.getElementById('filterBtn');
+              const filterPanel = document.getElementById('filterPanel');
+              const closeFilterPanel = document.getElementById('closeFilterPanel');
+              const yearSlider = document.getElementById('yearSlider');
+              const yearValue = document.getElementById('yearValue');
+              filterBtn.addEventListener('click', () => filterPanel.classList.add('active'));
+              closeFilterPanel.addEventListener('click', () => filterPanel.classList.remove('active'));
+              yearSlider.addEventListener('input', () => { yearValue.textContent = yearSlider.value; });
+              document.getElementById('resetFilters').addEventListener('click', () => { yearSlider.value = 2024; yearValue.textContent = '2024'; document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active')); });
+              document.querySelectorAll('.filter-option').forEach(o => o.addEventListener('click', () => o.classList.toggle('active')));
+
+              // Viewer
+              const viewerModal = document.getElementById('viewerModal');
+              const closeViewer = document.getElementById('closeViewer');
+              const playPauseBtn = document.getElementById('playPauseBtn');
+              const progressSlider = document.getElementById('progressSlider');
+              let isPlaying = false;
+              window.openViewer = this.openViewer;
+              closeViewer.addEventListener('click', () => { viewerModal.classList.remove('active'); document.getElementById('contentFrame').src='about:blank'; });
+              playPauseBtn.addEventListener('click', () => { isPlaying = !isPlaying; playPauseBtn.innerHTML = isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>'; });
+              progressSlider.addEventListener('input', () => {/* hook content progress here */});
+
+              // Auth modals
+              const loginModal = document.getElementById('loginModal');
+              const registerModal = document.getElementById('registerModal');
+              const closeLoginModal = document.getElementById('closeLoginModal');
+              const closeRegisterModal = document.getElementById('closeRegisterModal');
+              const switchToRegister = document.getElementById('switchToRegister');
+              const switchToLogin = document.getElementById('switchToLogin');
+              const switchToRegisterLink = document.getElementById('switchToRegisterLink');
+              const switchToLoginLink = document.getElementById('switchToLoginLink');
+
+              closeLoginModal.addEventListener('click', () => {
+                loginModal.classList.remove('active');
+                loginModal.setAttribute('aria-hidden', 'true');
+              });
+              closeRegisterModal.addEventListener('click', () => {
+                registerModal.classList.remove('active');
+                registerModal.setAttribute('aria-hidden', 'true');
+              });
+              const goToRegister = () => { loginModal.classList.remove('active'); registerModal.classList.add('active'); loginModal.setAttribute('aria-hidden', 'true'); registerModal.setAttribute('aria-hidden', 'false'); }
+              const goToLogin = () => { registerModal.classList.remove('active'); loginModal.classList.add('active'); registerModal.setAttribute('aria-hidden', 'true'); loginModal.setAttribute('aria-hidden', 'false'); }
+              if (switchToRegister) switchToRegister.addEventListener('click', goToRegister);
+              if (switchToLogin) switchToLogin.addEventListener('click', goToLogin);
+              if (switchToRegisterLink) switchToRegisterLink.addEventListener('click', (e)=>{ e.preventDefault(); goToRegister(); });
+              if (switchToLoginLink) switchToLoginLink.addEventListener('click', (e)=>{ e.preventDefault(); goToLogin(); });
+
+              // Drag-scroll books row & interactions
+              document.querySelectorAll('.books-row, .carousel-track').forEach(row => {
+                let isDown = false, startX = 0, scrollLeft = 0;
+                row.addEventListener('mousedown', e => { isDown = true; startX = e.pageX - row.offsetLeft; scrollLeft = row.scrollLeft; });
+                row.addEventListener('mouseleave', () => { isDown = false; });
+                row.addEventListener('mouseup', () => { isDown = false; });
+                row.addEventListener('mousemove', e => { if (!isDown) return; e.preventDefault(); const x = e.pageX - row.offsetLeft; const walk = (x - startX) * 2; row.scrollLeft = scrollLeft - walk; });
+              });
+              document.querySelectorAll('.book-action, .icon-button').forEach(btn => {
+                btn.addEventListener('click', function(e){ e.stopPropagation(); this.style.transform='scale(0.9)'; setTimeout(()=>{ this.style.transform='scale(1.1)'; setTimeout(()=>{ this.style.transform=''; },150); },100); const sparkle=document.createElement('div'); sparkle.innerHTML='✨'; sparkle.style.position='absolute'; sparkle.style.pointerEvents='none'; sparkle.style.fontSize='20px'; sparkle.style.animation='fadeInUp .6s ease-out forwards'; this.appendChild(sparkle); setTimeout(()=>sparkle.remove(),600); this.showToast('Added!'); });
+              });
+
+              // Search micro-interaction
+              const searchInput = document.querySelector('.search-input');
+              searchInput.addEventListener('focus', function(){ this.parentElement.style.transform='scale(1.02)'; });
+              searchInput.addEventListener('blur', function(){ this.parentElement.style.transform='scale(1)'; });
+
+              // Upload area interactions
+              const fileUpload = document.getElementById('file-upload');
+              const fileInput = document.getElementById('file-input');
+              fileUpload.addEventListener('click', ()=> fileInput.click());
+              fileUpload.addEventListener('dragover', function(e){ e.preventDefault(); this.style.borderColor='#ff7700'; this.style.background='rgba(255,119,0,.1)'; });
+              fileUpload.addEventListener('dragleave', function(){ this.style.borderColor='rgba(255,255,255,.3)'; this.style.background='transparent'; });
+              fileUpload.addEventListener('drop', function(e){ e.preventDefault(); this.showToast(`${e.dataTransfer.files.length} file(s) ready to upload`); this.style.borderColor='rgba(255,255,255,.3)'; this.style.background='transparent'; });
+
+              // Rating widget
+              const starRating = document.getElementById('starRating');
+              const ratingCount = document.getElementById('ratingCount');
+              let ratingTotal = 0, ratingVotes = 0;
+              starRating.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('click', ()=>{
+                  const val = Number(star.dataset.value); ratingTotal += val; ratingVotes += 1; const avg = (ratingTotal / ratingVotes).toFixed(1);
+                  ratingCount.textContent = `${avg} average • ${ratingVotes} rating${ratingVotes>1?'s':''}`;
+                  starRating.querySelectorAll('.star').forEach(s => s.classList.toggle('active', Number(s.dataset.value) <= val));
+                });
+              });
+
+              // Demo: clicking Read Now opens dashboard
+              document.getElementById('readNow').addEventListener('click', ()=> { document.getElementById('dashboard').classList.add('active'); window.scrollTo({ top: document.getElementById('dashboard').offsetTop - 60, behavior: 'smooth' }); });
+
+              // Demo: clicking Watch Movie opens viewer with sample content
+              document.getElementById('watchMovie').addEventListener('click', ()=> {
+                this.openViewer('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+                this.showToast('Opening movie viewer...');
+              });
+
+              // AWS Cognito integration placeholder
+              document.querySelector('.cognito-btn').addEventListener('click', () => {
+                this.showToast('AWS Cognito authentication would be integrated here');
+                // In a real implementation, this would trigger AWS Cognito authentication
+              });
+
+              // External store links
+              document.querySelectorAll('.store-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  const store = btn.classList.contains('apple') ? 'Apple Books' :
+                               btn.classList.contains('google') ? 'Google Play Books' :
+                               btn.classList.contains('amazon') ? 'Amazon' : 'Kindle';
+                  this.showToast(`Opening ${store}...`);
+                });
+              });
+
+              // Enhanced interactions for colorful buttons
+              document.querySelectorAll('.btn-play, .btn-watch, .btn-secondary').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                  this.style.transform = 'translateY(-2px) scale(1.02)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                  this.style.transform = 'translateY(0) scale(1)';
+                });
+              });
+            },
+
+            // Load user preferences from localStorage
+            loadUserPreferences: function() {
+              // Load saved theme
+              const savedTheme = localStorage.getItem('theme') || 'dark';
+              document.documentElement.setAttribute('data-theme', savedTheme);
+              const themeToggle = document.getElementById('themeToggle');
+              themeToggle.innerHTML = savedTheme === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+
+              // Load accessibility settings
+              const textScale = localStorage.getItem('textScale') || '1';
+              document.documentElement.style.fontSize = textScale + 'em';
+              document.querySelector(`.text-size-btn[data-scale="${textScale}"]`)?.classList.add('active');
+
+              const highContrast = localStorage.getItem('highContrast') === 'true';
+              if (highContrast) {
+                document.body.classList.add('high-contrast');
+                document.getElementById('contrastToggle').setAttribute('aria-pressed', 'true');
+              }
+            },
+
+            // Setup intersection observer for animations
+            setupIntersectionObserver: function() {
+              const observer = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                  if (e.isIntersecting) {
+                    e.target.classList.add('fade-in-up');
+                  }
+                });
+              }, { threshold: .1, rootMargin: '0px 0px -50px 0px' });
+
+            document.querySelectorAll('.book-card, .upload-section').forEach(function(el) {
+        observer.observe(el);
+      });
+
+          // Setup hover effects for trending cards
+      setupTrendingHovers: function() {
+        document.querySelectorAll('.book-card .icon-button').forEach(button => {
+          const playButton = button.querySelector('.fa-play');
+          const readButton = button.querySelector('.fa-book-open');
+          const plusButton = button.querySelector('.fa-plus');
+
+          if (playButton) {
+            button.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const bookTitle = button.closest('.book-card').querySelector('.book-title').textContent;
+              this.showToast(`Playing ${bookTitle}`);
+            });
+          }
+
+          if (readButton) {
+            button.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const bookTitle = button.closest('.book-card').querySelector('.book-title').textContent;
+              this.showToast(`Reading ${bookTitle}`);
+            });
+          }
+
+          if (plusButton) {
+            button.addEventListener('click', (e) => {
+              e.stopPropagation();
+              button.innerHTML = '<i class="fas fa-check"></i>';
+              button.style.backgroundColor = '#E50914';
+              button.style.borderColor = '#E50914';
+              setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-plus"></i>';
+                button.style.backgroundColor = 'rgba(42, 42, 42, 0.6)';
+                button.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+              }, 2000);
+            });
+          }
+        });
+      },
+
+            // Open viewer with content
+            openViewer: function(contentUrl) {
+              document.getElementById('contentFrame').src = contentUrl;
+              document.getElementById('viewerModal').classList.add('active');
+            },
+
+            // Add comment to the comment section
+            addComment: function() {
+              const input = document.getElementById('commentInput');
+              if (!input.value.trim()) return;
+              const list = document.getElementById('commentList');
+              const item = document.createElement('div');
+              item.className = 'comment-item';
+              item.innerHTML = `<div class="comment-avatar">U</div><div class="comment-content"><div class="comment-author">You</div><div class="comment-text">${input.value}</div><div class="comment-meta"><span>Just now</span><span class="comment-action">Like</span></div></div>`;
+              list.prepend(item);
+              input.value = '';
+            },
+
+            // Show toast notification
+            showToast: function(message) {
+              const center = document.getElementById('notificationCenter');
+              const note = document.createElement('div');
+              note.className = 'notification';
+              note.innerHTML = `<div class="notification-icon"><i class="fas fa-bell"></i></div><div class="notification-content"><div class="notification-title">Notice</div><div class="notification-message">${message}</div></div><button class="notification-close" aria-label="Close notification"><i class="fas fa-times"></i></button>`;
+              center.appendChild(note);
+              setTimeout(() => note.classList.add('show'), 50);
+              note.querySelector('.notification-close').addEventListener('click', () => note.remove());
+              setTimeout(() => note.remove(), 3500);
+            }
+          };
+
+          // Initialize the app when DOM is loaded
+          document.addEventListener('DOMContentLoaded', function() {
+            ManguApp.init();
+
+            // Demo: pop achievement after a moment
+            setTimeout(() => document.getElementById('achievementPopup').classList.add('show'), 1200);
+            setTimeout(() => document.getElementById('achievementPopup').classList.remove('show'), 5000);
+          });
+
+          // Make functions available globally for onclick attributes
+          window.addComment = ManguApp.addComment;
+          window.showToast = ManguApp.showToast;
+          window.openViewer = ManguApp.openViewer;
+
+          // Trending carousel functionality
+          let currentIndex = 0;
+          const totalCards = 5
+          const cardWidth = 225; // 200px card + 25px gap
+
+          function moveCarousel(direction) {
+            const track = document.getElementById('carouselTrack');
+            track.classList.remove('auto-scroll');
+
+            currentIndex += direction;
+
+            if (currentIndex < 0) currentIndex = totalCards - 1;
+            if (currentIndex >= totalCards) currentIndex = 0;
+
+            const translateX = -currentIndex * cardWidth;
+            track.style.transform = `translateX(${translateX}px)`;
+
+            setTimeout(() => {
+              track.classList.add('auto-scroll');
+            }, 5000);
+          }
+
+          // Add hover effects to pause auto-scroll
+          document.querySelectorAll('.book-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+              document.getElementById('carouselTrack').style.animationPlayState = 'paused';
+            });
+
+            card.addEventListener('mouseleave', () => {
+              document.getElementById('carouselTrack').style.animationPlayState = 'running';
+            });
+          });
+
+          // Make moveCarousel global
+          window.moveCarousel = moveCarousel;
+    </script>
+  </body>
+</html>

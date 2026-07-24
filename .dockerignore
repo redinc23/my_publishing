@@ -1,0 +1,32 @@
+.git
+.github
+.next
+coverage
+node_modules
+npm-debug.log*
+.env
+.env.*
+.cursor
+.bolt
+.husky
+.vscode
+.idea
+
+# Tests and QA artifacts — not needed for production builds
+tests
+playwright-report
+test-results
+playwright.config.ts
+jest.config.js
+jest.setup.js
+
+# Docs, reports, and one-off audit artifacts — not needed for production builds
+docs
+scripts
+blockers
+finding-1
+finding-1-deploy
+amplify.yml
+*.md
+*.txt
+*.log

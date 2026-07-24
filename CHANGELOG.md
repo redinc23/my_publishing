@@ -1,0 +1,148 @@
+# Changelog
+
+## [1.2.0](https://github.com/redinc23/my_publishing/compare/v1.1.1...v1.2.0) (2026-07-20)
+
+
+### Features
+
+* **phoenix-ws1:** Better Auth dual-run + owner reactivation (1.1–1.7) ([#304](https://github.com/redinc23/my_publishing/issues/304)) ([9a8a940](https://github.com/redinc23/my_publishing/commit/9a8a940cf1af7235df42641846ba6b5f118eb6a1))
+* **phoenix-ws2a:** Mongo types, query library, and index contract (2a.1–2a.3) ([#307](https://github.com/redinc23/my_publishing/issues/307)) ([625f46d](https://github.com/redinc23/my_publishing/commit/625f46d886503452be981d9a59e900e1b78b4d4d))
+
+
+### Bug Fixes
+
+* **ci:** repair bug-to-issue workflow trigger ([#294](https://github.com/redinc23/my_publishing/issues/294)) ([14d82ed](https://github.com/redinc23/my_publishing/commit/14d82ede7bbf0ced4b60d0d149eeefa6481ce403))
+* **forms:** honest contact + newsletter states (P0-012, P0-013) ([#303](https://github.com/redinc23/my_publishing/issues/303)) ([9d625d9](https://github.com/redinc23/my_publishing/commit/9d625d9caadbe3af3cea6ac1a5d8807d524f5397))
+* **rate-limit:** fail closed on Redis outage in newsletter + email-preferences routes (P0-011, refs [#195](https://github.com/redinc23/my_publishing/issues/195)) ([#295](https://github.com/redinc23/my_publishing/issues/295)) ([2adbc9e](https://github.com/redinc23/my_publishing/commit/2adbc9e6cc015ab9af963227ac51c50ebadc1491))
+
+## [1.1.1](https://github.com/redinc23/my_publishing/compare/v1.1.0...v1.1.1) (2026-07-19)
+
+
+### Bug Fixes
+
+* **ci:** clear PR backlog — unblock main CI, land GHA majors + cowork guard ([#291](https://github.com/redinc23/my_publishing/issues/291)) ([efd06fc](https://github.com/redinc23/my_publishing/commit/efd06fc198a0f51f22879119c07b2d2d4a0f8423))
+
+## [1.1.0](https://github.com/redinc23/my_publishing/compare/v1.0.1...v1.1.0) (2026-07-19)
+
+
+### Features
+
+* **launch:** audio player UI, reviews API, highlights & wishlist components — batch 4/7 ([8425afd](https://github.com/redinc23/my_publishing/commit/8425afde619add6dfbfe938fd8f2d5f46c41f1ba))
+* **launch:** book page reviews wiring, notes panel, review migration & engagement APIs — batch 5/7 ([b13332d](https://github.com/redinc23/my_publishing/commit/b13332d575a0b87415aecf02f898bde1583d7fa3))
+* **launch:** mini-player, resonance tracking, audio catalog & home exports — batch 7/12 ([8117c60](https://github.com/redinc23/my_publishing/commit/8117c6046d6a555f290488b54b43e42dc164928e))
+* **launch:** Phase 2 delta — webhook receipts, double opt-in newsletter, email prefs, embed route, tests ([#285](https://github.com/redinc23/my_publishing/issues/285)) ([ff0dd6f](https://github.com/redinc23/my_publishing/commit/ff0dd6f0a9d7d8ef4bd9ec1c5ec040d6284b7058))
+* **launch:** readers hub tabs, recommend API & review card — batch 6/8 ([944ca6a](https://github.com/redinc23/my_publishing/commit/944ca6a6da2f9c2ff0f695ecd211d163185a6e6d))
+* **launch:** sample play button, email layout, receipt template & audio types — batch 8/12 ([130b25e](https://github.com/redinc23/my_publishing/commit/130b25e396a889a654125dbe0529aa3373728636))
+* **platform:** production verify/IAM scripts + redacted secret inventory (P0-020, P0-016) ([#298](https://github.com/redinc23/my_publishing/issues/298)) ([266691b](https://github.com/redinc23/my_publishing/commit/266691b057803fd1cae72755c047721bc1dc70e9))
+
+
+### Bug Fixes
+
+* **ci:** align react-dom with react 18 to resolve npm ci peer conflict ([#245](https://github.com/redinc23/my_publishing/issues/245)) ([8d556a1](https://github.com/redinc23/my_publishing/commit/8d556a1af5b2a674d8a3cd11db54ead340f255e9))
+* **ci:** allow Cloud Build CI validation without production anon key ([#280](https://github.com/redinc23/my_publishing/issues/280)) ([a05af05](https://github.com/redinc23/my_publishing/commit/a05af05b984a0be9e3698aa8515a57b2f3c43dbe))
+* **ci:** format CHANGELOG.md for Prettier check ([#243](https://github.com/redinc23/my_publishing/issues/243)) ([900830f](https://github.com/redinc23/my_publishing/commit/900830fe8311b6bd3018962ec75bdc446a2ff7bb))
+* complete launch recovery and harden repository ([4eb5f75](https://github.com/redinc23/my_publishing/commit/4eb5f7594ce937b18def71cdcbf90b11ee94651f))
+* **home:** replace fabricated genre counts with real published+public counts (Phase 10) ([#263](https://github.com/redinc23/my_publishing/issues/263)) ([56ba08d](https://github.com/redinc23/my_publishing/commit/56ba08d981c86b4114c0765a388114e887999e7f))
+* **security:** fail-closed MCP transport gate (P0-017) ([#297](https://github.com/redinc23/my_publishing/issues/297)) ([ae7b926](https://github.com/redinc23/my_publishing/commit/ae7b92628d2079fe83632a5abc5b7383d7df11c1))
+* **stats,health:** cache platform stats, no-store health, config-only Stripe readiness ([#260](https://github.com/redinc23/my_publishing/issues/260)) ([6fdb9d2](https://github.com/redinc23/my_publishing/commit/6fdb9d29dd1896e5733ffad4e5843b4410ec6254))
+
+## [1.0.1](https://github.com/redinc23/my_publishing/compare/v1.0.0...v1.0.1) (2026-07-18)
+
+### Bug Fixes
+
+- apply Prettier formatting to docs/PROJECT_PHOENIX.md ([0ecdfb0](https://github.com/redinc23/my_publishing/commit/0ecdfb0cb47f9c3d486e00baa2000e81ba4d0cc0))
+- **ci:** resolve format check and bug-to-issue rebase race ([d1a0c78](https://github.com/redinc23/my_publishing/commit/d1a0c789e1ed21f3daed1d453107155f1d4c95d0))
+- **ci:** stop Trivy CRITICAL secret false positives in vuln-scan ([33e909f](https://github.com/redinc23/my_publishing/commit/33e909f06d1a8d6a09a33144dc458bf1952565db))
+- **ci:** stop Trivy CRITICAL secret false positives in vuln-scan ([3c82b12](https://github.com/redinc23/my_publishing/commit/3c82b12b2bde067d099c460e8bf27b808cd003a0))
+- **ci:** stop Trivy CRITICAL secret false positives in vuln-scan ([9d692fd](https://github.com/redinc23/my_publishing/commit/9d692fd5f6363905a7ec42959555131e29a525de))
+
+## 1.0.0 (2026-07-18)
+
+### Features
+
+- add /comics and /papers routes with content_type filtering ([#93](https://github.com/redinc23/my_publishing/issues/93)) ([76bff67](https://github.com/redinc23/my_publishing/commit/76bff678741b68d20029cf96b4d0673b9575c39d))
+- Add AWS Amplify configuration and update Next.js for security ([bbbe5be](https://github.com/redinc23/my_publishing/commit/bbbe5be98fe9980f2bd29615844d30a4addfe81b))
+- add cinematic depth layer to homepage hero ([#95](https://github.com/redinc23/my_publishing/issues/95)) ([bb36d08](https://github.com/redinc23/my_publishing/commit/bb36d08be646ee0ee766f92f9166ac1cea60b1cc))
+- add content_type to TypeScript types and filter book queries ([#91](https://github.com/redinc23/my_publishing/issues/91)) ([36839b0](https://github.com/redinc23/my_publishing/commit/36839b01b74c6f21cc75d2f515e591b913060223))
+- add copilot deep dive utility script ([50d6214](https://github.com/redinc23/my_publishing/commit/50d62143b545a6d7a44a482a19105c160c1ae044))
+- add external retailer URL fields to books ([#94](https://github.com/redinc23/my_publishing/issues/94)) ([aa3a53b](https://github.com/redinc23/my_publishing/commit/aa3a53be1e80e944c3e5823110497edbfca0ad63))
+- add Library dropdown navigation with Books, Comics, Papers ([#92](https://github.com/redinc23/my_publishing/issues/92)) ([885acdd](https://github.com/redinc23/my_publishing/commit/885acdd8f91e7623723a4c8965fb8399a0bb53a6))
+- Add MANGU production deployment to GCP Cloud Run ([57fed27](https://github.com/redinc23/my_publishing/commit/57fed27eaba34e964106091578afcc2b29b333b9))
+- add rate limiting utility and middleware for sensitive API endpoints ([9d1bfb4](https://github.com/redinc23/my_publishing/commit/9d1bfb48d4eb3ae2217190f7c1850c6467fd24c1))
+- add rate limiting utility with Upstash Redis ([de03f1a](https://github.com/redinc23/my_publishing/commit/de03f1a4a34ef9cec5297e9e078efac0cdc69140))
+- add static homepage assets for v_a_1 draft landing page ([ff23d55](https://github.com/redinc23/my_publishing/commit/ff23d559b3296be8abf9784b3e5be88188a28237))
+- **admin:** add content_type selector to BookEditForm ([edad50b](https://github.com/redinc23/my_publishing/commit/edad50b350f77f7b3b234735ba147d78a737eb0a))
+- **analytics:** Calculate unique countries reached in AnalyticsOverview ([805bad1](https://github.com/redinc23/my_publishing/commit/805bad1f67df9524e58a8a562356167e51beb8ee))
+- **ci:** add auto-merge workflow for AI agent PRs and labeled PRs ([5c0423f](https://github.com/redinc23/my_publishing/commit/5c0423fdf7d7d84801d7eccfa5818de5ceb41aaa))
+- **ci:** add robust admin setup automation scripts ([1b11074](https://github.com/redinc23/my_publishing/commit/1b11074239208e03eb88af9623ed0bcb9e96656d))
+- **ci:** add Vercel build & test GitHub Actions workflow ([2102be2](https://github.com/redinc23/my_publishing/commit/2102be2d2a8a5b7bec8408cf33b522f0daeeb0d4))
+- Complete Phase 1-6 implementation ([4011055](https://github.com/redinc23/my_publishing/commit/4011055cae17719f3a673e32aace9c07b4329fd5))
+- **db:** add content_type to books table (Task 1.3) ([#90](https://github.com/redinc23/my_publishing/issues/90)) ([38863bd](https://github.com/redinc23/my_publishing/commit/38863bd584cb3279a52d13959c0e6bcc6b0e39bf))
+- enhance homepage with Stats, Features, and CTA landing sections ([9e63b9d](https://github.com/redinc23/my_publishing/commit/9e63b9d28b17c24baaf9b5792397809992bc2be7))
+- harden auth, analytics, and ops tooling ([4ed27c4](https://github.com/redinc23/my_publishing/commit/4ed27c47ee62e04afa19ce49f6b749f85230fbdf))
+- **home:** enhance homepage with SEO, sections, and animations ([1f8a418](https://github.com/redinc23/my_publishing/commit/1f8a418b6f72127d338802d0bf0ab30e0a4b3cd7))
+- **monitoring:** add Sentry DSN for production error tracking ([4f139e9](https://github.com/redinc23/my_publishing/commit/4f139e93ba9ecc032bed7edb7e7b606b44e60f26))
+- **nav:** add mobile navigation drawer with Sheet component ([30df56d](https://github.com/redinc23/my_publishing/commit/30df56d00510baa78b0a7c053b196fd0e0bd98c0))
+- **nav:** add mobile navigation drawer with Sheet component ([f2fb347](https://github.com/redinc23/my_publishing/commit/f2fb3471a6cfadb2883d6f5972b53bc75eb82f7b))
+- P0 production enhancements — CSP headers, middleware, session refresh, auth accessibility, E2E tests, CI vuln scan ([610401b](https://github.com/redinc23/my_publishing/commit/610401bcab51971ea3172c365c8efd6ed6a53172))
+- **phase6:** recommend ADR-001 Cloud Run and retarget monitors ([#227](https://github.com/redinc23/my_publishing/issues/227)) ([bad4045](https://github.com/redinc23/my_publishing/commit/bad404588fc43df82de47050f1192b3df9f9fe1a))
+- **scripts:** add P0-020 production verification + IAM reference scripts ([#213](https://github.com/redinc23/my_publishing/issues/213)) ([ef8b821](https://github.com/redinc23/my_publishing/commit/ef8b821bfd809fb7c86edc9b8067442907bf3239))
+
+### Bug Fixes
+
+- add dynamic force-dynamic export to admin layout to resolve Vercel build error ([ede2c10](https://github.com/redinc23/my_publishing/commit/ede2c10e3cf1ac7f19da200bc03bd3d2c0d50eb7))
+- add production recovery automation and readiness hardening ([906201e](https://github.com/redinc23/my_publishing/commit/906201e9f49326d55f2b45bb4a183039820dd10f))
+- address code review feedback on stats and landing sections ([7a13958](https://github.com/redinc23/my_publishing/commit/7a13958aed2627e643154aa09f3d4a1a676eb65f))
+- **build:** extract MCP guard from route file to fix invalid export (P0-017 follow-up) ([#223](https://github.com/redinc23/my_publishing/issues/223)) ([5744794](https://github.com/redinc23/my_publishing/commit/574479411261f4fbb36d987c83d1c2ea5b870ac9))
+- **ci:** harden health-check for apex DNS split + bug-to-issue push ([#231](https://github.com/redinc23/my_publishing/issues/231)) ([0e82e09](https://github.com/redinc23/my_publishing/commit/0e82e09db760af7b83c1d056f7d18c652d00653d))
+- **ci:** harden Phase 4 deploy path after PR [#136](https://github.com/redinc23/my_publishing/issues/136) review ([c74fac9](https://github.com/redinc23/my_publishing/commit/c74fac98087d535527110df0c65b4ac76a3c8804))
+- **ci:** harden Phase 4 deploy path after PR [#136](https://github.com/redinc23/my_publishing/issues/136) review ([bb09c63](https://github.com/redinc23/my_publishing/commit/bb09c63407a433dbcd4e87d4c406845ee3596fdf))
+- **ci:** make preview E2E honor BASE_URL and drop mock env against real targets (P0-005) ([#221](https://github.com/redinc23/my_publishing/issues/221)) ([10132de](https://github.com/redinc23/my_publishing/commit/10132de43b1d0221937a717edc2d60d6b70191c5))
+- **ci:** repair bug-to-issue workflow trigger (P0-006) ([#219](https://github.com/redinc23/my_publishing/issues/219)) ([bf30d1c](https://github.com/redinc23/my_publishing/commit/bf30d1c27c0ef899d32c7e456f8f853a967a7e22))
+- **ci:** resolve all failing checks — build, RLS, and Playwright E2E ([#170](https://github.com/redinc23/my_publishing/issues/170)) ([4b97c76](https://github.com/redinc23/my_publishing/commit/4b97c7634d588d1eecd7e6871c90938b607ac02a))
+- **ci:** resolve ESM jest failure and broken deploy.yml ([#97](https://github.com/redinc23/my_publishing/issues/97)) ([ff5a4a4](https://github.com/redinc23/my_publishing/commit/ff5a4a4cb94fedd65eff9226d8eea1cc6e582aee))
+- **ci:** resolve Format Check on main (Phase 5) — one clean vehicle, supersedes [#207](https://github.com/redinc23/my_publishing/issues/207)/[#208](https://github.com/redinc23/my_publishing/issues/208) ([#211](https://github.com/redinc23/my_publishing/issues/211)) ([9b4ce45](https://github.com/redinc23/my_publishing/commit/9b4ce4505e49156efb648dc0e97d452d0dff4532))
+- **ci:** resolve format, migrate, scan, e2e, and Cloud Build failures ([#185](https://github.com/redinc23/my_publishing/issues/185)) ([16dc1d7](https://github.com/redinc23/my_publishing/commit/16dc1d7c3c3b2861efc8b289649b29a3bda56424))
+- **ci:** resolve vuln-scan secret false positives and bug-to-issue push race ([#225](https://github.com/redinc23/my_publishing/issues/225)) ([44031e1](https://github.com/redinc23/my_publishing/commit/44031e10386bc9afc8f52a2761cf46f60de2269e))
+- **ci:** satisfy prefer-const in sitemap ([a9c91d8](https://github.com/redinc23/my_publishing/commit/a9c91d8ceb68a5fa6eb56a0063a13f29853658ef))
+- correct typo in auth-flow E2E test email address ([720af2e](https://github.com/redinc23/my_publishing/commit/720af2e3769d0a01fee141476635792e8ad39f14))
+- **deploy:** provide public Supabase build fallbacks ([c748ee8](https://github.com/redinc23/my_publishing/commit/c748ee8e4bdfe2590d976dc515f03749a1bf76e6))
+- ensure public dir exists for Docker COPY ([adba3a3](https://github.com/redinc23/my_publishing/commit/adba3a3879a4435a611772adc0db9680cec4bdec))
+- ensure public dir exists for Docker COPY ([7b8ac5b](https://github.com/redinc23/my_publishing/commit/7b8ac5b43b87b9fbb8141bf4195fdddc04b48d0b))
+- **ENV:** sync Upstash secrets to GCP + verify script — P1 batch ([134e1a1](https://github.com/redinc23/my_publishing/commit/134e1a180cb73a92f7910af15666c687d0819103))
+- **ENV:** Upstash secret sync + GCP verification ([a99016e](https://github.com/redinc23/my_publishing/commit/a99016e0dab76d5858020d5a3441e6baca1de16b))
+- **hardening:** reconcile migrations, auth rate limits, and portal follow-ups ([3d9ea3c](https://github.com/redinc23/my_publishing/commit/3d9ea3c77e2829125a950b10a9d2a658d212d58a))
+- **health:** remove leftover agent debug instrumentation from /api/health ([#108](https://github.com/redinc23/my_publishing/issues/108)) ([8ca4c45](https://github.com/redinc23/my_publishing/commit/8ca4c455ef20893443b40146321d9d92565f2568))
+- **home:** remove broken authors CTA ([4fe7221](https://github.com/redinc23/my_publishing/commit/4fe7221d7f9c85718780462b1198632ac6098ffb))
+- **lint:** resolve no-explicit-any and no-unused-vars in middleware.ts ([b0ddde5](https://github.com/redinc23/my_publishing/commit/b0ddde5d48437e298fd5150d8c6cb83d86edeadd))
+- **P0.1:** Lockfile + [@upstash](https://github.com/upstash) + Node 20 enforced + CI npm ci [full auto by Grok] ([a478ed2](https://github.com/redinc23/my_publishing/commit/a478ed21326e3c76d6a05a4a9321c8e2f71685bb))
+- **P0.1:** lockfile missing [@upstash](https://github.com/upstash) dependencies — resolved via enhanced blocker pipeline ([f3027de](https://github.com/redinc23/my_publishing/commit/f3027ded69d21e483fab4b185496d112f15a82bf))
+- **P0.2:** enforce Node 20 with .nvmrc ([e7ae9db](https://github.com/redinc23/my_publishing/commit/e7ae9dbc9f9bbdfc1fe5865d5e574b52183c6bc5))
+- **P0.2:** node version mismatch — resolved via enhanced blocker pipeline ([2270933](https://github.com/redinc23/my_publishing/commit/22709338cc40255bf38f65097b62f882efdafbbb))
+- **P0.3-P0.5:** homepage DOCTYPE + GCP + Stripe order — direct bulk automation complete ([6dd1bd6](https://github.com/redinc23/my_publishing/commit/6dd1bd64a3de31b857bedd6e98065ff5eec69dfa))
+- **P0.3:** UPSTASH env wiring + graceful rate limit — resolved via enhanced blocker pipeline ([f1ee8a9](https://github.com/redinc23/my_publishing/commit/f1ee8a94ddc082147bb39c5453459f54b9dc9433))
+- **P0.4:** restore rate-limit unit tests — resolved via enhanced blocker pipeline ([1ba3c00](https://github.com/redinc23/my_publishing/commit/1ba3c0004c11aa8bb6973f52b9ab1dbc1ff0a412))
+- **P1:** INF ci-local npm + DB migration verify + SEC audit expand — launch hardening ([aef9b44](https://github.com/redinc23/my_publishing/commit/aef9b446d9a72370a11a1459bfcb43436ff2269d))
+- **P1:** INF/DB/SEC launch hardening ([c5da3e6](https://github.com/redinc23/my_publishing/commit/c5da3e60a8e3b93d050ac81830b56c053eb9eff4))
+- Pass limit as argument to unstable_cache instead of closure capture ([7c9d600](https://github.com/redinc23/my_publishing/commit/7c9d600a78c601fa9e607695bc257e37ed05e4ae))
+- Phase 12 sweep (C1-C10) - fail-closed rate limiting, /authors page, upload dedup, strict env validation ([bca270e](https://github.com/redinc23/my_publishing/commit/bca270eb8960dcb95380da1baf0709a14fb574dd))
+- preserve recommendation algorithm literal type ([7e34b1f](https://github.com/redinc23/my_publishing/commit/7e34b1fe7cbd0adab3f47e7ea0e2478f428cd4e0))
+- **product-truth:** remove false-success on contact, newsletter, homepage stats (Phase 9) ([#216](https://github.com/redinc23/my_publishing/issues/216)) ([e90ce1f](https://github.com/redinc23/my_publishing/commit/e90ce1fea3b0511a0efabe9ae2322263a5e4d2d5))
+- **QA:** add launch-readiness local verification script — P1 batch ([83c0e11](https://github.com/redinc23/my_publishing/commit/83c0e11f76f4e5755c8a657632a961cf882b9cba))
+- **rate-limit:** migrate auth and book actions to distributed Redis ([c4ecc69](https://github.com/redinc23/my_publishing/commit/c4ecc69c2ab30a904c387792a278e90a39a8a9e1))
+- regenerate lockfile with pinned @upstash/ratelimit 1.1.3 ([e4331ba](https://github.com/redinc23/my_publishing/commit/e4331ba2a38c3d1e180ddec26dd3b24a91025ec0))
+- remove /authors from sitemap static routes (no matching page exists) ([0147c58](https://github.com/redinc23/my_publishing/commit/0147c587b904dd4ab68a08a8ba9cbfab85277501))
+- remove defunct husky.sh source line from commit-msg hook ([ab6c5a2](https://github.com/redinc23/my_publishing/commit/ab6c5a2c46b55d8c12bc9b24e476372c85522b26))
+- remove unused PASS_THROUGH const failing lint on main ([#96](https://github.com/redinc23/my_publishing/issues/96)) ([a13c6b8](https://github.com/redinc23/my_publishing/commit/a13c6b8cbdb8a8436ad29d91d324cc519c150e8b))
+- **review:** address PR feedback batch ([1b2b409](https://github.com/redinc23/my_publishing/commit/1b2b40968b8e2a614e65b7357257891ed9160a71))
+- route homepage to new static draft and stabilize env validation ([a9db2d0](https://github.com/redinc23/my_publishing/commit/a9db2d0245b5c77a987d980d4021007abff76442))
+- **security:** gate + rate-limit + sanitize public MCP transport (P0-017, G7) ([#217](https://github.com/redinc23/my_publishing/issues/217)) ([a371831](https://github.com/redinc23/my_publishing/commit/a371831518e43252eb273e9c26ad6e1efae07717))
+- stabilize build, migrations and linting ([872308c](https://github.com/redinc23/my_publishing/commit/872308c775d226db08ca4bfc6bbad0a3e04f60f0))
+- use local Inter font to remove Google Fonts network dependency at build time ([877fee1](https://github.com/redinc23/my_publishing/commit/877fee16a95c6c9fceae9c99cb04b0dba63db255))
+
+### Performance Improvements
+
+- parallelize table checks in health endpoint ([f8266ec](https://github.com/redinc23/my_publishing/commit/f8266ec4b070f07bba7f069448127294a1351f35))
+- parallelize view counting db operations ([00fbfe5](https://github.com/redinc23/my_publishing/commit/00fbfe556d878fa2ee9e2098504098bcded6d936))
+- PERF PHASE 2 — all 10 tasks (streaming, caching, parallelization, RSC, bundle optimization) ([bfb38b6](https://github.com/redinc23/my_publishing/commit/bfb38b6873eefe46ee41f6a5057009158ea8b452))
+- Use Promise.all to await async operations in preloadCommonData ([66a22d8](https://github.com/redinc23/my_publishing/commit/66a22d8d9b94690aa6f78d072cfae94dbd06cf08))

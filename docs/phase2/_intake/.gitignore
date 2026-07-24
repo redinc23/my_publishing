@@ -1,0 +1,5 @@
+environment.local.sh
+*.save
+worksheet-export.md
+worksheet-export.csv
+*.pdf

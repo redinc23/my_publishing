@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "mangu-publishers": {
+      "url": "http://localhost:3000/api/mcp/mcp"
+    }
+  }
+}

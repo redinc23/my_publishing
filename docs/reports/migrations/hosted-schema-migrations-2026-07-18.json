@@ -1,0 +1,43 @@
+{
+  "exported_at_utc": "2026-07-18T04:47:00Z",
+  "project_ref": "tkzvikozrcynhwsqtkqp",
+  "project_name": "mangu-publishers",
+  "source": "supabase_migrations.schema_migrations via Supabase MCP execute_sql + list_migrations",
+  "count": 25,
+  "diff_vs_repo": "exact_match",
+  "pending": [],
+  "remote_only": [],
+  "migrations": [
+    { "version": "20260116000000", "name": "initial_schema" },
+    { "version": "20260116000001", "name": "create_books_table" },
+    { "version": "20260117000000", "name": "analytics_events" },
+    { "version": "20260117000001", "name": "analytics_sessions" },
+    { "version": "20260117000002", "name": "book_stats_materialized" },
+    { "version": "20260117000003", "name": "revenue_tracking" },
+    { "version": "20260117000004", "name": "author_payouts" },
+    { "version": "20260117000005", "name": "book_pricing" },
+    { "version": "20260117000006", "name": "storage_policies" },
+    { "version": "20260117000007", "name": "storage_policies" },
+    { "version": "20260118000000", "name": "critical_fixes" },
+    { "version": "20260120000006", "name": "performance_optimizations" },
+    { "version": "20260121000000", "name": "profile_trigger" },
+    { "version": "20260122000000", "name": "social_features" },
+    { "version": "20260619124500", "name": "add_content_type_to_books" },
+    { "version": "20260619162409", "name": "add_content_type" },
+    { "version": "20260619170000", "name": "add_retailer_urls" },
+    { "version": "20260708074716", "name": "enable_rls_on_exposed_tables" },
+    { "version": "20260708074819", "name": "harden_definer_views_and_rpcs" },
+    { "version": "20260717114020", "name": "protect_profiles_role" },
+    { "version": "20260717114047", "name": "tighten_analytics_sessions_rls" },
+    { "version": "20260717114057", "name": "public_read_authors" },
+    { "version": "20260717114115", "name": "fix_review_stats_trigger" },
+    { "version": "20260717114221", "name": "revoke_anon_update_reading_progress" },
+    { "version": "20260717114300", "name": "order_items_select_own" }
+  ],
+  "order_items_select_policy": {
+    "policy_name": "Users can view own order items",
+    "cmd": "SELECT",
+    "verified": true,
+    "matches_migration": "20260717114300_order_items_select_own.sql"
+  }
+}

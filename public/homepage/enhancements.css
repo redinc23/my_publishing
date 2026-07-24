@@ -1,0 +1,130 @@
+/* MANGU PUBLISHING ENHANCEMENTS */
+/* Add this link tag in your head after your main styles: */
+/* <link rel="stylesheet" href="enhancements.css"> */
+
+/* 1. Premium text effects */
+.premium-text {
+  background: linear-gradient(
+    135deg,
+    #ffd700 0%,
+    #ff8c00 20%,
+    #ff6b6b 40%,
+    #8a2be2 60%,
+    #0073e6 80%,
+    #4ecdc4 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShine 8s ease-in-out infinite;
+}
+
+@keyframes textShine {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 2. Text balancing for better readability */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* 3. Performance helper classes */
+.will-change {
+  will-change: transform, opacity;
+}
+
+/* 4. Premium button enhancements */
+.premium-btn {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.premium-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+  z-index: -1;
+}
+
+.premium-btn:hover::before {
+  left: 100%;
+}
+
+/* 5. Enhanced focus states for accessibility */
+.book-card:focus-within {
+  outline: 2px solid var(--accent-orange);
+  outline-offset: 2px;
+}
+
+/* 6. Premium scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--accent-orange), #cc5500);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--netflix-dark);
+}
+
+/* 7. Premium selection color */
+::selection {
+  background: var(--accent-orange);
+  color: white;
+}
+
+/* 8. Premium image loading effect */
+img:not([loaded]) {
+  filter: blur(10px);
+  transition: filter 0.5s ease;
+}
+
+img[loaded] {
+  filter: blur(0);
+}
+
+/* 9. Premium backdrop for modals */
+.auth-modal::before,
+.viewer-modal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  z-index: -1;
+}
+
+/* 10. Premium reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .premium-text {
+    animation: none;
+  }
+}
