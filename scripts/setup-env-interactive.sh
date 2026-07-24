@@ -199,7 +199,16 @@ validate_url() {
 
 validate_anon_key() {
   [[ ${#1} -ge 20 ]] || { echo "  ! Key looks too short"; return 1; }
-  [[ "$1" == eyJ* ]] || { echo "  ! Must be the anon public JWT from Supabase Settings > API (starts with eyJ)"; return 1; }
+  # Accept both legacy eyJ… JWT and modern sb_publishable_… format
+  if [[ "$1" == sb_publishable_* ]]; then
+    return 0
+  fi
+  if [[ "$1" != eyJ* ]]; then
+    echo "  ! Must be the anon/publishable key from Supabase Settings > API"
+    echo "    Modern format: sb_publishable_..."
+    echo "    Legacy format: eyJ... (JWT)"
+    return 1
+  fi
   [[ "$(awk -F'.' '{print NF}' <<< "$1")" -eq 3 ]] || { echo "  ! JWT should contain 3 dot-separated parts"; return 1; }
   return 0
 }

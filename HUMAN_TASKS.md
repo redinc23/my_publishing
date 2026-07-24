@@ -39,21 +39,37 @@ site keep serving the public. Path A (stabilize-only) is **off**. Production rem
 
 ### H0.1 Migrate off the exposed legacy Supabase anon key
 
-A real production anon-key JWT (project `tkzvikozrcynhwsqtkqp`, minted 2026-05-13,
-expires 2036) was hardcoded in `next.config.js` and `cloudbuild.yaml` since commit
-`c748ee8` (2026-07-10). The swarm removed it from HEAD, but **it remains in git
-history — disabling the legacy key after all consumers migrate is the only
-complete fix.** A modern `sb_publishable_...` key is already enabled.
+**Automation status:** `.github/workflows/rotate-supabase-key.yml` +
+`scripts/update-supabase-anon-key.sh` land in this commit. The workflow pushes
+any new key to GitHub Secrets and both Vercel projects in one trigger — no more
+touching three UIs.
 
-1. Replace the legacy JWT with the enabled publishable key in GitHub Actions,
-   both Vercel projects (`my_publishing`, `manguprojectz`) for Production +
-   Preview, Cloud Build substitutions, and local `.env.local` files.
-2. Redeploy and verify `/api/health?ready=1` remains ready.
-3. Supabase dashboard → Settings → API Keys → disable legacy API keys.
-4. Verify the old JWT now receives 401/403 from the REST API.
+**Remaining manual steps (3) — operator must do these:**
 
-Do not rotate the project JWT signing secret for this task; that is a separate
-session-impacting operation.
+#### H0.1-A  One-time bootstrap (do once, never again)
+Set these five GitHub Secrets at
+`github.com/redinc23/my_publishing/settings/secrets/actions`:
+
+| Secret | Where to get it |
+|---|---|
+| `VERCEL_TOKEN` | vercel.com/account/tokens → Create |
+| `GH_PAT_SECRETS` | github.com/settings/tokens → Fine-grained → secrets:write on this repo |
+| `VERCEL_PROJECT_MY_PUBLISHING` | Vercel → my_publishing → Settings → General → Project ID |
+| `VERCEL_PROJECT_MANGUPROJECTZ` | Vercel → manguprojectz → Settings → General → Project ID |
+| `VERCEL_TEAM_ID` | Vercel team ID (blank if personal account) |
+
+#### H0.1-B  Run the rotation workflow (pushes new key everywhere)
+1. Go to **Actions → Rotate Supabase Anon Key → Run workflow**
+2. Paste the `sb_publishable_…` key from
+   [Supabase dashboard → project `tkzvikozrcynhwsqtkqp` → Settings → API](https://supabase.com/dashboard/project/tkzvikozrcynhwsqtkqp/settings/api)
+3. Click **Run workflow** — GitHub Secrets + both Vercel projects update automatically
+
+#### H0.1-C  Disable the OLD key in Supabase (kills the git-history exposure)
+1. Supabase dashboard → project `tkzvikozrcynhwsqtkqp` → Settings → API Keys
+2. Find the legacy `anon` JWT (`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrenZp…`) → **Disable**
+3. Verify: `curl -I https://tkzvikozrcynhwsqtkqp.supabase.co/rest/v1/ -H "apikey: <OLD_JWT>"` → must return `401`
+
+Do not rotate the project JWT signing secret; that is a separate session-impacting operation.
 
 ### H0.2 Disable both external Cursor PR automations
 
