@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 30 29% 15%;
+    --card: 40 33% 95%;
+    --card-foreground: 30 29% 15%;
+    --popover: 40 33% 98%;
+    --popover-foreground: 30 29% 15%;
+    --primary: 30 29% 25%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 40 30% 93%;
+    --secondary-foreground: 30 29% 25%;
+    --muted: 40 30% 93%;
+    --muted-foreground: 30 15% 45%;
+    --accent: 40 30% 93%;
+    --accent-foreground: 30 29% 25%;
+    --destructive: 4 50% 52%;
+    --destructive-foreground: 40 33% 98%;
+    --border: 37 24% 82%;
+    --input: 37 24% 82%;
+    --ring: 40 50% 57%;
+    --radius: 0.625rem;
+    --sidebar-background: 40 33% 95%;
+    --sidebar-foreground: 30 29% 25%;
+    --sidebar-primary: 30 29% 25%;
+    --sidebar-primary-foreground: 40 33% 98%;
+    --sidebar-accent: 40 30% 93%;
+    --sidebar-accent-foreground: 30 29% 25%;
+    --sidebar-border: 37 24% 82%;
+    --sidebar-ring: 40 50% 57%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "Source Sans 3", sans-serif;
+    background-color: #FDFBF7;
+    color: #342A19;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Paper texture overlay */
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("/paper-texture.png");
+    background-repeat: repeat;
+    opacity: 0.03;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Selection color */
+  ::selection {
+    background-color: #D4A853;
+    color: #1F180D;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F7F3EC;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #DFD5C3;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8B6F4E;
+  }
+
+  /* Focus visible styling */
+  :focus-visible {
+    outline: 2px solid #D4A853;
+    outline-offset: 2px;
+  }
+}

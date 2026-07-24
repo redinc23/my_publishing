@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" fill="none">
+  <!-- Desk surface -->
+  <rect x="20" y="220" width="360" height="60" rx="8" fill="#EDE7DA" stroke="#DFD5C3" stroke-width="2"/>
+  
+  <!-- Open book -->
+  <path d="M120 200L120 100C120 100 150 85 200 100C250 115 280 100 280 100L280 200C280 200 250 215 200 200C150 185 120 200 120 200Z" fill="#FDFBF7" stroke="#4A3B25" stroke-width="2"/>
+  
+  <!-- Book spine fold -->
+  <line x1="200" y1="100" x2="200" y2="205" stroke="#4A3B25" stroke-width="1.5"/>
+  
+  <!-- Left page lines -->
+  <line x1="135" y1="115" x2="190" y2="115" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="135" y1="130" x2="185" y2="130" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="135" y1="145" x2="190" y2="145" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="135" y1="160" x2="180" y2="160" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="135" y1="175" x2="190" y2="175" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Right page lines -->
+  <line x1="210" y1="115" x2="265" y2="115" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="215" y1="130" x2="265" y2="130" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="210" y1="145" x2="265" y2="145" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="220" y1="160" x2="265" y2="160" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="210" y1="175" x2="265" y2="175" stroke="#DFD5C3" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Inkwell -->
+  <ellipse cx="310" cy="200" rx="18" ry="10" fill="#F7F3EC" stroke="#4A3B25" stroke-width="1.5"/>
+  <ellipse cx="310" cy="195" rx="14" ry="7" fill="#342A19"/>
+  
+  <!-- Quill pen -->
+  <path d="M315 195L340 120" stroke="#F7F3EC" stroke-width="4" stroke-linecap="round"/>
+  <path d="M315 195L340 120" stroke="#4A3B25" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M340 120L345 105L335 110Z" fill="#F7F3EC" stroke="#4A3B25" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M340 120C340 120 348 118 352 122C348 116 342 115 340 120Z" fill="#F7F3EC" stroke="#4A3B25" stroke-width="1"/>
+  
+  <!-- Quill feather details -->
+  <line x1="340" y1="120" x2="338" y2="112" stroke="#4A3B25" stroke-width="0.75"/>
+  <line x1="338" y1="118" x2="342" y2="115" stroke="#4A3B25" stroke-width="0.75"/>
+  
+  <!-- Candle -->
+  <rect x="75" y="170" width="14" height="30" rx="2" fill="#FDFBF7" stroke="#4A3B25" stroke-width="1.5"/>
+  <rect x="77" y="165" width="10" height="5" rx="1" fill="#DFD5C3"/>
+  
+  <!-- Candle flame -->
+  <ellipse cx="82" cy="158" rx="4" ry="7" fill="#D4A853" opacity="0.8"/>
+  <ellipse cx="82" cy="160" rx="2" ry="4" fill="#C49A3B"/>
+  
+  <!-- Candle glow -->
+  <circle cx="82" cy="158" r="20" fill="#D4A853" opacity="0.08"/>
+  
+  <!-- Small decorative elements -->
+  <circle cx="70" cy="235" r="4" fill="#D4A853" opacity="0.3"/>
+  <circle cx="330" cy="240" r="3" fill="#D4A853" opacity="0.25"/>
+  <circle cx="345" cy="225" r="2" fill="#D4A853" opacity="0.2"/>
+</svg>
