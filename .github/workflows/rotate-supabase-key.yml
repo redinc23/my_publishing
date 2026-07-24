@@ -37,7 +37,7 @@ jobs:
     name: Push key to GitHub Secrets + Vercel
     runs-on: ubuntu-latest
     permissions:
-      env: write  # needed to upsert GitHub Secrets via API
+      key: write  # needed to upsert GitHub Secrets via API
 
     steps:
       - name: Validate new key format
