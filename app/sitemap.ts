@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { createPublicCatalogClient } from '@/lib/supabase/public-queries';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
+import { FEATURE_COMICS, FEATURE_PAPERS, FEATURE_AUDIO } from '@/lib/flags';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
@@ -9,24 +10,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
     { url: `${baseUrl}/books`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.95 },
-    {
-      url: `${baseUrl}/comics`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/papers`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/audio`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
+    // Flag-off contract: excluded from sitemap when feature is disabled (P-057)
+    ...(FEATURE_COMICS
+      ? [{ url: `${baseUrl}/comics`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.8 }]
+      : []),
+    ...(FEATURE_PAPERS
+      ? [{ url: `${baseUrl}/papers`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.75 }]
+      : []),
+    ...(FEATURE_AUDIO
+      ? [{ url: `${baseUrl}/audio`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.75 }]
+      : []),
     {
       url: `${baseUrl}/authors`,
       lastModified: new Date(),
@@ -123,12 +116,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.45,
     },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.55,
-    },
+    // /blog excluded: no real posts exist yet (P-004 — MISLEADING state)
     {
       url: `${baseUrl}/press`,
       lastModified: new Date(),
