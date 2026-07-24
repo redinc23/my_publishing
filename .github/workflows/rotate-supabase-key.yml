@@ -36,8 +36,6 @@ jobs:
   rotate:
     name: Push key to GitHub Secrets + Vercel
     runs-on: ubuntu-latest
-    permissions:
-      key: write  # needed to upsert GitHub Secrets via API
 
     steps:
       - name: Validate new key format
